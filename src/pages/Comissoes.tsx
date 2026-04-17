@@ -54,6 +54,7 @@ function buildOptions() {
 export default function Comissoes() {
   const opcoes = useMemo(buildOptions, []);
   const [mes, setMes] = useState<string>(opcoes[0].value);
+  const mesLabel = opcoes.find((o) => o.value === mes)?.label ?? mes;
 
   return (
     <div className="space-y-6 p-6">
@@ -104,7 +105,7 @@ export default function Comissoes() {
         </TabsList>
 
         <TabsContent value="relatorio" className="mt-4">
-          <ComissoesRelatorioTab mes={mes} />
+          <ComissoesRelatorioTab mes={mes} mesLabel={mesLabel} />
         </TabsContent>
 
         <TabsContent value="regras" className="mt-4">

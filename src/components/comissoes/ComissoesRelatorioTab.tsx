@@ -40,10 +40,21 @@ type LinhaVendedor = {
   base: number;
   bonus: number;
   total: number;
+  contrato_ids: string[];
 };
 
 function fmtBRL(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+function Row({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
+  return (
+    <div className="flex items-baseline justify-between">
+      <span className="text-xs text-[#6B7A90]">{label}</span>
+      <span className="text-sm font-medium tabular-nums" style={valueColor ? { color: valueColor } : undefined}>
+        {value}
+      </span>
+    </div>
+  );
 }
 function iniciais(nome: string) {
   const parts = nome.trim().split(/\s+/);
@@ -59,14 +70,19 @@ function corMargem(m: number) {
 
 interface Props {
   mes: string; // YYYY-MM-01
+  mesLabel?: string;
   regra?: RegraComissao;
 }
 
-export function ComissoesRelatorioTab({ mes, regra = REGRA_PADRAO }: Props) {
+export function ComissoesRelatorioTab({ mes, mesLabel, regra = REGRA_PADRAO }: Props) {
   const [linhas, setLinhas] = useState<LinhaVendedor[]>([]);
   const [pagos, setPagos] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [alvo, setAlvo] = useState<LinhaVendedor | null>(null);
+  const [dataPagamento, setDataPagamento] = useState<string>(
+    () => new Date().toISOString().slice(0, 10)
+  );
+  const [confirmando, setConfirmando] = useState(false);
 
   const inicio = mes;
   const fim = useMemo(() => {
@@ -123,11 +139,13 @@ export function ComissoesRelatorioTab({ mes, regra = REGRA_PADRAO }: Props) {
             base: 0,
             bonus: 0,
             total: 0,
+            contrato_ids: [],
           };
         }
         const a = agg[vid];
         a.contratos += 1;
         a.faturamento += valor;
+        a.contrato_ids.push(c.id);
         // média ponderada por faturamento
         a.margemMedia =
           a.faturamento > 0
@@ -158,11 +176,33 @@ export function ComissoesRelatorioTab({ mes, regra = REGRA_PADRAO }: Props) {
     return { fat, base, bonus, total, margemPond };
   }, [linhas]);
 
-  function confirmarPago() {
-    if (!alvo) return;
-    setPagos((p) => new Set(p).add(alvo.vendedor_id));
-    toast.success("Comissão marcada como paga");
-    setAlvo(null);
+  async function confirmarPago() {
+    if (!alvo || confirmando) return;
+    setConfirmando(true);
+    try {
+      const periodo = mesLabel ?? mes;
+      const descricao = `Comissão ${periodo} — base ${fmtBRL(alvo.base)} + bônus ${fmtBRL(
+        alvo.bonus
+      )} = ${fmtBRL(alvo.total)}. Pago em ${dataPagamento}.`;
+      const linhasLog = alvo.contrato_ids.map((cid) => ({
+        contrato_id: cid,
+        acao: "comissao_paga",
+        titulo: "Comissão paga",
+        descricao,
+      }));
+      if (linhasLog.length) {
+        const { error } = await supabase.from("contrato_logs").insert(linhasLog);
+        if (error) throw error;
+      }
+      setPagos((p) => new Set(p).add(alvo.vendedor_id));
+      toast.success(`Comissão de ${alvo.nome} marcada como paga`);
+      setAlvo(null);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Erro ao registrar pagamento";
+      toast.error(msg);
+    } finally {
+      setConfirmando(false);
+    }
   }
 
   const rankFat = useMemo(
@@ -384,31 +424,57 @@ export function ComissoesRelatorioTab({ mes, regra = REGRA_PADRAO }: Props) {
       )}
 
       <Dialog open={!!alvo} onOpenChange={(v) => !v && setAlvo(null)}>
-        <DialogContent className="sm:max-w-[420px]">
+        <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle>Confirmar pagamento de comissão</DialogTitle>
           </DialogHeader>
           {alvo && (
-            <div className="space-y-2 text-sm">
-              <p>
-                Vendedor: <span className="font-medium">{alvo.nome}</span>
-              </p>
-              <p>
-                Total: <span className="font-medium tabular-nums">{fmtBRL(alvo.total)}</span>
-              </p>
+            <div className="space-y-3 text-sm">
+              <div className="space-y-1.5 rounded-md p-3" style={{ background: "#F5F7FA" }}>
+                <Row label="Vendedor" value={alvo.nome} />
+                <Row label="Período" value={mesLabel ?? mes} />
+                <Row label="Contratos" value={`${alvo.contratos} finalizados`} />
+                <Row label="Comissão base" value={fmtBRL(alvo.base)} />
+                <Row
+                  label="Bônus"
+                  value={alvo.bonus > 0 ? fmtBRL(alvo.bonus) : "—"}
+                  valueColor={alvo.bonus > 0 ? "#E8A020" : "#B0BAC9"}
+                />
+                <div className="mt-2 flex items-baseline justify-between border-t pt-2" style={{ borderColor: "#E8ECF2" }}>
+                  <span className="text-xs text-[#6B7A90]">Total</span>
+                  <span className="text-xl font-medium tabular-nums" style={{ color: "#12B76A" }}>
+                    {fmtBRL(alvo.total)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-[#0D1117]">
+                  Data de pagamento <span style={{ color: "#E53935" }}>*</span>
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={dataPagamento}
+                  onChange={(e) => setDataPagamento(e.target.value)}
+                  className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                  style={{ borderColor: "#E8ECF2" }}
+                />
+              </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAlvo(null)}>
+            <Button variant="outline" onClick={() => setAlvo(null)} disabled={confirmando}>
               Cancelar
             </Button>
             <Button
               onClick={confirmarPago}
+              disabled={confirmando || !dataPagamento}
               className="text-white hover:opacity-90"
               style={{ background: "#12B76A" }}
             >
               <Check className="mr-1 h-4 w-4" />
-              Confirmar pagamento
+              {confirmando ? "Processando…" : "Confirmar pagamento"}
             </Button>
           </DialogFooter>
         </DialogContent>
