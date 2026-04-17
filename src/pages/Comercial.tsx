@@ -388,9 +388,7 @@ export default function Comercial() {
       )}
 
       {tab === "contratos" ? (
-        <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-          Em breve: visualização de contratos.
-        </div>
+        <ContratosTable onCreate={() => toast({ title: "Em breve", description: "Criação de contrato em desenvolvimento." })} />
       ) : isLoading ? (
         <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
           Carregando leads...
