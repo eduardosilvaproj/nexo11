@@ -63,7 +63,7 @@ export default function PortalCliente() {
 
       const [{ data: c, error: cErr }, { data: l }, { data: chs }] =
         await Promise.all([
-          supabase.from("contratos").select("*").eq("id", cid).maybeSingle(),
+          supabase.from("contratos").select("*, lojas(nome, cidade, estado)").eq("id", cid).maybeSingle(),
           supabase
             .from("contrato_logs")
             .select("*")
