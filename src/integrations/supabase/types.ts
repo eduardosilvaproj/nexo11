@@ -288,12 +288,15 @@ export type Database = {
           created_at: string
           data_entrada: string
           data_ultimo_contato: string | null
+          email: string | null
           id: string
           loja_id: string
           nome: string
+          observacoes: string | null
           origem: string | null
           status: Database["public"]["Enums"]["lead_status"]
           updated_at: string
+          valor_estimado: number | null
           vendedor_id: string | null
         }
         Insert: {
@@ -301,12 +304,15 @@ export type Database = {
           created_at?: string
           data_entrada?: string
           data_ultimo_contato?: string | null
+          email?: string | null
           id?: string
           loja_id: string
           nome: string
+          observacoes?: string | null
           origem?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
+          valor_estimado?: number | null
           vendedor_id?: string | null
         }
         Update: {
@@ -314,12 +320,15 @@ export type Database = {
           created_at?: string
           data_entrada?: string
           data_ultimo_contato?: string | null
+          email?: string | null
           id?: string
           loja_id?: string
           nome?: string
+          observacoes?: string | null
           origem?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           updated_at?: string
+          valor_estimado?: number | null
           vendedor_id?: string | null
         }
         Relationships: [
