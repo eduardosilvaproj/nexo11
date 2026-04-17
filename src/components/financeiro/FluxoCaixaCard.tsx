@@ -47,6 +47,20 @@ function CustomTooltip({ active, payload, label }: any) {
   );
 }
 
+function SemanaTooltip({ active, payload, label }: any) {
+  if (!active || !payload?.length) return null;
+  const row = payload[0].payload as { entradas: number; saidas: number; acumulado: number };
+  return (
+    <div className="rounded-md border bg-white p-3 text-sm shadow-md" style={{ borderColor: "#E8ECF2" }}>
+      <p className="mb-1 font-medium">{label}</p>
+      <p style={{ color: "#1E6FBF" }}>Entradas: {fmtBRL(row.entradas)}</p>
+      <p style={{ color: "#D85A30" }}>Saídas: {fmtBRL(row.saidas)}</p>
+      <p className="mt-1 font-medium" style={{ color: row.acumulado >= 0 ? "#12B76A" : "#E53935" }}>
+        Saldo acumulado: {fmtBRL(row.acumulado)}
+      </p>
+    </div>
+  );
+
 function KpiCard({
   label, valor, hint, icon, color, topBorder,
 }: { label: string; valor: string; hint?: string; icon: React.ReactNode; color: string; topBorder?: string }) {
