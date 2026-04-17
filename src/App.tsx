@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Placeholder from "./pages/Placeholder";
 import Comercial from "./pages/Comercial";
 import Tecnico from "./pages/Tecnico";
+import Producao from "./pages/Producao";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
