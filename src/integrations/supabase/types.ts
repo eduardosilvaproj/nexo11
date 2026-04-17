@@ -886,6 +886,45 @@ export type Database = {
           },
         ]
       }
+      portal_tokens: {
+        Row: {
+          contrato_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          token: string
+        }
+        Insert: {
+          contrato_id: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token?: string
+        }
+        Update: {
+          contrato_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_tokens_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: true
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_tokens_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: true
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       registros_ponto: {
         Row: {
           created_at: string
@@ -1314,6 +1353,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      has_valid_portal_token: {
+        Args: { _contrato_id: string }
         Returns: boolean
       }
       outros_custos_sync_dre: {
