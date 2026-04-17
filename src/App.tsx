@@ -10,6 +10,7 @@ import AuthPage from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Placeholder from "./pages/Placeholder";
 import Comercial from "./pages/Comercial";
+import Tecnico from "./pages/Tecnico";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -37,7 +38,7 @@ const App = () => (
               <Route path="/comercial" element={<Comercial />} />
               <Route path="/tecnico" element={
                 <ProtectedRoute roles={["admin","gerente","tecnico"]}>
-                  <Placeholder title="NEXO Técnico" description="Checklists técnicos por contrato." />
+                  <Tecnico />
                 </ProtectedRoute>
               } />
               <Route path="/producao" element={
