@@ -94,6 +94,7 @@ export default function Lojas() {
           >
             + Nova loja
           </button>
+        </div>
       </div>
 
       <LojasKpiRow mes={mes} />
