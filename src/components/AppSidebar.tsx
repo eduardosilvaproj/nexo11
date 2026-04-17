@@ -50,7 +50,6 @@ const gestao = [
   { title: "Comissões", url: "/comissoes", icon: Percent },
   { title: "Compras", url: "/compras", icon: ShoppingCart },
   { title: "Equipe", url: "/equipe", icon: UserCog },
-  { title: "Equipes", url: "/equipes", icon: Users2, roles: ["admin", "gerente"] },
   { title: "Lojas", url: "/lojas", icon: Building2, roles: ["admin", "franqueador"] },
 ];
 
