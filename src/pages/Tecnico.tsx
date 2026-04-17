@@ -267,7 +267,7 @@ export default function Tecnico() {
               <TableHead>Cliente</TableHead>
               <TableHead>Vendedor</TableHead>
               <TableHead>Responsável</TableHead>
-              <TableHead>Progresso conferência</TableHead>
+              <TableHead>{aba === "medicao" ? "Progresso medição" : "Progresso conferência"}</TableHead>
               <TableHead>Projeto</TableHead>
               <TableHead>Trava</TableHead>
               <TableHead className="text-right">Ações</TableHead>
