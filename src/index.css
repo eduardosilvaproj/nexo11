@@ -34,7 +34,7 @@
     --nexo-red: #E53935;
     --nexo-red-light: #FDECEA;
 
-    --nexo-gradient-x: linear-gradient(135deg, #00AAFF 0%, #1E6FBF 45%, #12B76A 100%);
+    --nexo-gradient-x: linear-gradient(135deg, #00AAFF 0%, #1E6FBF 50%, #12B76A 100%);
 
     /* === Shadcn semantic tokens (HSL) — mapped to NEXO === */
     /* Light mode is the default for content areas */
@@ -149,10 +149,10 @@
     color: var(--nexo-gray-text);
   }
   .nexo-sidebar-label {
-    font-size: 10px;
-    color: var(--nexo-gray-text);
+    font-size: 10px !important;
+    color: #3D4A5C !important;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     font-weight: 600;
   }
   .nexo-sidebar-user-name {

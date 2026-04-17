@@ -62,12 +62,12 @@ export function AppSidebar() {
   const { perfil, roles, signOut } = useAuth();
   const collapsed = state === "collapsed";
 
-  // Inativo: cor #6B7A90 + hover bg #1A2332 / texto #B0BAC9
-  // Ativo: bg #1A2332 + borda esquerda 2px #1E6FBF + texto/ícone #00AAFF
+  // Inativo: SEM fundo, texto #6B7A90, hover discreto.
+  // Ativo: bg #1A2332 + borda esquerda 2px #1E6FBF + texto/ícone #00AAFF.
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     isActive
-      ? "border-l-2 border-[hsl(var(--sidebar-primary))] bg-[hsl(var(--sidebar-accent))] text-[hsl(var(--sidebar-accent-foreground))] font-medium pl-[calc(0.5rem-2px)]"
-      : "text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))] hover:text-[#B0BAC9]";
+      ? "!bg-[#1A2332] !text-[#00AAFF] font-medium border-l-2 border-[#1E6FBF] pl-[calc(0.5rem-2px)] hover:!bg-[#1A2332] hover:!text-[#00AAFF]"
+      : "!bg-transparent !text-[#6B7A90] hover:!bg-[#1A2332]/60 hover:!text-[#B0BAC9]";
 
   const canSee = (item: { roles?: string[] }) =>
     !item.roles || item.roles.some((r) => roles.includes(r as any));
