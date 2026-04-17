@@ -1,7 +1,16 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { CheckCircle2, Eye, Plus, Search } from "lucide-react";
+import { ArrowRight, CheckCircle2, ChevronsUpDown, Eye, Plus, Search } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -202,20 +211,28 @@ export default function PosVenda() {
   const abrirChamado = useMutation({
     mutationFn: async () => {
       if (!contratoId) throw new Error("Selecione um contrato");
-      if (!titulo && !descricao) throw new Error("Informe título ou descrição");
-      const desc = titulo
-        ? `${titulo}${descricao ? "\n\n" + descricao : ""}`
-        : descricao;
+      const tit = titulo.trim().slice(0, 80);
+      if (!tit) throw new Error("Informe um título");
+      const desc = `${tit}${descricao.trim() ? "\n\n" + descricao.trim() : ""}`;
+      const custoNum = custo === "" ? 0 : Number(custo);
+      if (Number.isNaN(custoNum) || custoNum < 0) throw new Error("Custo inválido");
       const { error } = await supabase.from("chamados_pos_venda").insert({
         contrato_id: contratoId,
         tipo,
         descricao: desc,
-        custo: Number(custo) || 0,
+        custo: custoNum,
       });
       if (error) throw error;
+      // log no contrato (autor_id obrigatório pela RLS é injetado via trigger SECURITY DEFINER)
+      await supabase.rpc("contrato_log_inserir", {
+        _contrato_id: contratoId,
+        _acao: "chamado_aberto",
+        _titulo: `Chamado aberto: ${tit}`,
+        _descricao: TIPO_LABEL[tipo],
+      });
     },
     onSuccess: () => {
-      toast.success("Chamado aberto");
+      toast.success("Chamado aberto com sucesso");
       qc.invalidateQueries({ queryKey: ["pos-venda-list"] });
       setOpen(false);
       reset();
@@ -301,28 +318,58 @@ export default function PosVenda() {
               <Plus className="h-4 w-4" /> Abrir chamado
             </button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[480px]">
             <DialogHeader>
               <DialogTitle>Abrir chamado</DialogTitle>
             </DialogHeader>
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-col gap-1">
-                <Label>Contrato</Label>
-                <Select value={contratoId} onValueChange={setContratoId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {contratos.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.cliente_nome} · #{c.id.slice(0, 4)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label>
+                  Contrato <span style={{ color: "#E53935" }}>*</span>
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <span className={contratoId ? "" : "text-muted-foreground"}>
+                        {(() => {
+                          const c = contratos.find((x) => x.id === contratoId);
+                          return c
+                            ? `#${c.id.slice(0, 4)} — ${c.cliente_nome}`
+                            : "Selecione um contrato";
+                        })()}
+                      </span>
+                      <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[420px] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Buscar cliente ou nº..." />
+                      <CommandList>
+                        <CommandEmpty>Nenhum contrato encontrado.</CommandEmpty>
+                        <CommandGroup>
+                          {contratos.map((c) => (
+                            <CommandItem
+                              key={c.id}
+                              value={`${c.id.slice(0, 4)} ${c.cliente_nome}`}
+                              onSelect={() => setContratoId(c.id)}
+                            >
+                              #{c.id.slice(0, 4)} — {c.cliente_nome}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
-              <div className="flex flex-col gap-1">
-                <Label>Tipo</Label>
+
+              <div className="flex flex-col gap-1.5">
+                <Label>
+                  Tipo <span style={{ color: "#E53935" }}>*</span>
+                </Label>
                 <Select value={tipo} onValueChange={(v) => setTipo(v as ChamadoTipo)}>
                   <SelectTrigger>
                     <SelectValue />
@@ -336,24 +383,45 @@ export default function PosVenda() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex flex-col gap-1">
-                <Label>Título</Label>
-                <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <Label>
+                    Título <span style={{ color: "#E53935" }}>*</span>
+                  </Label>
+                  <span style={{ fontSize: 11, color: "#6B7A90" }}>
+                    {titulo.length}/80
+                  </span>
+                </div>
+                <Input
+                  maxLength={80}
+                  value={titulo}
+                  onChange={(e) => setTitulo(e.target.value)}
+                />
               </div>
-              <div className="flex flex-col gap-1">
+
+              <div className="flex flex-col gap-1.5">
                 <Label>Descrição</Label>
                 <Textarea
+                  rows={4}
                   value={descricao}
                   onChange={(e) => setDescricao(e.target.value)}
                 />
               </div>
-              <div className="flex flex-col gap-1">
+
+              <div className="flex flex-col gap-1.5">
                 <Label>Custo de assistência (R$)</Label>
                 <Input
                   type="number"
+                  min={0}
+                  step="0.01"
+                  placeholder=""
                   value={custo}
                   onChange={(e) => setCusto(e.target.value)}
                 />
+                <span style={{ fontSize: 12, color: "#E8A020" }}>
+                  Valores acima de R$ 0 serão adicionados ao DRE do contrato
+                </span>
               </div>
             </div>
             <DialogFooter>
@@ -364,8 +432,9 @@ export default function PosVenda() {
                 onClick={() => abrirChamado.mutate()}
                 disabled={abrirChamado.isPending}
                 style={{ backgroundColor: "#1E6FBF" }}
+                className="gap-1.5"
               >
-                Abrir chamado
+                Abrir chamado <ArrowRight className="h-4 w-4" />
               </Button>
             </DialogFooter>
           </DialogContent>
