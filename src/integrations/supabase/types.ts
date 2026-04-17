@@ -296,6 +296,44 @@ export type Database = {
           },
         ]
       }
+      custos_fixos: {
+        Row: {
+          created_at: string
+          descricao: string
+          id: string
+          loja_id: string
+          mes_referencia: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          descricao: string
+          id?: string
+          loja_id: string
+          mes_referencia: string
+          updated_at?: string
+          valor?: number
+        }
+        Update: {
+          created_at?: string
+          descricao?: string
+          id?: string
+          loja_id?: string
+          mes_referencia?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custos_fixos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dre_contrato: {
         Row: {
           contrato_id: string

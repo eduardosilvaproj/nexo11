@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CustosFixosCard } from "@/components/financeiro/CustosFixosCard";
 
 function formatBRL(v: number) {
   if (!isFinite(v)) return "—";
@@ -10,7 +11,7 @@ function formatBRL(v: number) {
 }
 
 function PontoEquilibrio() {
-  const [custosFixos, setCustosFixos] = useState<number>(45000);
+  const [custosFixos, setCustosFixos] = useState<number>(0);
   const [margemPct, setMargemPct] = useState<number>(32);
   const [ticketMedio, setTicketMedio] = useState<number>(18000);
 
@@ -23,71 +24,48 @@ function PontoEquilibrio() {
 
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Parâmetros da loja</CardTitle>
-          <CardDescription>
-            Ajuste os valores para calcular quanto sua loja precisa faturar para cobrir os custos.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="cf">Custos fixos mensais</Label>
-            <Input
-              id="cf"
-              type="number"
-              value={custosFixos}
-              onChange={(e) => setCustosFixos(Number(e.target.value) || 0)}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="mg">Margem média (%)</Label>
-            <Input
-              id="mg"
-              type="number"
-              value={margemPct}
-              onChange={(e) => setMargemPct(Number(e.target.value) || 0)}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="tm">Ticket médio</Label>
-            <Input
-              id="tm"
-              type="number"
-              value={ticketMedio}
-              onChange={(e) => setTicketMedio(Number(e.target.value) || 0)}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <CustosFixosCard onTotalChange={setCustosFixos} />
 
-      <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground font-medium">
-              Faturamento de equilíbrio
-            </CardTitle>
+            <CardTitle className="text-base">Parâmetros do cálculo</CardTitle>
+            <CardDescription>
+              Margem média e ticket médio usados para calcular o ponto de equilíbrio.
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-semibold">{formatBRL(faturamentoPE)}</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Receita mensal mínima para cobrir os custos fixos.
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground font-medium">
-              Contratos necessários
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-semibold">
-              {isFinite(contratosPE) ? contratosPE : "—"}
-            </p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Considerando o ticket médio informado.
-            </p>
+          <CardContent className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="mg">Margem média (%)</Label>
+              <Input
+                id="mg"
+                type="number"
+                value={margemPct}
+                onChange={(e) => setMargemPct(Number(e.target.value) || 0)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="tm">Ticket médio (R$)</Label>
+              <Input
+                id="tm"
+                type="number"
+                value={ticketMedio}
+                onChange={(e) => setTicketMedio(Number(e.target.value) || 0)}
+              />
+            </div>
+
+            <div className="grid gap-3 pt-2 sm:grid-cols-2">
+              <div className="rounded-md border p-3">
+                <p className="text-xs text-muted-foreground">Faturamento de equilíbrio</p>
+                <p className="mt-1 text-2xl font-semibold">{formatBRL(faturamentoPE)}</p>
+              </div>
+              <div className="rounded-md border p-3">
+                <p className="text-xs text-muted-foreground">Contratos necessários</p>
+                <p className="mt-1 text-2xl font-semibold">
+                  {isFinite(contratosPE) ? contratosPE : "—"}
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
