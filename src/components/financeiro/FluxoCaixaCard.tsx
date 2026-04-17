@@ -186,10 +186,10 @@ export function FluxoCaixaCard() {
         />
       </div>
 
-      {/* Gráfico */}
+      {/* Gráfico semanal — entradas, saídas e saldo acumulado */}
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0">
-          <CardTitle className="text-base">Entradas × Saídas</CardTitle>
+          <CardTitle className="text-base">Movimentação semanal — {labelMes(mesAtivo)}</CardTitle>
           <Select value={periodo} onValueChange={(v) => setPeriodo(v as "6m" | "3m")}>
             <SelectTrigger className="h-9 w-[160px]"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -201,19 +201,29 @@ export function FluxoCaixaCard() {
         <CardContent>
           <div className="h-[320px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
+              <ComposedChart data={dataSemanal} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid stroke="#E8ECF2" vertical={false} />
-                <XAxis dataKey="mes" tick={{ fill: "#6B7A90", fontSize: 12 }} axisLine={{ stroke: "#E8ECF2" }} tickLine={false} />
+                <XAxis dataKey="semana" tick={{ fill: "#6B7A90", fontSize: 12 }} axisLine={{ stroke: "#E8ECF2" }} tickLine={false} />
                 <YAxis tickFormatter={fmtAbrev} tick={{ fill: "#6B7A90", fontSize: 12 }} axisLine={false} tickLine={false} width={70} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: "#F5F7FA" }} />
+                <Tooltip content={<SemanaTooltip />} cursor={{ fill: "#F5F7FA" }} />
                 <Legend
                   wrapperStyle={{ fontSize: 12, color: "#6B7A90" }}
-                  formatter={(v) => (v === "entradas" ? "Entradas" : "Saídas")}
+                  formatter={(v) =>
+                    v === "entradas" ? "Entradas" : v === "saidas" ? "Saídas" : "Saldo acumulado"
+                  }
                 />
                 <ReferenceLine y={0} stroke="#B0BAC9" />
-                <Bar dataKey="entradas" fill="#12B76A" radius={[4, 4, 0, 0]} maxBarSize={36} />
-                <Bar dataKey="saidas" fill="#E53935" radius={[4, 4, 0, 0]} maxBarSize={36} />
-              </BarChart>
+                <Bar dataKey="entradas" fill="#1E6FBF" radius={[4, 4, 0, 0]} maxBarSize={28} />
+                <Bar dataKey="saidas" fill="#D85A30" radius={[4, 4, 0, 0]} maxBarSize={28} />
+                <Line
+                  type="monotone"
+                  dataKey="acumulado"
+                  stroke="#0D1117"
+                  strokeWidth={1.5}
+                  strokeDasharray="4 4"
+                  dot={{ r: 3, fill: "#0D1117" }}
+                />
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
         </CardContent>
