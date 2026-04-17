@@ -72,9 +72,17 @@ interface Props {
   mes: string; // YYYY-MM-01
   mesLabel?: string;
   regra?: RegraComissao;
+  podePagar?: boolean;
+  apenasProprio?: boolean;
 }
 
-export function ComissoesRelatorioTab({ mes, mesLabel, regra = REGRA_PADRAO }: Props) {
+export function ComissoesRelatorioTab({
+  mes,
+  mesLabel,
+  regra = REGRA_PADRAO,
+  podePagar = true,
+  apenasProprio = false,
+}: Props) {
   const [linhas, setLinhas] = useState<LinhaVendedor[]>([]);
   const [pagos, setPagos] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -99,12 +107,17 @@ export function ComissoesRelatorioTab({ mes, mesLabel, regra = REGRA_PADRAO }: P
     let cancel = false;
     async function carregar() {
       setLoading(true);
-      const { data: contratos, error } = await supabase
+      let query = supabase
         .from("vw_contratos_dre")
         .select("id, vendedor_id, valor_venda, margem_realizada, data_finalizacao")
         .gte("data_finalizacao", `${inicio}T00:00:00`)
         .lte("data_finalizacao", `${fim}T23:59:59`)
         .not("vendedor_id", "is", null);
+      if (apenasProprio) {
+        const { data: u } = await supabase.auth.getUser();
+        if (u.user?.id) query = query.eq("vendedor_id", u.user.id);
+      }
+      const { data: contratos, error } = await query;
 
       if (error) {
         toast.error(error.message);
@@ -186,7 +199,7 @@ export function ComissoesRelatorioTab({ mes, mesLabel, regra = REGRA_PADRAO }: P
     return () => {
       cancel = true;
     };
-  }, [inicio, fim, regra]);
+  }, [inicio, fim, regra, apenasProprio]);
 
   const totais = useMemo(() => {
     const fat = linhas.reduce((s, l) => s + l.faturamento, 0);
@@ -381,7 +394,7 @@ export function ComissoesRelatorioTab({ mes, mesLabel, regra = REGRA_PADRAO }: P
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex justify-end">
-                      {!pago && (
+                      {!pago && podePagar && (
                         <Button
                           size="sm"
                           className="h-7 px-2 text-white hover:opacity-90"

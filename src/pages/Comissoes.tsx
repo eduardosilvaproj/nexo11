@@ -13,6 +13,7 @@ import { ComissoesRegrasTab } from "@/components/comissoes/ComissoesRegrasTab";
 import { RegraEditDialog } from "@/components/comissoes/RegraEditDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 function fmtBRL(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -64,6 +65,11 @@ export default function Comissoes() {
   const [lojaId, setLojaId] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [metricas, setMetricas] = useState({ totalMes: 0, pagas: 0, bonus: 0 });
+  const { hasRole } = useAuth();
+  const podeEditarRegra = hasRole("admin") || hasRole("franqueador");
+  const podePagar = podeEditarRegra;
+  const podeVerRelatorioCompleto =
+    hasRole("admin") || hasRole("franqueador") || hasRole("gerente");
 
   // Carrega loja do usuário e regra ativa
   useEffect(() => {
@@ -188,20 +194,32 @@ export default function Comissoes() {
         </TabsList>
 
         <TabsContent value="relatorio" className="mt-4">
-          <ComissoesRelatorioTab mes={mes} mesLabel={mesLabel} regra={regra} />
+          <ComissoesRelatorioTab
+            mes={mes}
+            mesLabel={mesLabel}
+            regra={regra}
+            podePagar={podePagar}
+            apenasProprio={!podeVerRelatorioCompleto}
+          />
         </TabsContent>
 
         <TabsContent value="regras" className="mt-4">
-          <ComissoesRegrasTab regra={regra} onEdit={() => setEditOpen(true)} />
+          <ComissoesRegrasTab
+            regra={regra}
+            onEdit={podeEditarRegra ? () => setEditOpen(true) : undefined}
+          />
         </TabsContent>
       </Tabs>
 
-      <RegraEditDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        regra={regra}
-        onSave={handleSaveRegra}
-      />
+      {podeEditarRegra && (
+        <RegraEditDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          regra={regra}
+          onSave={handleSaveRegra}
+        />
+      )}
     </div>
   );
 }
+
