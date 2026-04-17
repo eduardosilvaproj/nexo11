@@ -265,7 +265,7 @@ export default function PortalCliente() {
       <main className="portal-main flex-1 max-w-3xl w-full mx-auto px-6 py-8 space-y-6">
         {/* 2. Status atual — card de destaque */}
         <section
-          className="bg-white rounded-xl mx-auto flex items-center justify-between gap-6 flex-wrap"
+          className="portal-card portal-status-card bg-white rounded-xl mx-auto flex items-center justify-between gap-6 flex-wrap"
           style={{
             border: "0.5px solid #E8ECF2",
             padding: 24,
@@ -307,7 +307,7 @@ export default function PortalCliente() {
               </div>
             )}
           </div>
-          <div className="flex flex-col gap-1 text-right">
+          <div className="portal-status-right flex flex-col gap-1 text-right">
             <div style={{ fontSize: 12, color: "#6B7A90" }}>
               Contrato
             </div>
@@ -318,15 +318,22 @@ export default function PortalCliente() {
         </section>
 
         {/* 3. Barra de progresso das etapas — reutiliza componente interno */}
-        <section className="mx-auto w-full" style={{ maxWidth: 680 }}>
+        <section className="portal-stepper mx-auto w-full" style={{ maxWidth: 680 }}>
           <ContratoStepper current={contrato.status} />
+          <div
+            className="portal-current-stage text-center"
+            style={{ fontSize: 13, fontWeight: 500, color: "#1E6FBF", marginTop: 8 }}
+          >
+            Etapa atual: {stageLabel}
+          </div>
         </section>
 
         {/* 4. Detalhes do pedido */}
         <section
-          className="bg-white rounded-xl mx-auto w-full"
+          className="portal-card bg-white rounded-xl mx-auto w-full"
           style={{ maxWidth: 680, border: "0.5px solid #E8ECF2", padding: 24 }}
         >
+
           <h2 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117", marginBottom: 16 }}>
             Detalhes do pedido
           </h2>
