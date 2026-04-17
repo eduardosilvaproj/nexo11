@@ -81,7 +81,7 @@ const App = () => (
               } />
               <Route path="/comissoes" element={
                 <ProtectedRoute roles={["admin","gerente"]}>
-                  <Placeholder title="NEXO Comissões" />
+                  <Comissoes />
                 </ProtectedRoute>
               } />
               <Route path="/compras" element={
