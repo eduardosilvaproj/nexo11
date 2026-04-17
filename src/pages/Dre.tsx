@@ -96,6 +96,44 @@ export default function Dre() {
         .select("id, nome")
         .order("nome");
       setVendedores((us as any) ?? []);
+
+      // Evolução dos últimos 6 meses (margens médias ponderadas)
+      const inicio6 = new Date(ano, mes - 5, 1).toISOString();
+      const fim6 = new Date(ano, mes + 1, 1).toISOString();
+      const { data: hist } = await supabase
+        .from("vw_contratos_dre")
+        .select("data_criacao, valor_venda, margem_prevista, margem_realizada")
+        .gte("data_criacao", inicio6)
+        .lt("data_criacao", fim6);
+
+      const buckets: Record<
+        string,
+        { mes: string; sumP: number; sumR: number; w: number }
+      > = {};
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(ano, mes - i, 1);
+        const key = `${d.getFullYear()}-${d.getMonth()}`;
+        buckets[key] = { mes: MESES[d.getMonth()].slice(0, 3), sumP: 0, sumR: 0, w: 0 };
+      }
+      (hist ?? []).forEach((h: any) => {
+        const d = new Date(h.data_criacao);
+        const key = `${d.getFullYear()}-${d.getMonth()}`;
+        const b = buckets[key];
+        if (!b) return;
+        const v = h.valor_venda ?? 0;
+        if (v <= 0) return;
+        if (h.margem_prevista != null) b.sumP += h.margem_prevista * v;
+        if (h.margem_realizada != null) b.sumR += h.margem_realizada * v;
+        b.w += v;
+      });
+      setEvolucao(
+        Object.values(buckets).map((b) => ({
+          mes: b.mes,
+          prevista: b.w > 0 ? +(b.sumP / b.w).toFixed(1) : null,
+          realizada: b.w > 0 ? +(b.sumR / b.w).toFixed(1) : null,
+        }))
+      );
+
       setLoading(false);
     };
     load();
@@ -382,6 +420,130 @@ export default function Dre() {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="rounded-lg border border-[#E8ECF2] bg-white p-5">
+        <h2 className="mb-4 text-base font-medium text-[#0B1220]">
+          Evolução da margem — últimos 6 meses
+        </h2>
+        <div className="h-72 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={evolucao} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="gPrev" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#1E6FBF" stopOpacity={0.1} />
+                  <stop offset="100%" stopColor="#1E6FBF" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="gReal" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#12B76A" stopOpacity={0.1} />
+                  <stop offset="100%" stopColor="#12B76A" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid stroke="#E8ECF2" strokeWidth={0.5} vertical={false} />
+              <XAxis
+                dataKey="mes"
+                stroke="#6B7A90"
+                tickLine={false}
+                axisLine={{ stroke: "#E8ECF2" }}
+              />
+              <YAxis
+                domain={[0, 60]}
+                tickFormatter={(v) => `${v}%`}
+                stroke="#6B7A90"
+                tickLine={false}
+                axisLine={false}
+              />
+              <ReferenceLine
+                y={30}
+                stroke="#E8A020"
+                strokeDasharray="4 4"
+                label={{
+                  value: "Meta mínima 30%",
+                  position: "insideTopRight",
+                  fill: "#E8A020",
+                  fontSize: 11,
+                }}
+              />
+              <Tooltip
+                content={({ active, payload, label }) => {
+                  if (!active || !payload?.length) return null;
+                  const prev = payload.find((p) => p.dataKey === "prevista")?.value as
+                    | number
+                    | null;
+                  const real = payload.find((p) => p.dataKey === "realizada")?.value as
+                    | number
+                    | null;
+                  const desvio =
+                    prev != null && real != null ? real - prev : null;
+                  return (
+                    <div className="rounded-md border border-[#E8ECF2] bg-white p-3 shadow-sm">
+                      <p className="mb-1 text-xs font-medium text-[#6B7A90]">{label}</p>
+                      <p className="text-sm" style={{ color: "#1E6FBF" }}>
+                        Margem prevista: {prev != null ? `${prev}%` : "—"}
+                      </p>
+                      <p className="text-sm" style={{ color: "#12B76A" }}>
+                        Margem realizada: {real != null ? `${real}%` : "—"}
+                      </p>
+                      {desvio != null && desvio < 0 && (
+                        <p className="mt-1 text-xs" style={{ color: "#E53935" }}>
+                          ▼ desvio de {Math.abs(desvio).toFixed(1)}pp
+                        </p>
+                      )}
+                    </div>
+                  );
+                }}
+              />
+              <Area
+                type="monotone"
+                dataKey="prevista"
+                stroke="none"
+                fill="url(#gPrev)"
+              />
+              <Area
+                type="monotone"
+                dataKey="realizada"
+                stroke="none"
+                fill="url(#gReal)"
+              />
+              <Line
+                type="monotone"
+                dataKey="prevista"
+                stroke="#1E6FBF"
+                strokeWidth={2}
+                dot={{ r: 3, fill: "#1E6FBF" }}
+              />
+              <Line
+                type="monotone"
+                dataKey="realizada"
+                stroke="#12B76A"
+                strokeWidth={2}
+                dot={{ r: 3, fill: "#12B76A" }}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-5 text-xs text-[#6B7A90]">
+          <span className="flex items-center gap-2">
+            <span className="inline-block h-0.5 w-5" style={{ background: "#1E6FBF" }} />
+            Prevista
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="inline-block h-0.5 w-5" style={{ background: "#12B76A" }} />
+            Realizada
+          </span>
+          <span className="flex items-center gap-2">
+            <span
+              className="inline-block h-0.5 w-5"
+              style={{
+                backgroundImage:
+                  "linear-gradient(to right, #E8A020 50%, transparent 0%)",
+                backgroundSize: "6px 1px",
+                backgroundRepeat: "repeat-x",
+              }}
+            />
+            Meta mínima
+          </span>
+        </div>
       </div>
     </div>
   );
