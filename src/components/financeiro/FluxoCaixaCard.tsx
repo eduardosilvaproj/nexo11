@@ -88,6 +88,20 @@ export function FluxoCaixaCard() {
   const saldoProjetado = entradasPrevistas - saidasPrevistas;
   const saldoColor = saldoProjetado >= 0 ? "#12B76A" : "#E53935";
 
+  // Série semanal do mês ativo (mock baseado nos previstos / fallback realista)
+  const dataSemanal = useMemo(() => {
+    const baseEntrada = entradasPrevistas > 0 ? entradasPrevistas / 4 : 38000;
+    const baseSaida = saidasPrevistas > 0 ? saidasPrevistas / 4 : 32000;
+    const variacoes = [0.85, 1.1, 0.95, 1.1];
+    let acumulado = 0;
+    return variacoes.map((v, i) => {
+      const entradas = Math.round(baseEntrada * v);
+      const saidas = Math.round(baseSaida * (2 - v));
+      acumulado += entradas - saidas;
+      return { semana: `Sem ${i + 1}`, entradas, saidas, acumulado };
+    });
+  }, [entradasPrevistas, saidasPrevistas]);
+
   return (
     <div className="space-y-4">
       {/* Header de navegação por mês */}
