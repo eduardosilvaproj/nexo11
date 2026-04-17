@@ -117,10 +117,10 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Olá, {perfil?.nome ?? "Bem-vindo"} 👋
+        <h1 style={{ fontSize: 22, fontWeight: 500, color: "#0D1117", letterSpacing: "-0.01em" }}>
+          Olá, {perfil?.nome ?? "Bem-vindo"}
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="mt-1" style={{ fontSize: 14, color: "#6B7A90" }}>
           {perfil?.loja_id
             ? "Visão geral da sua loja."
             : "Você ainda não está vinculado a uma loja. Peça ao admin para te associar."}
