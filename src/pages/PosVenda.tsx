@@ -573,6 +573,63 @@ export default function PosVenda() {
           <p style={{ fontSize: 12, color: "#6B7A90", marginBottom: 16 }}>
             Notas registradas pelos clientes nos chamados.
           </p>
+          {(() => {
+            const notas = (chamados ?? [])
+              .map((c) => c.nps)
+              .filter((n): n is number => typeof n === "number");
+            const total = notas.length;
+            const promotores = notas.filter((n) => n >= 9).length;
+            const neutros = notas.filter((n) => n >= 7 && n <= 8).length;
+            const detratores = notas.filter((n) => n <= 6).length;
+            const pctP = total ? (promotores / total) * 100 : 0;
+            const pctN = total ? (neutros / total) * 100 : 0;
+            const pctD = total ? (detratores / total) * 100 : 0;
+            const score = total ? Math.round(pctP - pctD) : null;
+            const scoreColor =
+              score === null ? "#0D1117" : score >= 50 ? "#12B76A" : score >= 0 ? "#E8A020" : "#E53935";
+            return (
+              <div
+                className="mb-4 grid grid-cols-1 gap-4 rounded-lg p-4 md:grid-cols-4"
+                style={{ border: "0.5px solid #E8ECF2", backgroundColor: "#F7F9FC" }}
+              >
+                <div>
+                  <div style={{ fontSize: 11, color: "#6B7A90", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                    NPS Score
+                  </div>
+                  <div style={{ fontSize: 28, fontWeight: 700, color: scoreColor, marginTop: 4 }}>
+                    {score === null ? "—" : score}
+                  </div>
+                  <div style={{ fontSize: 11, color: "#6B7A90" }}>
+                    {total} {total === 1 ? "avaliação" : "avaliações"}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: "#6B7A90", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                    Promotores (9-10)
+                  </div>
+                  <div style={{ fontSize: 18, fontWeight: 600, color: "#12B76A", marginTop: 4 }}>
+                    {pctP.toFixed(0)}% <span style={{ fontSize: 12, color: "#6B7A90", fontWeight: 400 }}>· {promotores}</span>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: "#6B7A90", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                    Neutros (7-8)
+                  </div>
+                  <div style={{ fontSize: 18, fontWeight: 600, color: "#E8A020", marginTop: 4 }}>
+                    {pctN.toFixed(0)}% <span style={{ fontSize: 12, color: "#6B7A90", fontWeight: 400 }}>· {neutros}</span>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: "#6B7A90", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                    Detratores (0-6)
+                  </div>
+                  <div style={{ fontSize: 18, fontWeight: 600, color: "#E53935", marginTop: 4 }}>
+                    {pctD.toFixed(0)}% <span style={{ fontSize: 12, color: "#6B7A90", fontWeight: 400 }}>· {detratores}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
           <div className="overflow-hidden rounded-lg" style={{ border: "0.5px solid #E8ECF2" }}>
             <table className="w-full">
               <thead style={{ backgroundColor: "#F7F9FC" }}>
