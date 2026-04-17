@@ -6,15 +6,15 @@ import { Clock, Link2Off } from "lucide-react";
 import { LogoNexo } from "@/components/LogoNexo";
 import { ContratoStepper } from "@/components/contrato/ContratoStepper";
 
-const STAGES = [
-  { key: "comercial", label: "Comercial", icon: FileText },
-  { key: "tecnico", label: "Técnico", icon: Wrench },
-  { key: "producao", label: "Produção", icon: Package },
-  { key: "logistica", label: "Logística", icon: Truck },
-  { key: "montagem", label: "Montagem", icon: Wrench },
-  { key: "pos_venda", label: "Pós-venda", icon: Headphones },
-  { key: "finalizado", label: "Finalizado", icon: Check },
-];
+const STAGE_LABELS: Record<string, string> = {
+  comercial: "Comercial",
+  tecnico: "Técnico",
+  producao: "Produção",
+  logistica: "Logística",
+  montagem: "Montagem",
+  pos_venda: "Pós-venda",
+  finalizado: "Finalizado",
+};
 
 const fmtDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString("pt-BR") : "—";
