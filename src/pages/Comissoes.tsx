@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -6,6 +7,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+function fmtBRL(v: number) {
+  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function MetricCard({
+  label,
+  valor,
+  cor,
+}: {
+  label: string;
+  valor: number;
+  cor: string;
+}) {
+  return (
+    <Card style={{ borderTop: `3px solid ${cor}` }}>
+      <CardContent className="p-4">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="mt-1 text-xl font-medium tabular-nums" style={{ color: cor }}>
+          {fmtBRL(valor)}
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
 
 const MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
