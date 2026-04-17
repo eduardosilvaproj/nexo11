@@ -172,3 +172,31 @@
     background: transparent !important;
   }
 }
+
+/* ===== Print: DRE individual ===== */
+.dre-print { display: none; }
+
+@media print {
+  @page { size: A4; margin: 16mm; }
+
+  body { background: #FFFFFF !important; }
+
+  /* Hide everything by default */
+  body * { visibility: hidden !important; }
+
+  /* Show only the printable area */
+  .dre-print, .dre-print * { visibility: visible !important; }
+  .dre-print {
+    display: block !important;
+    position: absolute;
+    left: 0; top: 0;
+    width: 100%;
+    background: #FFFFFF !important;
+    color: #0D1117 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Defensive: hide common chrome */
+  aside, nav, header, [data-sidebar], .no-print { display: none !important; }
+}
