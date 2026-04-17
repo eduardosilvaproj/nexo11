@@ -91,6 +91,7 @@ export function ContasCard() {
     setFiltro,
     totalCor,
     acaoLabel,
+    variant,
   }: {
     titulo: string;
     arr: Conta[];
@@ -98,6 +99,7 @@ export function ContasCard() {
     setFiltro: (f: FiltroKey) => void;
     totalCor: string;
     acaoLabel: string;
+    variant: "receber" | "pagar";
   }) {
     const totalGeral = arr.filter((c) => c.status !== "cancelado").reduce((s, c) => s + Number(c.valor), 0);
     const rows = aplicaFiltro(arr, filtro);
@@ -128,8 +130,17 @@ export function ContasCard() {
               <table className="w-full text-sm">
                 <thead style={{ background: "#F5F7FA", color: "#6B7A90" }}>
                   <tr>
-                    <th className="px-3 py-2 text-left font-medium">Cliente</th>
-                    <th className="px-3 py-2 text-left font-medium">Contrato</th>
+                    {variant === "receber" ? (
+                      <>
+                        <th className="px-3 py-2 text-left font-medium">Cliente</th>
+                        <th className="px-3 py-2 text-left font-medium">Contrato</th>
+                      </>
+                    ) : (
+                      <>
+                        <th className="px-3 py-2 text-left font-medium">Descrição</th>
+                        <th className="px-3 py-2 text-left font-medium">Categoria</th>
+                      </>
+                    )}
                     <th className="px-3 py-2 text-right font-medium">Valor</th>
                     <th className="px-3 py-2 text-left font-medium">Vencimento</th>
                     <th className="px-3 py-2 text-left font-medium">Status</th>
@@ -142,16 +153,18 @@ export function ContasCard() {
                     const atrasado = key === "atrasado";
                     const cancelado = c.status === "cancelado";
                     const s = STATUS_STYLE[key];
-                    const cliente = c.contratos?.cliente_nome ?? "—";
-                    const contratoTxt = c.contrato_id ? `#${c.contrato_id.slice(0, 8)}` : c.descricao;
+                    const col1 = variant === "receber" ? (c.contratos?.cliente_nome ?? "—") : c.descricao;
+                    const col2 = variant === "receber"
+                      ? (c.contrato_id ? `#${c.contrato_id.slice(0, 8)}` : c.descricao)
+                      : c.categoria;
                     return (
                       <tr
                         key={c.id}
                         style={atrasado ? { background: "#FFF8F8" } : undefined}
                         className={cancelado ? "line-through" : undefined}
                       >
-                        <td className="px-3 py-2">{cliente}</td>
-                        <td className="px-3 py-2 text-[#6B7A90]">{contratoTxt}</td>
+                        <td className="px-3 py-2">{col1}</td>
+                        <td className="px-3 py-2 text-[#6B7A90]">{col2}</td>
                         <td className="px-3 py-2 text-right tabular-nums" style={{ color: c.tipo === "receita" ? "#05873C" : "#E53935" }}>
                           {fmtBRL(Number(c.valor))}
                         </td>
@@ -229,6 +242,7 @@ export function ContasCard() {
           setFiltro={setFiltroReceber}
           totalCor="#12B76A"
           acaoLabel="Marcar pago"
+          variant="receber"
         />
         <Coluna
           titulo="A pagar"
@@ -237,6 +251,7 @@ export function ContasCard() {
           setFiltro={setFiltroPagar}
           totalCor="#E53935"
           acaoLabel="Marcar pago"
+          variant="pagar"
         />
       </div>
 
