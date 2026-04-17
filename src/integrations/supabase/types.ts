@@ -871,6 +871,53 @@ export type Database = {
           },
         ]
       }
+      registros_ponto_audit: {
+        Row: {
+          ajustado_por: string
+          ajustado_por_nome: string | null
+          created_at: string
+          id: string
+          loja_id: string
+          motivo: string
+          registro_id: string
+          usuario_id: string
+          valor_anterior: string
+          valor_novo: string
+        }
+        Insert: {
+          ajustado_por: string
+          ajustado_por_nome?: string | null
+          created_at?: string
+          id?: string
+          loja_id: string
+          motivo: string
+          registro_id: string
+          usuario_id: string
+          valor_anterior: string
+          valor_novo: string
+        }
+        Update: {
+          ajustado_por?: string
+          ajustado_por_nome?: string | null
+          created_at?: string
+          id?: string
+          loja_id?: string
+          motivo?: string
+          registro_id?: string
+          usuario_id?: string
+          valor_anterior?: string
+          valor_novo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registros_ponto_audit_registro_id_fkey"
+            columns: ["registro_id"]
+            isOneToOne: false
+            referencedRelation: "registros_ponto"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       regras_comissao: {
         Row: {
           ativo: boolean
