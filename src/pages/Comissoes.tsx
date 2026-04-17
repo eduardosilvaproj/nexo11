@@ -9,6 +9,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ComissoesRelatorioTab } from "@/components/comissoes/ComissoesRelatorioTab";
+import { ComissoesRegrasTab } from "@/components/comissoes/ComissoesRegrasTab";
+import { toast } from "sonner";
 
 function fmtBRL(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -109,12 +111,7 @@ export default function Comissoes() {
         </TabsContent>
 
         <TabsContent value="regras" className="mt-4">
-          <div
-            className="rounded-md px-4 py-10 text-center text-sm"
-            style={{ background: "#F5F7FA", border: "1px dashed #B0BAC9", color: "#6B7A90" }}
-          >
-            Configuração de regras — em construção
-          </div>
+          <ComissoesRegrasTab onEdit={() => toast.info("Edição de regras em breve")} />
         </TabsContent>
       </Tabs>
     </div>
