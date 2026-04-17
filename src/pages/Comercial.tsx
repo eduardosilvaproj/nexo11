@@ -321,6 +321,71 @@ export default function Comercial() {
         })}
       </div>
 
+      {/* Filtros */}
+      {tab === "leads" && (
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value as "all" | LeadStatus)}
+            style={{
+              height: 36,
+              borderRadius: 8,
+              border: "1px solid #E8ECF2",
+              padding: "0 10px",
+              fontSize: 13,
+              color: "#0D1117",
+              background: "#FFFFFF",
+              outline: "none",
+            }}
+          >
+            <option value="all">Todas as etapas</option>
+            {COLUMNS.map((c) => (
+              <option key={c.id} value={c.id}>{c.title}</option>
+            ))}
+          </select>
+
+          <select
+            value={filterVendedor}
+            onChange={(e) => setFilterVendedor(e.target.value)}
+            style={{
+              height: 36,
+              borderRadius: 8,
+              border: "1px solid #E8ECF2",
+              padding: "0 10px",
+              fontSize: 13,
+              color: "#0D1117",
+              background: "#FFFFFF",
+              outline: "none",
+            }}
+          >
+            <option value="all">Todos os vendedores</option>
+            {vendedoresUnicos.map((v) => (
+              <option key={v} value={v}>{v.slice(0, 8)}</option>
+            ))}
+          </select>
+
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por cliente..."
+            maxLength={80}
+            style={{
+              height: 36,
+              borderRadius: 8,
+              border: "1px solid #E8ECF2",
+              padding: "0 10px",
+              fontSize: 13,
+              color: "#0D1117",
+              background: "#FFFFFF",
+              outline: "none",
+              minWidth: 220,
+              flex: 1,
+            }}
+          />
+        </div>
+      )}
+
       {tab === "contratos" ? (
         <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
           Em breve: visualização de contratos.
