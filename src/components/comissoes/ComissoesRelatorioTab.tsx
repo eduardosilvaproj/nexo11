@@ -107,12 +107,17 @@ export function ComissoesRelatorioTab({
     let cancel = false;
     async function carregar() {
       setLoading(true);
-      const { data: contratos, error } = await supabase
+      let query = supabase
         .from("vw_contratos_dre")
         .select("id, vendedor_id, valor_venda, margem_realizada, data_finalizacao")
         .gte("data_finalizacao", `${inicio}T00:00:00`)
         .lte("data_finalizacao", `${fim}T23:59:59`)
         .not("vendedor_id", "is", null);
+      if (apenasProprio) {
+        const { data: u } = await supabase.auth.getUser();
+        if (u.user?.id) query = query.eq("vendedor_id", u.user.id);
+      }
+      const { data: contratos, error } = await query;
 
       if (error) {
         toast.error(error.message);
