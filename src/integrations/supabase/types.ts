@@ -198,6 +198,7 @@ export type Database = {
           item: string
           observacao: string | null
           responsavel: string | null
+          sub_etapa: string
           updated_at: string
         }
         Insert: {
@@ -209,6 +210,7 @@ export type Database = {
           item: string
           observacao?: string | null
           responsavel?: string | null
+          sub_etapa?: string
           updated_at?: string
         }
         Update: {
@@ -220,6 +222,7 @@ export type Database = {
           item?: string
           observacao?: string | null
           responsavel?: string | null
+          sub_etapa?: string
           updated_at?: string
         }
         Relationships: [
@@ -356,12 +359,17 @@ export type Database = {
           assinado: boolean
           cliente_contato: string | null
           cliente_nome: string
+          conferencia_responsavel_id: string | null
           created_at: string
           data_criacao: string
           data_finalizacao: string | null
           id: string
           loja_id: string
+          medicao_responsavel_id: string | null
           status: Database["public"]["Enums"]["contrato_status"]
+          sub_etapa_tecnico: string
+          trava_medicao_ok: boolean
+          trava_tecnico_ok: boolean
           updated_at: string
           valor_venda: number
           vendedor_id: string | null
@@ -370,12 +378,17 @@ export type Database = {
           assinado?: boolean
           cliente_contato?: string | null
           cliente_nome: string
+          conferencia_responsavel_id?: string | null
           created_at?: string
           data_criacao?: string
           data_finalizacao?: string | null
           id?: string
           loja_id: string
+          medicao_responsavel_id?: string | null
           status?: Database["public"]["Enums"]["contrato_status"]
+          sub_etapa_tecnico?: string
+          trava_medicao_ok?: boolean
+          trava_tecnico_ok?: boolean
           updated_at?: string
           valor_venda?: number
           vendedor_id?: string | null
@@ -384,12 +397,17 @@ export type Database = {
           assinado?: boolean
           cliente_contato?: string | null
           cliente_nome?: string
+          conferencia_responsavel_id?: string | null
           created_at?: string
           data_criacao?: string
           data_finalizacao?: string | null
           id?: string
           loja_id?: string
+          medicao_responsavel_id?: string | null
           status?: Database["public"]["Enums"]["contrato_status"]
+          sub_etapa_tecnico?: string
+          trava_medicao_ok?: boolean
+          trava_tecnico_ok?: boolean
           updated_at?: string
           valor_venda?: number
           vendedor_id?: string | null
@@ -1429,6 +1447,8 @@ export type Database = {
         | "montador"
         | "gerente"
         | "franqueador"
+        | "medidor"
+        | "conferente"
       chamado_status: "aberto" | "em_andamento" | "resolvido"
       chamado_tipo: "assistencia" | "reclamacao" | "garantia" | "solicitacao"
       contrato_status:
@@ -1586,6 +1606,8 @@ export const Constants = {
         "montador",
         "gerente",
         "franqueador",
+        "medidor",
+        "conferente",
       ],
       chamado_status: ["aberto", "em_andamento", "resolvido"],
       chamado_tipo: ["assistencia", "reclamacao", "garantia", "solicitacao"],
