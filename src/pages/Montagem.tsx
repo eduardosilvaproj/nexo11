@@ -90,6 +90,7 @@ export default function Montagem() {
   });
 
   const equipeMap = new Map(equipes.map((e) => [e.id, e]));
+  const editAgendamento = agendamentos.find((a) => a.id === editId) ?? null;
 
   return (
     <div className="flex flex-col gap-6 p-8">
