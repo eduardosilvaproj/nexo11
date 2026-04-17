@@ -20,6 +20,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LeadFormDialog } from "@/components/comercial/LeadFormDialog";
 import { ConvertLeadDialog } from "@/components/comercial/ConvertLeadDialog";
+import { ContratosTable } from "@/components/comercial/ContratosTable";
 import type { Database } from "@/integrations/supabase/types";
 
 type LeadStatus = Database["public"]["Enums"]["lead_status"];
@@ -387,9 +388,7 @@ export default function Comercial() {
       )}
 
       {tab === "contratos" ? (
-        <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-          Em breve: visualização de contratos.
-        </div>
+        <ContratosTable onCreate={() => toast({ title: "Em breve", description: "Criação de contrato em desenvolvimento." })} />
       ) : isLoading ? (
         <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
           Carregando leads...
