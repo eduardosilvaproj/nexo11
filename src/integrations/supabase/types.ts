@@ -854,6 +854,38 @@ export type Database = {
       }
     }
     Views: {
+      usuarios_publico: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          loja_id: string | null
+          nome: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          loja_id?: string | null
+          nome?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          loja_id?: string | null
+          nome?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuarios_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vw_contratos_dre: {
         Row: {
           assinado: boolean | null
