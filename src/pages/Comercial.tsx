@@ -129,12 +129,15 @@ function Column({
   );
 }
 
+type TabKey = "leads" | "contratos";
+
 export default function Comercial() {
   const { perfil } = useAuth();
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [convertLead, setConvertLead] = useState<Lead | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [tab, setTab] = useState<TabKey>("leads");
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
@@ -206,7 +209,36 @@ export default function Comercial() {
         </Button>
       </div>
 
-      {isLoading ? (
+      {/* Abas */}
+      <div className="flex items-center gap-6 border-b border-[#E8ECF2]">
+        {([
+          { key: "leads", label: "Leads" },
+          { key: "contratos", label: "Contratos" },
+        ] as { key: TabKey; label: string }[]).map((t) => {
+          const active = tab === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className="-mb-px pb-2 pt-1 transition-colors"
+              style={{
+                fontSize: 14,
+                fontWeight: active ? 600 : 500,
+                color: active ? "#1E6FBF" : "#6B7A90",
+                borderBottom: active ? "2px solid #1E6FBF" : "2px solid transparent",
+              }}
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {tab === "contratos" ? (
+        <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
+          Em breve: visualização de contratos.
+        </div>
+      ) : isLoading ? (
         <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
           Carregando leads...
         </div>
