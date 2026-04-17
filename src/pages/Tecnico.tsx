@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Settings, Paperclip, ArrowRight } from "lucide-react";
+import { Loader2, Settings, Paperclip } from "lucide-react";
 
 type Contrato = {
   id: string;
