@@ -3,21 +3,39 @@ interface LogoNexoProps {
   className?: string;
 }
 
+const SIZE_PX: Record<NonNullable<LogoNexoProps["size"]>, number> = {
+  sm: 18,
+  md: 22,
+  lg: 32,
+};
+
 export function LogoNexo({ size = "md", className = "" }: LogoNexoProps) {
-  const sizes = {
-    sm: "text-lg",
-    md: "text-2xl",
-    lg: "text-4xl",
-  };
+  const fontSize = SIZE_PX[size];
 
   return (
     <span
-      className={`tracking-tight ${sizes[size]} ${className}`}
-      style={{ fontWeight: 800 }}
+      className={className}
+      style={{
+        fontWeight: 800,
+        fontSize,
+        letterSpacing: "-0.5px",
+        lineHeight: 1,
+      }}
     >
-      <span className="text-white">NE</span>
-      <span className="nexo-text-gradient-x">X</span>
-      <span className="text-white">O</span>
+      <span style={{ color: "#FFFFFF" }}>NE</span>
+      <span
+        style={{
+          background:
+            "linear-gradient(135deg, #00AAFF 0%, #1E6FBF 50%, #12B76A 100%)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text",
+          color: "transparent",
+        }}
+      >
+        X
+      </span>
+      <span style={{ color: "#FFFFFF" }}>O</span>
     </span>
   );
 }
