@@ -414,31 +414,57 @@ export function ComissoesRelatorioTab({ mes, mesLabel, regra = REGRA_PADRAO }: P
       )}
 
       <Dialog open={!!alvo} onOpenChange={(v) => !v && setAlvo(null)}>
-        <DialogContent className="sm:max-w-[420px]">
+        <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle>Confirmar pagamento de comissão</DialogTitle>
           </DialogHeader>
           {alvo && (
-            <div className="space-y-2 text-sm">
-              <p>
-                Vendedor: <span className="font-medium">{alvo.nome}</span>
-              </p>
-              <p>
-                Total: <span className="font-medium tabular-nums">{fmtBRL(alvo.total)}</span>
-              </p>
+            <div className="space-y-3 text-sm">
+              <div className="space-y-1.5 rounded-md p-3" style={{ background: "#F5F7FA" }}>
+                <Row label="Vendedor" value={alvo.nome} />
+                <Row label="Período" value={mesLabel ?? mes} />
+                <Row label="Contratos" value={`${alvo.contratos} finalizados`} />
+                <Row label="Comissão base" value={fmtBRL(alvo.base)} />
+                <Row
+                  label="Bônus"
+                  value={alvo.bonus > 0 ? fmtBRL(alvo.bonus) : "—"}
+                  valueColor={alvo.bonus > 0 ? "#E8A020" : "#B0BAC9"}
+                />
+                <div className="mt-2 flex items-baseline justify-between border-t pt-2" style={{ borderColor: "#E8ECF2" }}>
+                  <span className="text-xs text-[#6B7A90]">Total</span>
+                  <span className="text-xl font-medium tabular-nums" style={{ color: "#12B76A" }}>
+                    {fmtBRL(alvo.total)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-[#0D1117]">
+                  Data de pagamento <span style={{ color: "#E53935" }}>*</span>
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={dataPagamento}
+                  onChange={(e) => setDataPagamento(e.target.value)}
+                  className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+                  style={{ borderColor: "#E8ECF2" }}
+                />
+              </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAlvo(null)}>
+            <Button variant="outline" onClick={() => setAlvo(null)} disabled={confirmando}>
               Cancelar
             </Button>
             <Button
               onClick={confirmarPago}
+              disabled={confirmando || !dataPagamento}
               className="text-white hover:opacity-90"
               style={{ background: "#12B76A" }}
             >
               <Check className="mr-1 h-4 w-4" />
-              Confirmar pagamento
+              {confirmando ? "Processando…" : "Confirmar pagamento"}
             </Button>
           </DialogFooter>
         </DialogContent>
