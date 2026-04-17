@@ -15,6 +15,7 @@ import { FunilLeadsChart } from "@/components/analytics/FunilLeadsChart";
 import { MargemEvolucaoChart } from "@/components/analytics/MargemEvolucaoChart";
 import { MargemAlertasCard } from "@/components/analytics/MargemAlertasCard";
 import { PipelineCard } from "@/components/analytics/PipelineCard";
+import { VendedoresRankingCard } from "@/components/analytics/VendedoresRankingCard";
 
 type Loja = { id: string; nome: string };
 
@@ -120,7 +121,9 @@ export default function Analytics() {
         <div style={{ gridColumn: "span 9 / span 9" }}>
           <PipelineCard lojaId={lojaId} />
         </div>
-        <div style={{ gridColumn: "span 11 / span 11" }} />
+        <div style={{ gridColumn: "span 11 / span 11" }}>
+          <VendedoresRankingCard mes={mes} lojaId={lojaId} />
+        </div>
       </div>
       </div>
     </div>
