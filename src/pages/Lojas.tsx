@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select";
 import { LojasKpiRow } from "@/components/lojas/LojasKpiRow";
 import { LojasGrid } from "@/components/lojas/LojasGrid";
+import { LojasComparativoTab } from "@/components/lojas/LojasComparativoTab";
 import { NovaLojaDialog } from "@/components/lojas/NovaLojaDialog";
 
 function buildMonthOptions(months = 12) {
@@ -105,11 +106,7 @@ export default function Lojas() {
         <TabBtn value="comparativo" label="Comparativo" />
       </div>
 
-      {tab === "lojas" ? (
-        <LojasGrid mes={mes} />
-      ) : (
-        <div style={{ fontSize: 13, color: "#6B7A90" }}>Comparativo em breve.</div>
-      )}
+      {tab === "lojas" ? <LojasGrid mes={mes} /> : <LojasComparativoTab mes={mes} />}
 
       <NovaLojaDialog open={novaLojaOpen} onOpenChange={setNovaLojaOpen} />
     </div>
