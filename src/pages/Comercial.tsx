@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { LeadFormDialog } from "@/components/comercial/LeadFormDialog";
 import { ConvertLeadDialog } from "@/components/comercial/ConvertLeadDialog";
 import { ContratosTable } from "@/components/comercial/ContratosTable";
+import { ContratoFormDialog } from "@/components/comercial/ContratoFormDialog";
 import type { Database } from "@/integrations/supabase/types";
 
 type LeadStatus = Database["public"]["Enums"]["lead_status"];
@@ -200,6 +201,7 @@ export default function Comercial() {
   const { perfil } = useAuth();
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
+  const [contratoFormOpen, setContratoFormOpen] = useState(false);
   const [convertLead, setConvertLead] = useState<Lead | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("leads");
@@ -289,7 +291,7 @@ export default function Comercial() {
           </p>
         </div>
         <button
-          onClick={() => setFormOpen(true)}
+          onClick={() => (tab === "contratos" ? setContratoFormOpen(true) : setFormOpen(true))}
           className="inline-flex items-center gap-1.5 px-4 py-2 text-white transition-colors hover:bg-[#1759A0]"
           style={{ background: "#1E6FBF", borderRadius: 8, fontSize: 13, fontWeight: 500 }}
         >
@@ -388,7 +390,7 @@ export default function Comercial() {
       )}
 
       {tab === "contratos" ? (
-        <ContratosTable onCreate={() => toast({ title: "Em breve", description: "Criação de contrato em desenvolvimento." })} />
+        <ContratosTable onCreate={() => setContratoFormOpen(true)} />
       ) : isLoading ? (
         <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
           Carregando leads...
@@ -421,6 +423,7 @@ export default function Comercial() {
       )}
 
       <LeadFormDialog open={formOpen} onOpenChange={setFormOpen} />
+      <ContratoFormDialog open={contratoFormOpen} onOpenChange={setContratoFormOpen} />
       <ConvertLeadDialog
         lead={convertLead}
         open={!!convertLead}
