@@ -60,6 +60,7 @@ function SemanaTooltip({ active, payload, label }: any) {
       </p>
     </div>
   );
+}
 
 function KpiCard({
   label, valor, hint, icon, color, topBorder,
