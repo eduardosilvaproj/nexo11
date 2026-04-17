@@ -1,10 +1,15 @@
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine,
 } from "recharts";
-import { ArrowDownRight, ArrowUpRight, Wallet } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, ChevronLeft, ChevronRight, Plus, Wallet } from "lucide-react";
+
+const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+function labelMes(d: Date) { return `${MESES[d.getMonth()]} ${d.getFullYear()}`; }
+function shiftMes(d: Date, delta: number) { return new Date(d.getFullYear(), d.getMonth() + delta, 1); }
 
 type Linha = { mes: string; entradas: number; saidas: number };
 
@@ -61,6 +66,7 @@ function KpiCard({
 
 export function FluxoCaixaCard() {
   const [periodo, setPeriodo] = useState<"6m" | "3m">("6m");
+  const [mesAtivo, setMesAtivo] = useState<Date>(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
 
   const data = useMemo(() => {
     const base = periodo === "3m" ? SERIE_FAKE.slice(-3) : SERIE_FAKE;
@@ -78,6 +84,41 @@ export function FluxoCaixaCard() {
 
   return (
     <div className="space-y-4">
+      {/* Header de navegação por mês */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMesAtivo((d) => shiftMes(d, -1))}
+            className="gap-1 text-[#6B7A90] hover:text-[#1E6FBF]"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            <span className="text-sm">{labelMes(shiftMes(mesAtivo, -1))}</span>
+          </Button>
+          <span className="min-w-[140px] text-center text-base font-medium">
+            {labelMes(mesAtivo)}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMesAtivo((d) => shiftMes(d, 1))}
+            className="gap-1 text-[#6B7A90] hover:text-[#1E6FBF]"
+          >
+            <span className="text-sm">{labelMes(shiftMes(mesAtivo, 1))}</span>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+        <Button
+          size="sm"
+          className="text-white hover:opacity-90"
+          style={{ background: "#1E6FBF" }}
+          onClick={() => {/* TODO: abrir dialog de novo lançamento */}}
+        >
+          <Plus className="mr-1 h-4 w-4" /> Lançamento
+        </Button>
+      </div>
+
       {/* KPIs */}
       <div className="grid gap-4 md:grid-cols-4">
         <KpiCard
