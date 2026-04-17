@@ -433,3 +433,125 @@ export default function PortalCliente() {
     </div>
   );
 }
+
+function rangeColors(n: number) {
+  if (n <= 6) return { bg: "#FDECEA", border: "#E53935", text: "#E53935", fill: "#E53935" };
+  if (n <= 8) return { bg: "#FEF3C7", border: "#E8A020", text: "#E8A020", fill: "#E8A020" };
+  return { bg: "#D1FAE5", border: "#12B76A", text: "#05873C", fill: "#12B76A" };
+}
+
+function NpsCard({
+  nota,
+  setNota,
+  comentario,
+  setComentario,
+  onSubmit,
+  submitting,
+}: {
+  nota: number | null;
+  setNota: (n: number) => void;
+  comentario: string;
+  setComentario: (c: string) => void;
+  onSubmit: () => void;
+  submitting: boolean;
+}) {
+  const [hover, setHover] = useState<number | null>(null);
+
+  return (
+    <section
+      className="rounded-xl mx-auto w-full"
+      style={{
+        maxWidth: 680,
+        backgroundColor: "#F0FDF9",
+        border: "1px solid #12B76A",
+        padding: 24,
+      }}
+    >
+      <h2 style={{ fontSize: 16, fontWeight: 500, color: "#0D1117" }}>
+        Como foi a sua experiência?
+      </h2>
+      <p style={{ fontSize: 13, color: "#6B7A90", marginTop: 4, marginBottom: 20 }}>
+        Sua opinião ajuda a melhorarmos o atendimento
+      </p>
+
+      <div className="flex gap-2 flex-wrap">
+        {Array.from({ length: 11 }, (_, i) => i).map((n) => {
+          const selected = nota === n;
+          const isHover = hover === n;
+          const c = rangeColors(n);
+          let bg = "#F5F7FA";
+          let border = "#E8ECF2";
+          let text = "#6B7A90";
+          if (selected) {
+            bg = c.fill;
+            border = c.fill;
+            text = "#fff";
+          } else if (isHover) {
+            bg = c.bg;
+            border = c.border;
+            text = c.text;
+          }
+          return (
+            <button
+              key={n}
+              onClick={() => setNota(n)}
+              onMouseEnter={() => setHover(n)}
+              onMouseLeave={() => setHover(null)}
+              className="rounded-md transition-colors"
+              style={{
+                width: 40,
+                height: 40,
+                fontSize: 14,
+                fontWeight: 500,
+                backgroundColor: bg,
+                border: `1px solid ${border}`,
+                color: text,
+              }}
+            >
+              {n}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex justify-between mt-2" style={{ fontSize: 12, color: "#B0BAC9" }}>
+        <span>Muito insatisfeito</span>
+        <span>Muito satisfeito</span>
+      </div>
+
+      {nota !== null && (
+        <div className="mt-5" style={{ animation: "fadeIn 0.3s ease-in-out" }}>
+          <textarea
+            value={comentario}
+            onChange={(e) => setComentario(e.target.value)}
+            placeholder="Conte mais sobre sua experiência (opcional)"
+            rows={3}
+            className="w-full rounded-md p-3"
+            style={{
+              fontSize: 13,
+              border: "1px solid #E8ECF2",
+              backgroundColor: "#fff",
+              color: "#0D1117",
+              resize: "vertical",
+            }}
+          />
+          <button
+            onClick={onSubmit}
+            disabled={submitting}
+            className="rounded-md transition-opacity disabled:opacity-50 mt-4"
+            style={{
+              backgroundColor: "#12B76A",
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: 500,
+              padding: "10px 20px",
+            }}
+          >
+            {submitting ? "Enviando…" : "Enviar avaliação"}
+          </button>
+        </div>
+      )}
+      <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+    </section>
+  );
+}
