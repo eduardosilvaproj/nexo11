@@ -240,20 +240,59 @@ export default function PosVenda() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Resolver chamado dialog
+  type ChamadoRow = {
+    id: string;
+    contrato_id: string;
+    tipo: ChamadoTipo;
+    descricao: string;
+    custo: number | null;
+  };
+  const [resolveOpen, setResolveOpen] = useState(false);
+  const [resolveTarget, setResolveTarget] = useState<ChamadoRow | null>(null);
+  const [resolveCusto, setResolveCusto] = useState("");
+  const [resolveDesc, setResolveDesc] = useState("");
+  const [resolveData, setResolveData] = useState(() => new Date().toISOString().slice(0, 10));
+
+  const openResolveDialog = (c: ChamadoRow) => {
+    setResolveTarget(c);
+    setResolveCusto(c.custo != null ? String(c.custo) : "");
+    setResolveDesc("");
+    setResolveData(new Date().toISOString().slice(0, 10));
+    setResolveOpen(true);
+  };
+
   const resolverChamado = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async () => {
+      if (!resolveTarget) throw new Error("Chamado não selecionado");
+      const resolucao = resolveDesc.trim();
+      if (!resolucao) throw new Error("Descreva a resolução");
+      const custoNum = resolveCusto === "" ? 0 : Number(resolveCusto);
+      if (Number.isNaN(custoNum) || custoNum < 0) throw new Error("Custo inválido");
+      const tituloOrig = resolveTarget.descricao.split("\n")[0];
+      const novaDesc = `${resolveTarget.descricao}\n\n--- Resolução (${resolveData}) ---\n${resolucao}`;
       const { error } = await supabase
         .from("chamados_pos_venda")
         .update({
           status: "resolvido",
-          data_fechamento: new Date().toISOString(),
+          data_fechamento: new Date(`${resolveData}T12:00:00`).toISOString(),
+          custo: custoNum,
+          descricao: novaDesc,
         })
-        .eq("id", id);
+        .eq("id", resolveTarget.id);
       if (error) throw error;
+      await supabase.rpc("contrato_log_inserir", {
+        _contrato_id: resolveTarget.contrato_id,
+        _acao: "chamado_resolvido",
+        _titulo: `Chamado resolvido: ${tituloOrig}`,
+        _descricao: resolucao,
+      });
     },
     onSuccess: () => {
-      toast.success("Chamado resolvido");
+      toast.success("Chamado resolvido. DRE atualizado.");
       qc.invalidateQueries({ queryKey: ["pos-venda-list"] });
+      setResolveOpen(false);
+      setResolveTarget(null);
     },
     onError: (e: Error) => toast.error(e.message),
   });
