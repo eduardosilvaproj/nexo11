@@ -25,6 +25,7 @@ type Contrato = {
 
 export default function Tecnico() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [templateOpen, setTemplateOpen] = useState(false);
@@ -35,7 +36,7 @@ export default function Tecnico() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contratos")
-        .select("id,cliente_nome,status,vendedor_id,created_at,sub_etapa_tecnico")
+        .select("id,cliente_nome,status,vendedor_id,created_at,sub_etapa_tecnico,medicao_responsavel_id,conferencia_responsavel_id")
         .eq("status", "tecnico")
         .eq("sub_etapa_tecnico", aba)
         .order("created_at", { ascending: false });
@@ -43,6 +44,39 @@ export default function Tecnico() {
       return data as Contrato[];
     },
   });
+
+  const papelAtual = aba === "medicao" ? "medidor" : "conferente";
+  const { data: responsaveis = [] } = useQuery({
+    queryKey: ["responsaveis-tecnico", papelAtual],
+    queryFn: async () => {
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", papelAtual);
+      const ids = (roles ?? []).map((r) => r.user_id);
+      if (ids.length === 0) return [] as { id: string; nome: string }[];
+      const { data } = await supabase
+        .from("usuarios")
+        .select("id,nome")
+        .in("id", ids)
+        .order("nome");
+      return (data ?? []) as { id: string; nome: string }[];
+    },
+  });
+
+  const atribuirResponsavel = async (contratoId: string, userId: string) => {
+    const campo = aba === "medicao" ? "medicao_responsavel_id" : "conferencia_responsavel_id";
+    const { error } = await supabase
+      .from("contratos")
+      .update({ [campo]: userId })
+      .eq("id", contratoId);
+    if (error) {
+      toast.error("Erro ao atribuir responsável");
+      return;
+    }
+    toast.success("Responsável atribuído");
+    queryClient.invalidateQueries({ queryKey: ["contratos-tecnico-list", aba] });
+  };
 
   const contratoIds = contratos.map((c) => c.id);
 
