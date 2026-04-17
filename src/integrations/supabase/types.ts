@@ -167,6 +167,47 @@ export type Database = {
           },
         ]
       }
+      contrato_logs: {
+        Row: {
+          acao: string
+          autor_id: string | null
+          autor_nome: string | null
+          contrato_id: string
+          created_at: string
+          descricao: string | null
+          id: string
+          titulo: string
+        }
+        Insert: {
+          acao: string
+          autor_id?: string | null
+          autor_nome?: string | null
+          contrato_id: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          titulo: string
+        }
+        Update: {
+          acao?: string
+          autor_id?: string | null
+          autor_nome?: string | null
+          contrato_id?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrato_logs_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contratos: {
         Row: {
           assinado: boolean
@@ -588,6 +629,15 @@ export type Database = {
     }
     Functions: {
       contrato_da_loja: { Args: { _contrato_id: string }; Returns: boolean }
+      contrato_log_inserir: {
+        Args: {
+          _acao: string
+          _contrato_id: string
+          _descricao?: string
+          _titulo: string
+        }
+        Returns: undefined
+      }
       current_loja_id: { Args: never; Returns: string }
       has_role: {
         Args: {
