@@ -118,9 +118,47 @@ export function FluxoCaixaCard() {
     ? ((mesAtual.saldo - mesAnterior.saldo) / Math.max(Math.abs(mesAnterior.saldo), 1)) * 100
     : 0;
 
-  // Lançamentos do mês ativo (mock — começa vazio)
+  // Lançamentos do mês ativo (DB)
   const [lancamentos, setLancamentos] = useState<Lancamento[]>([]);
+  const [lojaId, setLojaId] = useState<string | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const hojeStr = new Date().toISOString().slice(0, 10);
+
+  async function carregar() {
+    const inicio = new Date(mesAtivo.getFullYear(), mesAtivo.getMonth(), 1).toISOString().slice(0, 10);
+    const fim = new Date(mesAtivo.getFullYear(), mesAtivo.getMonth() + 1, 0).toISOString().slice(0, 10);
+    const { data: rows, error } = await supabase
+      .from("transacoes")
+      .select("id, tipo, descricao, categoria, valor, data_vencimento, data_pagamento, status, created_at, loja_id")
+      .gte("data_vencimento", inicio)
+      .lte("data_vencimento", fim)
+      .order("data_vencimento", { ascending: true });
+    if (error) return;
+    setLancamentos(
+      (rows ?? []).map((r) => ({
+        id: r.id,
+        data: (r.data_pagamento ?? r.created_at)?.slice(0, 10) ?? "",
+        descricao: r.descricao,
+        categoria: r.categoria,
+        tipo: r.tipo as LancamentoTipo,
+        valor: Number(r.valor),
+        vencimento: r.data_vencimento,
+        status: r.status as LancamentoStatus,
+      })),
+    );
+    if (rows && rows.length > 0) setLojaId(rows[0].loja_id);
+  }
+
+  useEffect(() => {
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      const { data: usr } = await supabase.from("usuarios").select("loja_id").eq("id", u.user.id).maybeSingle();
+      if (usr?.loja_id) setLojaId(usr.loja_id);
+    })();
+  }, []);
+
+  useEffect(() => { carregar(); }, [mesAtivo]);
 
   const lancamentosOrdenados = useMemo(
     () => [...lancamentos].sort((a, b) => a.vencimento.localeCompare(b.vencimento)),
@@ -134,12 +172,21 @@ export function FluxoCaixaCard() {
     .filter((l) => l.tipo === "despesa" && l.status !== "cancelado")
     .reduce((s, l) => s + l.valor, 0);
 
-  function marcarPago(id: string) {
-    setLancamentos((arr) => arr.map((l) => (l.id === id ? { ...l, status: "pago" } : l)));
+  async function marcarPago(id: string) {
+    const { error } = await supabase
+      .from("transacoes")
+      .update({ status: "pago", data_pagamento: hojeStr })
+      .eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Marcado como pago");
+    carregar();
   }
-  function cancelar(id: string) {
+  async function cancelar(id: string) {
     if (!window.confirm("Cancelar este lançamento?")) return;
-    setLancamentos((arr) => arr.map((l) => (l.id === id ? { ...l, status: "cancelado" } : l)));
+    const { error } = await supabase.from("transacoes").update({ status: "cancelado" }).eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Lançamento cancelado");
+    carregar();
   }
   const saldoProjetado = entradasPrevistas - saidasPrevistas;
   const saldoColor = saldoProjetado >= 0 ? "#12B76A" : "#E53935";
