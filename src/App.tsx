@@ -16,6 +16,7 @@ import Logistica from "./pages/Logistica";
 import Montagem from "./pages/Montagem";
 import Equipes from "./pages/Equipes";
 import PosVenda from "./pages/PosVenda";
+import Dre from "./pages/Dre";
 import ContratoDetail from "./pages/ContratoDetail";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -64,7 +65,11 @@ const App = () => (
                 </ProtectedRoute>
               } />
               <Route path="/pos-venda" element={<PosVenda />} />
-              <Route path="/dre" element={<Placeholder title="NEXO DRE" description="Fechamento e margem realizada." />} />
+              <Route path="/dre" element={
+                <ProtectedRoute roles={["admin","gerente","franqueador"]}>
+                  <Dre />
+                </ProtectedRoute>
+              } />
 
               {/* Gestão */}
               <Route path="/financeiro" element={
