@@ -60,14 +60,19 @@ function corMargem(m: number) {
 
 interface Props {
   mes: string; // YYYY-MM-01
+  mesLabel?: string;
   regra?: RegraComissao;
 }
 
-export function ComissoesRelatorioTab({ mes, regra = REGRA_PADRAO }: Props) {
+export function ComissoesRelatorioTab({ mes, mesLabel, regra = REGRA_PADRAO }: Props) {
   const [linhas, setLinhas] = useState<LinhaVendedor[]>([]);
   const [pagos, setPagos] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [alvo, setAlvo] = useState<LinhaVendedor | null>(null);
+  const [dataPagamento, setDataPagamento] = useState<string>(
+    () => new Date().toISOString().slice(0, 10)
+  );
+  const [confirmando, setConfirmando] = useState(false);
 
   const inicio = mes;
   const fim = useMemo(() => {
