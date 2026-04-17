@@ -8,9 +8,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ComissoesRelatorioTab } from "@/components/comissoes/ComissoesRelatorioTab";
+import { ComissoesRelatorioTab, REGRA_PADRAO, type RegraComissao } from "@/components/comissoes/ComissoesRelatorioTab";
 import { ComissoesRegrasTab } from "@/components/comissoes/ComissoesRegrasTab";
-import { toast } from "sonner";
+import { RegraEditDialog } from "@/components/comissoes/RegraEditDialog";
 
 function fmtBRL(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -57,6 +57,8 @@ export default function Comissoes() {
   const opcoes = useMemo(buildOptions, []);
   const [mes, setMes] = useState<string>(opcoes[0].value);
   const mesLabel = opcoes.find((o) => o.value === mes)?.label ?? mes;
+  const [regra, setRegra] = useState<RegraComissao>(REGRA_PADRAO);
+  const [editOpen, setEditOpen] = useState(false);
 
   return (
     <div className="space-y-6 p-6">
@@ -111,9 +113,16 @@ export default function Comissoes() {
         </TabsContent>
 
         <TabsContent value="regras" className="mt-4">
-          <ComissoesRegrasTab onEdit={() => toast.info("Edição de regras em breve")} />
+          <ComissoesRegrasTab regra={regra} onEdit={() => setEditOpen(true)} />
         </TabsContent>
       </Tabs>
+
+      <RegraEditDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        regra={regra}
+        onSave={setRegra}
+      />
     </div>
   );
 }
