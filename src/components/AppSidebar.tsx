@@ -66,8 +66,8 @@ export function AppSidebar() {
   // Ativo: bg #1A2332 + borda esquerda 2px #1E6FBF + texto/ícone #00AAFF.
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     isActive
-      ? "!bg-[#1A2332] !text-[#00AAFF] font-medium border-l-2 border-[#1E6FBF] pl-[calc(0.5rem-2px)] hover:!bg-[#1A2332] hover:!text-[#00AAFF]"
-      : "!bg-transparent !text-[#6B7A90] hover:!bg-[#1A2332]/60 hover:!text-[#B0BAC9]";
+      ? "!bg-[#1A2332] !text-white font-medium border-l-2 border-[#1E6FBF] pl-[calc(0.5rem-2px)] rounded-l-none rounded-r-md transition-colors duration-150 ease-in-out hover:!bg-[#1A2332] hover:!text-white [&_svg]:!text-white"
+      : "!bg-transparent !text-[#6B7A90] transition-colors duration-150 ease-in-out hover:!bg-[#1A2332]/60 hover:!text-[#B0BAC9]";
 
   const canSee = (item: { roles?: string[] }) =>
     !item.roles || item.roles.some((r) => roles.includes(r as any));
