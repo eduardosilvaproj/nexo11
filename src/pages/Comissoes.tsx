@@ -13,6 +13,7 @@ import { ComissoesRegrasTab } from "@/components/comissoes/ComissoesRegrasTab";
 import { RegraEditDialog } from "@/components/comissoes/RegraEditDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 function fmtBRL(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
