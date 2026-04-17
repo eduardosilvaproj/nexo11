@@ -202,6 +202,9 @@ export default function Comercial() {
   const [convertLead, setConvertLead] = useState<Lead | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("leads");
+  const [filterStatus, setFilterStatus] = useState<"all" | LeadStatus>("all");
+  const [filterVendedor, setFilterVendedor] = useState<string>("all");
+  const [search, setSearch] = useState("");
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
@@ -257,7 +260,21 @@ export default function Comercial() {
 
   const activeLead = activeId ? leads.find((l) => l.id === activeId) : null;
 
-  const grouped = COLUMNS.map((c) => ({ ...c, leads: leads.filter((l) => l.status === c.id) }));
+  const filteredLeads = leads.filter((l) => {
+    if (filterStatus !== "all" && l.status !== filterStatus) return false;
+    if (filterVendedor !== "all" && l.vendedor_id !== filterVendedor) return false;
+    if (search.trim() && !l.nome.toLowerCase().includes(search.trim().toLowerCase())) return false;
+    return true;
+  });
+
+  const vendedoresUnicos = Array.from(
+    new Set(leads.map((l) => l.vendedor_id).filter(Boolean) as string[]),
+  );
+
+  const grouped = COLUMNS.map((c) => ({
+    ...c,
+    leads: filteredLeads.filter((l) => l.status === c.id),
+  }));
 
   return (
     <div className="flex h-full flex-col gap-4">
@@ -303,6 +320,71 @@ export default function Comercial() {
           );
         })}
       </div>
+
+      {/* Filtros */}
+      {tab === "leads" && (
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value as "all" | LeadStatus)}
+            style={{
+              height: 36,
+              borderRadius: 8,
+              border: "1px solid #E8ECF2",
+              padding: "0 10px",
+              fontSize: 13,
+              color: "#0D1117",
+              background: "#FFFFFF",
+              outline: "none",
+            }}
+          >
+            <option value="all">Todas as etapas</option>
+            {COLUMNS.map((c) => (
+              <option key={c.id} value={c.id}>{c.title}</option>
+            ))}
+          </select>
+
+          <select
+            value={filterVendedor}
+            onChange={(e) => setFilterVendedor(e.target.value)}
+            style={{
+              height: 36,
+              borderRadius: 8,
+              border: "1px solid #E8ECF2",
+              padding: "0 10px",
+              fontSize: 13,
+              color: "#0D1117",
+              background: "#FFFFFF",
+              outline: "none",
+            }}
+          >
+            <option value="all">Todos os vendedores</option>
+            {vendedoresUnicos.map((v) => (
+              <option key={v} value={v}>{v.slice(0, 8)}</option>
+            ))}
+          </select>
+
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por cliente..."
+            maxLength={80}
+            style={{
+              height: 36,
+              borderRadius: 8,
+              border: "1px solid #E8ECF2",
+              padding: "0 10px",
+              fontSize: 13,
+              color: "#0D1117",
+              background: "#FFFFFF",
+              outline: "none",
+              minWidth: 220,
+              flex: 1,
+            }}
+          />
+        </div>
+      )}
 
       {tab === "contratos" ? (
         <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
