@@ -509,6 +509,12 @@ export function FluxoCaixaCard() {
         lojaId={lojaId}
         onSaved={carregar}
       />
+      <PagamentoConfirmDialog
+        open={!!pagamentoAlvo}
+        onOpenChange={(v) => !v && setPagamentoAlvo(null)}
+        transacao={pagamentoAlvo}
+        onConfirmed={carregar}
+      />
     </div>
   );
 }
