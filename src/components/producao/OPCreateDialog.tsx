@@ -34,13 +34,17 @@ export function OPCreateDialog({ open, onOpenChange, contratoId }: OPCreateDialo
   const { data: fornecedores } = useQuery({
     queryKey: ["fornecedores-ativos"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as unknown as {
+        from: (t: string) => {
+          select: (s: string) => { eq: (c: string, v: boolean) => { order: (c: string) => Promise<{ data: Array<{ id: string; nome: string }> | null; error: Error | null }> } };
+        };
+      })
         .from("fornecedores")
         .select("id, nome")
         .eq("ativo", true)
         .order("nome");
       if (error) throw error;
-      return data;
+      return data ?? [];
     },
     enabled: open,
   });
@@ -55,14 +59,17 @@ export function OPCreateDialog({ open, onOpenChange, contratoId }: OPCreateDialo
     mutationFn: async () => {
       if (!dataPrevista) throw new Error("Data prevista obrigatória");
       const itensValidos = itens.filter((it) => it.nome.trim());
-      const { error } = await supabase.from("ordens_producao").insert({
+      const payload: Record<string, unknown> = {
         contrato_id: contratoId,
         fornecedor_id: fornecedorId || null,
         data_inicio: dataPedido,
         data_previsao: dataPrevista,
         observacoes: observacoes || null,
         itens_json: itensValidos,
-      });
+      };
+      const { error } = await (supabase.from("ordens_producao") as unknown as {
+        insert: (p: unknown) => Promise<{ error: Error | null }>;
+      }).insert(payload);
       if (error) throw error;
       await supabase.rpc("contrato_log_inserir", {
         _contrato_id: contratoId,

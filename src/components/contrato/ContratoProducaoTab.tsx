@@ -108,7 +108,9 @@ export function ContratoProducaoTab({ contratoId }: ProducaoTabProps) {
   const updateItemMutation = useMutation({
     mutationFn: async (itens: unknown[]) => {
       if (!op) return;
-      const { error } = await supabase.from("ordens_producao").update({ itens_json: itens }).eq("id", op.id);
+      const { error } = await (supabase.from("ordens_producao") as unknown as {
+        update: (u: unknown) => { eq: (c: string, v: string) => Promise<{ error: Error | null }> };
+      }).update({ itens_json: itens }).eq("id", op.id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["op", contratoId] }),

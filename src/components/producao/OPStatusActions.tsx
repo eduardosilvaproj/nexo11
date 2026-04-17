@@ -30,7 +30,9 @@ export function OPStatusActions({ opId, contratoId, status }: Props) {
       if (next.next === "concluido") {
         updates.data_conclusao = new Date().toISOString();
       }
-      const { error } = await supabase.from("ordens_producao").update(updates).eq("id", opId);
+      const { error } = await (supabase.from("ordens_producao") as unknown as {
+        update: (u: unknown) => { eq: (c: string, v: string) => Promise<{ error: Error | null }> };
+      }).update(updates).eq("id", opId);
       if (error) throw error;
     },
     onSuccess: () => {
