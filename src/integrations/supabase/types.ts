@@ -195,6 +195,70 @@ export type Database = {
           },
         ]
       }
+      comissoes: {
+        Row: {
+          contrato_id: string
+          created_at: string
+          data_pagamento: string | null
+          id: string
+          loja_id: string
+          margem_realizada_pct: number
+          pago: boolean
+          updated_at: string
+          valor_base: number
+          valor_bonus: number
+          vendedor_id: string
+        }
+        Insert: {
+          contrato_id: string
+          created_at?: string
+          data_pagamento?: string | null
+          id?: string
+          loja_id: string
+          margem_realizada_pct?: number
+          pago?: boolean
+          updated_at?: string
+          valor_base?: number
+          valor_bonus?: number
+          vendedor_id: string
+        }
+        Update: {
+          contrato_id?: string
+          created_at?: string
+          data_pagamento?: string | null
+          id?: string
+          loja_id?: string
+          margem_realizada_pct?: number
+          pago?: boolean
+          updated_at?: string
+          valor_base?: number
+          valor_bonus?: number
+          vendedor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comissoes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contrato_logs: {
         Row: {
           acao: string
@@ -768,6 +832,50 @@ export type Database = {
             columns: ["fornecedor_id"]
             isOneToOne: false
             referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      regras_comissao: {
+        Row: {
+          ativo: boolean
+          bonus_ativo: boolean
+          created_at: string
+          id: string
+          loja_id: string
+          margem_min_bonus: number
+          percentual_base: number
+          percentual_bonus: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          bonus_ativo?: boolean
+          created_at?: string
+          id?: string
+          loja_id: string
+          margem_min_bonus?: number
+          percentual_base?: number
+          percentual_bonus?: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          bonus_ativo?: boolean
+          created_at?: string
+          id?: string
+          loja_id?: string
+          margem_min_bonus?: number
+          percentual_base?: number
+          percentual_bonus?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "regras_comissao_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
             referencedColumns: ["id"]
           },
         ]
