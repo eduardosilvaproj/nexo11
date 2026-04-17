@@ -577,7 +577,7 @@ export default function PosVenda() {
             <table className="w-full">
               <thead style={{ backgroundColor: "#F7F9FC" }}>
                 <tr>
-                  {["Nº", "Cliente", "Nota", "Data", "Comentário"].map((h) => (
+                  {["Nº", "Cliente", "Nota", "Data", "Comentário", "Ações"].map((h) => (
                     <th
                       key={h}
                       className="px-4 py-3 text-left"
@@ -595,35 +595,48 @@ export default function PosVenda() {
                 </tr>
               </thead>
               <tbody>
-                {(chamados ?? [])
-                  .filter((c) => typeof c.nps === "number")
-                  .map((c) => {
-                    const cliente =
-                      (c as { contratos?: { cliente_nome?: string } }).contratos?.cliente_nome;
-                    return (
-                      <tr key={c.id} style={{ borderTop: "0.5px solid #E8ECF2" }}>
-                        <td className="px-4 py-3 text-sm font-medium">
-                          #{c.contrato_id?.slice(0, 4)}
-                        </td>
-                        <td className="px-4 py-3 text-sm">{cliente ?? "—"}</td>
-                        <td className="px-4 py-3 text-sm">
+                {(chamados ?? []).map((c) => {
+                  const cliente =
+                    (c as { contratos?: { cliente_nome?: string } }).contratos?.cliente_nome;
+                  const comentario = (c as { nps_comentario?: string }).nps_comentario;
+                  const hasNps = typeof c.nps === "number";
+                  return (
+                    <tr key={c.id} style={{ borderTop: "0.5px solid #E8ECF2" }}>
+                      <td className="px-4 py-3 text-sm font-medium">
+                        #{c.contrato_id?.slice(0, 4)}
+                      </td>
+                      <td className="px-4 py-3 text-sm">{cliente ?? "—"}</td>
+                      <td className="px-4 py-3 text-sm">
+                        {hasNps ? (
                           <span style={{ color: npsColor(c.nps as number), fontWeight: 600 }}>
                             {c.nps}
                           </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm">
-                          {new Date(c.data_fechamento ?? c.updated_at).toLocaleDateString("pt-BR")}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-muted-foreground">
-                          {(c as { nps_comentario?: string }).nps_comentario ?? "—"}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                {(chamados ?? []).filter((c) => typeof c.nps === "number").length === 0 && (
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {new Date(c.data_fechamento ?? c.updated_at).toLocaleDateString("pt-BR")}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                        {comentario ?? "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openNpsDialog(c.id, cliente, c.nps, comentario)}
+                        >
+                          {hasNps ? "Editar" : "Registrar"}
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {(chamados ?? []).length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                      Nenhum NPS registrado ainda.
+                    <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                      Nenhum chamado encontrado.
                     </td>
                   </tr>
                 )}
@@ -632,6 +645,48 @@ export default function PosVenda() {
           </div>
         </div>
       )}
+
+      <Dialog open={npsOpen} onOpenChange={setNpsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Registrar NPS{npsTarget?.cliente ? ` · ${npsTarget.cliente}` : ""}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1">
+              <Label>Nota (0 a 10)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={10}
+                value={npsNota}
+                onChange={(e) => setNpsNota(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label>Comentário (opcional)</Label>
+              <Textarea
+                maxLength={500}
+                value={npsComentario}
+                onChange={(e) => setNpsComentario(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNpsOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => registrarNps.mutate()}
+              disabled={registrarNps.isPending}
+              style={{ backgroundColor: "#1E6FBF" }}
+            >
+              Salvar NPS
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
