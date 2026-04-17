@@ -62,34 +62,32 @@ export function AppSidebar() {
   const { perfil, roles, signOut } = useAuth();
   const collapsed = state === "collapsed";
 
+  // Inativo: cor #6B7A90 + hover bg #1A2332 / texto #B0BAC9
+  // Ativo: bg #1A2332 + borda esquerda 2px #1E6FBF + texto/ícone #00AAFF
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     isActive
-      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium border-l-2 border-sidebar-primary"
-      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground";
+      ? "border-l-2 border-[hsl(var(--sidebar-primary))] bg-[hsl(var(--sidebar-accent))] text-[hsl(var(--sidebar-accent-foreground))] font-medium pl-[calc(0.5rem-2px)]"
+      : "text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))] hover:text-[#B0BAC9]";
 
   const canSee = (item: { roles?: string[] }) =>
     !item.roles || item.roles.some((r) => roles.includes(r as any));
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
+    <Sidebar collapsible="icon" className="bg-[#0D1117]">
+      <SidebarHeader className="border-b border-sidebar-border bg-[#0D1117] px-4 py-4">
         {collapsed ? (
           <LogoNexo size="sm" />
         ) : (
           <div>
             <LogoNexo size="md" />
-            <p className="mt-0.5 text-xs text-nexo-gray-text">Gestão de Planejados</p>
+            <p className="mt-0.5 nexo-sidebar-subtitle">Gestão de Planejados</p>
           </div>
         )}
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="bg-[#0D1117]">
         <SidebarGroup>
-          <SidebarGroupLabel>
-            <NavLink to="/" className="text-xs font-medium uppercase tracking-wider">
-              Início
-            </NavLink>
-          </SidebarGroupLabel>
+          <SidebarGroupLabel className="nexo-sidebar-label">Início</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -105,7 +103,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Operação</SidebarGroupLabel>
+          <SidebarGroupLabel className="nexo-sidebar-label">Operação</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {operacao.map((item) => (
@@ -123,7 +121,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Gestão</SidebarGroupLabel>
+          <SidebarGroupLabel className="nexo-sidebar-label">Gestão</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {gestao.filter(canSee).map((item) => (
@@ -141,7 +139,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Inteligência</SidebarGroupLabel>
+          <SidebarGroupLabel className="nexo-sidebar-label">Inteligência</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {inteligencia.map((item) => (
@@ -159,19 +157,19 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t p-3">
+      <SidebarFooter className="border-t border-sidebar-border bg-[#1A2332] p-3">
         {!collapsed && perfil && (
           <div className="mb-2 px-2">
-            <p className="truncate text-sm font-medium">{perfil.nome}</p>
-            <p className="truncate text-xs text-muted-foreground">{perfil.email}</p>
-            {roles.length > 0 && (
-              <p className="mt-1 text-[10px] uppercase tracking-wide text-primary">
-                {roles.join(" · ")}
-              </p>
-            )}
+            <p className="truncate nexo-sidebar-user-name">{perfil.nome}</p>
+            <p className="truncate nexo-sidebar-user-email">{perfil.email}</p>
           </div>
         )}
-        <Button variant="ghost" size="sm" className="w-full justify-start" onClick={signOut}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="nexo-sidebar-logout w-full justify-start"
+          onClick={signOut}
+        >
           <LogOut className="h-4 w-4" />
           {!collapsed && <span className="ml-2">Sair</span>}
         </Button>

@@ -11,7 +11,10 @@ export function LogoNexo({ size = "md", className = "" }: LogoNexoProps) {
   };
 
   return (
-    <span className={`font-black tracking-tight ${sizes[size]} ${className}`}>
+    <span
+      className={`tracking-tight ${sizes[size]} ${className}`}
+      style={{ fontWeight: 800 }}
+    >
       <span className="text-white">NE</span>
       <span className="nexo-text-gradient-x">X</span>
       <span className="text-white">O</span>
