@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { checkAgendamentoConflict } from "@/lib/agendamento-conflict";
 
 interface MontagemTabProps {
   contratoId: string;
