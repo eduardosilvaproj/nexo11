@@ -41,6 +41,8 @@ const MESES = [
 
 export default function Dre() {
   const navigate = useNavigate();
+  const { hasRole } = useAuth();
+  const podeVerRanking = hasRole("admin") || hasRole("gerente") || hasRole("franqueador");
   const today = new Date();
   const [mes, setMes] = useState<number>(today.getMonth());
   const [ano, setAno] = useState<number>(today.getFullYear());
