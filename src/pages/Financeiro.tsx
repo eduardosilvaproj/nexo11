@@ -1,74 +1,20 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { CustosFixosCard } from "@/components/financeiro/CustosFixosCard";
-
-function formatBRL(v: number) {
-  if (!isFinite(v)) return "—";
-  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
-}
+import { SimuladorPECard } from "@/components/financeiro/SimuladorPECard";
 
 function PontoEquilibrio() {
-  const [custosFixos, setCustosFixos] = useState<number>(0);
-  const [margemPct, setMargemPct] = useState<number>(32);
-  const [ticketMedio, setTicketMedio] = useState<number>(18000);
-
-  const { faturamentoPE, contratosPE } = useMemo(() => {
-    const m = margemPct / 100;
-    const fat = m > 0 ? custosFixos / m : Infinity;
-    const ctr = ticketMedio > 0 ? Math.ceil(fat / ticketMedio) : Infinity;
-    return { faturamentoPE: fat, contratosPE: ctr };
-  }, [custosFixos, margemPct, ticketMedio]);
+  const [custoFixoTotal, setCustoFixoTotal] = useState<number>(0);
+  const [mes, setMes] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+  });
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-4 lg:grid-cols-2">
-        <CustosFixosCard onTotalChange={setCustosFixos} />
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Parâmetros do cálculo</CardTitle>
-            <CardDescription>
-              Margem média e ticket médio usados para calcular o ponto de equilíbrio.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="mg">Margem média (%)</Label>
-              <Input
-                id="mg"
-                type="number"
-                value={margemPct}
-                onChange={(e) => setMargemPct(Number(e.target.value) || 0)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="tm">Ticket médio (R$)</Label>
-              <Input
-                id="tm"
-                type="number"
-                value={ticketMedio}
-                onChange={(e) => setTicketMedio(Number(e.target.value) || 0)}
-              />
-            </div>
-
-            <div className="grid gap-3 pt-2 sm:grid-cols-2">
-              <div className="rounded-md border p-3">
-                <p className="text-xs text-muted-foreground">Faturamento de equilíbrio</p>
-                <p className="mt-1 text-2xl font-semibold">{formatBRL(faturamentoPE)}</p>
-              </div>
-              <div className="rounded-md border p-3">
-                <p className="text-xs text-muted-foreground">Contratos necessários</p>
-                <p className="mt-1 text-2xl font-semibold">
-                  {isFinite(contratosPE) ? contratosPE : "—"}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+    <div className="grid gap-4 lg:grid-cols-2">
+      <CustosFixosCard onTotalChange={setCustoFixoTotal} onMesChange={setMes} />
+      <SimuladorPECard custoFixoTotal={custoFixoTotal} mes={mes} />
     </div>
   );
 }
