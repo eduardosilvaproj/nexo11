@@ -173,11 +173,9 @@ export default function PortalCliente() {
     );
   }
 
-  const currentIdx = STAGES.findIndex((s) => s.key === contrato.status);
   const numero = "#" + contrato.id.slice(0, 8).toUpperCase();
   const isFinalizado = contrato.status === "finalizado";
-  const stageLabel =
-    STAGES.find((s) => s.key === contrato.status)?.label ?? contrato.status;
+  const stageLabel = STAGE_LABELS[contrato.status] ?? contrato.status;
 
   return (
     <div
