@@ -223,7 +223,7 @@ export default function PosVenda() {
       });
     },
     onSuccess: () => {
-      toast.success("Chamado aberto");
+      toast.success("Chamado aberto com sucesso");
       qc.invalidateQueries({ queryKey: ["pos-venda-list"] });
       setOpen(false);
       reset();
