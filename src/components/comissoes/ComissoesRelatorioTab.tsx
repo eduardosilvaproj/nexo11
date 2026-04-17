@@ -179,6 +179,25 @@ export function ComissoesRelatorioTab({ mes, regra = REGRA_PADRAO }: Props) {
     );
   }
 
+  const rankFat = useMemo(
+    () => [...linhas].sort((a, b) => b.faturamento - a.faturamento).slice(0, 5),
+    [linhas]
+  );
+  const rankMargem = useMemo(
+    () => [...linhas].sort((a, b) => b.margemMedia - a.margemMedia).slice(0, 5),
+    [linhas]
+  );
+  const topFat = rankFat[0];
+  const topMargem = rankMargem[0];
+  const mostrarAlerta =
+    topFat && topMargem && topFat.vendedor_id !== topMargem.vendedor_id;
+  const diffPp = mostrarAlerta ? topMargem!.margemMedia - topFat!.margemMedia : 0;
+
+  function fmtCompactBRL(v: number) {
+    if (v >= 1000) return `R$ ${(v / 1000).toFixed(0)}k`;
+    return fmtBRL(v);
+  }
+
   return (
     <>
       <div className="overflow-hidden rounded-md border" style={{ borderColor: "#E8ECF2" }}>
