@@ -20,6 +20,8 @@ const ROLE_COLORS: Record<AppRole, { bg: string; fg: string; avatar: string; lab
   tecnico:     { bg: "#EEEDFE", fg: "#534AB7", avatar: "#534AB7", label: "Técnico" },
   montador:    { bg: "#FAECE7", fg: "#993C1D", avatar: "#D85A30", label: "Montador" },
   franqueador: { bg: "#F1F2F4", fg: "#0D1117", avatar: "#0D1117", label: "Franqueador" },
+  medidor:     { bg: "#E6F3FF", fg: "#1E6FBF", avatar: "#1E6FBF", label: "Medidor" },
+  conferente:  { bg: "#EEEDFE", fg: "#534AB7", avatar: "#534AB7", label: "Conferente" },
 };
 
 function getInitials(nome: string) {
