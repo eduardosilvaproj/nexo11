@@ -836,6 +836,41 @@ export type Database = {
           },
         ]
       }
+      registros_ponto: {
+        Row: {
+          created_at: string
+          id: string
+          loja_id: string
+          registrado_em: string
+          tipo: Database["public"]["Enums"]["ponto_tipo"]
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          loja_id: string
+          registrado_em?: string
+          tipo: Database["public"]["Enums"]["ponto_tipo"]
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          loja_id?: string
+          registrado_em?: string
+          tipo?: Database["public"]["Enums"]["ponto_tipo"]
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registros_ponto_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       regras_comissao: {
         Row: {
           ativo: boolean
@@ -1225,6 +1260,7 @@ export type Database = {
         | "convertido"
         | "perdido"
       op_status: "aguardando" | "em_corte" | "em_montagem" | "concluido"
+      ponto_tipo: "entrada" | "saida"
       transacao_status: "pendente" | "pago" | "cancelado"
       transacao_tipo: "receita" | "despesa"
     }
@@ -1384,6 +1420,7 @@ export const Constants = {
         "perdido",
       ],
       op_status: ["aguardando", "em_corte", "em_montagem", "concluido"],
+      ponto_tipo: ["entrada", "saida"],
       transacao_status: ["pendente", "pago", "cancelado"],
       transacao_tipo: ["receita", "despesa"],
     },
