@@ -393,73 +393,33 @@ export default function PortalCliente() {
           })()}
         </section>
 
-        {/* 6. NPS — somente se ainda não respondido */}
-        {!npsRespondido && (
-          <section className="bg-white rounded-xl shadow-sm p-6">
-            <h2
+        {/* 6. NPS — coleta pública (somente pos_venda ou finalizado) */}
+        {(contrato.status === "pos_venda" || contrato.status === "finalizado") && (
+          npsRespondido ? (
+            <section
+              className="rounded-xl mx-auto w-full text-center"
               style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: "#0D1117",
-                marginBottom: 6,
-              }}
-            >
-              Como foi sua experiência?
-            </h2>
-            <p style={{ fontSize: 13, color: "#6B7A90", marginBottom: 16 }}>
-              De 0 a 10, qual a chance de você nos recomendar?
-            </p>
-            <div className="flex flex-wrap gap-2 mb-4">
-              {Array.from({ length: 11 }, (_, i) => i).map((n) => {
-                const selected = npsNota === n;
-                return (
-                  <button
-                    key={n}
-                    onClick={() => setNpsNota(n)}
-                    className="rounded-md transition-colors"
-                    style={{
-                      width: 40,
-                      height: 40,
-                      fontSize: 14,
-                      fontWeight: 500,
-                      border: `1px solid ${selected ? "#1E6FBF" : "#E8ECF2"}`,
-                      backgroundColor: selected ? "#1E6FBF" : "#fff",
-                      color: selected ? "#fff" : "#0D1117",
-                    }}
-                  >
-                    {n}
-                  </button>
-                );
-              })}
-            </div>
-            <textarea
-              value={npsComentario}
-              onChange={(e) => setNpsComentario(e.target.value)}
-              placeholder="Deixe um comentário (opcional)"
-              rows={3}
-              className="w-full rounded-md p-3 mb-4"
-              style={{
-                fontSize: 13,
-                border: "1px solid #E8ECF2",
-                color: "#0D1117",
-                resize: "vertical",
-              }}
-            />
-            <button
-              onClick={handleSubmitNps}
-              disabled={npsNota === null || npsSubmitting}
-              className="rounded-md transition-opacity disabled:opacity-50"
-              style={{
-                backgroundColor: "#1E6FBF",
-                color: "#fff",
+                maxWidth: 680,
+                backgroundColor: "#F0FDF9",
+                border: "1px solid #12B76A",
+                padding: 20,
                 fontSize: 14,
                 fontWeight: 500,
-                padding: "10px 20px",
+                color: "#05873C",
               }}
             >
-              {npsSubmitting ? "Enviando…" : "Enviar avaliação"}
-            </button>
-          </section>
+              Avaliação registrada — obrigado! ★
+            </section>
+          ) : (
+            <NpsCard
+              nota={npsNota}
+              setNota={setNpsNota}
+              comentario={npsComentario}
+              setComentario={setNpsComentario}
+              onSubmit={handleSubmitNps}
+              submitting={npsSubmitting}
+            />
+          )
         )}
       </main>
 
@@ -471,5 +431,127 @@ export default function PortalCliente() {
         NEXO · Gestão de Planejados
       </footer>
     </div>
+  );
+}
+
+function rangeColors(n: number) {
+  if (n <= 6) return { bg: "#FDECEA", border: "#E53935", text: "#E53935", fill: "#E53935" };
+  if (n <= 8) return { bg: "#FEF3C7", border: "#E8A020", text: "#E8A020", fill: "#E8A020" };
+  return { bg: "#D1FAE5", border: "#12B76A", text: "#05873C", fill: "#12B76A" };
+}
+
+function NpsCard({
+  nota,
+  setNota,
+  comentario,
+  setComentario,
+  onSubmit,
+  submitting,
+}: {
+  nota: number | null;
+  setNota: (n: number) => void;
+  comentario: string;
+  setComentario: (c: string) => void;
+  onSubmit: () => void;
+  submitting: boolean;
+}) {
+  const [hover, setHover] = useState<number | null>(null);
+
+  return (
+    <section
+      className="rounded-xl mx-auto w-full"
+      style={{
+        maxWidth: 680,
+        backgroundColor: "#F0FDF9",
+        border: "1px solid #12B76A",
+        padding: 24,
+      }}
+    >
+      <h2 style={{ fontSize: 16, fontWeight: 500, color: "#0D1117" }}>
+        Como foi a sua experiência?
+      </h2>
+      <p style={{ fontSize: 13, color: "#6B7A90", marginTop: 4, marginBottom: 20 }}>
+        Sua opinião ajuda a melhorarmos o atendimento
+      </p>
+
+      <div className="flex gap-2 flex-wrap">
+        {Array.from({ length: 11 }, (_, i) => i).map((n) => {
+          const selected = nota === n;
+          const isHover = hover === n;
+          const c = rangeColors(n);
+          let bg = "#F5F7FA";
+          let border = "#E8ECF2";
+          let text = "#6B7A90";
+          if (selected) {
+            bg = c.fill;
+            border = c.fill;
+            text = "#fff";
+          } else if (isHover) {
+            bg = c.bg;
+            border = c.border;
+            text = c.text;
+          }
+          return (
+            <button
+              key={n}
+              onClick={() => setNota(n)}
+              onMouseEnter={() => setHover(n)}
+              onMouseLeave={() => setHover(null)}
+              className="rounded-md transition-colors"
+              style={{
+                width: 40,
+                height: 40,
+                fontSize: 14,
+                fontWeight: 500,
+                backgroundColor: bg,
+                border: `1px solid ${border}`,
+                color: text,
+              }}
+            >
+              {n}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex justify-between mt-2" style={{ fontSize: 12, color: "#B0BAC9" }}>
+        <span>Muito insatisfeito</span>
+        <span>Muito satisfeito</span>
+      </div>
+
+      {nota !== null && (
+        <div className="mt-5" style={{ animation: "fadeIn 0.3s ease-in-out" }}>
+          <textarea
+            value={comentario}
+            onChange={(e) => setComentario(e.target.value)}
+            placeholder="Conte mais sobre sua experiência (opcional)"
+            rows={3}
+            className="w-full rounded-md p-3"
+            style={{
+              fontSize: 13,
+              border: "1px solid #E8ECF2",
+              backgroundColor: "#fff",
+              color: "#0D1117",
+              resize: "vertical",
+            }}
+          />
+          <button
+            onClick={onSubmit}
+            disabled={submitting}
+            className="rounded-md transition-opacity disabled:opacity-50 mt-4"
+            style={{
+              backgroundColor: "#12B76A",
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: 500,
+              padding: "10px 20px",
+            }}
+          >
+            {submitting ? "Enviando…" : "Enviar avaliação"}
+          </button>
+        </div>
+      )}
+      <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+    </section>
   );
 }
