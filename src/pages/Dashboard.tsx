@@ -36,7 +36,10 @@ const cardStyle: React.CSSProperties = {
 
 function MetricCard({ label, value, icon: Icon, color, valueColor = "#0D1117" }: MetricCardProps) {
   return (
-    <div className="relative bg-white p-5" style={cardStyle}>
+    <div
+      className="relative bg-white p-5"
+      style={{ ...cardStyle, borderTop: `3px solid ${color}` }}
+    >
       <Icon
         className="absolute right-4 top-4"
         style={{ color, width: 20, height: 20 }}
