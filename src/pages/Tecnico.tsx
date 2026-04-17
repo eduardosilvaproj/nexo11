@@ -109,7 +109,11 @@ export default function Tecnico() {
           <h1 className="text-2xl font-semibold tracking-tight">NEXO Técnico</h1>
           <p className="text-sm text-muted-foreground">Contratos aguardando validação técnica</p>
         </div>
-        <Button variant="outline" size="sm">
+        <Button
+          variant="outline"
+          size="sm"
+          style={{ borderColor: "#1E6FBF", color: "#1E6FBF" }}
+        >
           <Settings className="mr-2 h-4 w-4" />
           Configurar checklist
         </Button>
