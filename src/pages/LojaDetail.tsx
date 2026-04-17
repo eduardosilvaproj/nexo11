@@ -114,32 +114,7 @@ export default function LojaDetail() {
 
       {tab === "contratos" && <LojaContratosTab lojaId={id} />}
 
-      {tab === "equipe" && (
-        <div style={{ background: "#fff", border: "0.5px solid #E8ECF2", borderRadius: 12 }}>
-          {equipe.length === 0 ? (
-            <div style={{ padding: 24, fontSize: 13, color: "#6B7A90", textAlign: "center" }}>
-              Nenhum membro vinculado.
-            </div>
-          ) : (
-            <table style={{ width: "100%", fontSize: 13 }}>
-              <thead>
-                <tr style={{ color: "#6B7A90", textAlign: "left" }}>
-                  <th style={{ padding: "10px 16px" }}>Nome</th>
-                  <th style={{ padding: "10px 16px" }}>Papel</th>
-                </tr>
-              </thead>
-              <tbody>
-                {equipe.map((m: any) => (
-                  <tr key={`${m.user_id}-${m.role}`} style={{ borderTop: "1px solid #EEF1F5" }}>
-                    <td style={{ padding: "10px 16px" }}>{m.nome}</td>
-                    <td style={{ padding: "10px 16px", color: "#6B7A90" }}>{m.role}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
+      {tab === "equipe" && <LojaEquipeTab lojaId={id} />}
     </div>
   );
 }
