@@ -90,6 +90,7 @@ function MetricCard({
 export default function PosVenda() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const [tab, setTab] = useState<"chamados" | "nps">("chamados");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [tipoFilter, setTipoFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
