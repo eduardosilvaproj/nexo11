@@ -9,6 +9,7 @@ import { ArrowDownRight, ArrowUpRight, Check, ChevronLeft, ChevronRight, Plus, T
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LancamentoFormDialog } from "./LancamentoFormDialog";
+import { PagamentoConfirmDialog } from "./PagamentoConfirmDialog";
 
 type LancamentoStatus = "pendente" | "pago" | "cancelado";
 type LancamentoTipo = "receita" | "despesa";
@@ -172,15 +173,7 @@ export function FluxoCaixaCard() {
     .filter((l) => l.tipo === "despesa" && l.status !== "cancelado")
     .reduce((s, l) => s + l.valor, 0);
 
-  async function marcarPago(id: string) {
-    const { error } = await supabase
-      .from("transacoes")
-      .update({ status: "pago", data_pagamento: hojeStr })
-      .eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Marcado como pago");
-    carregar();
-  }
+  const [pagamentoAlvo, setPagamentoAlvo] = useState<{ id: string; descricao: string; valor: number } | null>(null);
   async function cancelar(id: string) {
     if (!window.confirm("Cancelar este lançamento?")) return;
     const { error } = await supabase.from("transacoes").update({ status: "cancelado" }).eq("id", id);
@@ -429,7 +422,7 @@ export function FluxoCaixaCard() {
                                 size="sm"
                                 className="h-7 px-2 text-white hover:opacity-90"
                                 style={{ background: "#05873C" }}
-                                onClick={() => marcarPago(l.id)}
+                                onClick={() => setPagamentoAlvo({ id: l.id, descricao: l.descricao, valor: l.valor })}
                               >
                                 <Check className="mr-1 h-3 w-3" /> Marcar pago
                               </Button>
@@ -515,6 +508,12 @@ export function FluxoCaixaCard() {
         onOpenChange={setDialogOpen}
         lojaId={lojaId}
         onSaved={carregar}
+      />
+      <PagamentoConfirmDialog
+        open={!!pagamentoAlvo}
+        onOpenChange={(v) => !v && setPagamentoAlvo(null)}
+        transacao={pagamentoAlvo}
+        onConfirmed={carregar}
       />
     </div>
   );
