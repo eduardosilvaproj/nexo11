@@ -1,12 +1,12 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Folder, TrendingUp, Percent, Users } from "lucide-react";
+import { Folder, TrendingUp, Percent, Users, type LucideIcon } from "lucide-react";
 
 interface MetricCardProps {
   label: string;
   value: string;
-  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties; size?: number }>;
+  icon: LucideIcon;
   color: string;
 }
 
