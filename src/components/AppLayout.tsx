@@ -1,9 +1,8 @@
 import { Outlet, useLocation, Link } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Bell } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { NotificationsBell } from "@/components/NotificationsBell";
 
 const ROUTE_LABELS: Record<string, string> = {
   "": "Dashboard",
@@ -68,14 +67,7 @@ export default function AppLayout() {
 
             {/* Right side: bell + avatar */}
             <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 text-[#6B7A90] hover:text-[#1E6FBF]"
-                aria-label="Notificações"
-              >
-                <Bell className="h-5 w-5" />
-              </Button>
+              <NotificationsBell />
               <div
                 className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white"
                 style={{ background: "#1E6FBF" }}

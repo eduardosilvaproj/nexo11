@@ -507,6 +507,39 @@ export type Database = {
         }
         Relationships: []
       }
+      notificacoes: {
+        Row: {
+          contrato_id: string | null
+          created_at: string
+          id: string
+          lida_em: string | null
+          link: string | null
+          mensagem: string
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          contrato_id?: string | null
+          created_at?: string
+          id?: string
+          lida_em?: string | null
+          link?: string | null
+          mensagem: string
+          tipo: string
+          user_id: string
+        }
+        Update: {
+          contrato_id?: string | null
+          created_at?: string
+          id?: string
+          lida_em?: string | null
+          link?: string | null
+          mensagem?: string
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ordens_producao: {
         Row: {
           contrato_id: string
