@@ -80,7 +80,7 @@ export default function Montagem() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("agendamentos_montagem")
-        .select("*, contratos(id, cliente_nome)")
+        .select("*, contratos(id, cliente_nome), equipes(nome, cor)")
         .gte("data", inicioStr)
         .lte("data", fimStr)
         .order("data");
