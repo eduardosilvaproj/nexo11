@@ -13,6 +13,7 @@ import { KpiRow } from "@/components/analytics/KpiRow";
 import { FaturamentoVsPeChart } from "@/components/analytics/FaturamentoVsPeChart";
 import { FunilLeadsChart } from "@/components/analytics/FunilLeadsChart";
 import { MargemEvolucaoChart } from "@/components/analytics/MargemEvolucaoChart";
+import { MargemAlertasCard } from "@/components/analytics/MargemAlertasCard";
 
 type Loja = { id: string; nome: string };
 
@@ -110,7 +111,9 @@ export default function Analytics() {
         <div className="lg:col-span-13" style={{ gridColumn: "span 13 / span 13" }}>
           <MargemEvolucaoChart />
         </div>
-        <div className="lg:col-span-7" style={{ gridColumn: "span 7 / span 7" }} />
+        <div style={{ gridColumn: "span 7 / span 7" }}>
+          <MargemAlertasCard mes={mes} lojaId={lojaId} />
+        </div>
       </div>
     </div>
   );
