@@ -13,10 +13,10 @@ import {
 
 const ETAPAS: { key: string; label: string; color: string }[] = [
   { key: "comercial", label: "Comercial", color: "#1E6FBF" },
-  { key: "tecnico", label: "Técnico", color: "#7C3AED" },
-  { key: "producao", label: "Produção", color: "#F97316" },
+  { key: "tecnico", label: "Técnico", color: "#7F77DD" },
+  { key: "producao", label: "Produção", color: "#D85A30" },
   { key: "logistica", label: "Logística", color: "#12B76A" },
-  { key: "montagem", label: "Montagem", color: "#0EA5A4" },
+  { key: "montagem", label: "Montagem", color: "#1D9E75" },
   { key: "pos_venda", label: "Pós-venda", color: "#E8A020" },
   { key: "finalizado", label: "Finalizado", color: "#05873C" },
 ];
