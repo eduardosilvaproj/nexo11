@@ -284,7 +284,7 @@ export default function Tecnico() {
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7}>
+                <TableCell colSpan={8}>
                   <div className="flex flex-col items-center justify-center p-12 text-center">
                     <ClipboardList size={32} style={{ color: "#B0BAC9" }} />
                     <p className="mt-3" style={{ fontSize: 13, color: "#6B7A90", fontWeight: 500 }}>
