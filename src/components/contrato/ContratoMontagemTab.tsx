@@ -90,6 +90,12 @@ export function ContratoMontagemTab({ contratoId }: MontagemTabProps) {
     queryFn: async () => (await supabase.from("usuarios").select("id, nome")).data ?? [],
   });
 
+  const { data: equipes = [] } = useQuery({
+    queryKey: ["equipes"],
+    queryFn: async () =>
+      (await supabase.from("equipes").select("id, nome, cor").eq("ativo", true).order("nome")).data ?? [],
+  });
+
   const [agOpen, setAgOpen] = useState(false);
   const [agData, setAgData] = useState<Date | undefined>();
   const [agInicio, setAgInicio] = useState("08:00");
@@ -273,19 +279,16 @@ export function ContratoMontagemTab({ contratoId }: MontagemTabProps) {
                     <Label>Equipe</Label>
                     <Select value={agEquipe} onValueChange={setAgEquipe}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione um responsável" />
+                        <SelectValue placeholder="Selecione uma equipe" />
                       </SelectTrigger>
                       <SelectContent>
-                        {usuarios.map((u) => (
-                          <SelectItem key={u.id} value={u.id}>
-                            {u.nome}
+                        {equipes.map((e) => (
+                          <SelectItem key={e.id} value={e.id}>
+                            {e.nome}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <span style={{ fontSize: 11, color: "#6B7A90" }}>
-                      Capacidade disponível para a data será calculada conforme demais agendamentos.
-                    </span>
                   </div>
                 </div>
                 <DialogFooter>
@@ -307,7 +310,7 @@ export function ContratoMontagemTab({ contratoId }: MontagemTabProps) {
           <div>
             <Field
               label="Equipe"
-              value={agendamento.equipe_id ? userMap.get(agendamento.equipe_id) ?? "—" : "—"}
+              value={agendamento.equipe_id ? equipes.find((e) => e.id === agendamento.equipe_id)?.nome ?? "—" : "—"}
             />
             <Field label="Data" value={new Date(agendamento.data).toLocaleDateString("pt-BR")} />
             <Field
