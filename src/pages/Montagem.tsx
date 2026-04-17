@@ -313,48 +313,46 @@ function AgendarDialog({
   });
 
   const dataStr = data ? format(data, "yyyy-MM-dd") : "";
-
-  // Busca agendamentos existentes da equipe na data selecionada
-  const { data: existentes = [] } = useQuery({
-    queryKey: ["agendamentos-conflito", equipeId, dataStr],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("agendamentos_montagem")
-        .select("id, hora_inicio, hora_fim, contrato_id")
-        .eq("equipe_id", equipeId)
-        .eq("data", dataStr)
-        .neq("status", "cancelado");
-      return data ?? [];
-    },
-    enabled: open && !!equipeId && !!dataStr,
-  });
-
   const equipeSel = equipes.find((e) => e.id === equipeId);
   const capacidade = (equipeSel as any)?.capacidade_horas_dia ?? 8;
 
-  const novaIni = ini;
-  const novaFim = fim;
-  const conflito = existentes.find((a) => {
-    if (!a.hora_inicio || !a.hora_fim || !novaIni || !novaFim) return false;
-    return a.hora_inicio < novaFim && novaIni < a.hora_fim;
+  const { data: check } = useQuery({
+    queryKey: ["agendamento-check", equipeId, dataStr, ini, fim, capacidade],
+    queryFn: () =>
+      checkAgendamentoConflict({
+        equipeId: equipeId || null,
+        data: dataStr,
+        horaInicio: ini || null,
+        horaFim: fim || null,
+        capacidadeHorasDia: capacidade,
+      }),
+    enabled: open && !!equipeId && !!dataStr,
   });
 
-  const horasReservadas = existentes.reduce(
-    (acc, a) => acc + diffHoras(a.hora_inicio ?? "", a.hora_fim ?? ""),
-    0
-  );
-  const horasNovas = diffHoras(novaIni, novaFim);
-  const excedeCapacidade = equipeId && horasReservadas + horasNovas > capacidade;
+  const conflito = check?.conflito ?? null;
+  const excedeCapacidade = !!check?.excedeCapacidade;
+  const horasReservadas = check?.horasReservadas ?? 0;
+  const horasNovas = check?.horasNovas ?? diffH(ini, fim);
 
   const mut = useMutation({
     mutationFn: async () => {
       if (!contratoId || !data) throw new Error("Preencha contrato e data");
-      if (novaIni && novaFim && novaIni >= novaFim)
-        throw new Error("Hora fim deve ser maior que hora início");
-      if (conflito)
-        throw new Error(`Conflito de horário: equipe já agendada das ${conflito.hora_inicio?.slice(0, 5)} às ${conflito.hora_fim?.slice(0, 5)}`);
-      if (excedeCapacidade)
-        throw new Error(`Excede capacidade diária da equipe (${capacidade}h). Já reservadas: ${horasReservadas.toFixed(1)}h`);
+      const result = await checkAgendamentoConflict({
+        equipeId: equipeId || null,
+        data: dataStr,
+        horaInicio: ini || null,
+        horaFim: fim || null,
+        capacidadeHorasDia: capacidade,
+      });
+      if (result.error) throw new Error(result.error);
+      if (result.conflito)
+        throw new Error(
+          `Conflito de horário: equipe já agendada das ${result.conflito.hora_inicio?.slice(0, 5)} às ${result.conflito.hora_fim?.slice(0, 5)}`,
+        );
+      if (result.excedeCapacidade)
+        throw new Error(
+          `Excede capacidade diária da equipe (${result.capacidade}h). Já reservadas: ${result.horasReservadas.toFixed(1)}h`,
+        );
       const { error } = await supabase.from("agendamentos_montagem").insert({
         contrato_id: contratoId,
         equipe_id: equipeId || null,
@@ -375,7 +373,7 @@ function AgendarDialog({
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const totalH = diffHoras(ini, fim);
+  const totalH = diffH(ini, fim);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
