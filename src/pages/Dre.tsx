@@ -682,6 +682,7 @@ export default function Dre() {
           Comissão estimada calculada com base de {(COMISSAO_BASE * 100).toFixed(0)}% sobre o faturamento.
         </p>
       </div>
+      )}
     </div>
   );
 }
