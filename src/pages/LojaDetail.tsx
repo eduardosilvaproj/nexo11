@@ -5,6 +5,7 @@ import { ArrowLeft, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { LojasKpiRow } from "@/components/lojas/LojasKpiRow";
+import { LojaResumoTab } from "@/components/lojas/LojaResumoTab";
 
 const fmtBRL = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -134,24 +135,7 @@ export default function LojaDetail() {
         <TabBtn value="equipe" label="Equipe" />
       </div>
 
-      {tab === "resumo" && (
-        <div
-          style={{
-            background: "#fff",
-            border: "0.5px solid #E8ECF2",
-            borderRadius: 12,
-            padding: 20,
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 16,
-          }}
-        >
-          <Info label="CNPJ" value={loja?.cnpj} />
-          <Info label="Telefone" value={loja?.telefone} />
-          <Info label="Email" value={loja?.email} />
-          <Info label="Cidade / UF" value={cidadeEstado} />
-        </div>
-      )}
+      {tab === "resumo" && <LojaResumoTab lojaId={id} />}
 
       {tab === "contratos" && (
         <div style={{ background: "#fff", border: "0.5px solid #E8ECF2", borderRadius: 12 }}>
