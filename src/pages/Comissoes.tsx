@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -82,16 +83,43 @@ export default function Comissoes() {
         <MetricCard label="Bônus por margem" valor={0} cor="#E8A020" />
       </div>
 
-      <div
-        className="rounded-md px-4 py-10 text-center text-sm"
-        style={{
-          background: "#F5F7FA",
-          border: "1px dashed #B0BAC9",
-          color: "#6B7A90",
-        }}
-      >
-        Conteúdo do módulo será construído nas próximas etapas
-      </div>
+      <Tabs defaultValue="relatorio">
+        <TabsList
+          className="h-auto justify-start rounded-none bg-transparent p-0 border-b"
+          style={{ borderColor: "#E8ECF2" }}
+        >
+          {[
+            { v: "relatorio", l: "Relatório" },
+            { v: "regras", l: "Regras" },
+          ].map((t) => (
+            <TabsTrigger
+              key={t.v}
+              value={t.v}
+              className="rounded-none bg-transparent px-4 py-2 text-[#6B7A90] shadow-none data-[state=active]:bg-transparent data-[state=active]:text-[#1E6FBF] data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#1E6FBF] -mb-px"
+            >
+              {t.l}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        <TabsContent value="relatorio" className="mt-4">
+          <div
+            className="rounded-md px-4 py-10 text-center text-sm"
+            style={{ background: "#F5F7FA", border: "1px dashed #B0BAC9", color: "#6B7A90" }}
+          >
+            Relatório por vendedor — em construção
+          </div>
+        </TabsContent>
+
+        <TabsContent value="regras" className="mt-4">
+          <div
+            className="rounded-md px-4 py-10 text-center text-sm"
+            style={{ background: "#F5F7FA", border: "1px dashed #B0BAC9", color: "#6B7A90" }}
+          >
+            Configuração de regras — em construção
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
