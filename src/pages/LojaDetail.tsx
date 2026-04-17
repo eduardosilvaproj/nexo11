@@ -30,19 +30,7 @@ export default function LojaDetail() {
     },
   });
 
-  const { data: contratos = [] } = useQuery({
-    queryKey: ["loja-contratos", id],
-    enabled: !!id && tab === "contratos",
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("contratos")
-        .select("id, cliente_nome, valor_venda, status, data_criacao")
-        .eq("loja_id", id)
-        .order("data_criacao", { ascending: false })
-        .limit(50);
-      return data ?? [];
-    },
-  });
+  // contratos agora em LojaContratosTab
 
   const { data: equipe = [] } = useQuery({
     queryKey: ["loja-equipe", id],
