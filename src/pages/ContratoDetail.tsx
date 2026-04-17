@@ -7,6 +7,7 @@ import { ContratoFinanceStrip } from "@/components/contrato/ContratoFinanceStrip
 import { ContratoTabs, useContratoTabs } from "@/components/contrato/ContratoTabs";
 import { ContratoActivityLog } from "@/components/contrato/ContratoActivityLog";
 import { ContratoComercialTab } from "@/components/contrato/ContratoComercialTab";
+import { ContratoTecnicoTab } from "@/components/contrato/ContratoTecnicoTab";
 
 export default function ContratoDetail() {
   const { id } = useParams<{ id: string }>();
@@ -51,6 +52,8 @@ export default function ContratoDetail() {
         <div>
           {active === "comercial" ? (
             <ContratoComercialTab contrato={contrato} />
+          ) : active === "tecnico" ? (
+            <ContratoTecnicoTab contratoId={contrato.id} />
           ) : (
             <div className="text-sm text-muted-foreground">
               Conteúdo da aba “{active}” em construção.
