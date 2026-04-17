@@ -23,9 +23,31 @@ function buildMonthOptions(months = 12) {
 export default function Lojas() {
   const monthOptions = useMemo(() => buildMonthOptions(12), []);
   const [mes, setMes] = useState(monthOptions[0].value);
+  const [tab, setTab] = useState<"lojas" | "comparativo">("lojas");
 
   const handleNovaLoja = () => {
     // TODO: abrir dialog de criação
+  };
+
+  const TabBtn = ({ value, label }: { value: "lojas" | "comparativo"; label: string }) => {
+    const active = tab === value;
+    return (
+      <button
+        onClick={() => setTab(value)}
+        style={{
+          fontSize: 14,
+          fontWeight: active ? 600 : 500,
+          padding: "10px 4px",
+          background: "transparent",
+          border: "none",
+          borderBottom: `2px solid ${active ? "#1E6FBF" : "transparent"}`,
+          color: active ? "#1E6FBF" : "#6B7A90",
+          cursor: "pointer",
+        }}
+      >
+        {label}
+      </button>
+    );
   };
 
   return (
@@ -74,6 +96,18 @@ export default function Lojas() {
       </div>
 
       <LojasKpiRow mes={mes} />
+
+      {/* Abas */}
+      <div style={{ borderBottom: "1px solid #E5E7EB", display: "flex", gap: 24 }}>
+        <TabBtn value="lojas" label="Lojas" />
+        <TabBtn value="comparativo" label="Comparativo" />
+      </div>
+
+      {tab === "lojas" ? (
+        <div style={{ fontSize: 13, color: "#6B7A90" }}>Lista de lojas em breve.</div>
+      ) : (
+        <div style={{ fontSize: 13, color: "#6B7A90" }}>Comparativo em breve.</div>
+      )}
     </div>
     </div>
   );
