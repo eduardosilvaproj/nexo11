@@ -14,16 +14,508 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      agendamentos_montagem: {
+        Row: {
+          checklist_obra_json: Json
+          contrato_id: string
+          created_at: string
+          data: string
+          entrega_confirmada: boolean
+          equipe_id: string | null
+          hora_fim: string | null
+          hora_inicio: string | null
+          id: string
+          retrabalho: boolean
+          retrabalho_motivo: string | null
+          status: Database["public"]["Enums"]["agendamento_status"]
+          updated_at: string
+        }
+        Insert: {
+          checklist_obra_json?: Json
+          contrato_id: string
+          created_at?: string
+          data: string
+          entrega_confirmada?: boolean
+          equipe_id?: string | null
+          hora_fim?: string | null
+          hora_inicio?: string | null
+          id?: string
+          retrabalho?: boolean
+          retrabalho_motivo?: string | null
+          status?: Database["public"]["Enums"]["agendamento_status"]
+          updated_at?: string
+        }
+        Update: {
+          checklist_obra_json?: Json
+          contrato_id?: string
+          created_at?: string
+          data?: string
+          entrega_confirmada?: boolean
+          equipe_id?: string | null
+          hora_fim?: string | null
+          hora_inicio?: string | null
+          id?: string
+          retrabalho?: boolean
+          retrabalho_motivo?: string | null
+          status?: Database["public"]["Enums"]["agendamento_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agendamentos_montagem_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chamados_pos_venda: {
+        Row: {
+          contrato_id: string
+          created_at: string
+          data_abertura: string
+          data_fechamento: string | null
+          descricao: string
+          id: string
+          nps: number | null
+          nps_comentario: string | null
+          status: Database["public"]["Enums"]["chamado_status"]
+          tipo: Database["public"]["Enums"]["chamado_tipo"]
+          updated_at: string
+        }
+        Insert: {
+          contrato_id: string
+          created_at?: string
+          data_abertura?: string
+          data_fechamento?: string | null
+          descricao: string
+          id?: string
+          nps?: number | null
+          nps_comentario?: string | null
+          status?: Database["public"]["Enums"]["chamado_status"]
+          tipo: Database["public"]["Enums"]["chamado_tipo"]
+          updated_at?: string
+        }
+        Update: {
+          contrato_id?: string
+          created_at?: string
+          data_abertura?: string
+          data_fechamento?: string | null
+          descricao?: string
+          id?: string
+          nps?: number | null
+          nps_comentario?: string | null
+          status?: Database["public"]["Enums"]["chamado_status"]
+          tipo?: Database["public"]["Enums"]["chamado_tipo"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chamados_pos_venda_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checklists_tecnicos: {
+        Row: {
+          concluido: boolean
+          contrato_id: string
+          created_at: string
+          data: string | null
+          id: string
+          item: string
+          observacao: string | null
+          responsavel: string | null
+          updated_at: string
+        }
+        Insert: {
+          concluido?: boolean
+          contrato_id: string
+          created_at?: string
+          data?: string | null
+          id?: string
+          item: string
+          observacao?: string | null
+          responsavel?: string | null
+          updated_at?: string
+        }
+        Update: {
+          concluido?: boolean
+          contrato_id?: string
+          created_at?: string
+          data?: string | null
+          id?: string
+          item?: string
+          observacao?: string | null
+          responsavel?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklists_tecnicos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contratos: {
+        Row: {
+          assinado: boolean
+          cliente_contato: string | null
+          cliente_nome: string
+          created_at: string
+          data_criacao: string
+          data_finalizacao: string | null
+          id: string
+          loja_id: string
+          status: Database["public"]["Enums"]["contrato_status"]
+          updated_at: string
+          valor_venda: number
+          vendedor_id: string | null
+        }
+        Insert: {
+          assinado?: boolean
+          cliente_contato?: string | null
+          cliente_nome: string
+          created_at?: string
+          data_criacao?: string
+          data_finalizacao?: string | null
+          id?: string
+          loja_id: string
+          status?: Database["public"]["Enums"]["contrato_status"]
+          updated_at?: string
+          valor_venda?: number
+          vendedor_id?: string | null
+        }
+        Update: {
+          assinado?: boolean
+          cliente_contato?: string | null
+          cliente_nome?: string
+          created_at?: string
+          data_criacao?: string
+          data_finalizacao?: string | null
+          id?: string
+          loja_id?: string
+          status?: Database["public"]["Enums"]["contrato_status"]
+          updated_at?: string
+          valor_venda?: number
+          vendedor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contratos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dre_contrato: {
+        Row: {
+          contrato_id: string
+          custo_comissao_previsto: number
+          custo_comissao_real: number
+          custo_frete_previsto: number
+          custo_frete_real: number
+          custo_montagem_previsto: number
+          custo_montagem_real: number
+          custo_produto_previsto: number
+          custo_produto_real: number
+          desvio_total: number
+          margem_prevista: number
+          margem_realizada: number
+          outros_custos_previstos: number
+          outros_custos_reais: number
+          updated_at: string
+          valor_venda: number
+        }
+        Insert: {
+          contrato_id: string
+          custo_comissao_previsto?: number
+          custo_comissao_real?: number
+          custo_frete_previsto?: number
+          custo_frete_real?: number
+          custo_montagem_previsto?: number
+          custo_montagem_real?: number
+          custo_produto_previsto?: number
+          custo_produto_real?: number
+          desvio_total?: number
+          margem_prevista?: number
+          margem_realizada?: number
+          outros_custos_previstos?: number
+          outros_custos_reais?: number
+          updated_at?: string
+          valor_venda?: number
+        }
+        Update: {
+          contrato_id?: string
+          custo_comissao_previsto?: number
+          custo_comissao_real?: number
+          custo_frete_previsto?: number
+          custo_frete_real?: number
+          custo_montagem_previsto?: number
+          custo_montagem_real?: number
+          custo_produto_previsto?: number
+          custo_produto_real?: number
+          desvio_total?: number
+          margem_prevista?: number
+          margem_realizada?: number
+          outros_custos_previstos?: number
+          outros_custos_reais?: number
+          updated_at?: string
+          valor_venda?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dre_contrato_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: true
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          contato: string | null
+          created_at: string
+          data_entrada: string
+          data_ultimo_contato: string | null
+          id: string
+          loja_id: string
+          nome: string
+          origem: string | null
+          status: Database["public"]["Enums"]["lead_status"]
+          updated_at: string
+          vendedor_id: string | null
+        }
+        Insert: {
+          contato?: string | null
+          created_at?: string
+          data_entrada?: string
+          data_ultimo_contato?: string | null
+          id?: string
+          loja_id: string
+          nome: string
+          origem?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          vendedor_id?: string | null
+        }
+        Update: {
+          contato?: string | null
+          created_at?: string
+          data_entrada?: string
+          data_ultimo_contato?: string | null
+          id?: string
+          loja_id?: string
+          nome?: string
+          origem?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
+          vendedor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lojas: {
+        Row: {
+          cidade: string | null
+          created_at: string
+          franqueado_id: string | null
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          cidade?: string | null
+          created_at?: string
+          franqueado_id?: string | null
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          cidade?: string | null
+          created_at?: string
+          franqueado_id?: string | null
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ordens_producao: {
+        Row: {
+          contrato_id: string
+          created_at: string
+          custo_real: number | null
+          data_conclusao: string | null
+          data_inicio: string | null
+          data_previsao: string | null
+          id: string
+          itens_json: Json
+          status: Database["public"]["Enums"]["op_status"]
+          updated_at: string
+        }
+        Insert: {
+          contrato_id: string
+          created_at?: string
+          custo_real?: number | null
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          data_previsao?: string | null
+          id?: string
+          itens_json?: Json
+          status?: Database["public"]["Enums"]["op_status"]
+          updated_at?: string
+        }
+        Update: {
+          contrato_id?: string
+          created_at?: string
+          custo_real?: number | null
+          data_conclusao?: string | null
+          data_inicio?: string | null
+          data_previsao?: string | null
+          id?: string
+          itens_json?: Json
+          status?: Database["public"]["Enums"]["op_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ordens_producao_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          loja_id: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          loja_id?: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          loja_id?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usuarios: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          loja_id: string | null
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id: string
+          loja_id?: string | null
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          loja_id?: string | null
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuarios_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      contrato_da_loja: { Args: { _contrato_id: string }; Returns: boolean }
+      current_loja_id: { Args: never; Returns: string }
+      has_role: {
+        Args: {
+          _loja_id?: string
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      agendamento_status: "agendado" | "em_execucao" | "concluido" | "cancelado"
+      app_role:
+        | "admin"
+        | "vendedor"
+        | "tecnico"
+        | "montador"
+        | "gerente"
+        | "franqueador"
+      chamado_status: "aberto" | "em_andamento" | "resolvido"
+      chamado_tipo: "assistencia" | "reclamacao" | "garantia" | "solicitacao"
+      contrato_status:
+        | "comercial"
+        | "tecnico"
+        | "producao"
+        | "logistica"
+        | "montagem"
+        | "pos_venda"
+        | "finalizado"
+      lead_status:
+        | "novo"
+        | "atendimento"
+        | "visita"
+        | "proposta"
+        | "convertido"
+        | "perdido"
+      op_status: "aguardando" | "em_corte" | "em_montagem" | "concluido"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +642,36 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      agendamento_status: ["agendado", "em_execucao", "concluido", "cancelado"],
+      app_role: [
+        "admin",
+        "vendedor",
+        "tecnico",
+        "montador",
+        "gerente",
+        "franqueador",
+      ],
+      chamado_status: ["aberto", "em_andamento", "resolvido"],
+      chamado_tipo: ["assistencia", "reclamacao", "garantia", "solicitacao"],
+      contrato_status: [
+        "comercial",
+        "tecnico",
+        "producao",
+        "logistica",
+        "montagem",
+        "pos_venda",
+        "finalizado",
+      ],
+      lead_status: [
+        "novo",
+        "atendimento",
+        "visita",
+        "proposta",
+        "convertido",
+        "perdido",
+      ],
+      op_status: ["aguardando", "em_corte", "em_montagem", "concluido"],
+    },
   },
 } as const
