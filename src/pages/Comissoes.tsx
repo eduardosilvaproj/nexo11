@@ -220,14 +220,5 @@ export default function Comissoes() {
         />
       )}
     </div>
-  );
-
-      <RegraEditDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        regra={regra}
-        onSave={handleSaveRegra}
-      />
-    </div>
-  );
 }
+
