@@ -29,10 +29,17 @@ type ChamadoTipo = Database["public"]["Enums"]["chamado_tipo"];
 type ChamadoStatus = Database["public"]["Enums"]["chamado_status"];
 
 const TIPO_LABEL: Record<ChamadoTipo, string> = {
-  assistencia: "Assistência",
+  assistencia: "Assistência técnica",
   reclamacao: "Reclamação",
   garantia: "Garantia",
   solicitacao: "Solicitação",
+};
+
+const TIPO_BADGE: Record<ChamadoTipo, { bg: string; fg: string }> = {
+  assistencia: { bg: "#E6F3FF", fg: "#1E6FBF" },
+  reclamacao: { bg: "#FDECEA", fg: "#E53935" },
+  garantia: { bg: "#EEEDFE", fg: "#534AB7" },
+  solicitacao: { bg: "#E8ECF2", fg: "#6B7A90" },
 };
 
 const STATUS_LABEL: Record<ChamadoStatus, string> = {
@@ -42,7 +49,7 @@ const STATUS_LABEL: Record<ChamadoStatus, string> = {
 };
 
 const STATUS_BADGE: Record<ChamadoStatus, { bg: string; fg: string }> = {
-  aberto: { bg: "#FEE2E2", fg: "#E53935" },
+  aberto: { bg: "#FDECEA", fg: "#E53935" },
   em_andamento: { bg: "#FEF3C7", fg: "#E8A020" },
   resolvido: { bg: "#D1FAE5", fg: "#05873C" },
 };
