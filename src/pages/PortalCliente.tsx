@@ -373,7 +373,7 @@ export default function PortalCliente() {
 
         {/* 5. Timeline de atividades — eventos públicos */}
         <section
-          className="bg-white rounded-xl mx-auto w-full"
+          className="portal-card bg-white rounded-xl mx-auto w-full"
           style={{ maxWidth: 680, border: "0.5px solid #E8ECF2", padding: 24 }}
         >
           <h2 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117", marginBottom: 16 }}>
@@ -429,7 +429,7 @@ export default function PortalCliente() {
         {(contrato.status === "pos_venda" || contrato.status === "finalizado") && (
           npsRespondido ? (
             <section
-              className="rounded-xl mx-auto w-full text-center"
+              className="portal-card rounded-xl mx-auto w-full text-center"
               style={{
                 maxWidth: 680,
                 backgroundColor: "#F0FDF9",
@@ -496,7 +496,7 @@ function NpsCard({
 
   return (
     <section
-      className="rounded-xl mx-auto w-full"
+      className="portal-card rounded-xl mx-auto w-full"
       style={{
         maxWidth: 680,
         backgroundColor: "#F0FDF9",
@@ -511,7 +511,7 @@ function NpsCard({
         Sua opinião ajuda a melhorarmos o atendimento
       </p>
 
-      <div className="flex gap-2 flex-wrap">
+      <div className="portal-nps-grid flex gap-2 flex-wrap">
         {Array.from({ length: 11 }, (_, i) => i).map((n) => {
           const selected = nota === n;
           const isHover = hover === n;
