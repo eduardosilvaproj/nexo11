@@ -11,6 +11,7 @@ import {
 import { AlertasBanner } from "@/components/analytics/AlertasBanner";
 import { KpiRow } from "@/components/analytics/KpiRow";
 import { FaturamentoVsPeChart } from "@/components/analytics/FaturamentoVsPeChart";
+import { FunilLeadsChart } from "@/components/analytics/FunilLeadsChart";
 
 type Loja = { id: string; nome: string };
 
@@ -99,7 +100,9 @@ export default function Analytics() {
         <div className="lg:col-span-3">
           <FaturamentoVsPeChart />
         </div>
-        <div className="lg:col-span-2" />
+        <div className="lg:col-span-2">
+          <FunilLeadsChart />
+        </div>
       </div>
     </div>
   );
