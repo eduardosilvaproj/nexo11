@@ -234,6 +234,44 @@ export default function PosVenda() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // NPS dialog state
+  const [npsOpen, setNpsOpen] = useState(false);
+  const [npsTarget, setNpsTarget] = useState<{ id: string; cliente?: string } | null>(null);
+  const [npsNota, setNpsNota] = useState<string>("");
+  const [npsComentario, setNpsComentario] = useState("");
+
+  const registrarNps = useMutation({
+    mutationFn: async () => {
+      if (!npsTarget) throw new Error("Selecione um chamado");
+      const n = Number(npsNota);
+      if (!Number.isInteger(n) || n < 0 || n > 10) {
+        throw new Error("Nota deve ser um inteiro entre 0 e 10");
+      }
+      const comentario = npsComentario.trim().slice(0, 500);
+      const { error } = await supabase
+        .from("chamados_pos_venda")
+        .update({ nps: n, nps_comentario: comentario || null })
+        .eq("id", npsTarget.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("NPS registrado");
+      qc.invalidateQueries({ queryKey: ["pos-venda-list"] });
+      setNpsOpen(false);
+      setNpsTarget(null);
+      setNpsNota("");
+      setNpsComentario("");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const openNpsDialog = (id: string, cliente?: string, current?: number | null, comentario?: string | null) => {
+    setNpsTarget({ id, cliente });
+    setNpsNota(current != null ? String(current) : "");
+    setNpsComentario(comentario ?? "");
+    setNpsOpen(true);
+  };
+
   return (
     <div className="p-8">
       <div className="mb-6 flex items-start justify-between gap-4">
