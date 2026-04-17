@@ -443,10 +443,24 @@ function AgendarDialog({
             </div>
           </div>
           <span style={{ fontSize: 12, color: "#6B7A90" }}>Total: {totalH.toFixed(1)}h</span>
+          {conflito && (
+            <div className="rounded-md border border-destructive/50 bg-destructive/10 p-2 text-xs text-destructive">
+              ⚠ Conflito: equipe já agendada das {conflito.hora_inicio?.slice(0, 5)} às {conflito.hora_fim?.slice(0, 5)} nesta data.
+            </div>
+          )}
+          {!conflito && excedeCapacidade && (
+            <div className="rounded-md border border-amber-500/50 bg-amber-500/10 p-2 text-xs text-amber-600">
+              ⚠ Excede capacidade diária ({capacidade}h). Já reservadas: {horasReservadas.toFixed(1)}h + {horasNovas.toFixed(1)}h novas.
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-          <Button onClick={() => mut.mutate()} disabled={mut.isPending} style={{ backgroundColor: "#1E6FBF" }}>
+          <Button
+            onClick={() => mut.mutate()}
+            disabled={mut.isPending || !!conflito || !!excedeCapacidade}
+            style={{ backgroundColor: "#1E6FBF" }}
+          >
             {mut.isPending ? "Salvando..." : "Agendar"}
           </Button>
         </DialogFooter>
