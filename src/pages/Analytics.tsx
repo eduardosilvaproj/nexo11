@@ -32,12 +32,22 @@ function buildMonthOptions(months = 12) {
 }
 
 export default function Analytics() {
-  const { hasRole } = useAuth();
+  const { hasRole, perfil } = useAuth();
   const isFranqueador = hasRole("franqueador");
   const monthOptions = useMemo(() => buildMonthOptions(12), []);
   const [mes, setMes] = useState(monthOptions[0].value);
-  const [lojaId, setLojaId] = useState<string>("all");
+  // Franqueador can switch lojas; everyone else is locked to their own loja
+  const [lojaId, setLojaId] = useState<string>(
+    isFranqueador ? "all" : perfil?.loja_id ?? "all"
+  );
   const [lojas, setLojas] = useState<Loja[]>([]);
+
+  // Keep lojaId in sync with perfil for non-franqueador users
+  useEffect(() => {
+    if (!isFranqueador && perfil?.loja_id) {
+      setLojaId(perfil.loja_id);
+    }
+  }, [isFranqueador, perfil?.loja_id]);
 
   useEffect(() => {
     if (!isFranqueador) return;
