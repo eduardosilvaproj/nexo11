@@ -25,6 +25,7 @@ import Analytics from "./pages/Analytics";
 import Lojas from "./pages/Lojas";
 import LojaDetail from "./pages/LojaDetail";
 import NotFound from "./pages/NotFound.tsx";
+import PortalCliente from "./pages/PortalCliente";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/portal/:token" element={<PortalCliente />} />
 
             <Route
               element={
