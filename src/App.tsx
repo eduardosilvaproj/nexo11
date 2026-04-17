@@ -37,6 +37,7 @@ const App = () => (
 
               {/* Operação */}
               <Route path="/comercial" element={<Comercial />} />
+              <Route path="/contratos/:id" element={<Placeholder title="Detalhe do contrato" description="Tela em construção." />} />
               <Route path="/tecnico" element={
                 <ProtectedRoute roles={["admin","gerente","tecnico"]}>
                   <Tecnico />
