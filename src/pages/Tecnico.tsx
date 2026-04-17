@@ -86,8 +86,16 @@ export default function Tecnico() {
     return m;
   }, [checklists]);
 
+  const checklistStatusOf = (contratoId: string, contratoStatus: string) => {
+    const s = checklistStats.get(contratoId) ?? { total: 0, done: 0 };
+    if (s.total > 0 && s.done === s.total && contratoStatus !== "tecnico") return "liberado";
+    if (s.total === 0 || s.done === 0) return "nao_iniciado";
+    if (s.done === s.total) return "completo";
+    return "em_andamento";
+  };
+
   const filtered = contratos.filter((c) => {
-    if (statusFilter !== "all" && c.status !== statusFilter) return false;
+    if (statusFilter !== "all" && checklistStatusOf(c.id, c.status) !== statusFilter) return false;
     if (search) {
       const q = search.toLowerCase();
       if (!c.cliente_nome.toLowerCase().includes(q) && !c.id.toLowerCase().includes(q)) return false;
@@ -121,17 +129,19 @@ export default function Tecnico() {
 
       <div className="flex flex-wrap items-center gap-3">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-[220px]">
             <SelectValue placeholder="Todos os status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
-            <SelectItem value="comercial">Comercial</SelectItem>
-            <SelectItem value="tecnico">Técnico</SelectItem>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="nao_iniciado">Não iniciado</SelectItem>
+            <SelectItem value="em_andamento">Em andamento</SelectItem>
+            <SelectItem value="completo">Completo</SelectItem>
+            <SelectItem value="liberado">Liberado para produção</SelectItem>
           </SelectContent>
         </Select>
         <Input
-          placeholder="Buscar cliente ou nº..."
+          placeholder="Buscar por cliente ou nº..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-sm"
