@@ -2,9 +2,42 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Clock, Link2Off } from "lucide-react";
+import { Link2Off, ArrowRight, CheckCircle2 } from "lucide-react";
 import { LogoNexo } from "@/components/LogoNexo";
 import { ContratoStepper } from "@/components/contrato/ContratoStepper";
+
+const PUBLIC_EVENTS: Record<
+  string,
+  { mensagem: (log: any) => string; tipo: "avancado" | "concluido" }
+> = {
+  status_avancado: {
+    tipo: "avancado",
+    mensagem: (log) =>
+      `Seu pedido avançou para ${log.descricao || log.titulo || "a próxima etapa"}`,
+  },
+  producao_concluida: {
+    tipo: "concluido",
+    mensagem: () => "Seu pedido saiu para produção",
+  },
+  logistica_confirmada: {
+    tipo: "concluido",
+    mensagem: () => "Entrega realizada com sucesso",
+  },
+  checklist_tecnico_completo: {
+    tipo: "concluido",
+    mensagem: () => "Projeto validado pela equipe técnica",
+  },
+};
+
+const fmtDateLong = (d?: string | null) => {
+  if (!d) return "—";
+  return new Date(d).toLocaleString("pt-BR", {
+    day: "numeric",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 const STAGE_LABELS: Record<string, string> = {
   comercial: "Comercial",
