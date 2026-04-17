@@ -749,6 +749,10 @@ export type Database = {
         Args: { _contrato_id: string }
         Returns: undefined
       }
+      realtime_canal_contrato_permitido: {
+        Args: { _topic: string }
+        Returns: boolean
+      }
     }
     Enums: {
       agendamento_status: "agendado" | "em_execucao" | "concluido" | "cancelado"
