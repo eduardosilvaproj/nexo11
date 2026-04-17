@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AlertasBanner } from "@/components/analytics/AlertasBanner";
 
 type Loja = { id: string; nome: string };
 
