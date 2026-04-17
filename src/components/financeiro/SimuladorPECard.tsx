@@ -98,14 +98,29 @@ export function SimuladorPECard({ custoFixoTotal, mes }: Props) {
               onValueChange={(v) => setMargem(v[0])} />
           }
         />
-        <SliderRow
-          label="Custo fixo mensal"
-          value={fmtBRL(custoFixo)}
-          slider={
-            <Slider value={[custoFixo]} min={10000} max={200000} step={1000}
-              onValueChange={(v) => setCustoFixo(v[0])} />
-          }
-        />
+        <div>
+          <SliderRow
+            label="Custo fixo mensal"
+            value={fmtBRL(custoFixo)}
+            slider={
+              <Slider value={[custoFixo]} min={10000} max={200000} step={1000}
+                onValueChange={(v) => handleCustoFixoChange(v[0])} />
+            }
+          />
+          {manualOverride && (
+            <div className="mt-2 flex items-center justify-between gap-2 text-[11px]" style={{ color: "#B0BAC9" }}>
+              <span>Valor ajustado manualmente — diferente dos custos cadastrados</span>
+              <button
+                type="button"
+                onClick={resetCustoFixo}
+                className="shrink-0 rounded px-2 py-0.5 font-medium hover:underline"
+                style={{ color: "#00AAFF" }}
+              >
+                Usar custos reais
+              </button>
+            </div>
+          )}
+        </div>
         <SliderRow
           label="Meta de lucro mensal"
           value={fmtBRL(meta)}
