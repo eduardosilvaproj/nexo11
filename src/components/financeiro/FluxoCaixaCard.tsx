@@ -48,10 +48,10 @@ function CustomTooltip({ active, payload, label }: any) {
 }
 
 function KpiCard({
-  label, valor, hint, icon, color,
-}: { label: string; valor: string; hint?: string; icon: React.ReactNode; color: string }) {
+  label, valor, hint, icon, color, topBorder,
+}: { label: string; valor: string; hint?: string; icon: React.ReactNode; color: string; topBorder?: string }) {
   return (
-    <Card>
+    <Card style={topBorder ? { borderTop: `3px solid ${topBorder}` } : undefined}>
       <CardContent className="flex items-start justify-between gap-3 p-4">
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground">{label}</p>
@@ -81,6 +81,12 @@ export function FluxoCaixaCard() {
   const variacao = mesAnterior
     ? ((mesAtual.saldo - mesAnterior.saldo) / Math.max(Math.abs(mesAnterior.saldo), 1)) * 100
     : 0;
+
+  // Previstos do mês ativo (sem dados reais ainda → R$ 0)
+  const entradasPrevistas = 0;
+  const saidasPrevistas = 0;
+  const saldoProjetado = entradasPrevistas - saidasPrevistas;
+  const saldoColor = saldoProjetado >= 0 ? "#12B76A" : "#E53935";
 
   return (
     <div className="space-y-4">
@@ -119,7 +125,32 @@ export function FluxoCaixaCard() {
         </Button>
       </div>
 
-      {/* KPIs */}
+      {/* Cards de previsão do mês ativo */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <KpiCard
+          label="Entradas previstas"
+          valor={fmtBRL(entradasPrevistas)}
+          icon={<ArrowUpRight className="h-5 w-5" />}
+          color="#12B76A"
+          topBorder="#12B76A"
+        />
+        <KpiCard
+          label="Saídas previstas"
+          valor={fmtBRL(saidasPrevistas)}
+          icon={<ArrowDownRight className="h-5 w-5" />}
+          color="#E53935"
+          topBorder="#E53935"
+        />
+        <KpiCard
+          label="Saldo projetado"
+          valor={fmtBRL(saldoProjetado)}
+          icon={<Wallet className="h-5 w-5" />}
+          color={saldoColor}
+          topBorder="#1E6FBF"
+        />
+      </div>
+
+      {/* KPIs do período */}
       <div className="grid gap-4 md:grid-cols-4">
         <KpiCard
           label="Entradas no período"
