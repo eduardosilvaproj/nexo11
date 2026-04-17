@@ -240,20 +240,59 @@ export default function PosVenda() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Resolver chamado dialog
+  type ChamadoRow = {
+    id: string;
+    contrato_id: string;
+    tipo: ChamadoTipo;
+    descricao: string;
+    custo: number | null;
+  };
+  const [resolveOpen, setResolveOpen] = useState(false);
+  const [resolveTarget, setResolveTarget] = useState<ChamadoRow | null>(null);
+  const [resolveCusto, setResolveCusto] = useState("");
+  const [resolveDesc, setResolveDesc] = useState("");
+  const [resolveData, setResolveData] = useState(() => new Date().toISOString().slice(0, 10));
+
+  const openResolveDialog = (c: ChamadoRow) => {
+    setResolveTarget(c);
+    setResolveCusto(c.custo != null ? String(c.custo) : "");
+    setResolveDesc("");
+    setResolveData(new Date().toISOString().slice(0, 10));
+    setResolveOpen(true);
+  };
+
   const resolverChamado = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async () => {
+      if (!resolveTarget) throw new Error("Chamado não selecionado");
+      const resolucao = resolveDesc.trim();
+      if (!resolucao) throw new Error("Descreva a resolução");
+      const custoNum = resolveCusto === "" ? 0 : Number(resolveCusto);
+      if (Number.isNaN(custoNum) || custoNum < 0) throw new Error("Custo inválido");
+      const tituloOrig = resolveTarget.descricao.split("\n")[0];
+      const novaDesc = `${resolveTarget.descricao}\n\n--- Resolução (${resolveData}) ---\n${resolucao}`;
       const { error } = await supabase
         .from("chamados_pos_venda")
         .update({
           status: "resolvido",
-          data_fechamento: new Date().toISOString(),
+          data_fechamento: new Date(`${resolveData}T12:00:00`).toISOString(),
+          custo: custoNum,
+          descricao: novaDesc,
         })
-        .eq("id", id);
+        .eq("id", resolveTarget.id);
       if (error) throw error;
+      await supabase.rpc("contrato_log_inserir", {
+        _contrato_id: resolveTarget.contrato_id,
+        _acao: "chamado_resolvido",
+        _titulo: `Chamado resolvido: ${tituloOrig}`,
+        _descricao: resolucao,
+      });
     },
     onSuccess: () => {
-      toast.success("Chamado resolvido");
+      toast.success("Chamado resolvido. DRE atualizado.");
       qc.invalidateQueries({ queryKey: ["pos-venda-list"] });
+      setResolveOpen(false);
+      setResolveTarget(null);
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -646,7 +685,15 @@ export default function PosVenda() {
                         <Button
                           size="sm"
                           style={{ backgroundColor: "#12B76A" }}
-                          onClick={() => resolverChamado.mutate(c.id)}
+                          onClick={() =>
+                            openResolveDialog({
+                              id: c.id,
+                              contrato_id: c.contrato_id,
+                              tipo: c.tipo,
+                              descricao: c.descricao,
+                              custo: Number(c.custo ?? 0),
+                            })
+                          }
                         >
                           Resolver
                         </Button>
@@ -847,6 +894,100 @@ export default function PosVenda() {
               style={{ backgroundColor: "#1E6FBF" }}
             >
               Salvar NPS
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={resolveOpen} onOpenChange={setResolveOpen}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>
+              Resolver chamado #{resolveTarget?.id.slice(0, 4).toUpperCase()}
+            </DialogTitle>
+          </DialogHeader>
+          {resolveTarget && (
+            <div className="flex flex-col gap-4">
+              <div
+                className="flex flex-col gap-2 rounded-md p-3"
+                style={{ backgroundColor: "#F5F7FA" }}
+              >
+                <div className="flex items-center gap-2">
+                  <span style={{ fontSize: 11, color: "#6B7A90", fontWeight: 500 }}>TIPO:</span>
+                  <span
+                    className="inline-flex items-center rounded-full px-2 py-0.5"
+                    style={{
+                      backgroundColor: TIPO_BADGE[resolveTarget.tipo].bg,
+                      color: TIPO_BADGE[resolveTarget.tipo].fg,
+                      fontSize: 11,
+                      fontWeight: 500,
+                    }}
+                  >
+                    {TIPO_LABEL[resolveTarget.tipo]}
+                  </span>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: "#6B7A90", fontWeight: 500 }}>TÍTULO</div>
+                  <div style={{ fontSize: 13, color: "#0D1117", fontWeight: 500 }}>
+                    {resolveTarget.descricao.split("\n")[0]}
+                  </div>
+                </div>
+                {resolveTarget.descricao.split("\n").slice(1).join("\n").trim() && (
+                  <div>
+                    <div style={{ fontSize: 11, color: "#6B7A90", fontWeight: 500 }}>
+                      DESCRIÇÃO ORIGINAL
+                    </div>
+                    <div style={{ fontSize: 12, color: "#0D1117", whiteSpace: "pre-wrap" }}>
+                      {resolveTarget.descricao.split("\n").slice(1).join("\n").trim()}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label>Custo final de assistência (R$)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={resolveCusto}
+                  onChange={(e) => setResolveCusto(e.target.value)}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label>
+                  Descrição da resolução <span style={{ color: "#E53935" }}>*</span>
+                </Label>
+                <Textarea
+                  rows={4}
+                  placeholder="Descreva o que foi feito para resolver..."
+                  value={resolveDesc}
+                  onChange={(e) => setResolveDesc(e.target.value)}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label>Data de fechamento</Label>
+                <Input
+                  type="date"
+                  value={resolveData}
+                  onChange={(e) => setResolveData(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResolveOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => resolverChamado.mutate()}
+              disabled={resolverChamado.isPending}
+              style={{ backgroundColor: "#12B76A" }}
+              className="text-white"
+            >
+              Marcar como resolvido ✓
             </Button>
           </DialogFooter>
         </DialogContent>
