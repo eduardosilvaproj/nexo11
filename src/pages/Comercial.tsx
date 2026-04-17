@@ -199,14 +199,18 @@ export default function Comercial() {
     <div className="flex h-full flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">NEXO Comercial</h1>
-          <p className="text-sm text-muted-foreground">
-            Acompanhe o funil de leads e converta em contratos.
+          <h1 style={{ fontSize: 18, fontWeight: 500, color: "#0D1117" }}>Leads</h1>
+          <p className="mt-0.5" style={{ fontSize: 13, color: "#6B7A90" }}>
+            Pipeline comercial
           </p>
         </div>
-        <Button onClick={() => setFormOpen(true)} className="bg-nexo-blue hover:bg-nexo-blue-dark">
+        <button
+          onClick={() => setFormOpen(true)}
+          className="inline-flex items-center gap-1.5 px-4 py-2 text-white transition-colors hover:bg-[#1759A0]"
+          style={{ background: "#1E6FBF", borderRadius: 8, fontSize: 13, fontWeight: 500 }}
+        >
           <Plus className="h-4 w-4" /> Novo lead
-        </Button>
+        </button>
       </div>
 
       {/* Abas */}
