@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { CustosFixosCard } from "@/components/financeiro/CustosFixosCard";
 import { SimuladorPECard } from "@/components/financeiro/SimuladorPECard";
+import { HistoricoPECard } from "@/components/financeiro/HistoricoPECard";
 
 function PontoEquilibrio() {
   const [custoFixoTotal, setCustoFixoTotal] = useState<number>(0);
@@ -12,9 +13,12 @@ function PontoEquilibrio() {
   });
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      <CustosFixosCard onTotalChange={setCustoFixoTotal} onMesChange={setMes} />
-      <SimuladorPECard custoFixoTotal={custoFixoTotal} mes={mes} />
+    <div className="space-y-4">
+      <div className="grid gap-4 lg:grid-cols-2">
+        <CustosFixosCard onTotalChange={setCustoFixoTotal} onMesChange={setMes} />
+        <SimuladorPECard custoFixoTotal={custoFixoTotal} mes={mes} />
+      </div>
+      <HistoricoPECard />
     </div>
   );
 }
