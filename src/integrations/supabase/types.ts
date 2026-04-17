@@ -745,6 +745,44 @@ export type Database = {
         }
         Relationships: []
       }
+      metas_loja: {
+        Row: {
+          created_at: string
+          id: string
+          loja_id: string
+          mes_referencia: string
+          meta_faturamento: number
+          meta_margem: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          loja_id: string
+          mes_referencia: string
+          meta_faturamento?: number
+          meta_margem?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          loja_id?: string
+          mes_referencia?: string
+          meta_faturamento?: number
+          meta_margem?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metas_loja_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notificacoes: {
         Row: {
           contrato_id: string | null
