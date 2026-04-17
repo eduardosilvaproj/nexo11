@@ -191,11 +191,17 @@ export default function Tecnico() {
           if (s.total > 0 && s.done < s.total) emAndamento++;
           if (s.total > 0 && s.done === s.total) liberados++;
         });
-        const cards = [
-          { label: "Contratos aguardando", value: aguardando, color: "#E8A020" },
-          { label: "Conferências em andamento", value: emAndamento, color: "#1E6FBF" },
-          { label: "Liberados para produção", value: liberados, color: "#12B76A" },
-        ];
+        const cards = aba === "medicao"
+          ? [
+              { label: "Aguardando medição", value: aguardando - emAndamento - liberados, color: "#E8A020" },
+              { label: "Em andamento", value: emAndamento, color: "#1E6FBF" },
+              { label: "Medição concluída", value: liberados, color: "#12B76A" },
+            ]
+          : [
+              { label: "Aguardando conferência", value: aguardando - emAndamento - liberados, color: "#E8A020" },
+              { label: "Em andamento", value: emAndamento, color: "#1E6FBF" },
+              { label: "Liberados p/ produção", value: liberados, color: "#12B76A" },
+            ];
         return (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {cards.map((k) => (
