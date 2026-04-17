@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,8 @@ type Contrato = {
   vendedor_id: string | null;
   created_at: string;
   sub_etapa_tecnico: SubEtapa;
+  medicao_responsavel_id: string | null;
+  conferencia_responsavel_id: string | null;
 };
 
 export default function Tecnico() {
