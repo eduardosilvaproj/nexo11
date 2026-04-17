@@ -4,9 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { ContratoDetailHeader } from "@/components/contrato/ContratoDetailHeader";
 import { ContratoStepper } from "@/components/contrato/ContratoStepper";
 import { ContratoFinanceStrip } from "@/components/contrato/ContratoFinanceStrip";
+import { ContratoTabs, useContratoTabs } from "@/components/contrato/ContratoTabs";
 
 export default function ContratoDetail() {
   const { id } = useParams<{ id: string }>();
+  const { active, setActive } = useContratoTabs("comercial");
 
   const { data: contrato, isLoading } = useQuery({
     queryKey: ["contrato", id],
@@ -35,8 +37,9 @@ export default function ContratoDetail() {
       <ContratoDetailHeader contrato={contrato} />
       <ContratoStepper current={contrato.status} />
       <ContratoFinanceStrip contratoId={contrato.id} />
+      <ContratoTabs active={active} onChange={setActive} />
       <div className="p-8 text-sm text-muted-foreground">
-        Conteúdo do contrato em construção.
+        Conteúdo da aba “{active}” em construção.
       </div>
     </div>
   );
