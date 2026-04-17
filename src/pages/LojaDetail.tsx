@@ -33,22 +33,7 @@ export default function LojaDetail() {
 
   // contratos agora em LojaContratosTab
 
-  const { data: equipe = [] } = useQuery({
-    queryKey: ["loja-equipe", id],
-    enabled: !!id && tab === "equipe",
-    queryFn: async () => {
-      const [{ data: roles }, { data: usuarios }] = await Promise.all([
-        supabase.from("user_roles").select("user_id, role").eq("loja_id", id),
-        supabase.from("usuarios_publico").select("id, nome").eq("loja_id", id),
-      ]);
-      const byId = new Map((usuarios ?? []).map((u: any) => [u.id, u.nome]));
-      return (roles ?? []).map((r: any) => ({
-        user_id: r.user_id,
-        role: r.role,
-        nome: byId.get(r.user_id) ?? "—",
-      }));
-    },
-  });
+  // equipe agora em LojaEquipeTab
 
   const TabBtn = ({ value, label }: { value: Tab; label: string }) => {
     const active = tab === value;
