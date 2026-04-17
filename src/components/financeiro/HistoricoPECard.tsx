@@ -23,6 +23,7 @@ function fmtBRL(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 }
 function fmtAbrev(v: number) {
+  if (v >= 1_000_000) return `R$ ${(v / 1_000_000).toFixed(1)}M`;
   if (v >= 1000) return `R$ ${Math.round(v / 1000)}k`;
   return `R$ ${v}`;
 }
