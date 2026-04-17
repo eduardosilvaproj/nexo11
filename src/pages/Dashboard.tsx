@@ -181,12 +181,14 @@ export default function Dashboard() {
                     <span style={{ fontSize: 13, color: "#0D1117" }}>{e.label}</span>
                   </div>
                   <span
-                    className="inline-flex items-center justify-center rounded-full px-2.5 py-0.5"
+                    className="inline-flex items-center justify-center"
                     style={{
                       fontSize: 12,
                       fontWeight: 600,
-                      color: "#3D4A5C",
-                      background: "#E8ECF2",
+                      color: "#6B7A90",
+                      background: "#F5F7FA",
+                      borderRadius: 20,
+                      padding: "2px 10px",
                       minWidth: 28,
                     }}
                   >
