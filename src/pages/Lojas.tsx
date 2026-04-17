@@ -105,7 +105,7 @@ export default function Lojas() {
       </div>
 
       {tab === "lojas" ? (
-        <div style={{ fontSize: 13, color: "#6B7A90" }}>Lista de lojas em breve.</div>
+        <LojasGrid mes={mes} />
       ) : (
         <div style={{ fontSize: 13, color: "#6B7A90" }}>Comparativo em breve.</div>
       )}
