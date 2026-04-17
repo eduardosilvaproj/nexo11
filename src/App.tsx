@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Placeholder from "./pages/Placeholder";
 import Comercial from "./pages/Comercial";
 import Tecnico from "./pages/Tecnico";
+import Producao from "./pages/Producao";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -43,7 +44,7 @@ const App = () => (
               } />
               <Route path="/producao" element={
                 <ProtectedRoute roles={["admin","gerente","tecnico"]}>
-                  <Placeholder title="NEXO Produção" description="Ordens de produção." />
+                  <Producao />
                 </ProtectedRoute>
               } />
               <Route path="/logistica" element={
