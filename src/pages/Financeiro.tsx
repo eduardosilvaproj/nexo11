@@ -94,7 +94,7 @@ export default function Financeiro() {
           <PontoEquilibrio />
         </TabsContent>
         <TabsContent value="fluxo-caixa" className="mt-4">
-          <FluxoCaixaPlaceholder />
+          <FluxoCaixaTab />
         </TabsContent>
         <TabsContent value="contas" className="mt-4">
           <ContasPlaceholder />
