@@ -9,6 +9,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ComissoesRelatorioTab } from "@/components/comissoes/ComissoesRelatorioTab";
+import { ComissoesRegrasTab } from "@/components/comissoes/ComissoesRegrasTab";
+import { toast } from "sonner";
 
 function fmtBRL(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
