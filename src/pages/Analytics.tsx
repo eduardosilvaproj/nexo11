@@ -14,6 +14,7 @@ import { FaturamentoVsPeChart } from "@/components/analytics/FaturamentoVsPeChar
 import { FunilLeadsChart } from "@/components/analytics/FunilLeadsChart";
 import { MargemEvolucaoChart } from "@/components/analytics/MargemEvolucaoChart";
 import { MargemAlertasCard } from "@/components/analytics/MargemAlertasCard";
+import { PipelineCard } from "@/components/analytics/PipelineCard";
 
 type Loja = { id: string; nome: string };
 
