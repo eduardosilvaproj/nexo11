@@ -45,6 +45,7 @@ export default function Dre() {
   const [ano, setAno] = useState<number>(today.getFullYear());
   const [vendedor, setVendedor] = useState<string>("all");
   const [statusFiltro, setStatusFiltro] = useState<string>("all");
+  const [rankBy, setRankBy] = useState<"margem" | "faturamento">("margem");
   const [rows, setRows] = useState<Row[]>([]);
   const [vendedores, setVendedores] = useState<{ id: string; nome: string }[]>([]);
   const [evolucao, setEvolucao] = useState<
@@ -179,6 +180,48 @@ export default function Dre() {
     return "#E53935";
   };
   const fmtPct = (m: number | null) => (m === null ? "—" : `${m.toFixed(1)}%`);
+
+  // Comissão base estimada (não há tabela de regras configurada)
+  const COMISSAO_BASE = 0.03;
+
+  const ranking = useMemo(() => {
+    const map = new Map<
+      string,
+      { id: string; nome: string; contratos: number; fat: number; sumM: number; w: number }
+    >();
+    for (const r of rows) {
+      if (!r.vendedor_id) continue;
+      const v = r.valor_venda ?? 0;
+      const cur =
+        map.get(r.vendedor_id) ??
+        {
+          id: r.vendedor_id,
+          nome: vendedores.find((u) => u.id === r.vendedor_id)?.nome ?? "—",
+          contratos: 0,
+          fat: 0,
+          sumM: 0,
+          w: 0,
+        };
+      cur.contratos += 1;
+      cur.fat += v;
+      if (v > 0 && r.margem_realizada != null) {
+        cur.sumM += r.margem_realizada * v;
+        cur.w += v;
+      }
+      map.set(r.vendedor_id, cur);
+    }
+    const arr = Array.from(map.values()).map((v) => ({
+      ...v,
+      margem: v.w > 0 ? v.sumM / v.w : null,
+      comissao: v.fat * COMISSAO_BASE,
+    }));
+    arr.sort((a, b) =>
+      rankBy === "margem"
+        ? (b.margem ?? -Infinity) - (a.margem ?? -Infinity)
+        : b.fat - a.fat
+    );
+    return arr;
+  }, [rows, vendedores, rankBy]);
 
   return (
     <div className="space-y-6">
