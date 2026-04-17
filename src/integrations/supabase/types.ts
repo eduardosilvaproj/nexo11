@@ -1363,6 +1363,10 @@ export type Database = {
         Args: { _contrato_id: string }
         Returns: undefined
       }
+      portal_registrar_nps: {
+        Args: { _comentario?: string; _nota: number; _token: string }
+        Returns: Json
+      }
       realtime_canal_contrato_permitido: {
         Args: { _topic: string }
         Returns: boolean
