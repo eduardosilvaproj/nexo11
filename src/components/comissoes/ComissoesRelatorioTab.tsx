@@ -201,6 +201,56 @@ export function ComissoesRelatorioTab({ mes, mesLabel, regra = REGRA_PADRAO }: P
     if (!alvo || confirmando) return;
     setConfirmando(true);
     try {
+      // Buscar loja do usuário
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      let lojaId: string | null = null;
+      if (uid) {
+        const { data: u } = await supabase
+          .from("usuarios")
+          .select("loja_id")
+          .eq("id", uid)
+          .maybeSingle();
+        lojaId = u?.loja_id ?? null;
+      }
+      if (!lojaId) throw new Error("Loja do usuário não encontrada");
+
+      // Upsert linhas de comissão por contrato (uma por contrato)
+      const fatorBase = regra.percentual_base;
+      const fatorBonus = regra.percentual_bonus;
+      const margemMin = regra.margem_min_bonus;
+
+      // Recalcula por contrato com base na margem realizada de cada um
+      const { data: contratosAlvo } = await supabase
+        .from("vw_contratos_dre")
+        .select("id, valor_venda, margem_realizada")
+        .in("id", alvo.contrato_ids);
+
+      const linhasUpsert = (contratosAlvo ?? []).map((c) => {
+        const valor = Number(c.valor_venda ?? 0);
+        const margem = Number(c.margem_realizada ?? 0);
+        const base = valor * fatorBase;
+        const bonus = margem >= margemMin ? valor * fatorBonus : 0;
+        return {
+          contrato_id: c.id as string,
+          loja_id: lojaId!,
+          vendedor_id: alvo.vendedor_id,
+          valor_base: base,
+          valor_bonus: bonus,
+          margem_realizada_pct: margem,
+          pago: true,
+          data_pagamento: dataPagamento,
+        };
+      });
+
+      if (linhasUpsert.length) {
+        const { error } = await supabase
+          .from("comissoes")
+          .upsert(linhasUpsert, { onConflict: "contrato_id" });
+        if (error) throw error;
+      }
+
+      // Logs por contrato
       const periodo = mesLabel ?? mes;
       const descricao = `Comissão ${periodo} — base ${fmtBRL(alvo.base)} + bônus ${fmtBRL(
         alvo.bonus
@@ -210,10 +260,10 @@ export function ComissoesRelatorioTab({ mes, mesLabel, regra = REGRA_PADRAO }: P
         acao: "comissao_paga",
         titulo: "Comissão paga",
         descricao,
+        autor_id: uid ?? null,
       }));
       if (linhasLog.length) {
-        const { error } = await supabase.from("contrato_logs").insert(linhasLog);
-        if (error) throw error;
+        await supabase.from("contrato_logs").insert(linhasLog);
       }
       setPagos((p) => new Set(p).add(alvo.vendedor_id));
       toast.success(`Comissão de ${alvo.nome} marcada como paga`);
