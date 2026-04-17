@@ -7,6 +7,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LojasKpiRow } from "@/components/lojas/LojasKpiRow";
+import { LojasGrid } from "@/components/lojas/LojasGrid";
 
 function buildMonthOptions(months = 12) {
   const opts: { value: string; label: string }[] = [];
