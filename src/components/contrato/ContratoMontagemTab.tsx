@@ -105,17 +105,49 @@ export function ContratoMontagemTab({ contratoId }: MontagemTabProps) {
   const agendarMut = useMutation({
     mutationFn: async () => {
       if (!agData) throw new Error("Selecione a data");
-      const { error } = await supabase.from("agendamentos_montagem").insert({
-        contrato_id: contratoId,
-        data: format(agData, "yyyy-MM-dd"),
-        hora_inicio: agInicio || null,
-        hora_fim: agFim || null,
-        equipe_id: agEquipe || null,
+      const dataStr = format(agData, "yyyy-MM-dd");
+      const equipeSel = equipes.find((e) => e.id === agEquipe) as any;
+      const check = await checkAgendamentoConflict({
+        equipeId: agEquipe || null,
+        data: dataStr,
+        horaInicio: agInicio || null,
+        horaFim: agFim || null,
+        capacidadeHorasDia: equipeSel?.capacidade_horas_dia,
+        excludeId: agendamento?.id,
       });
-      if (error) throw error;
+      if (check.error) throw new Error(check.error);
+      if (check.conflito)
+        throw new Error(
+          `Conflito: equipe já agendada das ${check.conflito.hora_inicio?.slice(0, 5)} às ${check.conflito.hora_fim?.slice(0, 5)}`,
+        );
+      if (check.excedeCapacidade)
+        throw new Error(
+          `Excede capacidade diária (${check.capacidade}h). Já reservadas: ${check.horasReservadas.toFixed(1)}h`,
+        );
+      if (agendamento?.id) {
+        const { error } = await supabase
+          .from("agendamentos_montagem")
+          .update({
+            data: dataStr,
+            hora_inicio: agInicio || null,
+            hora_fim: agFim || null,
+            equipe_id: agEquipe || null,
+          })
+          .eq("id", agendamento.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("agendamentos_montagem").insert({
+          contrato_id: contratoId,
+          data: dataStr,
+          hora_inicio: agInicio || null,
+          hora_fim: agFim || null,
+          equipe_id: agEquipe || null,
+        });
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
-      toast.success("Montagem agendada");
+      toast.success(agendamento?.id ? "Montagem reagendada" : "Montagem agendada");
       setAgOpen(false);
       qc.invalidateQueries({ queryKey: ["agendamento", contratoId] });
     },
