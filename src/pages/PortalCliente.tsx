@@ -212,19 +212,44 @@ export default function PortalCliente() {
 
   return (
     <div
-      className="min-h-screen flex flex-col"
+      className="portal-root min-h-screen flex flex-col"
       style={{ backgroundColor: "#F5F7FA" }}
     >
+      <style>{`
+        .portal-current-stage { display: none; }
+        @media (max-width: 480px) {
+          .portal-root .portal-header { padding: 16px !important; }
+          .portal-root .portal-header-inner {
+            flex-direction: column !important;
+            align-items: center !important;
+            text-align: center !important;
+            gap: 8px !important;
+          }
+          .portal-root .portal-header-right { text-align: center !important; align-items: center !important; }
+          .portal-root .portal-main { padding-left: 12px !important; padding-right: 12px !important; }
+          .portal-root .portal-card { padding: 16px !important; max-width: 100% !important; margin-top: 16px !important; }
+          .portal-root .portal-status-card { flex-direction: column !important; align-items: stretch !important; }
+          .portal-root .portal-status-right { text-align: left !important; }
+          .portal-root .portal-stepper > div { padding: 12px 8px !important; }
+          .portal-root .portal-stepper .h-8.w-8 { height: 24px !important; width: 24px !important; }
+          .portal-root .portal-stepper .h-8.w-8 svg { width: 12px !important; height: 12px !important; }
+          .portal-root .portal-stepper span.mt-2 { display: none !important; }
+          .portal-root .portal-current-stage { display: block !important; }
+          .portal-root .portal-nps-grid { display: grid !important; grid-template-columns: repeat(5, 1fr) !important; gap: 6px !important; }
+          .portal-root .portal-nps-grid > button { width: 100% !important; height: 44px !important; }
+        }
+      `}</style>
+
       {/* 1. Header público */}
-      <header style={{ backgroundColor: "#0D1117", padding: "20px 32px" }}>
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <div className="flex flex-col gap-1">
+      <header className="portal-header" style={{ backgroundColor: "#0D1117", padding: "20px 32px" }}>
+        <div className="portal-header-inner max-w-3xl mx-auto flex items-center justify-between">
+          <div className="flex flex-col gap-1 items-start">
             <LogoNexo size="lg" />
             <div style={{ fontSize: 12, color: "#6B7A90" }}>
               Acompanhamento de pedido
             </div>
           </div>
-          <div className="text-right flex flex-col gap-1">
+          <div className="portal-header-right text-right flex flex-col gap-1">
             <div style={{ color: "#fff", fontSize: 13, fontWeight: 500 }}>
               {contrato.lojas?.nome ?? numero}
             </div>
@@ -237,10 +262,10 @@ export default function PortalCliente() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-3xl w-full mx-auto px-6 py-8 space-y-6">
+      <main className="portal-main flex-1 max-w-3xl w-full mx-auto px-6 py-8 space-y-6">
         {/* 2. Status atual — card de destaque */}
         <section
-          className="bg-white rounded-xl mx-auto flex items-center justify-between gap-6 flex-wrap"
+          className="portal-card portal-status-card bg-white rounded-xl mx-auto flex items-center justify-between gap-6 flex-wrap"
           style={{
             border: "0.5px solid #E8ECF2",
             padding: 24,
@@ -282,7 +307,7 @@ export default function PortalCliente() {
               </div>
             )}
           </div>
-          <div className="flex flex-col gap-1 text-right">
+          <div className="portal-status-right flex flex-col gap-1 text-right">
             <div style={{ fontSize: 12, color: "#6B7A90" }}>
               Contrato
             </div>
@@ -293,15 +318,22 @@ export default function PortalCliente() {
         </section>
 
         {/* 3. Barra de progresso das etapas — reutiliza componente interno */}
-        <section className="mx-auto w-full" style={{ maxWidth: 680 }}>
+        <section className="portal-stepper mx-auto w-full" style={{ maxWidth: 680 }}>
           <ContratoStepper current={contrato.status} />
+          <div
+            className="portal-current-stage text-center"
+            style={{ fontSize: 13, fontWeight: 500, color: "#1E6FBF", marginTop: 8 }}
+          >
+            Etapa atual: {stageLabel}
+          </div>
         </section>
 
         {/* 4. Detalhes do pedido */}
         <section
-          className="bg-white rounded-xl mx-auto w-full"
+          className="portal-card bg-white rounded-xl mx-auto w-full"
           style={{ maxWidth: 680, border: "0.5px solid #E8ECF2", padding: 24 }}
         >
+
           <h2 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117", marginBottom: 16 }}>
             Detalhes do pedido
           </h2>
@@ -341,7 +373,7 @@ export default function PortalCliente() {
 
         {/* 5. Timeline de atividades — eventos públicos */}
         <section
-          className="bg-white rounded-xl mx-auto w-full"
+          className="portal-card bg-white rounded-xl mx-auto w-full"
           style={{ maxWidth: 680, border: "0.5px solid #E8ECF2", padding: 24 }}
         >
           <h2 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117", marginBottom: 16 }}>
@@ -397,7 +429,7 @@ export default function PortalCliente() {
         {(contrato.status === "pos_venda" || contrato.status === "finalizado") && (
           npsRespondido ? (
             <section
-              className="rounded-xl mx-auto w-full text-center"
+              className="portal-card rounded-xl mx-auto w-full text-center"
               style={{
                 maxWidth: 680,
                 backgroundColor: "#F0FDF9",
@@ -464,7 +496,7 @@ function NpsCard({
 
   return (
     <section
-      className="rounded-xl mx-auto w-full"
+      className="portal-card rounded-xl mx-auto w-full"
       style={{
         maxWidth: 680,
         backgroundColor: "#F0FDF9",
@@ -479,7 +511,7 @@ function NpsCard({
         Sua opinião ajuda a melhorarmos o atendimento
       </p>
 
-      <div className="flex gap-2 flex-wrap">
+      <div className="portal-nps-grid flex gap-2 flex-wrap">
         {Array.from({ length: 11 }, (_, i) => i).map((n) => {
           const selected = nota === n;
           const isHover = hover === n;
