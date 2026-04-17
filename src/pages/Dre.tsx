@@ -592,6 +592,7 @@ export default function Dre() {
         </div>
       </div>
 
+      {podeVerRanking && (
       <div className="rounded-lg border border-[#E8ECF2] bg-white p-5">
         <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
