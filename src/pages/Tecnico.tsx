@@ -27,7 +27,7 @@ export default function Tecnico() {
       const { data, error } = await supabase
         .from("contratos")
         .select("id,cliente_nome,status,vendedor_id,created_at")
-        .in("status", ["tecnico", "comercial"])
+        .eq("status", "tecnico")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Contrato[];
