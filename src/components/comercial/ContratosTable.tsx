@@ -39,15 +39,24 @@ export function ContratosTable({ onCreate }: Props) {
     queryKey: ["contratos-table", perfil?.loja_id],
     enabled: !!perfil?.loja_id,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("contratos")
-        .select("id, cliente_nome, vendedor_id, status, valor_venda, data_criacao, dre_contrato(margem_prevista)")
-        .order("data_criacao", { ascending: false });
-      if (error) throw error;
-      return data as Array<{
+      const [contratosRes, usuariosRes] = await Promise.all([
+        supabase
+          .from("contratos")
+          .select("id, cliente_nome, vendedor_id, status, valor_venda, data_criacao, dre_contrato(margem_prevista)")
+          .order("data_criacao", { ascending: false }),
+        supabase.from("usuarios").select("id, nome").eq("loja_id", perfil!.loja_id!),
+      ]);
+      if (contratosRes.error) throw contratosRes.error;
+      if (usuariosRes.error) throw usuariosRes.error;
+      const userMap = new Map((usuariosRes.data ?? []).map((u) => [u.id, u.nome]));
+      return (contratosRes.data ?? []).map((c) => ({
+        ...c,
+        vendedor_nome: c.vendedor_id ? userMap.get(c.vendedor_id) ?? "—" : "Sem responsável",
+      })) as Array<{
         id: string;
         cliente_nome: string;
         vendedor_id: string | null;
+        vendedor_nome: string;
         status: ContratoStatus;
         valor_venda: number;
         data_criacao: string;
@@ -153,7 +162,7 @@ export function ContratosTable({ onCreate }: Props) {
                     {c.cliente_nome}
                   </td>
                   <td className="px-4 py-3" style={{ fontSize: 13, color: "#6B7A90" }}>
-                    {c.vendedor_id ? "—" : "Sem responsável"}
+                    {c.vendedor_nome}
                   </td>
                   <td className="px-4 py-3">
                     <span
