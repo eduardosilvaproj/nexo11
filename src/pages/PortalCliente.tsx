@@ -215,30 +215,61 @@ export default function PortalCliente() {
       </header>
 
       <main className="flex-1 max-w-3xl w-full mx-auto px-6 py-8 space-y-6">
-        {/* 2. Status atual em destaque */}
+        {/* 2. Status atual — card de destaque */}
         <section
-          className="rounded-xl p-6 text-white"
+          className="bg-white rounded-xl mx-auto flex items-center justify-between gap-6 flex-wrap"
           style={{
-            background: isFinalizado
-              ? "linear-gradient(135deg, #12B76A 0%, #05873C 100%)"
-              : "linear-gradient(135deg, #1E6FBF 0%, #0D4F8F 100%)",
+            border: "0.5px solid #E8ECF2",
+            padding: 24,
+            marginTop: 32,
+            maxWidth: 680,
           }}
         >
-          <div
-            className="uppercase tracking-wider"
-            style={{ fontSize: 11, opacity: 0.85 }}
-          >
-            Status atual
+          <div className="flex flex-col gap-2">
+            <div style={{ fontSize: 20, fontWeight: 500, color: "#0D1117" }}>
+              Olá, {contrato.cliente_nome}
+            </div>
+            <div style={{ fontSize: 14, color: "#6B7A90" }}>
+              {isFinalizado
+                ? "Seu pedido foi finalizado"
+                : "Seu pedido está em andamento"}
+            </div>
+            <div className="mt-2">
+              <span
+                className="inline-block rounded-full"
+                style={{
+                  padding: "8px 20px",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  backgroundColor: isFinalizado ? "#E8F8EF" : "#E8F0FB",
+                  color: isFinalizado ? "#05873C" : "#1E6FBF",
+                }}
+              >
+                {isFinalizado ? "Finalizado" : stageLabel}
+              </span>
+            </div>
+            {entregaPrevista && !isFinalizado && (
+              <div style={{ fontSize: 13, color: "#6B7A90", marginTop: 4 }}>
+                Previsão:{" "}
+                {new Date(entregaPrevista).toLocaleDateString("pt-BR", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </div>
+            )}
           </div>
-          <div
-            style={{ fontSize: 28, fontWeight: 600, marginTop: 4 }}
-          >
-            {isFinalizado ? "Pedido finalizado" : stageLabel}
-          </div>
-          <div style={{ fontSize: 13, opacity: 0.9, marginTop: 6 }}>
-            {isFinalizado
-              ? `Concluído em ${fmtDate(contrato.data_finalizacao)}`
-              : `Atualizado em ${fmtDateTime(contrato.updated_at)}`}
+          <div className="flex flex-col gap-2 text-right">
+            <div style={{ fontSize: 12, color: "#6B7A90" }}>
+              Contrato {numero}
+            </div>
+            <div style={{ fontSize: 20, fontWeight: 500, color: "#0D1117" }}>
+              {Number(contrato.valor_venda ?? 0).toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+                maximumFractionDigits: 0,
+              })}
+            </div>
           </div>
         </section>
 
