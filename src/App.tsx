@@ -18,6 +18,7 @@ import Equipes from "./pages/Equipes";
 import PosVenda from "./pages/PosVenda";
 import Dre from "./pages/Dre";
 import Financeiro from "./pages/Financeiro";
+import Comissoes from "./pages/Comissoes";
 import ContratoDetail from "./pages/ContratoDetail";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -80,7 +81,7 @@ const App = () => (
               } />
               <Route path="/comissoes" element={
                 <ProtectedRoute roles={["admin","gerente"]}>
-                  <Placeholder title="NEXO Comissões" />
+                  <Comissoes />
                 </ProtectedRoute>
               } />
               <Route path="/compras" element={
