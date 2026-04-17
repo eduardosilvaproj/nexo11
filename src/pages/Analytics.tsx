@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AlertasBanner } from "@/components/analytics/AlertasBanner";
+import { KpiRow } from "@/components/analytics/KpiRow";
 
 type Loja = { id: string; nome: string };
 
@@ -90,6 +91,8 @@ export default function Analytics() {
           )}
         </div>
       </div>
+
+      <KpiRow mes={mes} lojaId={lojaId} />
     </div>
   );
 }
