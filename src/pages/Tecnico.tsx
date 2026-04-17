@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, Settings, Paperclip, ClipboardList } from "lucide-react";
+import { ChecklistTemplateDialog } from "@/components/tecnico/ChecklistTemplateDialog";
 
 type Contrato = {
   id: string;
@@ -20,6 +21,7 @@ export default function Tecnico() {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [templateOpen, setTemplateOpen] = useState(false);
 
   const { data: contratos = [], isLoading } = useQuery({
     queryKey: ["contratos-tecnico-list"],
@@ -120,12 +122,15 @@ export default function Tecnico() {
         <Button
           variant="outline"
           size="sm"
+          onClick={() => setTemplateOpen(true)}
           style={{ borderColor: "#1E6FBF", color: "#1E6FBF" }}
         >
           <Settings className="mr-2 h-4 w-4" />
           Configurar checklist
         </Button>
       </div>
+
+      <ChecklistTemplateDialog open={templateOpen} onOpenChange={setTemplateOpen} />
 
       <div className="flex flex-wrap items-center gap-3">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
