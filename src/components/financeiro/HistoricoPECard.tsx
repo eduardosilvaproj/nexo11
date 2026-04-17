@@ -23,6 +23,7 @@ function fmtBRL(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 }
 function fmtAbrev(v: number) {
+  if (v >= 1_000_000) return `R$ ${(v / 1_000_000).toFixed(1)}M`;
   if (v >= 1000) return `R$ ${Math.round(v / 1000)}k`;
   return `R$ ${v}`;
 }
@@ -77,7 +78,9 @@ export function HistoricoPECard() {
           faturamento: Number(found?.faturamento_realizado ?? 0),
         });
       }
-      setData(series);
+      // Se todos os valores forem zero, mantém o fallback para o gráfico ter escala
+      const hasAny = series.some((r) => r.pe > 0 || r.faturamento > 0);
+      if (hasAny) setData(series);
     })();
   }, [lojaId]);
 
@@ -109,7 +112,7 @@ export function HistoricoPECard() {
               </defs>
               <CartesianGrid stroke="#E8ECF2" vertical={false} />
               <XAxis dataKey="mes" tick={{ fill: "#6B7A90", fontSize: 12 }} axisLine={{ stroke: "#E8ECF2" }} tickLine={false} />
-              <YAxis tickFormatter={fmtAbrev} tick={{ fill: "#6B7A90", fontSize: 12 }} axisLine={false} tickLine={false} width={70} />
+              <YAxis tickFormatter={fmtAbrev} tick={{ fill: "#6B7A90", fontSize: 12 }} axisLine={false} tickLine={false} width={70} domain={[0, "auto"]} allowDecimals={false} />
               <Tooltip content={<CustomTooltip />} />
               <Legend
                 wrapperStyle={{ fontSize: 12, color: "#6B7A90" }}
