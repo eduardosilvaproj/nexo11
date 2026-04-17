@@ -1,5 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Link2, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Bar,
@@ -222,6 +224,7 @@ export function ContratoDreTab({ contratoId, contratoNumero, contratoStatus }: C
           DRE do contrato {numeroFmt}
         </h2>
         <div className="flex items-center gap-3">
+          <SharePortalButton contratoId={contratoId} />
           <button
             type="button"
             onClick={() => window.print()}
@@ -482,6 +485,115 @@ export function ContratoDreTab({ contratoId, contratoNumero, contratoStatus }: C
           </ResponsiveContainer>
         </div>
       </div>
+    </div>
+  );
+}
+
+function SharePortalButton({ contratoId }: { contratoId: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleShare() {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("portal_tokens")
+        .select("token")
+        .eq("contrato_id", contratoId)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data?.token) {
+        toast.error("Token do portal não encontrado para este contrato.");
+        return;
+      }
+      const link = `${window.location.origin}/portal/${data.token}`;
+      setUrl(link);
+      try {
+        await navigator.clipboard.writeText(link);
+        toast.success("Link copiado! Envie para o cliente pelo WhatsApp.");
+      } catch {
+        toast.message("Link gerado. Copie manualmente abaixo.");
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Não foi possível gerar o link.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function copyAgain() {
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copiado!");
+    } catch {
+      toast.error("Não foi possível copiar.");
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <button
+        type="button"
+        onClick={handleShare}
+        disabled={loading}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          padding: "6px 12px",
+          fontSize: 12,
+          fontWeight: 500,
+          color: "#1E6FBF",
+          backgroundColor: "#FFFFFF",
+          border: "1px solid #1E6FBF",
+          borderRadius: 6,
+          cursor: loading ? "wait" : "pointer",
+          opacity: loading ? 0.7 : 1,
+        }}
+      >
+        <Link2 size={14} />
+        Compartilhar portal com cliente
+      </button>
+      {url && (
+        <div className="flex flex-col items-end gap-1" style={{ marginTop: 4 }}>
+          <div className="flex items-center gap-1">
+            <input
+              readOnly
+              value={url}
+              onFocus={(e) => e.currentTarget.select()}
+              style={{
+                width: 320,
+                padding: "4px 8px",
+                fontSize: 11,
+                color: "#0D1117",
+                backgroundColor: "#F5F7FA",
+                border: "1px solid #E8ECF2",
+                borderRadius: 4,
+              }}
+            />
+            <button
+              type="button"
+              onClick={copyAgain}
+              title="Copiar"
+              style={{
+                padding: 4,
+                background: "transparent",
+                border: "1px solid #E8ECF2",
+                borderRadius: 4,
+                cursor: "pointer",
+                color: "#6B7A90",
+                display: "inline-flex",
+              }}
+            >
+              <Copy size={12} />
+            </button>
+          </div>
+          <span style={{ fontSize: 11, color: "#6B7A90" }}>
+            Válido enquanto o contrato estiver ativo
+          </span>
+        </div>
+      )}
     </div>
   );
 }
