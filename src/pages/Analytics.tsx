@@ -12,6 +12,7 @@ import { AlertasBanner } from "@/components/analytics/AlertasBanner";
 import { KpiRow } from "@/components/analytics/KpiRow";
 import { FaturamentoVsPeChart } from "@/components/analytics/FaturamentoVsPeChart";
 import { FunilLeadsChart } from "@/components/analytics/FunilLeadsChart";
+import { MargemEvolucaoChart } from "@/components/analytics/MargemEvolucaoChart";
 
 type Loja = { id: string; nome: string };
 
@@ -103,6 +104,13 @@ export default function Analytics() {
         <div className="lg:col-span-2">
           <FunilLeadsChart />
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-20 gap-4" style={{ gridTemplateColumns: "repeat(20, minmax(0, 1fr))" }}>
+        <div className="lg:col-span-13" style={{ gridColumn: "span 13 / span 13" }}>
+          <MargemEvolucaoChart />
+        </div>
+        <div className="lg:col-span-7" style={{ gridColumn: "span 7 / span 7" }} />
       </div>
     </div>
   );
