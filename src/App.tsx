@@ -91,7 +91,7 @@ const App = () => (
               } />
               <Route path="/equipe" element={
                 <ProtectedRoute roles={["admin","gerente"]}>
-                  <Placeholder title="NEXO Equipe" />
+                  <Equipe />
                 </ProtectedRoute>
               } />
               <Route path="/lojas" element={
