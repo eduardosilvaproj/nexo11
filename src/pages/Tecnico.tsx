@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, Settings, Paperclip, ClipboardList } from "lucide-react";
+import { ChecklistTemplateDialog } from "@/components/tecnico/ChecklistTemplateDialog";
 
 type Contrato = {
   id: string;
