@@ -323,6 +323,34 @@ export default function Tecnico() {
                       {c.vendedor_id ? userMap.get(c.vendedor_id) ?? "—" : "—"}
                     </TableCell>
                     <TableCell>
+                      {(() => {
+                        const value = aba === "medicao" ? c.medicao_responsavel_id : c.conferencia_responsavel_id;
+                        return (
+                          <Select
+                            value={value ?? undefined}
+                            onValueChange={(v) => atribuirResponsavel(c.id, v)}
+                          >
+                            <SelectTrigger className="h-8 w-[160px]" style={{ fontSize: 12 }}>
+                              <SelectValue placeholder="Atribuir →" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {responsaveis.length === 0 ? (
+                                <div className="px-2 py-1.5" style={{ fontSize: 12, color: "#6B7A90" }}>
+                                  Nenhum {papelAtual} cadastrado
+                                </div>
+                              ) : (
+                                responsaveis.map((u) => (
+                                  <SelectItem key={u.id} value={u.id}>
+                                    {u.nome}
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
+                        );
+                      })()}
+                    </TableCell>
+                    <TableCell>
                       {stats.total === 0 ? (
                         <span style={{ fontSize: 12, color: "#B0BAC9" }}>Não iniciado</span>
                       ) : (
