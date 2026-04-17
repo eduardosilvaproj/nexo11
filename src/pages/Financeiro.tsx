@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { CustosFixosCard } from "@/components/financeiro/CustosFixosCard";
 import { SimuladorPECard } from "@/components/financeiro/SimuladorPECard";
 import { HistoricoPECard } from "@/components/financeiro/HistoricoPECard";
+import { FluxoCaixaCard } from "@/components/financeiro/FluxoCaixaCard";
 
 function PontoEquilibrio() {
   const [custoFixoTotal, setCustoFixoTotal] = useState<number>(0);
