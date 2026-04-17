@@ -13,6 +13,7 @@ import {
   ShoppingCart,
   UserCog,
   Building2,
+  Users2,
   BarChart3,
   Plug,
   LogOut,
@@ -49,6 +50,7 @@ const gestao = [
   { title: "Comissões", url: "/comissoes", icon: Percent },
   { title: "Compras", url: "/compras", icon: ShoppingCart },
   { title: "Equipe", url: "/equipe", icon: UserCog },
+  { title: "Equipes", url: "/equipes", icon: Users2, roles: ["admin", "gerente"] },
   { title: "Lojas", url: "/lojas", icon: Building2, roles: ["admin", "franqueador"] },
 ];
 
