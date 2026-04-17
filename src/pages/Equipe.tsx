@@ -4,6 +4,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { MembrosTab } from "@/components/equipe/MembrosTab";
 import { NovoMembroDialog } from "@/components/equipe/NovoMembroDialog";
 import { PontoTab } from "@/components/equipe/PontoTab";
+import { DesempenhoTab } from "@/components/equipe/DesempenhoTab";
 
 type Metric = {
   label: string;
@@ -105,9 +106,7 @@ export default function Equipe() {
           <PontoTab />
         </TabsContent>
         <TabsContent value="desempenho" className="mt-6">
-          <p style={{ fontSize: 13, color: "#6B7A90" }}>
-            Sem dados de desempenho.
-          </p>
+          <DesempenhoTab />
         </TabsContent>
       </Tabs>
 
