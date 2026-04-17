@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LojasKpiRow } from "@/components/lojas/LojasKpiRow";
 import { LojaResumoTab } from "@/components/lojas/LojaResumoTab";
 import { LojaContratosTab } from "@/components/lojas/LojaContratosTab";
+import { LojaEquipeTab } from "@/components/lojas/LojaEquipeTab";
 
 const fmtBRL = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -32,22 +33,7 @@ export default function LojaDetail() {
 
   // contratos agora em LojaContratosTab
 
-  const { data: equipe = [] } = useQuery({
-    queryKey: ["loja-equipe", id],
-    enabled: !!id && tab === "equipe",
-    queryFn: async () => {
-      const [{ data: roles }, { data: usuarios }] = await Promise.all([
-        supabase.from("user_roles").select("user_id, role").eq("loja_id", id),
-        supabase.from("usuarios_publico").select("id, nome").eq("loja_id", id),
-      ]);
-      const byId = new Map((usuarios ?? []).map((u: any) => [u.id, u.nome]));
-      return (roles ?? []).map((r: any) => ({
-        user_id: r.user_id,
-        role: r.role,
-        nome: byId.get(r.user_id) ?? "—",
-      }));
-    },
-  });
+  // equipe agora em LojaEquipeTab
 
   const TabBtn = ({ value, label }: { value: Tab; label: string }) => {
     const active = tab === value;
@@ -128,32 +114,7 @@ export default function LojaDetail() {
 
       {tab === "contratos" && <LojaContratosTab lojaId={id} />}
 
-      {tab === "equipe" && (
-        <div style={{ background: "#fff", border: "0.5px solid #E8ECF2", borderRadius: 12 }}>
-          {equipe.length === 0 ? (
-            <div style={{ padding: 24, fontSize: 13, color: "#6B7A90", textAlign: "center" }}>
-              Nenhum membro vinculado.
-            </div>
-          ) : (
-            <table style={{ width: "100%", fontSize: 13 }}>
-              <thead>
-                <tr style={{ color: "#6B7A90", textAlign: "left" }}>
-                  <th style={{ padding: "10px 16px" }}>Nome</th>
-                  <th style={{ padding: "10px 16px" }}>Papel</th>
-                </tr>
-              </thead>
-              <tbody>
-                {equipe.map((m: any) => (
-                  <tr key={`${m.user_id}-${m.role}`} style={{ borderTop: "1px solid #EEF1F5" }}>
-                    <td style={{ padding: "10px 16px" }}>{m.nome}</td>
-                    <td style={{ padding: "10px 16px", color: "#6B7A90" }}>{m.role}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
+      {tab === "equipe" && <LojaEquipeTab lojaId={id} />}
     </div>
   );
 }
