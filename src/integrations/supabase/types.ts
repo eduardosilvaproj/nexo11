@@ -421,6 +421,53 @@ export type Database = {
           },
         ]
       }
+      fornecedores: {
+        Row: {
+          ativo: boolean
+          contato: string | null
+          created_at: string
+          email: string | null
+          id: string
+          loja_id: string
+          nome: string
+          observacoes: string | null
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          contato?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          loja_id: string
+          nome: string
+          observacoes?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          contato?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          loja_id?: string
+          nome?: string
+          observacoes?: string | null
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fornecedores_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           contato: string | null
@@ -548,8 +595,11 @@ export type Database = {
           data_conclusao: string | null
           data_inicio: string | null
           data_previsao: string | null
+          fornecedor_id: string | null
           id: string
           itens_json: Json
+          observacoes: string | null
+          prazo_dias: number | null
           status: Database["public"]["Enums"]["op_status"]
           updated_at: string
         }
@@ -560,8 +610,11 @@ export type Database = {
           data_conclusao?: string | null
           data_inicio?: string | null
           data_previsao?: string | null
+          fornecedor_id?: string | null
           id?: string
           itens_json?: Json
+          observacoes?: string | null
+          prazo_dias?: number | null
           status?: Database["public"]["Enums"]["op_status"]
           updated_at?: string
         }
@@ -572,8 +625,11 @@ export type Database = {
           data_conclusao?: string | null
           data_inicio?: string | null
           data_previsao?: string | null
+          fornecedor_id?: string | null
           id?: string
           itens_json?: Json
+          observacoes?: string | null
+          prazo_dias?: number | null
           status?: Database["public"]["Enums"]["op_status"]
           updated_at?: string
         }
@@ -590,6 +646,13 @@ export type Database = {
             columns: ["contrato_id"]
             isOneToOne: false
             referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordens_producao_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
             referencedColumns: ["id"]
           },
         ]
