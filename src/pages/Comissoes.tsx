@@ -76,6 +76,12 @@ export default function Comissoes() {
         </Select>
       </header>
 
+      <div className="grid gap-4 md:grid-cols-3">
+        <MetricCard label="Total a pagar (mês)" valor={0} cor="#1E6FBF" />
+        <MetricCard label="Comissões pagas" valor={0} cor="#12B76A" />
+        <MetricCard label="Bônus por margem" valor={0} cor="#E8A020" />
+      </div>
+
       <div
         className="rounded-md px-4 py-10 text-center text-sm"
         style={{
