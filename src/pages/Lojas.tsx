@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select";
 import { LojasKpiRow } from "@/components/lojas/LojasKpiRow";
 import { LojasGrid } from "@/components/lojas/LojasGrid";
+import { LojasComparativoTab } from "@/components/lojas/LojasComparativoTab";
 import { NovaLojaDialog } from "@/components/lojas/NovaLojaDialog";
 
 function buildMonthOptions(months = 12) {
