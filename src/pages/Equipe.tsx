@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { Plus, Users, UserCheck, UserX, Clock } from "lucide-react";
-import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { MembrosTab } from "@/components/equipe/MembrosTab";
+import { NovoMembroDialog } from "@/components/equipe/NovoMembroDialog";
 
 type Metric = {
   label: string;
@@ -48,6 +49,7 @@ function MetricCard({ metric }: { metric: Metric }) {
 }
 
 export default function Equipe() {
+  const [novoOpen, setNovoOpen] = useState(false);
   return (
     <div className="flex flex-col gap-6 p-8">
       <div className="flex items-end justify-between">
@@ -60,7 +62,7 @@ export default function Equipe() {
           </p>
         </div>
         <button
-          onClick={() => toast.info("Em breve: cadastro de novo membro")}
+          onClick={() => setNovoOpen(true)}
           className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-white"
           style={{ backgroundColor: "#1E6FBF", fontSize: 13 }}
         >
@@ -109,6 +111,8 @@ export default function Equipe() {
           </p>
         </TabsContent>
       </Tabs>
+
+      <NovoMembroDialog open={novoOpen} onOpenChange={setNovoOpen} />
     </div>
   );
 }
