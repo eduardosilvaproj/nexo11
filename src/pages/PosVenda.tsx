@@ -426,19 +426,6 @@ export default function PosVenda() {
       {tab === "chamados" && (
       <>
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
-            {(Object.keys(STATUS_LABEL) as ChamadoStatus[]).map((s) => (
-              <SelectItem key={s} value={s}>
-                {STATUS_LABEL[s]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         <Select value={tipoFilter} onValueChange={setTipoFilter}>
           <SelectTrigger className="w-48">
             <SelectValue />
@@ -452,11 +439,24 @@ export default function PosVenda() {
             ))}
           </SelectContent>
         </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            {(Object.keys(STATUS_LABEL) as ChamadoStatus[]).map((s) => (
+              <SelectItem key={s} value={s}>
+                {STATUS_LABEL[s]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="pl-9"
-            placeholder="Buscar cliente, nº ou descrição..."
+            placeholder="Buscar cliente ou nº..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
