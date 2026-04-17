@@ -82,6 +82,12 @@ export function FluxoCaixaCard() {
     ? ((mesAtual.saldo - mesAnterior.saldo) / Math.max(Math.abs(mesAnterior.saldo), 1)) * 100
     : 0;
 
+  // Previstos do mês ativo (sem dados reais ainda → R$ 0)
+  const entradasPrevistas = 0;
+  const saidasPrevistas = 0;
+  const saldoProjetado = entradasPrevistas - saidasPrevistas;
+  const saldoColor = saldoProjetado >= 0 ? "#12B76A" : "#E53935";
+
   return (
     <div className="space-y-4">
       {/* Header de navegação por mês */}
