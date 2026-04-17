@@ -2,9 +2,42 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Clock, Link2Off } from "lucide-react";
+import { Link2Off, ArrowRight, CheckCircle2 } from "lucide-react";
 import { LogoNexo } from "@/components/LogoNexo";
 import { ContratoStepper } from "@/components/contrato/ContratoStepper";
+
+const PUBLIC_EVENTS: Record<
+  string,
+  { mensagem: (log: any) => string; tipo: "avancado" | "concluido" }
+> = {
+  status_avancado: {
+    tipo: "avancado",
+    mensagem: (log) =>
+      `Seu pedido avançou para ${log.descricao || log.titulo || "a próxima etapa"}`,
+  },
+  producao_concluida: {
+    tipo: "concluido",
+    mensagem: () => "Seu pedido saiu para produção",
+  },
+  logistica_confirmada: {
+    tipo: "concluido",
+    mensagem: () => "Entrega realizada com sucesso",
+  },
+  checklist_tecnico_completo: {
+    tipo: "concluido",
+    mensagem: () => "Projeto validado pela equipe técnica",
+  },
+};
+
+const fmtDateLong = (d?: string | null) => {
+  if (!d) return "—";
+  return new Date(d).toLocaleString("pt-BR", {
+    day: "numeric",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 const STAGE_LABELS: Record<string, string> = {
   comercial: "Comercial",
@@ -306,74 +339,58 @@ export default function PortalCliente() {
           </dl>
         </section>
 
-        {/* 5. Timeline */}
-        <section className="bg-white rounded-xl shadow-sm p-6">
-          <h2
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#0D1117",
-              marginBottom: 20,
-            }}
-          >
+        {/* 5. Timeline de atividades — eventos públicos */}
+        <section
+          className="bg-white rounded-xl mx-auto w-full"
+          style={{ maxWidth: 680, border: "0.5px solid #E8ECF2", padding: 24 }}
+        >
+          <h2 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117", marginBottom: 16 }}>
             Histórico do pedido
           </h2>
-          {logs.length === 0 ? (
-            <div style={{ fontSize: 14, color: "#6B7A90" }}>
-              Nenhuma movimentação registrada ainda.
-            </div>
-          ) : (
-            <ol
-              className="relative ml-2 space-y-5"
-              style={{ borderLeft: "2px solid #E8ECF2" }}
-            >
-              {logs.map((log) => (
-                <li key={log.id} className="ml-5 relative">
-                  <span
-                    className="absolute rounded-full"
-                    style={{
-                      left: -27,
-                      top: 4,
-                      width: 12,
-                      height: 12,
-                      backgroundColor: "#1E6FBF",
-                    }}
-                  />
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
+          {(() => {
+            const publicLogs = logs.filter((l) => PUBLIC_EVENTS[l.acao]);
+            if (publicLogs.length === 0) {
+              return (
+                <div style={{ fontSize: 14, color: "#6B7A90" }}>
+                  Seu pedido foi registrado. Em breve teremos atualizações.
+                </div>
+              );
+            }
+            return (
+              <ol className="space-y-4">
+                {publicLogs.map((log) => {
+                  const cfg = PUBLIC_EVENTS[log.acao];
+                  const isConcluido = cfg.tipo === "concluido";
+                  const Icon = isConcluido ? CheckCircle2 : ArrowRight;
+                  const color = isConcluido ? "#12B76A" : "#1E6FBF";
+                  return (
+                    <li key={log.id} className="flex items-start gap-3">
                       <div
+                        className="rounded-full flex items-center justify-center shrink-0"
                         style={{
-                          fontSize: 14,
-                          fontWeight: 500,
-                          color: "#0D1117",
+                          width: 32,
+                          height: 32,
+                          backgroundColor: `${color}1A`,
+                          color,
                         }}
                       >
-                        {log.titulo}
+                        <Icon size={16} />
                       </div>
-                      {log.descricao && (
-                        <div
-                          style={{
-                            fontSize: 12,
-                            color: "#6B7A90",
-                            marginTop: 2,
-                          }}
-                        >
-                          {log.descricao}
+                      <div className="flex-1 min-w-0">
+                        <div style={{ fontSize: 14, fontWeight: 500, color: "#0D1117" }}>
+                          {cfg.mensagem(log)}
+                          {isConcluido && " ✓"}
                         </div>
-                      )}
-                    </div>
-                    <div
-                      className="flex items-center gap-1 whitespace-nowrap"
-                      style={{ fontSize: 11, color: "#6B7A90" }}
-                    >
-                      <Clock size={12} />
-                      {fmtDateTime(log.created_at)}
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          )}
+                        <div style={{ fontSize: 12, color: "#6B7A90", marginTop: 2 }}>
+                          {fmtDateLong(log.created_at)}
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            );
+          })()}
         </section>
 
         {/* 6. NPS — somente se ainda não respondido */}
