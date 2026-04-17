@@ -13,10 +13,10 @@ import {
 
 const ETAPAS: { key: string; label: string; color: string }[] = [
   { key: "comercial", label: "Comercial", color: "#1E6FBF" },
-  { key: "tecnico", label: "Técnico", color: "#7C3AED" },
-  { key: "producao", label: "Produção", color: "#F97316" },
+  { key: "tecnico", label: "Técnico", color: "#7F77DD" },
+  { key: "producao", label: "Produção", color: "#D85A30" },
   { key: "logistica", label: "Logística", color: "#12B76A" },
-  { key: "montagem", label: "Montagem", color: "#0EA5A4" },
+  { key: "montagem", label: "Montagem", color: "#1D9E75" },
   { key: "pos_venda", label: "Pós-venda", color: "#E8A020" },
   { key: "finalizado", label: "Finalizado", color: "#05873C" },
 ];
@@ -181,12 +181,14 @@ export default function Dashboard() {
                     <span style={{ fontSize: 13, color: "#0D1117" }}>{e.label}</span>
                   </div>
                   <span
-                    className="inline-flex items-center justify-center rounded-full px-2.5 py-0.5"
+                    className="inline-flex items-center justify-center"
                     style={{
                       fontSize: 12,
                       fontWeight: 600,
-                      color: "#3D4A5C",
-                      background: "#E8ECF2",
+                      color: "#6B7A90",
+                      background: "#F5F7FA",
+                      borderRadius: 20,
+                      padding: "2px 10px",
                       minWidth: 28,
                     }}
                   >
