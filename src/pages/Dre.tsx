@@ -28,6 +28,7 @@ const MESES = [
 ];
 
 export default function Dre() {
+  const navigate = useNavigate();
   const today = new Date();
   const [mes, setMes] = useState<number>(today.getMonth());
   const [ano, setAno] = useState<number>(today.getFullYear());
