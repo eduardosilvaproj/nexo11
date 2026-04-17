@@ -849,6 +849,10 @@ export type Database = {
         Args: { _topic: string }
         Returns: boolean
       }
+      realtime_canal_user_permitido: {
+        Args: { _topic: string }
+        Returns: boolean
+      }
     }
     Enums: {
       agendamento_status: "agendado" | "em_execucao" | "concluido" | "cancelado"
