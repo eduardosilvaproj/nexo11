@@ -495,6 +495,7 @@ function EditarAgendamentoDialog({
   onOpenChange: (o: boolean) => void;
   onChanged: () => void;
 }) {
+  const navigate = useNavigate();
   const [equipeId, setEquipeId] = useState("");
   const [data, setData] = useState<Date | undefined>();
   const [ini, setIni] = useState("08:00");
@@ -594,9 +595,22 @@ function EditarAgendamentoDialog({
           <DialogTitle>Editar agendamento</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-3">
-          <div style={{ fontSize: 13, color: "#6B7A90" }}>
-            Contrato: <strong>{agendamento.contratos?.cliente_nome ?? "—"}</strong> · #
-            {agendamento.contrato_id?.slice(0, 4)}
+          <div className="flex items-center justify-between gap-2" style={{ fontSize: 13, color: "#6B7A90" }}>
+            <span>
+              Contrato: <strong>{agendamento.contratos?.cliente_nome ?? "—"}</strong> · #
+              {agendamento.contrato_id?.slice(0, 4)}
+            </span>
+            <Button
+              variant="link"
+              size="sm"
+              className="h-auto p-0"
+              onClick={() => {
+                onOpenChange(false);
+                navigate(`/contratos/${agendamento.contrato_id}`);
+              }}
+            >
+              Abrir contrato →
+            </Button>
           </div>
           <div className="flex flex-col gap-1">
             <Label>Equipe</Label>
