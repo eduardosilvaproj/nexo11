@@ -249,16 +249,12 @@ export default function PortalCliente() {
               </div>
             )}
           </div>
-          <div className="flex flex-col gap-2 text-right">
+          <div className="flex flex-col gap-1 text-right">
             <div style={{ fontSize: 12, color: "#6B7A90" }}>
-              Contrato {numero}
+              Contrato
             </div>
-            <div style={{ fontSize: 20, fontWeight: 500, color: "#0D1117" }}>
-              {Number(contrato.valor_venda ?? 0).toLocaleString("pt-BR", {
-                style: "currency",
-                currency: "BRL",
-                maximumFractionDigits: 0,
-              })}
+            <div style={{ fontSize: 16, fontWeight: 500, color: "#0D1117" }}>
+              {numero}
             </div>
           </div>
         </section>
@@ -268,63 +264,45 @@ export default function PortalCliente() {
           <ContratoStepper current={contrato.status} />
         </section>
 
-        {/* 4. Detalhes do contrato */}
-        <section className="bg-white rounded-xl shadow-sm p-6">
-          <h2
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#0D1117",
-              marginBottom: 16,
-            }}
-          >
-            Detalhes do contrato
+        {/* 4. Detalhes do pedido */}
+        <section
+          className="bg-white rounded-xl mx-auto w-full"
+          style={{ maxWidth: 680, border: "0.5px solid #E8ECF2", padding: 24 }}
+        >
+          <h2 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117", marginBottom: 16 }}>
+            Detalhes do pedido
           </h2>
-          <dl className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <dt
-                className="uppercase tracking-wide"
-                style={{ fontSize: 11, color: "#6B7A90" }}
+          <dl className="divide-y" style={{ borderColor: "#E8ECF2" }}>
+            {[
+              { label: "Cliente", value: contrato.cliente_nome },
+              {
+                label: "Data de assinatura",
+                value: fmtDate(contrato.data_criacao),
+              },
+              {
+                label: "Previsão de entrega",
+                value: entregaPrevista ? fmtDate(entregaPrevista) : "A definir",
+              },
+              {
+                label: "Loja",
+                value: contrato.lojas?.nome
+                  ? `${contrato.lojas.nome}${contrato.lojas.cidade ? " — " + contrato.lojas.cidade : ""}`
+                  : "—",
+              },
+            ].map((row) => (
+              <div
+                key={row.label}
+                className="flex items-center justify-between py-3"
               >
-                Cliente
-              </dt>
-              <dd style={{ fontWeight: 500, marginTop: 4, color: "#0D1117" }}>
-                {contrato.cliente_nome}
-              </dd>
-            </div>
-            <div>
-              <dt
-                className="uppercase tracking-wide"
-                style={{ fontSize: 11, color: "#6B7A90" }}
-              >
-                Contrato
-              </dt>
-              <dd style={{ fontWeight: 500, marginTop: 4, color: "#0D1117" }}>
-                {numero}
-              </dd>
-            </div>
-            <div>
-              <dt
-                className="uppercase tracking-wide"
-                style={{ fontSize: 11, color: "#6B7A90" }}
-              >
-                Aberto em
-              </dt>
-              <dd style={{ fontWeight: 500, marginTop: 4, color: "#0D1117" }}>
-                {fmtDate(contrato.data_criacao)}
-              </dd>
-            </div>
-            <div>
-              <dt
-                className="uppercase tracking-wide"
-                style={{ fontSize: 11, color: "#6B7A90" }}
-              >
-                Etapa atual
-              </dt>
-              <dd style={{ fontWeight: 500, marginTop: 4, color: "#0D1117" }}>
-                {stageLabel}
-              </dd>
-            </div>
+                <dt style={{ fontSize: 13, color: "#6B7A90" }}>{row.label}</dt>
+                <dd
+                  style={{ fontSize: 13, fontWeight: 500, color: "#0D1117" }}
+                  className="text-right"
+                >
+                  {row.value}
+                </dd>
+              </div>
+            ))}
           </dl>
         </section>
 
