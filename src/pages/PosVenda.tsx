@@ -898,6 +898,100 @@ export default function PosVenda() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={resolveOpen} onOpenChange={setResolveOpen}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>
+              Resolver chamado #{resolveTarget?.id.slice(0, 4).toUpperCase()}
+            </DialogTitle>
+          </DialogHeader>
+          {resolveTarget && (
+            <div className="flex flex-col gap-4">
+              <div
+                className="flex flex-col gap-2 rounded-md p-3"
+                style={{ backgroundColor: "#F5F7FA" }}
+              >
+                <div className="flex items-center gap-2">
+                  <span style={{ fontSize: 11, color: "#6B7A90", fontWeight: 500 }}>TIPO:</span>
+                  <span
+                    className="inline-flex items-center rounded-full px-2 py-0.5"
+                    style={{
+                      backgroundColor: TIPO_BADGE[resolveTarget.tipo].bg,
+                      color: TIPO_BADGE[resolveTarget.tipo].fg,
+                      fontSize: 11,
+                      fontWeight: 500,
+                    }}
+                  >
+                    {TIPO_LABEL[resolveTarget.tipo]}
+                  </span>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: "#6B7A90", fontWeight: 500 }}>TÍTULO</div>
+                  <div style={{ fontSize: 13, color: "#0D1117", fontWeight: 500 }}>
+                    {resolveTarget.descricao.split("\n")[0]}
+                  </div>
+                </div>
+                {resolveTarget.descricao.split("\n").slice(1).join("\n").trim() && (
+                  <div>
+                    <div style={{ fontSize: 11, color: "#6B7A90", fontWeight: 500 }}>
+                      DESCRIÇÃO ORIGINAL
+                    </div>
+                    <div style={{ fontSize: 12, color: "#0D1117", whiteSpace: "pre-wrap" }}>
+                      {resolveTarget.descricao.split("\n").slice(1).join("\n").trim()}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label>Custo final de assistência (R$)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={resolveCusto}
+                  onChange={(e) => setResolveCusto(e.target.value)}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label>
+                  Descrição da resolução <span style={{ color: "#E53935" }}>*</span>
+                </Label>
+                <Textarea
+                  rows={4}
+                  placeholder="Descreva o que foi feito para resolver..."
+                  value={resolveDesc}
+                  onChange={(e) => setResolveDesc(e.target.value)}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label>Data de fechamento</Label>
+                <Input
+                  type="date"
+                  value={resolveData}
+                  onChange={(e) => setResolveData(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResolveOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => resolverChamado.mutate()}
+              disabled={resolverChamado.isPending}
+              style={{ backgroundColor: "#12B76A" }}
+              className="text-white"
+            >
+              Marcar como resolvido ✓
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
