@@ -9,12 +9,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Loader2, Settings, Paperclip, ClipboardList } from "lucide-react";
 import { ChecklistTemplateDialog } from "@/components/tecnico/ChecklistTemplateDialog";
 
+type SubEtapa = "medicao" | "conferencia";
+
 type Contrato = {
   id: string;
   cliente_nome: string;
   status: string;
   vendedor_id: string | null;
   created_at: string;
+  sub_etapa_tecnico: SubEtapa;
 };
 
 export default function Tecnico() {
@@ -22,14 +25,16 @@ export default function Tecnico() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [templateOpen, setTemplateOpen] = useState(false);
+  const [aba, setAba] = useState<SubEtapa>("medicao");
 
   const { data: contratos = [], isLoading } = useQuery({
-    queryKey: ["contratos-tecnico-list"],
+    queryKey: ["contratos-tecnico-list", aba],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contratos")
-        .select("id,cliente_nome,status,vendedor_id,created_at")
+        .select("id,cliente_nome,status,vendedor_id,created_at,sub_etapa_tecnico")
         .eq("status", "tecnico")
+        .eq("sub_etapa_tecnico", aba)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Contrato[];
