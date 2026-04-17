@@ -112,7 +112,7 @@ export function HistoricoPECard() {
               </defs>
               <CartesianGrid stroke="#E8ECF2" vertical={false} />
               <XAxis dataKey="mes" tick={{ fill: "#6B7A90", fontSize: 12 }} axisLine={{ stroke: "#E8ECF2" }} tickLine={false} />
-              <YAxis tickFormatter={fmtAbrev} tick={{ fill: "#6B7A90", fontSize: 12 }} axisLine={false} tickLine={false} width={70} />
+              <YAxis tickFormatter={fmtAbrev} tick={{ fill: "#6B7A90", fontSize: 12 }} axisLine={false} tickLine={false} width={70} domain={[0, "auto"]} allowDecimals={false} />
               <Tooltip content={<CustomTooltip />} />
               <Legend
                 wrapperStyle={{ fontSize: 12, color: "#6B7A90" }}
