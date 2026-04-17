@@ -716,146 +716,152 @@ export default function PosVenda() {
       </>
       )}
 
-      {tab === "nps" && (
-        <div
-          className="rounded-xl bg-white p-6"
-          style={{ border: "0.5px solid #E8ECF2" }}
-        >
-          <h2 style={{ fontSize: 15, fontWeight: 600, color: "#0D1117" }}>
-            Avaliações NPS
-          </h2>
-          <p style={{ fontSize: 12, color: "#6B7A90", marginBottom: 16 }}>
-            Notas registradas pelos clientes nos chamados.
-          </p>
-          {(() => {
-            const notas = (chamados ?? [])
-              .map((c) => c.nps)
-              .filter((n): n is number => typeof n === "number");
-            const total = notas.length;
-            const promotores = notas.filter((n) => n >= 9).length;
-            const neutros = notas.filter((n) => n >= 7 && n <= 8).length;
-            const detratores = notas.filter((n) => n <= 6).length;
-            const pctP = total ? (promotores / total) * 100 : 0;
-            const pctN = total ? (neutros / total) * 100 : 0;
-            const pctD = total ? (detratores / total) * 100 : 0;
-            const score = total ? Math.round(pctP - pctD) : null;
-            const scoreColor =
-              score === null ? "#0D1117" : score >= 50 ? "#12B76A" : score >= 0 ? "#E8A020" : "#E53935";
-            return (
-              <div
-                className="mb-4 grid grid-cols-1 gap-4 rounded-lg p-4 md:grid-cols-4"
-                style={{ border: "0.5px solid #E8ECF2", backgroundColor: "#F7F9FC" }}
-              >
-                <div>
-                  <div style={{ fontSize: 11, color: "#6B7A90", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                    NPS Score
-                  </div>
-                  <div style={{ fontSize: 28, fontWeight: 700, color: scoreColor, marginTop: 4 }}>
-                    {score === null ? "—" : score}
-                  </div>
-                  <div style={{ fontSize: 11, color: "#6B7A90" }}>
-                    {total} {total === 1 ? "avaliação" : "avaliações"}
-                  </div>
+      {tab === "nps" && (() => {
+        const now = new Date();
+        const since = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        const npsRows = (chamados ?? []).filter((c): c is typeof c & { nps: number } => {
+          if (typeof c.nps !== "number") return false;
+          const ref = new Date(c.data_fechamento ?? c.updated_at);
+          return ref >= since;
+        });
+        const total = npsRows.length;
+        const promotores = npsRows.filter((c) => c.nps >= 9).length;
+        const neutros = npsRows.filter((c) => c.nps >= 7 && c.nps <= 8).length;
+        const detratores = npsRows.filter((c) => c.nps <= 6).length;
+        const pctP = total ? (promotores / total) * 100 : 0;
+        const pctN = total ? (neutros / total) * 100 : 0;
+        const pctD = total ? (detratores / total) * 100 : 0;
+        const media = total ? npsRows.reduce((s, c) => s + c.nps, 0) / total : null;
+        const mediaColor =
+          media === null ? "#0D1117" : media >= 8 ? "#12B76A" : media >= 6 ? "#E8A020" : "#E53935";
+        const notaBadge = (n: number) =>
+          n >= 9
+            ? { bg: "#D1FAE5", fg: "#05873C" }
+            : n >= 7
+              ? { bg: "#FEF3C7", fg: "#E8A020" }
+              : { bg: "#FDECEA", fg: "#E53935" };
+
+        return (
+          <div className="rounded-xl bg-white p-6" style={{ border: "0.5px solid #E8ECF2" }}>
+            <div className="mb-6 flex flex-col items-start gap-1">
+              <div style={{ fontSize: 48, fontWeight: 500, color: mediaColor, lineHeight: 1 }}>
+                {media === null ? "—" : media.toFixed(1).replace(".", ",")}
+              </div>
+              <div style={{ fontSize: 12, color: "#6B7A90" }}>
+                Média dos últimos 30 dias · {total} {total === 1 ? "avaliação" : "avaliações"}
+              </div>
+            </div>
+
+            {total > 0 && (
+              <div className="mb-6">
+                <div className="flex h-3 w-full overflow-hidden rounded-full">
+                  {pctP > 0 && <div style={{ width: `${pctP}%`, backgroundColor: "#12B76A" }} />}
+                  {pctN > 0 && <div style={{ width: `${pctN}%`, backgroundColor: "#E8A020" }} />}
+                  {pctD > 0 && <div style={{ width: `${pctD}%`, backgroundColor: "#E53935" }} />}
                 </div>
-                <div>
-                  <div style={{ fontSize: 11, color: "#6B7A90", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                    Promotores (9-10)
-                  </div>
-                  <div style={{ fontSize: 18, fontWeight: 600, color: "#12B76A", marginTop: 4 }}>
-                    {pctP.toFixed(0)}% <span style={{ fontSize: 12, color: "#6B7A90", fontWeight: 400 }}>· {promotores}</span>
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 11, color: "#6B7A90", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                    Neutros (7-8)
-                  </div>
-                  <div style={{ fontSize: 18, fontWeight: 600, color: "#E8A020", marginTop: 4 }}>
-                    {pctN.toFixed(0)}% <span style={{ fontSize: 12, color: "#6B7A90", fontWeight: 400 }}>· {neutros}</span>
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 11, color: "#6B7A90", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                    Detratores (0-6)
-                  </div>
-                  <div style={{ fontSize: 18, fontWeight: 600, color: "#E53935", marginTop: 4 }}>
-                    {pctD.toFixed(0)}% <span style={{ fontSize: 12, color: "#6B7A90", fontWeight: 400 }}>· {detratores}</span>
-                  </div>
+                <div className="mt-3 grid grid-cols-3 gap-4">
+                  {[
+                    { label: "Promotores (9–10)", color: "#12B76A", pct: pctP, count: promotores },
+                    { label: "Neutros (7–8)", color: "#E8A020", pct: pctN, count: neutros },
+                    { label: "Detratores (0–6)", color: "#E53935", pct: pctD, count: detratores },
+                  ].map((s) => (
+                    <div key={s.label} className="flex flex-col gap-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className="inline-block h-2 w-2 rounded-full"
+                          style={{ backgroundColor: s.color }}
+                        />
+                        <span style={{ fontSize: 11, color: "#6B7A90" }}>{s.label}</span>
+                      </div>
+                      <div style={{ fontSize: 16, fontWeight: 600, color: s.color }}>
+                        {s.pct.toFixed(0)}%{" "}
+                        <span style={{ fontSize: 12, color: "#6B7A90", fontWeight: 400 }}>
+                          · {s.count}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
-            );
-          })()}
-          <div className="overflow-hidden rounded-lg" style={{ border: "0.5px solid #E8ECF2" }}>
-            <table className="w-full">
-              <thead style={{ backgroundColor: "#F7F9FC" }}>
-                <tr>
-                  {["Nº", "Cliente", "Nota", "Data", "Comentário", "Ações"].map((h) => (
-                    <th
-                      key={h}
-                      className="px-4 py-3 text-left"
-                      style={{
-                        fontSize: 11,
-                        color: "#6B7A90",
-                        fontWeight: 500,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.04em",
-                      }}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {(chamados ?? []).map((c) => {
-                  const cliente =
-                    (c as { contratos?: { cliente_nome?: string } }).contratos?.cliente_nome;
-                  const comentario = (c as { nps_comentario?: string }).nps_comentario;
-                  const hasNps = typeof c.nps === "number";
-                  return (
-                    <tr key={c.id} style={{ borderTop: "0.5px solid #E8ECF2" }}>
-                      <td className="px-4 py-3 text-sm font-medium">
-                        #{c.contrato_id?.slice(0, 4)}
-                      </td>
-                      <td className="px-4 py-3 text-sm">{cliente ?? "—"}</td>
-                      <td className="px-4 py-3 text-sm">
-                        {hasNps ? (
-                          <span style={{ color: npsColor(c.nps as number), fontWeight: 600 }}>
-                            {c.nps}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        {new Date(c.data_fechamento ?? c.updated_at).toLocaleDateString("pt-BR")}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
-                        {comentario ?? "—"}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openNpsDialog(c.id, cliente, c.nps, comentario)}
+            )}
+
+            {npsRows.length === 0 ? (
+              <div className="flex flex-col items-center gap-1 py-12">
+                <div style={{ fontSize: 14, color: "#0D1117", fontWeight: 500 }}>
+                  Nenhum NPS registrado ainda
+                </div>
+                <div style={{ fontSize: 12, color: "#6B7A90" }}>
+                  O NPS é coletado ao finalizar o pós-venda de cada contrato
+                </div>
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-lg" style={{ border: "0.5px solid #E8ECF2" }}>
+                <table className="w-full">
+                  <thead style={{ backgroundColor: "#F7F9FC" }}>
+                    <tr>
+                      {["Contrato", "Cliente", "Nota", "Comentário", "Data"].map((h) => (
+                        <th
+                          key={h}
+                          className="px-4 py-3 text-left"
+                          style={{
+                            fontSize: 11,
+                            color: "#6B7A90",
+                            fontWeight: 500,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.04em",
+                          }}
                         >
-                          {hasNps ? "Editar" : "Registrar"}
-                        </Button>
-                      </td>
+                          {h}
+                        </th>
+                      ))}
                     </tr>
-                  );
-                })}
-                {(chamados ?? []).length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                      Nenhum chamado encontrado.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    {npsRows.map((c) => {
+                      const cliente =
+                        (c as { contratos?: { cliente_nome?: string } }).contratos?.cliente_nome;
+                      const comentario = (c as { nps_comentario?: string }).nps_comentario ?? "";
+                      const truncated =
+                        comentario.length > 60 ? comentario.slice(0, 60) + "…" : comentario;
+                      const badge = notaBadge(c.nps);
+                      return (
+                        <tr key={c.id} style={{ borderTop: "0.5px solid #E8ECF2" }}>
+                          <td className="px-4 py-3 text-sm font-medium">
+                            #{c.contrato_id?.slice(0, 4)}
+                          </td>
+                          <td className="px-4 py-3 text-sm">{cliente ?? "—"}</td>
+                          <td className="px-4 py-3">
+                            <span
+                              className="inline-flex items-center rounded-full px-2.5 py-0.5"
+                              style={{
+                                backgroundColor: badge.bg,
+                                color: badge.fg,
+                                fontSize: 12,
+                                fontWeight: 600,
+                              }}
+                            >
+                              {c.nps}
+                            </span>
+                          </td>
+                          <td
+                            className="px-4 py-3 text-sm text-muted-foreground"
+                            title={comentario || undefined}
+                          >
+                            {truncated || "—"}
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            {new Date(c.data_fechamento ?? c.updated_at).toLocaleDateString("pt-BR")}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       <Dialog open={npsOpen} onOpenChange={setNpsOpen}>
         <DialogContent>
