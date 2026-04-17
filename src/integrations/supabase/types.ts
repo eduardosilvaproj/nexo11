@@ -282,6 +282,59 @@ export type Database = {
           },
         ]
       }
+      entregas: {
+        Row: {
+          confirmado_por: string | null
+          contrato_id: string
+          created_at: string
+          custo_frete: number
+          data_confirmacao: string | null
+          data_prevista: string | null
+          foto_confirmacao_path: string | null
+          id: string
+          rota: string | null
+          status: Database["public"]["Enums"]["entrega_status"]
+          transportadora: string | null
+          updated_at: string
+        }
+        Insert: {
+          confirmado_por?: string | null
+          contrato_id: string
+          created_at?: string
+          custo_frete?: number
+          data_confirmacao?: string | null
+          data_prevista?: string | null
+          foto_confirmacao_path?: string | null
+          id?: string
+          rota?: string | null
+          status?: Database["public"]["Enums"]["entrega_status"]
+          transportadora?: string | null
+          updated_at?: string
+        }
+        Update: {
+          confirmado_por?: string | null
+          contrato_id?: string
+          created_at?: string
+          custo_frete?: number
+          data_confirmacao?: string | null
+          data_prevista?: string | null
+          foto_confirmacao_path?: string | null
+          id?: string
+          rota?: string | null
+          status?: Database["public"]["Enums"]["entrega_status"]
+          transportadora?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entregas_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           contato: string | null
@@ -517,6 +570,7 @@ export type Database = {
         | "montagem"
         | "pos_venda"
         | "finalizado"
+      entrega_status: "pendente" | "confirmada"
       lead_status:
         | "novo"
         | "atendimento"
@@ -672,6 +726,7 @@ export const Constants = {
         "pos_venda",
         "finalizado",
       ],
+      entrega_status: ["pendente", "confirmada"],
       lead_status: [
         "novo",
         "atendimento",
