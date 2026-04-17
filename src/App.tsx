@@ -15,6 +15,7 @@ import Producao from "./pages/Producao";
 import Logistica from "./pages/Logistica";
 import Montagem from "./pages/Montagem";
 import Equipes from "./pages/Equipes";
+import PosVenda from "./pages/PosVenda";
 import ContratoDetail from "./pages/ContratoDetail";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -62,7 +63,7 @@ const App = () => (
                   <Montagem />
                 </ProtectedRoute>
               } />
-              <Route path="/pos-venda" element={<Placeholder title="NEXO Pós-venda" description="Chamados e NPS." />} />
+              <Route path="/pos-venda" element={<PosVenda />} />
               <Route path="/dre" element={<Placeholder title="NEXO DRE" description="Fechamento e margem realizada." />} />
 
               {/* Gestão */}
