@@ -2,17 +2,9 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import {
-  Check,
-  Clock,
-  Link2Off,
-  Package,
-  Truck,
-  Wrench,
-  Headphones,
-  FileText,
-} from "lucide-react";
+import { Clock, Link2Off } from "lucide-react";
 import { LogoNexo } from "@/components/LogoNexo";
+import { ContratoStepper } from "@/components/contrato/ContratoStepper";
 
 const STAGES = [
   { key: "comercial", label: "Comercial", icon: FileText },
