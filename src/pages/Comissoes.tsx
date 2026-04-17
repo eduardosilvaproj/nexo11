@@ -60,7 +60,84 @@ export default function Comissoes() {
   const [mes, setMes] = useState<string>(opcoes[0].value);
   const mesLabel = opcoes.find((o) => o.value === mes)?.label ?? mes;
   const [regra, setRegra] = useState<RegraComissao>(REGRA_PADRAO);
+  const [regraId, setRegraId] = useState<string | null>(null);
+  const [lojaId, setLojaId] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [metricas, setMetricas] = useState({ totalMes: 0, pagas: 0, bonus: 0 });
+
+  // Carrega loja do usuário e regra ativa
+  useEffect(() => {
+    (async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id;
+      if (!uid) return;
+      const { data: u } = await supabase
+        .from("usuarios")
+        .select("loja_id")
+        .eq("id", uid)
+        .maybeSingle();
+      const lid = u?.loja_id ?? null;
+      setLojaId(lid);
+      if (!lid) return;
+      const { data: r } = await supabase
+        .from("regras_comissao")
+        .select("id, percentual_base, margem_min_bonus, percentual_bonus, bonus_ativo")
+        .eq("loja_id", lid)
+        .eq("ativo", true)
+        .maybeSingle();
+      if (r) {
+        setRegraId(r.id);
+        setRegra({
+          percentual_base: Number(r.percentual_base) / 100,
+          margem_min_bonus: Number(r.margem_min_bonus),
+          percentual_bonus: r.bonus_ativo ? Number(r.percentual_bonus) / 100 : 0,
+        });
+      }
+    })();
+  }, []);
+
+  // Carrega métricas reais do mês
+  useEffect(() => {
+    if (!lojaId) return;
+    (async () => {
+      const [y, m] = mes.split("-").map(Number);
+      const fim = new Date(y, m, 0);
+      const fimStr = `${fim.getFullYear()}-${String(fim.getMonth() + 1).padStart(2, "0")}-${String(fim.getDate()).padStart(2, "0")}`;
+      const { data } = await supabase
+        .from("comissoes")
+        .select("valor_base, valor_bonus, pago, created_at")
+        .eq("loja_id", lojaId)
+        .gte("created_at", `${mes}T00:00:00`)
+        .lte("created_at", `${fimStr}T23:59:59`);
+      const rows = data ?? [];
+      const totalMes = rows.reduce((s, r) => s + Number(r.valor_base) + Number(r.valor_bonus), 0);
+      const pagas = rows
+        .filter((r) => r.pago)
+        .reduce((s, r) => s + Number(r.valor_base) + Number(r.valor_bonus), 0);
+      const bonus = rows.reduce((s, r) => s + Number(r.valor_bonus), 0);
+      setMetricas({ totalMes, pagas, bonus });
+    })();
+  }, [mes, lojaId]);
+
+  async function handleSaveRegra(nova: RegraComissao) {
+    setRegra(nova);
+    if (!lojaId) return;
+    const payload = {
+      loja_id: lojaId,
+      percentual_base: nova.percentual_base * 100,
+      margem_min_bonus: nova.margem_min_bonus,
+      percentual_bonus: nova.percentual_bonus * 100,
+      bonus_ativo: nova.percentual_bonus > 0,
+      ativo: true,
+    };
+    const { error } = regraId
+      ? await supabase.from("regras_comissao").update(payload).eq("id", regraId)
+      : await supabase.from("regras_comissao").insert(payload).select("id").single().then((r) => {
+          if (r.data) setRegraId(r.data.id);
+          return r;
+        });
+    if (error) toast.error(error.message);
+  }
 
   return (
     <div className="space-y-6 p-6">
@@ -86,9 +163,9 @@ export default function Comissoes() {
       </header>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <MetricCard label="Total a pagar (mês)" valor={0} cor="#1E6FBF" />
-        <MetricCard label="Comissões pagas" valor={0} cor="#12B76A" />
-        <MetricCard label="Bônus por margem" valor={0} cor="#E8A020" />
+        <MetricCard label="Total a pagar (mês)" valor={metricas.totalMes - metricas.pagas} cor="#1E6FBF" />
+        <MetricCard label="Comissões pagas" valor={metricas.pagas} cor="#12B76A" />
+        <MetricCard label="Bônus por margem" valor={metricas.bonus} cor="#E8A020" />
       </div>
 
       <Tabs defaultValue="relatorio">
@@ -111,7 +188,7 @@ export default function Comissoes() {
         </TabsList>
 
         <TabsContent value="relatorio" className="mt-4">
-          <ComissoesRelatorioTab mes={mes} mesLabel={mesLabel} />
+          <ComissoesRelatorioTab mes={mes} mesLabel={mesLabel} regra={regra} />
         </TabsContent>
 
         <TabsContent value="regras" className="mt-4">
@@ -123,7 +200,7 @@ export default function Comissoes() {
         open={editOpen}
         onOpenChange={setEditOpen}
         regra={regra}
-        onSave={setRegra}
+        onSave={handleSaveRegra}
       />
     </div>
   );
