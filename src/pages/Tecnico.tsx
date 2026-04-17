@@ -65,10 +65,12 @@ export default function Tecnico() {
   });
 
   const atribuirResponsavel = async (contratoId: string, userId: string) => {
-    const campo = aba === "medicao" ? "medicao_responsavel_id" : "conferencia_responsavel_id";
+    const payload = aba === "medicao"
+      ? { medicao_responsavel_id: userId }
+      : { conferencia_responsavel_id: userId };
     const { error } = await supabase
       .from("contratos")
-      .update({ [campo]: userId })
+      .update(payload)
       .eq("id", contratoId);
     if (error) {
       toast.error("Erro ao atribuir responsável");
