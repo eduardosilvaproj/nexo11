@@ -164,7 +164,7 @@ export default function Montagem() {
                         return (
                           <button
                             key={a.id}
-                            onClick={() => navigate(`/contratos/${a.contrato_id}`)}
+                            onClick={() => setEditId(a.id)}
                             className="rounded-lg bg-white text-left transition-shadow hover:shadow-sm"
                             style={{
                               border: "0.5px solid #E8ECF2",
