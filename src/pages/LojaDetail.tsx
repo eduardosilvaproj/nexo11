@@ -17,6 +17,8 @@ type Tab = "resumo" | "contratos" | "equipe";
 
 export default function LojaDetail() {
   const { id = "" } = useParams();
+  const { hasRole } = useAuth();
+  const podeEditarLoja = hasRole("franqueador");
   const [tab, setTab] = useState<Tab>("resumo");
 
   const { data: loja } = useQuery({
