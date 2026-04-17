@@ -5,6 +5,7 @@ import { CustosFixosCard } from "@/components/financeiro/CustosFixosCard";
 import { SimuladorPECard } from "@/components/financeiro/SimuladorPECard";
 import { HistoricoPECard } from "@/components/financeiro/HistoricoPECard";
 import { FluxoCaixaCard } from "@/components/financeiro/FluxoCaixaCard";
+import { ContasCard } from "@/components/financeiro/ContasCard";
 
 function PontoEquilibrio() {
   const [custoFixoTotal, setCustoFixoTotal] = useState<number>(0);
@@ -44,22 +45,7 @@ function FluxoCaixaTab() {
 }
 
 function ContasPlaceholder() {
-  return (
-    <div>
-      <EmConstrucaoBanner />
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Contas a pagar e receber</CardTitle>
-          <CardDescription>
-            Acompanhe vencimentos, pagamentos e recebimentos da loja.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          Listagem de contas com status, vencimento, valor e responsável.
-        </CardContent>
-      </Card>
-    </div>
-  );
+  return <ContasCard />;
 }
 
 
