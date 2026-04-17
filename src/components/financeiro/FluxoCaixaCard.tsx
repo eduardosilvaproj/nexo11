@@ -125,7 +125,32 @@ export function FluxoCaixaCard() {
         </Button>
       </div>
 
-      {/* KPIs */}
+      {/* Cards de previsão do mês ativo */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <KpiCard
+          label="Entradas previstas"
+          valor={fmtBRL(entradasPrevistas)}
+          icon={<ArrowUpRight className="h-5 w-5" />}
+          color="#12B76A"
+          topBorder="#12B76A"
+        />
+        <KpiCard
+          label="Saídas previstas"
+          valor={fmtBRL(saidasPrevistas)}
+          icon={<ArrowDownRight className="h-5 w-5" />}
+          color="#E53935"
+          topBorder="#E53935"
+        />
+        <KpiCard
+          label="Saldo projetado"
+          valor={fmtBRL(saldoProjetado)}
+          icon={<Wallet className="h-5 w-5" />}
+          color={saldoColor}
+          topBorder="#1E6FBF"
+        />
+      </div>
+
+      {/* KPIs do período */}
       <div className="grid gap-4 md:grid-cols-4">
         <KpiCard
           label="Entradas no período"
