@@ -248,10 +248,12 @@ export default function Tecnico() {
                   <div className="flex flex-col items-center justify-center p-12 text-center">
                     <ClipboardList size={32} style={{ color: "#B0BAC9" }} />
                     <p className="mt-3" style={{ fontSize: 13, color: "#6B7A90", fontWeight: 500 }}>
-                      Nenhum contrato em fase técnica
+                      {aba === "medicao"
+                        ? "Nenhum contrato aguardando medição fina"
+                        : "Nenhum contrato aguardando conferência"}
                     </p>
                     <p className="mt-1" style={{ fontSize: 13, color: "#6B7A90" }}>
-                      Contratos aparecem aqui após assinatura no módulo Comercial
+                      Contratos aparecem aqui conforme avançam no fluxo
                     </p>
                   </div>
                 </TableCell>
