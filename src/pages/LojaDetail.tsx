@@ -8,6 +8,7 @@ import { LojasKpiRow } from "@/components/lojas/LojasKpiRow";
 import { LojaResumoTab } from "@/components/lojas/LojaResumoTab";
 import { LojaContratosTab } from "@/components/lojas/LojaContratosTab";
 import { LojaEquipeTab } from "@/components/lojas/LojaEquipeTab";
+import { useAuth } from "@/contexts/AuthContext";
 
 const fmtBRL = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -16,6 +17,8 @@ type Tab = "resumo" | "contratos" | "equipe";
 
 export default function LojaDetail() {
   const { id = "" } = useParams();
+  const { hasRole } = useAuth();
+  const podeEditarLoja = hasRole("franqueador");
   const [tab, setTab] = useState<Tab>("resumo");
 
   const { data: loja } = useQuery({
@@ -93,12 +96,14 @@ export default function LojaDetail() {
           </p>
         </div>
 
-        <Button
-          variant="outline"
-          style={{ borderColor: "#1E6FBF", color: "#1E6FBF" }}
-        >
-          Editar loja
-        </Button>
+        {podeEditarLoja && (
+          <Button
+            variant="outline"
+            style={{ borderColor: "#1E6FBF", color: "#1E6FBF" }}
+          >
+            Editar loja
+          </Button>
+        )}
       </div>
 
       <LojasKpiRow mes={new Date().toISOString().slice(0, 7)} lojaId={id} />
