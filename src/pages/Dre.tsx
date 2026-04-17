@@ -45,6 +45,7 @@ export default function Dre() {
   const [ano, setAno] = useState<number>(today.getFullYear());
   const [vendedor, setVendedor] = useState<string>("all");
   const [statusFiltro, setStatusFiltro] = useState<string>("all");
+  const [rankBy, setRankBy] = useState<"margem" | "faturamento">("margem");
   const [rows, setRows] = useState<Row[]>([]);
   const [vendedores, setVendedores] = useState<{ id: string; nome: string }[]>([]);
   const [evolucao, setEvolucao] = useState<
@@ -179,6 +180,48 @@ export default function Dre() {
     return "#E53935";
   };
   const fmtPct = (m: number | null) => (m === null ? "—" : `${m.toFixed(1)}%`);
+
+  // Comissão base estimada (não há tabela de regras configurada)
+  const COMISSAO_BASE = 0.03;
+
+  const ranking = useMemo(() => {
+    const map = new Map<
+      string,
+      { id: string; nome: string; contratos: number; fat: number; sumM: number; w: number }
+    >();
+    for (const r of rows) {
+      if (!r.vendedor_id) continue;
+      const v = r.valor_venda ?? 0;
+      const cur =
+        map.get(r.vendedor_id) ??
+        {
+          id: r.vendedor_id,
+          nome: vendedores.find((u) => u.id === r.vendedor_id)?.nome ?? "—",
+          contratos: 0,
+          fat: 0,
+          sumM: 0,
+          w: 0,
+        };
+      cur.contratos += 1;
+      cur.fat += v;
+      if (v > 0 && r.margem_realizada != null) {
+        cur.sumM += r.margem_realizada * v;
+        cur.w += v;
+      }
+      map.set(r.vendedor_id, cur);
+    }
+    const arr = Array.from(map.values()).map((v) => ({
+      ...v,
+      margem: v.w > 0 ? v.sumM / v.w : null,
+      comissao: v.fat * COMISSAO_BASE,
+    }));
+    arr.sort((a, b) =>
+      rankBy === "margem"
+        ? (b.margem ?? -Infinity) - (a.margem ?? -Infinity)
+        : b.fat - a.fat
+    );
+    return arr;
+  }, [rows, vendedores, rankBy]);
 
   return (
     <div className="space-y-6">
@@ -544,6 +587,96 @@ export default function Dre() {
             Meta mínima
           </span>
         </div>
+      </div>
+
+      <div className="rounded-lg border border-[#E8ECF2] bg-white p-5">
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-base font-medium text-[#0B1220]">Performance por vendedor</h2>
+            <p className="text-sm text-[#6B7A90]">
+              Quem vende com qualidade de margem, não só volume
+            </p>
+          </div>
+          <div className="inline-flex rounded-md border border-[#E8ECF2] p-0.5 text-sm">
+            {(["margem", "faturamento"] as const).map((opt) => (
+              <button
+                key={opt}
+                onClick={() => setRankBy(opt)}
+                className="rounded px-3 py-1.5 transition-colors"
+                style={{
+                  background: rankBy === opt ? "#1E6FBF" : "transparent",
+                  color: rankBy === opt ? "#fff" : "#6B7A90",
+                }}
+              >
+                {opt === "margem" ? "Por margem" : "Por faturamento"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="overflow-hidden rounded-lg border border-[#E8ECF2]">
+          <table className="w-full text-sm">
+            <thead className="border-b border-[#E8ECF2] bg-[#F5F7FA] text-left text-[#6B7A90]">
+              <tr>
+                <th className="px-4 py-3 font-medium">#</th>
+                <th className="px-4 py-3 font-medium">Vendedor</th>
+                <th className="px-4 py-3 text-right font-medium">Contratos</th>
+                <th className="px-4 py-3 text-right font-medium">Faturamento</th>
+                <th className="px-4 py-3 text-right font-medium">Margem média</th>
+                <th className="px-4 py-3 text-right font-medium">Comissão estimada</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ranking.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-10 text-center text-[#6B7A90]">
+                    Nenhum dado de vendas no período
+                  </td>
+                </tr>
+              ) : (
+                ranking.map((v, i) => (
+                  <tr
+                    key={v.id}
+                    className="border-b border-[#E8ECF2] last:border-0"
+                    style={{ backgroundColor: i === 0 ? "#F0FDF9" : undefined }}
+                  >
+                    <td className="px-4 py-3 text-[#6B7A90]">{i + 1}</td>
+                    <td className="px-4 py-3 text-[#0B1220]">
+                      <span className="inline-flex items-center gap-2">
+                        {v.nome}
+                        {i === 0 && (
+                          <span
+                            className="rounded-full px-2 py-0.5 text-[11px] font-medium"
+                            style={{ background: "#D1FAE5", color: "#05873C" }}
+                          >
+                            Top
+                          </span>
+                        )}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right text-[#0B1220]">{v.contratos}</td>
+                    <td className="px-4 py-3 text-right text-[#0B1220]">{fmt(v.fat)}</td>
+                    <td
+                      className="px-4 py-3 text-right font-medium"
+                      style={{ color: margemColor(v.margem) }}
+                    >
+                      {fmtPct(v.margem)}
+                    </td>
+                    <td
+                      className="px-4 py-3 text-right"
+                      style={{ color: "#6B7A90", fontSize: "13px" }}
+                    >
+                      {fmt(v.comissao)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-2 text-[11px] text-[#B0BAC9]">
+          Comissão estimada calculada com base de {(COMISSAO_BASE * 100).toFixed(0)}% sobre o faturamento.
+        </p>
       </div>
     </div>
   );
