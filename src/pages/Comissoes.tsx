@@ -194,13 +194,33 @@ export default function Comissoes() {
         </TabsList>
 
         <TabsContent value="relatorio" className="mt-4">
-          <ComissoesRelatorioTab mes={mes} mesLabel={mesLabel} regra={regra} />
+          <ComissoesRelatorioTab
+            mes={mes}
+            mesLabel={mesLabel}
+            regra={regra}
+            podePagar={podePagar}
+            apenasProprio={!podeVerRelatorioCompleto}
+          />
         </TabsContent>
 
         <TabsContent value="regras" className="mt-4">
-          <ComissoesRegrasTab regra={regra} onEdit={() => setEditOpen(true)} />
+          <ComissoesRegrasTab
+            regra={regra}
+            onEdit={podeEditarRegra ? () => setEditOpen(true) : undefined}
+          />
         </TabsContent>
       </Tabs>
+
+      {podeEditarRegra && (
+        <RegraEditDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          regra={regra}
+          onSave={handleSaveRegra}
+        />
+      )}
+    </div>
+  );
 
       <RegraEditDialog
         open={editOpen}
