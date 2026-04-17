@@ -249,16 +249,12 @@ export default function PortalCliente() {
               </div>
             )}
           </div>
-          <div className="flex flex-col gap-2 text-right">
+          <div className="flex flex-col gap-1 text-right">
             <div style={{ fontSize: 12, color: "#6B7A90" }}>
-              Contrato {numero}
+              Contrato
             </div>
-            <div style={{ fontSize: 20, fontWeight: 500, color: "#0D1117" }}>
-              {Number(contrato.valor_venda ?? 0).toLocaleString("pt-BR", {
-                style: "currency",
-                currency: "BRL",
-                maximumFractionDigits: 0,
-              })}
+            <div style={{ fontSize: 16, fontWeight: 500, color: "#0D1117" }}>
+              {numero}
             </div>
           </div>
         </section>
