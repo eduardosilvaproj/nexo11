@@ -85,11 +85,17 @@ export function ContratoDetailHeader({
       {/* LADO ESQUERDO */}
       <div className="flex flex-col gap-1">
         <button
-          onClick={() => navigate("/comercial")}
+          onClick={() => {
+            if (window.history.length > 1) {
+              navigate(-1);
+            } else {
+              navigate("/comercial?aba=contratos");
+            }
+          }}
           className="text-left hover:underline"
           style={{ color: "#6B7A90", fontSize: 13 }}
         >
-          ← Voltar para Contratos
+          ← Voltar
         </button>
         <h1
           style={{ fontSize: 22, fontWeight: 500, color: "#0D1117" }}
