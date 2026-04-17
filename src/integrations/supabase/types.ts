@@ -144,6 +144,44 @@ export type Database = {
           },
         ]
       }
+      checklist_templates: {
+        Row: {
+          created_at: string
+          descricao: string
+          id: string
+          loja_id: string
+          obrigatorio: boolean
+          ordem: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao: string
+          id?: string
+          loja_id: string
+          obrigatorio?: boolean
+          ordem?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string
+          id?: string
+          loja_id?: string
+          obrigatorio?: boolean
+          ordem?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_templates_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checklists_tecnicos: {
         Row: {
           concluido: boolean
