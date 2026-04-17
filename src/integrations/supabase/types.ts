@@ -75,6 +75,13 @@ export type Database = {
             referencedRelation: "vw_contratos_dre"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "agendamentos_montagem_equipe_id_fkey"
+            columns: ["equipe_id"]
+            isOneToOne: false
+            referencedRelation: "equipes"
+            referencedColumns: ["id"]
+          },
         ]
       }
       chamados_pos_venda: {
