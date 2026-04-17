@@ -86,8 +86,16 @@ export default function Tecnico() {
     return m;
   }, [checklists]);
 
+  const checklistStatusOf = (contratoId: string, contratoStatus: string) => {
+    const s = checklistStats.get(contratoId) ?? { total: 0, done: 0 };
+    if (s.total > 0 && s.done === s.total && contratoStatus !== "tecnico") return "liberado";
+    if (s.total === 0 || s.done === 0) return "nao_iniciado";
+    if (s.done === s.total) return "completo";
+    return "em_andamento";
+  };
+
   const filtered = contratos.filter((c) => {
-    if (statusFilter !== "all" && c.status !== statusFilter) return false;
+    if (statusFilter !== "all" && checklistStatusOf(c.id, c.status) !== statusFilter) return false;
     if (search) {
       const q = search.toLowerCase();
       if (!c.cliente_nome.toLowerCase().includes(q) && !c.id.toLowerCase().includes(q)) return false;
