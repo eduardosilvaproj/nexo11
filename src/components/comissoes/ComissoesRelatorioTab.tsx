@@ -165,6 +165,25 @@ export function ComissoesRelatorioTab({ mes, regra = REGRA_PADRAO }: Props) {
     setAlvo(null);
   }
 
+  const rankFat = useMemo(
+    () => [...linhas].sort((a, b) => b.faturamento - a.faturamento).slice(0, 5),
+    [linhas]
+  );
+  const rankMargem = useMemo(
+    () => [...linhas].sort((a, b) => b.margemMedia - a.margemMedia).slice(0, 5),
+    [linhas]
+  );
+  const topFat = rankFat[0];
+  const topMargem = rankMargem[0];
+  const mostrarAlerta =
+    !!(topFat && topMargem && topFat.vendedor_id !== topMargem.vendedor_id);
+  const diffPp = mostrarAlerta ? topMargem!.margemMedia - topFat!.margemMedia : 0;
+
+  function fmtCompactBRL(v: number) {
+    if (v >= 1000) return `R$ ${(v / 1000).toFixed(0)}k`;
+    return fmtBRL(v);
+  }
+
   if (!loading && linhas.length === 0) {
     return (
       <div
@@ -292,6 +311,77 @@ export function ComissoesRelatorioTab({ mes, regra = REGRA_PADRAO }: Props) {
           </tfoot>
         </table>
       </div>
+
+      {linhas.length > 0 && (
+        <div
+          className="mt-6 rounded-md p-4"
+          style={{ border: "1px solid #E8ECF2", background: "#FFFFFF" }}
+        >
+          <h3 className="text-sm font-medium text-[#0D1117]">
+            Quem vende melhor — volume vs margem
+          </h3>
+          <p className="text-xs text-[#6B7A90]">
+            Os dois rankings podem ter nomes diferentes
+          </p>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            {[
+              {
+                titulo: "RANKING POR FATURAMENTO",
+                sub: "(quem mais vendeu em R$)",
+                lista: rankFat,
+                valor: (l: LinhaVendedor) => fmtCompactBRL(l.faturamento),
+              },
+              {
+                titulo: "RANKING POR MARGEM REALIZADA",
+                sub: "(quem vendeu com mais qualidade)",
+                lista: rankMargem,
+                valor: (l: LinhaVendedor) => `${l.margemMedia.toFixed(1)}%`,
+              },
+            ].map((col) => (
+              <div key={col.titulo}>
+                <p className="text-xs font-medium text-[#6B7A90]">{col.titulo}</p>
+                <p className="text-[11px] text-[#B0BAC9]">{col.sub}</p>
+                <ul className="mt-2 space-y-1">
+                  {col.lista.map((l, i) => (
+                    <li
+                      key={l.vendedor_id}
+                      className="flex items-center gap-2 rounded px-2 py-1.5 text-sm"
+                      style={i === 0 ? { background: "#F0FDF9" } : undefined}
+                    >
+                      <span className="w-5 text-xs text-[#6B7A90]">{i + 1}.</span>
+                      <div
+                        className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-medium text-white"
+                        style={{ background: "#1E6FBF" }}
+                      >
+                        {iniciais(l.nome)}
+                      </div>
+                      <span className="flex-1 truncate">{l.nome}</span>
+                      <span className="tabular-nums font-medium">{col.valor(l)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          {mostrarAlerta && (
+            <div
+              className="mt-4 rounded-md px-3 py-2 text-xs"
+              style={{
+                background: "#FEF3C7",
+                border: "1px solid #E8A020",
+                color: "#633806",
+              }}
+            >
+              <span className="font-medium">{topFat!.nome}</span> lidera em faturamento mas{" "}
+              <span className="font-medium">{topMargem!.nome}</span> tem margem{" "}
+              {diffPp.toFixed(1)}pp maior. A regra de bônus recompensa quem vende com mais
+              qualidade.
+            </div>
+          )}
+        </div>
+      )}
 
       <Dialog open={!!alvo} onOpenChange={(v) => !v && setAlvo(null)}>
         <DialogContent className="sm:max-w-[420px]">
