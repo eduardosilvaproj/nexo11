@@ -105,7 +105,7 @@ export default function Analytics() {
           <FaturamentoVsPeChart />
         </div>
         <div className="lg:col-span-2">
-          <FunilLeadsChart />
+          <FunilLeadsChart mes={mes} lojaId={lojaId} />
         </div>
       </div>
 
