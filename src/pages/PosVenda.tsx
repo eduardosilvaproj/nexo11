@@ -521,6 +521,79 @@ export default function PosVenda() {
           </tbody>
         </table>
       </div>
+      </>
+      )}
+
+      {tab === "nps" && (
+        <div
+          className="rounded-xl bg-white p-6"
+          style={{ border: "0.5px solid #E8ECF2" }}
+        >
+          <h2 style={{ fontSize: 15, fontWeight: 600, color: "#0D1117" }}>
+            Avaliações NPS
+          </h2>
+          <p style={{ fontSize: 12, color: "#6B7A90", marginBottom: 16 }}>
+            Notas registradas pelos clientes nos chamados.
+          </p>
+          <div className="overflow-hidden rounded-lg" style={{ border: "0.5px solid #E8ECF2" }}>
+            <table className="w-full">
+              <thead style={{ backgroundColor: "#F7F9FC" }}>
+                <tr>
+                  {["Nº", "Cliente", "Nota", "Data", "Comentário"].map((h) => (
+                    <th
+                      key={h}
+                      className="px-4 py-3 text-left"
+                      style={{
+                        fontSize: 11,
+                        color: "#6B7A90",
+                        fontWeight: 500,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {(chamados ?? [])
+                  .filter((c) => typeof c.nps === "number")
+                  .map((c) => {
+                    const cliente =
+                      (c as { contratos?: { cliente_nome?: string } }).contratos?.cliente_nome;
+                    return (
+                      <tr key={c.id} style={{ borderTop: "0.5px solid #E8ECF2" }}>
+                        <td className="px-4 py-3 text-sm font-medium">
+                          #{c.contrato_id?.slice(0, 4)}
+                        </td>
+                        <td className="px-4 py-3 text-sm">{cliente ?? "—"}</td>
+                        <td className="px-4 py-3 text-sm">
+                          <span style={{ color: npsColor(c.nps as number), fontWeight: 600 }}>
+                            {c.nps}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          {new Date(c.data_fechamento ?? c.updated_at).toLocaleDateString("pt-BR")}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-muted-foreground">
+                          {(c as { nps_comentario?: string }).nps_comentario ?? "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                {(chamados ?? []).filter((c) => typeof c.nps === "number").length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                      Nenhum NPS registrado ainda.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
