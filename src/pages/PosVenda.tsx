@@ -318,28 +318,58 @@ export default function PosVenda() {
               <Plus className="h-4 w-4" /> Abrir chamado
             </button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[480px]">
             <DialogHeader>
               <DialogTitle>Abrir chamado</DialogTitle>
             </DialogHeader>
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-col gap-1">
-                <Label>Contrato</Label>
-                <Select value={contratoId} onValueChange={setContratoId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {contratos.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.cliente_nome} · #{c.id.slice(0, 4)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label>
+                  Contrato <span style={{ color: "#E53935" }}>*</span>
+                </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    >
+                      <span className={contratoId ? "" : "text-muted-foreground"}>
+                        {(() => {
+                          const c = contratos.find((x) => x.id === contratoId);
+                          return c
+                            ? `#${c.id.slice(0, 4)} — ${c.cliente_nome}`
+                            : "Selecione um contrato";
+                        })()}
+                      </span>
+                      <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[420px] p-0" align="start">
+                    <Command>
+                      <CommandInput placeholder="Buscar cliente ou nº..." />
+                      <CommandList>
+                        <CommandEmpty>Nenhum contrato encontrado.</CommandEmpty>
+                        <CommandGroup>
+                          {contratos.map((c) => (
+                            <CommandItem
+                              key={c.id}
+                              value={`${c.id.slice(0, 4)} ${c.cliente_nome}`}
+                              onSelect={() => setContratoId(c.id)}
+                            >
+                              #{c.id.slice(0, 4)} — {c.cliente_nome}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
-              <div className="flex flex-col gap-1">
-                <Label>Tipo</Label>
+
+              <div className="flex flex-col gap-1.5">
+                <Label>
+                  Tipo <span style={{ color: "#E53935" }}>*</span>
+                </Label>
                 <Select value={tipo} onValueChange={(v) => setTipo(v as ChamadoTipo)}>
                   <SelectTrigger>
                     <SelectValue />
@@ -353,24 +383,45 @@ export default function PosVenda() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="flex flex-col gap-1">
-                <Label>Título</Label>
-                <Input value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <Label>
+                    Título <span style={{ color: "#E53935" }}>*</span>
+                  </Label>
+                  <span style={{ fontSize: 11, color: "#6B7A90" }}>
+                    {titulo.length}/80
+                  </span>
+                </div>
+                <Input
+                  maxLength={80}
+                  value={titulo}
+                  onChange={(e) => setTitulo(e.target.value)}
+                />
               </div>
-              <div className="flex flex-col gap-1">
+
+              <div className="flex flex-col gap-1.5">
                 <Label>Descrição</Label>
                 <Textarea
+                  rows={4}
                   value={descricao}
                   onChange={(e) => setDescricao(e.target.value)}
                 />
               </div>
-              <div className="flex flex-col gap-1">
+
+              <div className="flex flex-col gap-1.5">
                 <Label>Custo de assistência (R$)</Label>
                 <Input
                   type="number"
+                  min={0}
+                  step="0.01"
+                  placeholder=""
                   value={custo}
                   onChange={(e) => setCusto(e.target.value)}
                 />
+                <span style={{ fontSize: 12, color: "#E8A020" }}>
+                  Valores acima de R$ 0 serão adicionados ao DRE do contrato
+                </span>
               </div>
             </div>
             <DialogFooter>
@@ -381,8 +432,9 @@ export default function PosVenda() {
                 onClick={() => abrirChamado.mutate()}
                 disabled={abrirChamado.isPending}
                 style={{ backgroundColor: "#1E6FBF" }}
+                className="gap-1.5"
               >
-                Abrir chamado
+                Abrir chamado <ArrowRight className="h-4 w-4" />
               </Button>
             </DialogFooter>
           </DialogContent>
