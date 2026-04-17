@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,10 +19,13 @@ type Contrato = {
   vendedor_id: string | null;
   created_at: string;
   sub_etapa_tecnico: SubEtapa;
+  medicao_responsavel_id: string | null;
+  conferencia_responsavel_id: string | null;
 };
 
 export default function Tecnico() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [templateOpen, setTemplateOpen] = useState(false);
@@ -32,7 +36,7 @@ export default function Tecnico() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contratos")
-        .select("id,cliente_nome,status,vendedor_id,created_at,sub_etapa_tecnico")
+        .select("id,cliente_nome,status,vendedor_id,created_at,sub_etapa_tecnico,medicao_responsavel_id,conferencia_responsavel_id")
         .eq("status", "tecnico")
         .eq("sub_etapa_tecnico", aba)
         .order("created_at", { ascending: false });
@@ -40,6 +44,41 @@ export default function Tecnico() {
       return data as Contrato[];
     },
   });
+
+  const papelAtual = aba === "medicao" ? "medidor" : "conferente";
+  const { data: responsaveis = [] } = useQuery({
+    queryKey: ["responsaveis-tecnico", papelAtual],
+    queryFn: async () => {
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", papelAtual);
+      const ids = (roles ?? []).map((r) => r.user_id);
+      if (ids.length === 0) return [] as { id: string; nome: string }[];
+      const { data } = await supabase
+        .from("usuarios")
+        .select("id,nome")
+        .in("id", ids)
+        .order("nome");
+      return (data ?? []) as { id: string; nome: string }[];
+    },
+  });
+
+  const atribuirResponsavel = async (contratoId: string, userId: string) => {
+    const payload = aba === "medicao"
+      ? { medicao_responsavel_id: userId }
+      : { conferencia_responsavel_id: userId };
+    const { error } = await supabase
+      .from("contratos")
+      .update(payload)
+      .eq("id", contratoId);
+    if (error) {
+      toast.error("Erro ao atribuir responsável");
+      return;
+    }
+    toast.success("Responsável atribuído");
+    queryClient.invalidateQueries({ queryKey: ["contratos-tecnico-list", aba] });
+  };
 
   const contratoIds = contratos.map((c) => c.id);
 
@@ -227,6 +266,7 @@ export default function Tecnico() {
               <TableHead>Nº</TableHead>
               <TableHead>Cliente</TableHead>
               <TableHead>Vendedor</TableHead>
+              <TableHead>Responsável</TableHead>
               <TableHead>Progresso conferência</TableHead>
               <TableHead>Projeto</TableHead>
               <TableHead>Trava</TableHead>
@@ -236,7 +276,7 @@ export default function Tecnico() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7}>
+                <TableCell colSpan={8}>
                   <div className="flex items-center justify-center p-8">
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                   </div>
@@ -244,7 +284,7 @@ export default function Tecnico() {
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7}>
+                <TableCell colSpan={8}>
                   <div className="flex flex-col items-center justify-center p-12 text-center">
                     <ClipboardList size={32} style={{ color: "#B0BAC9" }} />
                     <p className="mt-3" style={{ fontSize: 13, color: "#6B7A90", fontWeight: 500 }}>
@@ -281,6 +321,34 @@ export default function Tecnico() {
                     </TableCell>
                     <TableCell style={{ fontSize: 13, color: "#6B7A90" }}>
                       {c.vendedor_id ? userMap.get(c.vendedor_id) ?? "—" : "—"}
+                    </TableCell>
+                    <TableCell>
+                      {(() => {
+                        const value = aba === "medicao" ? c.medicao_responsavel_id : c.conferencia_responsavel_id;
+                        return (
+                          <Select
+                            value={value ?? undefined}
+                            onValueChange={(v) => atribuirResponsavel(c.id, v)}
+                          >
+                            <SelectTrigger className="h-8 w-[160px]" style={{ fontSize: 12 }}>
+                              <SelectValue placeholder="Atribuir →" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {responsaveis.length === 0 ? (
+                                <div className="px-2 py-1.5" style={{ fontSize: 12, color: "#6B7A90" }}>
+                                  Nenhum {papelAtual} cadastrado
+                                </div>
+                              ) : (
+                                responsaveis.map((u) => (
+                                  <SelectItem key={u.id} value={u.id}>
+                                    {u.nome}
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell>
                       {stats.total === 0 ? (
