@@ -709,26 +709,38 @@ export type Database = {
       lojas: {
         Row: {
           cidade: string | null
+          cnpj: string | null
           created_at: string
+          email: string | null
+          estado: string | null
           franqueado_id: string | null
           id: string
           nome: string
+          telefone: string | null
           updated_at: string
         }
         Insert: {
           cidade?: string | null
+          cnpj?: string | null
           created_at?: string
+          email?: string | null
+          estado?: string | null
           franqueado_id?: string | null
           id?: string
           nome: string
+          telefone?: string | null
           updated_at?: string
         }
         Update: {
           cidade?: string | null
+          cnpj?: string | null
           created_at?: string
+          email?: string | null
+          estado?: string | null
           franqueado_id?: string | null
           id?: string
           nome?: string
+          telefone?: string | null
           updated_at?: string
         }
         Relationships: []

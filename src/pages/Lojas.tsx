@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select";
 import { LojasKpiRow } from "@/components/lojas/LojasKpiRow";
 import { LojasGrid } from "@/components/lojas/LojasGrid";
+import { NovaLojaDialog } from "@/components/lojas/NovaLojaDialog";
 
 function buildMonthOptions(months = 12) {
   const opts: { value: string; label: string }[] = [];
@@ -25,10 +26,9 @@ export default function Lojas() {
   const monthOptions = useMemo(() => buildMonthOptions(12), []);
   const [mes, setMes] = useState(monthOptions[0].value);
   const [tab, setTab] = useState<"lojas" | "comparativo">("lojas");
+  const [novaLojaOpen, setNovaLojaOpen] = useState(false);
 
-  const handleNovaLoja = () => {
-    // TODO: abrir dialog de criação
-  };
+  const handleNovaLoja = () => setNovaLojaOpen(true);
 
   const TabBtn = ({ value, label }: { value: "lojas" | "comparativo"; label: string }) => {
     const active = tab === value;
@@ -110,6 +110,8 @@ export default function Lojas() {
       ) : (
         <div style={{ fontSize: 13, color: "#6B7A90" }}>Comparativo em breve.</div>
       )}
+
+      <NovaLojaDialog open={novaLojaOpen} onOpenChange={setNovaLojaOpen} />
     </div>
   );
 }
