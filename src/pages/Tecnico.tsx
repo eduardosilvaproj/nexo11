@@ -170,7 +170,7 @@ export default function Tecnico() {
           style={{ borderColor: "#1E6FBF", color: "#1E6FBF" }}
         >
           <Settings className="mr-2 h-4 w-4" />
-          Configurar conferência
+          Configurar checklist
         </Button>
       </div>
 
