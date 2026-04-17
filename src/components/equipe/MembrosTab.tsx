@@ -123,7 +123,7 @@ function MembroCard({ membro }: { membro: Membro }) {
   );
 }
 
-export function MembrosTab() {
+export function MembrosTab({ onAddMember }: { onAddMember?: () => void } = {}) {
   const { data: membros, isLoading } = useQuery({
     queryKey: ["equipe-membros"],
     queryFn: fetchMembros,
@@ -145,7 +145,11 @@ export function MembrosTab() {
           Nenhum membro cadastrado
         </p>
         <button
-          onClick={() => toast.info("Em breve: cadastro de novo membro")}
+          onClick={() =>
+            onAddMember
+              ? onAddMember()
+              : toast.info("Em breve: cadastro de novo membro")
+          }
           className="mt-4 inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-white"
           style={{ backgroundColor: "#1E6FBF", fontSize: 13 }}
         >
