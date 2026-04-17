@@ -1,6 +1,7 @@
 import { Plus, Users, UserCheck, UserX, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { MembrosTab } from "@/components/equipe/MembrosTab";
 
 type Metric = {
   label: string;
@@ -95,9 +96,7 @@ export default function Equipe() {
         </TabsList>
 
         <TabsContent value="membros" className="mt-6">
-          <p style={{ fontSize: 13, color: "#6B7A90" }}>
-            Nenhum membro cadastrado.
-          </p>
+          <MembrosTab />
         </TabsContent>
         <TabsContent value="ponto" className="mt-6">
           <p style={{ fontSize: 13, color: "#6B7A90" }}>
