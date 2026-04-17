@@ -124,11 +124,13 @@ export function ComissoesRelatorioTab({ mes, regra = REGRA_PADRAO }: Props) {
             base: 0,
             bonus: 0,
             total: 0,
+            contrato_ids: [],
           };
         }
         const a = agg[vid];
         a.contratos += 1;
         a.faturamento += valor;
+        a.contrato_ids.push(c.id);
         // média ponderada por faturamento
         a.margemMedia =
           a.faturamento > 0
