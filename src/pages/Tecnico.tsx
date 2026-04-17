@@ -137,6 +137,30 @@ export default function Tecnico() {
 
       <ChecklistTemplateDialog open={templateOpen} onOpenChange={setTemplateOpen} />
 
+      <div className="flex items-center gap-6" style={{ borderBottom: "1px solid #E8ECF2" }}>
+        {([
+          { key: "medicao", label: "Medição fina" },
+          { key: "conferencia", label: "Conferência" },
+        ] as const).map((t) => {
+          const active = aba === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => setAba(t.key)}
+              className="pb-2 -mb-px transition-colors"
+              style={{
+                fontSize: 14,
+                fontWeight: active ? 500 : 400,
+                color: active ? "#1E6FBF" : "#6B7A90",
+                borderBottom: active ? "2px solid #1E6FBF" : "2px solid transparent",
+              }}
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="flex flex-wrap items-center gap-3">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[220px]">
