@@ -242,6 +242,7 @@ export function ContasCard() {
           setFiltro={setFiltroReceber}
           totalCor="#12B76A"
           acaoLabel="Marcar pago"
+          variant="receber"
         />
         <Coluna
           titulo="A pagar"
@@ -250,6 +251,7 @@ export function ContasCard() {
           setFiltro={setFiltroPagar}
           totalCor="#E53935"
           acaoLabel="Marcar pago"
+          variant="pagar"
         />
       </div>
 
