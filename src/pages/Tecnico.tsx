@@ -117,7 +117,7 @@ export default function Tecnico() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">NEXO Técnico</h1>
-          <p className="text-sm text-muted-foreground">Contratos aguardando validação técnica</p>
+          <p className="text-sm text-muted-foreground">Medição fina e conferência técnica</p>
         </div>
         <Button
           variant="outline"
