@@ -105,7 +105,7 @@ export default function Comissoes() {
         </TabsList>
 
         <TabsContent value="relatorio" className="mt-4">
-          <ComissoesRelatorioTab mes={mes} />
+          <ComissoesRelatorioTab mes={mes} mesLabel={mesLabel} />
         </TabsContent>
 
         <TabsContent value="regras" className="mt-4">
