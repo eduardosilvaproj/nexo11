@@ -13,6 +13,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Select,
   SelectContent,
@@ -40,6 +41,8 @@ const MESES = [
 
 export default function Dre() {
   const navigate = useNavigate();
+  const { hasRole } = useAuth();
+  const podeVerRanking = hasRole("admin") || hasRole("gerente") || hasRole("franqueador");
   const today = new Date();
   const [mes, setMes] = useState<number>(today.getMonth());
   const [ano, setAno] = useState<number>(today.getFullYear());
@@ -589,6 +592,7 @@ export default function Dre() {
         </div>
       </div>
 
+      {podeVerRanking && (
       <div className="rounded-lg border border-[#E8ECF2] bg-white p-5">
         <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -678,6 +682,7 @@ export default function Dre() {
           Comissão estimada calculada com base de {(COMISSAO_BASE * 100).toFixed(0)}% sobre o faturamento.
         </p>
       </div>
+      )}
     </div>
   );
 }
