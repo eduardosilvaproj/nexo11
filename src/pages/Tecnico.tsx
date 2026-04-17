@@ -9,12 +9,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Loader2, Settings, Paperclip, ClipboardList } from "lucide-react";
 import { ChecklistTemplateDialog } from "@/components/tecnico/ChecklistTemplateDialog";
 
+type SubEtapa = "medicao" | "conferencia";
+
 type Contrato = {
   id: string;
   cliente_nome: string;
   status: string;
   vendedor_id: string | null;
   created_at: string;
+  sub_etapa_tecnico: SubEtapa;
 };
 
 export default function Tecnico() {
@@ -22,14 +25,16 @@ export default function Tecnico() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [templateOpen, setTemplateOpen] = useState(false);
+  const [aba, setAba] = useState<SubEtapa>("medicao");
 
   const { data: contratos = [], isLoading } = useQuery({
-    queryKey: ["contratos-tecnico-list"],
+    queryKey: ["contratos-tecnico-list", aba],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contratos")
-        .select("id,cliente_nome,status,vendedor_id,created_at")
+        .select("id,cliente_nome,status,vendedor_id,created_at,sub_etapa_tecnico")
         .eq("status", "tecnico")
+        .eq("sub_etapa_tecnico", aba)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Contrato[];
@@ -132,6 +137,30 @@ export default function Tecnico() {
 
       <ChecklistTemplateDialog open={templateOpen} onOpenChange={setTemplateOpen} />
 
+      <div className="flex items-center gap-6" style={{ borderBottom: "1px solid #E8ECF2" }}>
+        {([
+          { key: "medicao", label: "Medição fina" },
+          { key: "conferencia", label: "Conferência" },
+        ] as const).map((t) => {
+          const active = aba === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => setAba(t.key)}
+              className="pb-2 -mb-px transition-colors"
+              style={{
+                fontSize: 14,
+                fontWeight: active ? 500 : 400,
+                color: active ? "#1E6FBF" : "#6B7A90",
+                borderBottom: active ? "2px solid #1E6FBF" : "2px solid transparent",
+              }}
+            >
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="flex flex-wrap items-center gap-3">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[220px]">
@@ -162,11 +191,17 @@ export default function Tecnico() {
           if (s.total > 0 && s.done < s.total) emAndamento++;
           if (s.total > 0 && s.done === s.total) liberados++;
         });
-        const cards = [
-          { label: "Contratos aguardando", value: aguardando, color: "#E8A020" },
-          { label: "Conferências em andamento", value: emAndamento, color: "#1E6FBF" },
-          { label: "Liberados para produção", value: liberados, color: "#12B76A" },
-        ];
+        const cards = aba === "medicao"
+          ? [
+              { label: "Aguardando medição", value: aguardando - emAndamento - liberados, color: "#E8A020" },
+              { label: "Em andamento", value: emAndamento, color: "#1E6FBF" },
+              { label: "Medição concluída", value: liberados, color: "#12B76A" },
+            ]
+          : [
+              { label: "Aguardando conferência", value: aguardando - emAndamento - liberados, color: "#E8A020" },
+              { label: "Em andamento", value: emAndamento, color: "#1E6FBF" },
+              { label: "Liberados p/ produção", value: liberados, color: "#12B76A" },
+            ];
         return (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {cards.map((k) => (
@@ -213,10 +248,12 @@ export default function Tecnico() {
                   <div className="flex flex-col items-center justify-center p-12 text-center">
                     <ClipboardList size={32} style={{ color: "#B0BAC9" }} />
                     <p className="mt-3" style={{ fontSize: 13, color: "#6B7A90", fontWeight: 500 }}>
-                      Nenhum contrato em fase técnica
+                      {aba === "medicao"
+                        ? "Nenhum contrato aguardando medição fina"
+                        : "Nenhum contrato aguardando conferência"}
                     </p>
                     <p className="mt-1" style={{ fontSize: 13, color: "#6B7A90" }}>
-                      Contratos aparecem aqui após assinatura no módulo Comercial
+                      Contratos aparecem aqui conforme avançam no fluxo
                     </p>
                   </div>
                 </TableCell>
