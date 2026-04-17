@@ -5,7 +5,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Bar, BarChart, CartesianGrid, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine,
 } from "recharts";
-import { ArrowDownRight, ArrowUpRight, ChevronLeft, ChevronRight, Plus, Wallet } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Check, ChevronLeft, ChevronRight, Plus, Trash2, Wallet } from "lucide-react";
+
+type LancamentoStatus = "pendente" | "pago" | "cancelado";
+type LancamentoTipo = "receita" | "despesa";
+type Lancamento = {
+  id: string;
+  data: string; // YYYY-MM-DD
+  descricao: string;
+  categoria: string;
+  tipo: LancamentoTipo;
+  valor: number;
+  vencimento: string; // YYYY-MM-DD
+  status: LancamentoStatus;
+};
+
+function fmtData(s: string) {
+  const [y, m, d] = s.split("-");
+  return `${d}/${m}/${y}`;
+}
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 function labelMes(d: Date) { return `${MESES[d.getMonth()]} ${d.getFullYear()}`; }
