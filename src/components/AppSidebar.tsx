@@ -36,12 +36,12 @@ import { LogoNexo } from "@/components/LogoNexo";
 
 const operacao = [
   { title: "Comercial", url: "/comercial", icon: Users },
-  { title: "Técnico", url: "/tecnico", icon: ClipboardCheck },
-  { title: "Produção", url: "/producao", icon: Factory },
-  { title: "Logística", url: "/logistica", icon: Truck },
-  { title: "Montagem", url: "/montagem", icon: Wrench },
+  { title: "Técnico", url: "/tecnico", icon: ClipboardCheck, roles: ["admin", "gerente", "tecnico", "franqueador"] },
+  { title: "Produção", url: "/producao", icon: Factory, roles: ["admin", "gerente", "tecnico", "franqueador"] },
+  { title: "Logística", url: "/logistica", icon: Truck, roles: ["admin", "gerente", "franqueador"] },
+  { title: "Montagem", url: "/montagem", icon: Wrench, roles: ["admin", "gerente", "montador", "franqueador"] },
   { title: "Pós-venda", url: "/pos-venda", icon: HeadphonesIcon },
-  { title: "DRE", url: "/dre", icon: TrendingUp },
+  { title: "DRE", url: "/dre", icon: TrendingUp, roles: ["admin", "gerente", "franqueador"] },
 ];
 
 const gestao = [
@@ -106,7 +106,7 @@ export function AppSidebar() {
           <SidebarGroupLabel className="nexo-sidebar-label">Operação</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {operacao.map((item) => (
+              {operacao.filter(canSee).map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} className={linkClass}>

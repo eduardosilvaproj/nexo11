@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, Download, Paperclip, AlertTriangle } from "lucide-react";
+import { Check, Download, Paperclip, AlertTriangle, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface TecnicoTabProps {
   contratoId: string;
@@ -33,6 +34,8 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
   const qc = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const { hasRole } = useAuth();
+  const canEdit = hasRole("admin") || hasRole("gerente") || hasRole("tecnico");
 
   const { data: itens = [] } = useQuery({
     queryKey: ["checklist", contratoId],
@@ -121,9 +124,20 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
       <Card
         title="Checklist técnico"
         right={
-          <span style={{ fontSize: 12, color: "#6B7A90" }}>
-            {concluidos} de {total} itens concluídos
-          </span>
+          <div className="flex items-center gap-2">
+            {!canEdit && (
+              <span
+                className="inline-flex items-center gap-1 rounded px-2 py-0.5"
+                style={{ fontSize: 11, backgroundColor: "#F5F7FA", color: "#6B7A90" }}
+                title="Somente leitura — apenas técnico, gerente ou admin podem editar"
+              >
+                <Lock className="h-3 w-3" /> Somente leitura
+              </span>
+            )}
+            <span style={{ fontSize: 12, color: "#6B7A90" }}>
+              {concluidos} de {total} itens concluídos
+            </span>
+          </div>
         }
       >
         {pendentes > 0 && (
@@ -161,11 +175,13 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
               style={{ borderTop: "0.5px solid #E8ECF2" }}
             >
               <button
-                onClick={() => toggleMutation.mutate({ id: item.id, concluido: item.concluido })}
-                className="flex h-5 w-5 shrink-0 items-center justify-center rounded transition-colors"
+                onClick={() => canEdit && toggleMutation.mutate({ id: item.id, concluido: item.concluido })}
+                disabled={!canEdit}
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded transition-colors disabled:cursor-not-allowed"
                 style={{
                   backgroundColor: item.concluido ? "#12B76A" : "transparent",
                   border: item.concluido ? "1px solid #12B76A" : "1.5px solid #B0BAC9",
+                  opacity: canEdit ? 1 : 0.7,
                 }}
                 aria-label="Toggle item"
               >
@@ -203,15 +219,17 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
             e.target.value = "";
           }}
         />
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-          className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-          style={{ backgroundColor: "#1E6FBF", fontSize: 13 }}
-        >
-          <Paperclip className="h-4 w-4" />
-          {uploading ? "Enviando..." : "Anexar projeto Promob"}
-        </button>
+        {canEdit && (
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+            style={{ backgroundColor: "#1E6FBF", fontSize: 13 }}
+          >
+            <Paperclip className="h-4 w-4" />
+            {uploading ? "Enviando..." : "Anexar projeto Promob"}
+          </button>
+        )}
 
         <ul className="mt-4 flex flex-col">
           {arquivos.length === 0 && (
