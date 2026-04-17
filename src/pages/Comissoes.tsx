@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ComissoesRelatorioTab } from "@/components/comissoes/ComissoesRelatorioTab";
 
 function fmtBRL(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -103,12 +104,7 @@ export default function Comissoes() {
         </TabsList>
 
         <TabsContent value="relatorio" className="mt-4">
-          <div
-            className="rounded-md px-4 py-10 text-center text-sm"
-            style={{ background: "#F5F7FA", border: "1px dashed #B0BAC9", color: "#6B7A90" }}
-          >
-            Relatório por vendedor — em construção
-          </div>
+          <ComissoesRelatorioTab mes={mes} />
         </TabsContent>
 
         <TabsContent value="regras" className="mt-4">
