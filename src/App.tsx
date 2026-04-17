@@ -94,11 +94,6 @@ const App = () => (
                   <Placeholder title="NEXO Equipe" />
                 </ProtectedRoute>
               } />
-              <Route path="/equipes" element={
-                <ProtectedRoute roles={["admin","gerente"]}>
-                  <Equipes />
-                </ProtectedRoute>
-              } />
               <Route path="/lojas" element={
                 <ProtectedRoute roles={["admin","franqueador"]}>
                   <Placeholder title="NEXO Lojas" description="Comparativo entre unidades." />
