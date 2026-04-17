@@ -7,6 +7,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LojasKpiRow } from "@/components/lojas/LojasKpiRow";
+import { LojasGrid } from "@/components/lojas/LojasGrid";
 
 function buildMonthOptions(months = 12) {
   const opts: { value: string; label: string }[] = [];
@@ -104,7 +105,7 @@ export default function Lojas() {
       </div>
 
       {tab === "lojas" ? (
-        <div style={{ fontSize: 13, color: "#6B7A90" }}>Lista de lojas em breve.</div>
+        <LojasGrid mes={mes} />
       ) : (
         <div style={{ fontSize: 13, color: "#6B7A90" }}>Comparativo em breve.</div>
       )}
