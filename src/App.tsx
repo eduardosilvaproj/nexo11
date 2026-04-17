@@ -40,7 +40,7 @@ const App = () => (
               <Route path="/comercial" element={<Comercial />} />
               <Route path="/contratos/:id" element={<ContratoDetail />} />
               <Route path="/tecnico" element={
-                <ProtectedRoute roles={["admin","gerente","tecnico"]}>
+                <ProtectedRoute roles={["admin","gerente","tecnico","franqueador"]}>
                   <Tecnico />
                 </ProtectedRoute>
               } />
