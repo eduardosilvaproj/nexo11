@@ -23,11 +23,23 @@ export function SimuladorPECard({ custoFixoTotal, mes }: Props) {
   const [custoFixo, setCustoFixo] = useState<number>(48000);
   const [meta, setMeta] = useState<number>(0);
   const [faturamentoAtual, setFaturamentoAtual] = useState<number>(0);
+  const [manualOverride, setManualOverride] = useState<boolean>(false);
 
-  // Sync custo fixo with left column total
+  // Sync custo fixo with left column total (unless user manually overrode it)
   useEffect(() => {
+    if (custoFixoTotal > 0 && !manualOverride) {
+      setCustoFixo(Math.round(custoFixoTotal));
+    }
+  }, [custoFixoTotal, manualOverride]);
+
+  function handleCustoFixoChange(v: number) {
+    setCustoFixo(v);
+    setManualOverride(Math.round(custoFixoTotal) !== v);
+  }
+  function resetCustoFixo() {
+    setManualOverride(false);
     if (custoFixoTotal > 0) setCustoFixo(Math.round(custoFixoTotal));
-  }, [custoFixoTotal]);
+  }
 
   // Load faturamento atual from vw_contratos_dre for the selected month
   useEffect(() => {
