@@ -5,7 +5,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Bar, BarChart, CartesianGrid, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine,
 } from "recharts";
-import { ArrowDownRight, ArrowUpRight, ChevronLeft, ChevronRight, Plus, Wallet } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Check, ChevronLeft, ChevronRight, Plus, Trash2, Wallet } from "lucide-react";
+
+type LancamentoStatus = "pendente" | "pago" | "cancelado";
+type LancamentoTipo = "receita" | "despesa";
+type Lancamento = {
+  id: string;
+  data: string; // YYYY-MM-DD
+  descricao: string;
+  categoria: string;
+  tipo: LancamentoTipo;
+  valor: number;
+  vencimento: string; // YYYY-MM-DD
+  status: LancamentoStatus;
+};
+
+function fmtData(s: string) {
+  const [y, m, d] = s.split("-");
+  return `${d}/${m}/${y}`;
+}
 
 const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 function labelMes(d: Date) { return `${MESES[d.getMonth()]} ${d.getFullYear()}`; }
@@ -97,9 +115,29 @@ export function FluxoCaixaCard() {
     ? ((mesAtual.saldo - mesAnterior.saldo) / Math.max(Math.abs(mesAnterior.saldo), 1)) * 100
     : 0;
 
-  // Previstos do mês ativo (sem dados reais ainda → R$ 0)
-  const entradasPrevistas = 0;
-  const saidasPrevistas = 0;
+  // Lançamentos do mês ativo (mock — começa vazio)
+  const [lancamentos, setLancamentos] = useState<Lancamento[]>([]);
+  const hojeStr = new Date().toISOString().slice(0, 10);
+
+  const lancamentosOrdenados = useMemo(
+    () => [...lancamentos].sort((a, b) => a.vencimento.localeCompare(b.vencimento)),
+    [lancamentos],
+  );
+
+  const entradasPrevistas = lancamentos
+    .filter((l) => l.tipo === "receita" && l.status !== "cancelado")
+    .reduce((s, l) => s + l.valor, 0);
+  const saidasPrevistas = lancamentos
+    .filter((l) => l.tipo === "despesa" && l.status !== "cancelado")
+    .reduce((s, l) => s + l.valor, 0);
+
+  function marcarPago(id: string) {
+    setLancamentos((arr) => arr.map((l) => (l.id === id ? { ...l, status: "pago" } : l)));
+  }
+  function cancelar(id: string) {
+    if (!window.confirm("Cancelar este lançamento?")) return;
+    setLancamentos((arr) => arr.map((l) => (l.id === id ? { ...l, status: "cancelado" } : l)));
+  }
   const saldoProjetado = entradasPrevistas - saidasPrevistas;
   const saldoColor = saldoProjetado >= 0 ? "#12B76A" : "#E53935";
 
@@ -255,6 +293,117 @@ export function FluxoCaixaCard() {
               </ComposedChart>
             </ResponsiveContainer>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Lançamentos do mês */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Lançamentos — {labelMes(mesAtivo)}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {lancamentosOrdenados.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+              <p className="text-sm text-[#6B7A90]">Nenhum lançamento em {labelMes(mesAtivo)}</p>
+              <Button size="sm" className="text-white hover:opacity-90" style={{ background: "#1E6FBF" }}>
+                <Plus className="mr-1 h-4 w-4" /> Criar primeiro lançamento
+              </Button>
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-md border" style={{ borderColor: "#E8ECF2" }}>
+              <table className="w-full text-sm">
+                <thead style={{ background: "#F5F7FA", color: "#6B7A90" }}>
+                  <tr>
+                    <th className="px-3 py-2 text-left font-medium">Data</th>
+                    <th className="px-3 py-2 text-left font-medium">Descrição</th>
+                    <th className="px-3 py-2 text-left font-medium">Categoria</th>
+                    <th className="px-3 py-2 text-left font-medium">Tipo</th>
+                    <th className="px-3 py-2 text-right font-medium">Valor</th>
+                    <th className="px-3 py-2 text-left font-medium">Vencimento</th>
+                    <th className="px-3 py-2 text-left font-medium">Status</th>
+                    <th className="px-3 py-2 text-right font-medium">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y" style={{ borderColor: "#E8ECF2" }}>
+                  {lancamentosOrdenados.map((l) => {
+                    const atrasado = l.status === "pendente" && l.vencimento < hojeStr;
+                    const statusKey: LancamentoStatus | "atrasado" = atrasado ? "atrasado" : l.status;
+                    const statusStyle = {
+                      pendente: { bg: "#FEF3C7", fg: "#E8A020", label: "Pendente" },
+                      pago: { bg: "#D1FAE5", fg: "#05873C", label: "Pago" },
+                      atrasado: { bg: "#FDECEA", fg: "#E53935", label: "Atrasado" },
+                      cancelado: { bg: "#E8ECF2", fg: "#B0BAC9", label: "Cancelado" },
+                    }[statusKey];
+                    const tipoStyle =
+                      l.tipo === "receita"
+                        ? { bg: "#D1FAE5", fg: "#05873C", label: "Receita" }
+                        : { bg: "#FDECEA", fg: "#E53935", label: "Despesa" };
+                    const cancelado = l.status === "cancelado";
+                    const podeMarcarPago = l.status === "pendente";
+                    return (
+                      <tr
+                        key={l.id}
+                        style={atrasado ? { background: "#FFF8F8" } : undefined}
+                        className={cancelado ? "line-through" : undefined}
+                      >
+                        <td className="px-3 py-2">{fmtData(l.data)}</td>
+                        <td className="px-3 py-2">{l.descricao}</td>
+                        <td className="px-3 py-2 text-[#6B7A90]">{l.categoria}</td>
+                        <td className="px-3 py-2">
+                          <span
+                            className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                            style={{ background: tipoStyle.bg, color: tipoStyle.fg }}
+                          >
+                            {tipoStyle.label}
+                          </span>
+                        </td>
+                        <td
+                          className="px-3 py-2 text-right tabular-nums"
+                          style={{ color: l.tipo === "receita" ? "#05873C" : "#E53935" }}
+                        >
+                          {fmtBRL(l.valor)}
+                        </td>
+                        <td className="px-3 py-2">{fmtData(l.vencimento)}</td>
+                        <td className="px-3 py-2">
+                          <span
+                            className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                            style={{ background: statusStyle.bg, color: statusStyle.fg }}
+                          >
+                            {statusStyle.label}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2">
+                          <div className="flex items-center justify-end gap-2">
+                            {podeMarcarPago && (
+                              <Button
+                                size="sm"
+                                className="h-7 px-2 text-white hover:opacity-90"
+                                style={{ background: "#05873C" }}
+                                onClick={() => marcarPago(l.id)}
+                              >
+                                <Check className="mr-1 h-3 w-3" /> Marcar pago
+                              </Button>
+                            )}
+                            {!cancelado && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 text-[#6B7A90] hover:text-[#E53935]"
+                                onClick={() => cancelar(l.id)}
+                                aria-label="Cancelar lançamento"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
