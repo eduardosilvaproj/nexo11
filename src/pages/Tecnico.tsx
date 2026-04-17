@@ -164,7 +164,7 @@ export default function Tecnico() {
         });
         const cards = [
           { label: "Contratos aguardando", value: aguardando, color: "#E8A020" },
-          { label: "Checklists em andamento", value: emAndamento, color: "#1E6FBF" },
+          { label: "Conferências em andamento", value: emAndamento, color: "#1E6FBF" },
           { label: "Liberados para produção", value: liberados, color: "#12B76A" },
         ];
         return (
