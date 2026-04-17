@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Settings, Paperclip, ArrowRight } from "lucide-react";
+import { Loader2, Settings, Paperclip } from "lucide-react";
 
 type Contrato = {
   id: string;
@@ -27,7 +27,7 @@ export default function Tecnico() {
       const { data, error } = await supabase
         .from("contratos")
         .select("id,cliente_nome,status,vendedor_id,created_at")
-        .in("status", ["tecnico", "comercial"])
+        .eq("status", "tecnico")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Contrato[];
@@ -176,56 +176,78 @@ export default function Tecnico() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((c) => {
+              {filtered.map((c, idx) => {
                 const stats = checklistStats.get(c.id) ?? { total: 0, done: 0 };
                 const pct = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0;
                 const arquivo = arquivosMap[c.id];
+                const numero = `#${String(filtered.length - idx).padStart(3, "0")}`;
                 const trava =
                   stats.total === 0
                     ? { label: "Aguardando", bg: "#E8ECF2", color: "#6B7A90" }
                     : stats.done === stats.total
                     ? { label: "Liberado ✓", bg: "#D1FAE5", color: "#05873C" }
-                    : { label: "Bloqueado", bg: "#FDECEA", color: "#E53935" };
+                    : { label: "Pendente", bg: "#FDECEA", color: "#E53935" };
 
                 return (
                   <TableRow key={c.id}>
-                    <TableCell className="font-mono text-xs text-muted-foreground">
-                      {c.id.slice(0, 8)}
+                    <TableCell style={{ fontSize: 12, color: "#6B7A90" }}>
+                      {numero}
                     </TableCell>
-                    <TableCell className="font-medium">{c.cliente_nome}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell style={{ fontSize: 13, fontWeight: 500, color: "#0D1117" }}>
+                      {c.cliente_nome}
+                    </TableCell>
+                    <TableCell style={{ fontSize: 13, color: "#6B7A90" }}>
                       {c.vendedor_id ? userMap.get(c.vendedor_id) ?? "—" : "—"}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="h-2 overflow-hidden rounded-full"
-                          style={{ width: 120, backgroundColor: "#E8ECF2" }}
-                        >
+                      {stats.total === 0 ? (
+                        <span style={{ fontSize: 12, color: "#B0BAC9" }}>Não iniciado</span>
+                      ) : (
+                        <div className="flex items-center gap-2">
                           <div
-                            className="h-full transition-all"
-                            style={{ width: `${pct}%`, backgroundColor: "#1E6FBF" }}
-                          />
+                            className="overflow-hidden"
+                            style={{
+                              width: 140,
+                              height: 6,
+                              borderRadius: 3,
+                              backgroundColor: "#E8ECF2",
+                            }}
+                          >
+                            <div
+                              className="h-full transition-all"
+                              style={{
+                                width: `${pct}%`,
+                                backgroundColor: pct === 100 ? "#12B76A" : "#1E6FBF",
+                                borderRadius: 3,
+                              }}
+                            />
+                          </div>
+                          <span style={{ fontSize: 12, color: "#6B7A90" }}>
+                            {stats.done}/{stats.total} itens
+                          </span>
                         </div>
-                        <span className="text-xs text-muted-foreground">
-                          {stats.done}/{stats.total} itens
-                        </span>
-                      </div>
+                      )}
                     </TableCell>
                     <TableCell>
                       {arquivo ? (
                         <button
                           onClick={() => handleDownload(c.id, arquivo.name)}
-                          className="inline-flex items-center gap-1.5 text-xs hover:underline"
-                          style={{ color: "#1E6FBF" }}
+                          className="inline-flex items-center gap-1.5 hover:underline"
+                          style={{ color: "#1E6FBF", fontSize: 13 }}
                         >
                           <Paperclip className="h-3 w-3" />
                           {arquivo.name.replace(/^\d+-/, "").slice(0, 24)}
                         </button>
                       ) : (
                         <span
-                          className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-                          style={{ backgroundColor: "#FEF3C7", color: "#E8A020" }}
+                          className="inline-flex items-center font-medium"
+                          style={{
+                            backgroundColor: "#FEF3C7",
+                            color: "#E8A020",
+                            borderRadius: 20,
+                            padding: "2px 10px",
+                            fontSize: 12,
+                          }}
                         >
                           Sem projeto
                         </span>
@@ -233,21 +255,31 @@ export default function Tecnico() {
                     </TableCell>
                     <TableCell>
                       <span
-                        className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-                        style={{ backgroundColor: trava.bg, color: trava.color }}
+                        className="inline-flex items-center font-medium"
+                        style={{
+                          backgroundColor: trava.bg,
+                          color: trava.color,
+                          borderRadius: 20,
+                          padding: "2px 10px",
+                          fontSize: 12,
+                        }}
                       >
                         {trava.label}
                       </span>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => navigate(`/contratos/${c.id}?tab=tecnico`)}
+                      <button
+                        onClick={() => navigate(`/contratos/${c.id}?aba=tecnico`)}
+                        className="text-white transition-opacity hover:opacity-90"
+                        style={{
+                          backgroundColor: "#1E6FBF",
+                          fontSize: 12,
+                          borderRadius: 6,
+                          padding: "6px 14px",
+                        }}
                       >
                         Abrir checklist
-                        <ArrowRight className="ml-1 h-3 w-3" />
-                      </Button>
+                      </button>
                     </TableCell>
                   </TableRow>
                 );
