@@ -65,6 +65,11 @@ export default function Comissoes() {
   const [lojaId, setLojaId] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [metricas, setMetricas] = useState({ totalMes: 0, pagas: 0, bonus: 0 });
+  const { hasRole } = useAuth();
+  const podeEditarRegra = hasRole("admin") || hasRole("franqueador");
+  const podePagar = podeEditarRegra;
+  const podeVerRelatorioCompleto =
+    hasRole("admin") || hasRole("franqueador") || hasRole("gerente");
 
   // Carrega loja do usuário e regra ativa
   useEffect(() => {
