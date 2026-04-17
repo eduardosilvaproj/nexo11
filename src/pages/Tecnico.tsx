@@ -153,36 +153,76 @@ export default function Tecnico() {
         />
       </div>
 
-      <div className="rounded-xl bg-white" style={{ border: "0.5px solid #E8ECF2" }}>
-        {isLoading ? (
-          <div className="flex items-center justify-center p-12">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      {(() => {
+        const aguardando = contratos.length;
+        let emAndamento = 0;
+        let liberados = 0;
+        contratos.forEach((c) => {
+          const s = checklistStats.get(c.id) ?? { total: 0, done: 0 };
+          if (s.total > 0 && s.done < s.total) emAndamento++;
+          if (s.total > 0 && s.done === s.total) liberados++;
+        });
+        const cards = [
+          { label: "Contratos aguardando", value: aguardando, color: "#E8A020" },
+          { label: "Checklists em andamento", value: emAndamento, color: "#1E6FBF" },
+          { label: "Liberados para produção", value: liberados, color: "#12B76A" },
+        ];
+        return (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {cards.map((k) => (
+              <div
+                key={k.label}
+                className="rounded-xl bg-white p-4"
+                style={{ border: "0.5px solid #E8ECF2", borderTop: `3px solid ${k.color}` }}
+              >
+                <div style={{ fontSize: 12, color: "#6B7A90" }}>{k.label}</div>
+                <div className="mt-1" style={{ fontSize: 24, fontWeight: 600, color: "#0D1117" }}>
+                  {k.value}
+                </div>
+              </div>
+            ))}
           </div>
-        ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-12 text-center">
-            <ClipboardList size={32} style={{ color: "#B0BAC9" }} />
-            <p className="mt-3" style={{ fontSize: 13, color: "#6B7A90", fontWeight: 500 }}>
-              Nenhum contrato em fase técnica
-            </p>
-            <p className="mt-1" style={{ fontSize: 13, color: "#6B7A90" }}>
-              Contratos aparecem aqui após assinatura no módulo Comercial
-            </p>
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
+        );
+      })()}
+
+      <div className="rounded-xl bg-white overflow-hidden" style={{ border: "0.5px solid #E8ECF2" }}>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nº</TableHead>
+              <TableHead>Cliente</TableHead>
+              <TableHead>Vendedor</TableHead>
+              <TableHead>Progresso checklist</TableHead>
+              <TableHead>Projeto</TableHead>
+              <TableHead>Trava</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
               <TableRow>
-                <TableHead>Nº</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Vendedor</TableHead>
-                <TableHead>Progresso checklist</TableHead>
-                <TableHead>Projeto</TableHead>
-                <TableHead>Trava</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableCell colSpan={7}>
+                  <div className="flex items-center justify-center p-8">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((c, idx) => {
+            ) : filtered.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7}>
+                  <div className="flex flex-col items-center justify-center p-12 text-center">
+                    <ClipboardList size={32} style={{ color: "#B0BAC9" }} />
+                    <p className="mt-3" style={{ fontSize: 13, color: "#6B7A90", fontWeight: 500 }}>
+                      Nenhum contrato em fase técnica
+                    </p>
+                    <p className="mt-1" style={{ fontSize: 13, color: "#6B7A90" }}>
+                      Contratos aparecem aqui após assinatura no módulo Comercial
+                    </p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : (
+              filtered.map((c, idx) => {
                 const stats = checklistStats.get(c.id) ?? { total: 0, done: 0 };
                 const pct = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0;
                 const arquivo = arquivosMap[c.id];
@@ -289,10 +329,10 @@ export default function Tecnico() {
                     </TableCell>
                   </TableRow>
                 );
-              })}
-            </TableBody>
-          </Table>
-        )}
+              })
+            )}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
