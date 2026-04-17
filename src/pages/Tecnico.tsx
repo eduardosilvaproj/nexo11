@@ -21,6 +21,7 @@ export default function Tecnico() {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [templateOpen, setTemplateOpen] = useState(false);
 
   const { data: contratos = [], isLoading } = useQuery({
     queryKey: ["contratos-tecnico-list"],
