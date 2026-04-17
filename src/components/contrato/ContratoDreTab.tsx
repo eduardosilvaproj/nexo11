@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -27,6 +28,14 @@ const marginColor = (m: number) => {
 };
 
 export function ContratoDreTab({ contratoId, contratoNumero, contratoStatus }: ContratoDreTabProps) {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("print") === "1") {
+      const t = setTimeout(() => window.print(), 600);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
   const { data: dre } = useQuery({
     queryKey: ["dre-tab", contratoId],
     queryFn: async () => {
@@ -200,26 +209,123 @@ export function ContratoDreTab({ contratoId, contratoNumero, contratoStatus }: C
     );
   };
 
+  const dataEmissao = new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
+  }).format(new Date());
+  const numeroFmt = contratoNumero ? `#${contratoNumero}` : "";
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between no-print">
         <h2 style={{ fontSize: 18, fontWeight: 600, color: "#0D1117" }}>
-          DRE do contrato {contratoNumero ? `#${contratoNumero}` : ""}
+          DRE do contrato {numeroFmt}
         </h2>
-        <span
-          className="inline-flex items-center"
-          style={{
-            padding: "4px 10px",
-            borderRadius: 999,
-            fontSize: 11,
-            fontWeight: 500,
-            backgroundColor: isFechado ? "#E6F4EA" : "#FEF3C7",
-            color: isFechado ? "#12B76A" : "#E8A020",
-          }}
-        >
-          {isFechado ? "Fechado" : "Em andamento"}
-        </span>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => window.print()}
+            style={{
+              padding: "6px 12px",
+              fontSize: 12,
+              fontWeight: 500,
+              color: "#1E6FBF",
+              backgroundColor: "#FFFFFF",
+              border: "1px solid #1E6FBF",
+              borderRadius: 6,
+              cursor: "pointer",
+            }}
+          >
+            Exportar PDF
+          </button>
+          <span
+            className="inline-flex items-center"
+            style={{
+              padding: "4px 10px",
+              borderRadius: 999,
+              fontSize: 11,
+              fontWeight: 500,
+              backgroundColor: isFechado ? "#E6F4EA" : "#FEF3C7",
+              color: isFechado ? "#12B76A" : "#E8A020",
+            }}
+          >
+            {isFechado ? "Fechado" : "Em andamento"}
+          </span>
+        </div>
+      </div>
+
+      {/* Área impressa (visível somente em @media print) */}
+      <div className="dre-print">
+        <div style={{ borderBottom: "2px solid #0D1117", paddingBottom: 12, marginBottom: 16 }}>
+          <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: "0.04em", color: "#0D1117" }}>
+            NEXO
+          </div>
+          <div style={{ fontSize: 16, fontWeight: 600, marginTop: 8, color: "#0D1117" }}>
+            DRE — Contrato {numeroFmt}
+          </div>
+          <div style={{ fontSize: 11, color: "#6B7A90", marginTop: 4 }}>
+            Data de emissão: {dataEmissao}
+          </div>
+        </div>
+
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, color: "#0D1117" }}>
+          <thead>
+            <tr>
+              <th style={{ textAlign: "left", padding: "6px 8px", borderBottom: "1px solid #0D1117" }}>Item</th>
+              <th style={{ textAlign: "right", padding: "6px 8px", borderBottom: "1px solid #0D1117" }}>Previsto</th>
+              <th style={{ textAlign: "right", padding: "6px 8px", borderBottom: "1px solid #0D1117" }}>Real</th>
+              <th style={{ textAlign: "right", padding: "6px 8px", borderBottom: "1px solid #0D1117" }}>Desvio</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style={{ padding: "5px 8px" }}>Receita líquida</td>
+              <td style={{ padding: "5px 8px", textAlign: "right" }}>{formatBRL(valorVenda)}</td>
+              <td style={{ padding: "5px 8px", textAlign: "right" }}>{formatBRL(valorVenda)}</td>
+              <td style={{ padding: "5px 8px", textAlign: "right" }}>—</td>
+            </tr>
+            {linhasCusto.map((l) => {
+              const d = l.real - l.previsto;
+              return (
+                <tr key={l.label}>
+                  <td style={{ padding: "5px 8px" }}>{l.label}</td>
+                  <td style={{ padding: "5px 8px", textAlign: "right" }}>{formatBRL(l.previsto)}</td>
+                  <td style={{ padding: "5px 8px", textAlign: "right" }}>{formatBRL(l.real)}</td>
+                  <td style={{ padding: "5px 8px", textAlign: "right" }}>
+                    {Math.abs(d) < 0.005 ? "—" : `${d > 0 ? "+" : "−"}${formatBRL(Math.abs(d))}`}
+                  </td>
+                </tr>
+              );
+            })}
+            <tr style={{ borderTop: "1px solid #0D1117", fontWeight: 600 }}>
+              <td style={{ padding: "6px 8px" }}>TOTAL CUSTOS</td>
+              <td style={{ padding: "6px 8px", textAlign: "right" }}>{formatBRL(totalCustoPrev)}</td>
+              <td style={{ padding: "6px 8px", textAlign: "right" }}>{formatBRL(totalCustoReal)}</td>
+              <td style={{ padding: "6px 8px", textAlign: "right" }}>
+                {`${totalCustoReal - totalCustoPrev >= 0 ? "+" : "−"}${formatBRL(Math.abs(totalCustoReal - totalCustoPrev))}`}
+              </td>
+            </tr>
+            <tr style={{ fontWeight: 600 }}>
+              <td style={{ padding: "6px 8px" }}>LUCRO</td>
+              <td style={{ padding: "6px 8px", textAlign: "right" }}>{formatBRL(lucroPrev)}</td>
+              <td style={{ padding: "6px 8px", textAlign: "right" }}>{formatBRL(lucroReal)}</td>
+              <td style={{ padding: "6px 8px", textAlign: "right" }}>
+                {`${lucroReal - lucroPrev >= 0 ? "+" : "−"}${formatBRL(Math.abs(lucroReal - lucroPrev))}`}
+              </td>
+            </tr>
+            <tr style={{ fontWeight: 600 }}>
+              <td style={{ padding: "6px 8px" }}>MARGEM</td>
+              <td style={{ padding: "6px 8px", textAlign: "right" }}>{margemPrev.toFixed(1).replace(".", ",")}%</td>
+              <td style={{ padding: "6px 8px", textAlign: "right" }}>{margemReal.toFixed(1).replace(".", ",")}%</td>
+              <td style={{ padding: "6px 8px", textAlign: "right" }}>
+                {`${desvioMargem >= 0 ? "+" : ""}${desvioMargem.toFixed(1).replace(".", ",")}pp`}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style={{ marginTop: 32, paddingTop: 12, borderTop: "1px solid #6B7A90", fontSize: 10, color: "#6B7A90", textAlign: "center" }}>
+          NEXO ERP · Gestão de Planejados
+        </div>
       </div>
 
       {/* Alerta margem */}

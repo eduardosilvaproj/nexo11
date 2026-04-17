@@ -425,7 +425,7 @@ export default function Dre() {
                             <Eye className="h-4 w-4" />
                           </button>
                           <button
-                            onClick={() => window.print()}
+                            onClick={() => window.open(`/contratos/${r.id}?tab=dre&print=1`, "_blank")}
                             className="rounded p-1.5 text-[#6B7A90] hover:bg-[#F5F7FA] hover:text-[#1E6FBF]"
                             title="Exportar PDF"
                           >
