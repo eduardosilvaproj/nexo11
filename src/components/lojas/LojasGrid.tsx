@@ -200,8 +200,38 @@ export function LojasGrid({ mes }: Props) {
 
   if (lojas.length === 0) {
     return (
-      <div style={{ fontSize: 13, color: "#6B7A90", padding: 24, textAlign: "center" }}>
-        Nenhuma loja cadastrada.
+      <div
+        style={{
+          background: "#fff",
+          border: "0.5px solid #E8ECF2",
+          borderRadius: 12,
+          padding: 48,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 12,
+        }}
+      >
+        <Store size={40} color="#6B7A90" />
+        <div style={{ fontSize: 14, fontWeight: 500, color: "#0D1117" }}>
+          Nenhuma loja cadastrada
+        </div>
+        <button
+          style={{
+            background: "#1E6FBF",
+            color: "#fff",
+            fontSize: 13,
+            fontWeight: 500,
+            padding: "0 14px",
+            height: 36,
+            borderRadius: 6,
+            border: "none",
+            cursor: "pointer",
+            marginTop: 4,
+          }}
+        >
+          + Criar primeira loja
+        </button>
       </div>
     );
   }
