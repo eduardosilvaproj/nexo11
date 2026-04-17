@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { LojasKpiRow } from "@/components/lojas/LojasKpiRow";
 import { LojaResumoTab } from "@/components/lojas/LojaResumoTab";
+import { LojaContratosTab } from "@/components/lojas/LojaContratosTab";
 
 const fmtBRL = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -29,19 +30,7 @@ export default function LojaDetail() {
     },
   });
 
-  const { data: contratos = [] } = useQuery({
-    queryKey: ["loja-contratos", id],
-    enabled: !!id && tab === "contratos",
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("contratos")
-        .select("id, cliente_nome, valor_venda, status, data_criacao")
-        .eq("loja_id", id)
-        .order("data_criacao", { ascending: false })
-        .limit(50);
-      return data ?? [];
-    },
-  });
+  // contratos agora em LojaContratosTab
 
   const { data: equipe = [] } = useQuery({
     queryKey: ["loja-equipe", id],
@@ -137,40 +126,7 @@ export default function LojaDetail() {
 
       {tab === "resumo" && <LojaResumoTab lojaId={id} />}
 
-      {tab === "contratos" && (
-        <div style={{ background: "#fff", border: "0.5px solid #E8ECF2", borderRadius: 12 }}>
-          {contratos.length === 0 ? (
-            <div style={{ padding: 24, fontSize: 13, color: "#6B7A90", textAlign: "center" }}>
-              Nenhum contrato.
-            </div>
-          ) : (
-            <table style={{ width: "100%", fontSize: 13 }}>
-              <thead>
-                <tr style={{ color: "#6B7A90", textAlign: "left" }}>
-                  <th style={{ padding: "10px 16px" }}>Cliente</th>
-                  <th style={{ padding: "10px 16px" }}>Status</th>
-                  <th style={{ padding: "10px 16px", textAlign: "right" }}>Valor</th>
-                </tr>
-              </thead>
-              <tbody>
-                {contratos.map((c: any) => (
-                  <tr key={c.id} style={{ borderTop: "1px solid #EEF1F5" }}>
-                    <td style={{ padding: "10px 16px" }}>
-                      <Link to={`/contratos/${c.id}`} style={{ color: "#1E6FBF" }}>
-                        {c.cliente_nome}
-                      </Link>
-                    </td>
-                    <td style={{ padding: "10px 16px", color: "#6B7A90" }}>{c.status}</td>
-                    <td style={{ padding: "10px 16px", textAlign: "right" }}>
-                      {fmtBRL(Number(c.valor_venda ?? 0))}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
+      {tab === "contratos" && <LojaContratosTab lojaId={id} />}
 
       {tab === "equipe" && (
         <div style={{ background: "#fff", border: "0.5px solid #E8ECF2", borderRadius: 12 }}>
