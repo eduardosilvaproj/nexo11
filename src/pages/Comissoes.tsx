@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -6,6 +7,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+function fmtBRL(v: number) {
+  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function MetricCard({
+  label,
+  valor,
+  cor,
+}: {
+  label: string;
+  valor: number;
+  cor: string;
+}) {
+  return (
+    <Card style={{ borderTop: `3px solid ${cor}` }}>
+      <CardContent className="p-4">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="mt-1 text-xl font-medium tabular-nums" style={{ color: cor }}>
+          {fmtBRL(valor)}
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
 
 const MESES = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -49,6 +75,12 @@ export default function Comissoes() {
           </SelectContent>
         </Select>
       </header>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <MetricCard label="Total a pagar (mês)" valor={0} cor="#1E6FBF" />
+        <MetricCard label="Comissões pagas" valor={0} cor="#12B76A" />
+        <MetricCard label="Bônus por margem" valor={0} cor="#E8A020" />
+      </div>
 
       <div
         className="rounded-md px-4 py-10 text-center text-sm"
