@@ -14,7 +14,7 @@ import Tecnico from "./pages/Tecnico";
 import Producao from "./pages/Producao";
 import Logistica from "./pages/Logistica";
 import Montagem from "./pages/Montagem";
-import Equipes from "./pages/Equipes";
+
 import PosVenda from "./pages/PosVenda";
 import Dre from "./pages/Dre";
 import Financeiro from "./pages/Financeiro";
@@ -92,11 +92,6 @@ const App = () => (
               <Route path="/equipe" element={
                 <ProtectedRoute roles={["admin","gerente"]}>
                   <Placeholder title="NEXO Equipe" />
-                </ProtectedRoute>
-              } />
-              <Route path="/equipes" element={
-                <ProtectedRoute roles={["admin","gerente"]}>
-                  <Equipes />
                 </ProtectedRoute>
               } />
               <Route path="/lojas" element={
