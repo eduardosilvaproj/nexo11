@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { Eye, FileText, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
@@ -205,53 +206,145 @@ export default function Dre() {
         ))}
       </div>
 
-      <div className="rounded-lg border border-[#E8ECF2] bg-white">
+      <div className="overflow-hidden rounded-lg border border-[#E8ECF2] bg-white">
         <table className="w-full text-sm">
           <thead className="border-b border-[#E8ECF2] bg-[#F5F7FA] text-left text-[#6B7A90]">
             <tr>
-              <th className="px-4 py-3 font-medium">Contrato</th>
+              <th className="px-4 py-3 font-medium">Nº</th>
               <th className="px-4 py-3 font-medium">Cliente</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 text-right font-medium">Venda</th>
-              <th className="px-4 py-3 text-right font-medium">Margem prev.</th>
-              <th className="px-4 py-3 text-right font-medium">Margem real.</th>
+              <th className="px-4 py-3 font-medium">Vendedor</th>
+              <th className="px-4 py-3 text-right font-medium">Valor</th>
+              <th className="px-4 py-3 text-right font-medium">Margem prevista</th>
+              <th className="px-4 py-3 text-right font-medium">Margem realizada</th>
               <th className="px-4 py-3 text-right font-medium">Desvio</th>
+              <th className="px-4 py-3 font-medium">Status</th>
+              <th className="px-4 py-3 text-right font-medium">Ações</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-[#6B7A90]">
+                <td colSpan={9} className="px-4 py-8 text-center text-[#6B7A90]">
                   Carregando...
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-[#6B7A90]">
-                  Nenhum contrato no período
+                <td colSpan={9} className="px-4 py-12 text-center">
+                  <BarChart3 className="mx-auto mb-3 h-10 w-10 text-[#B0BAC9]" />
+                  <p className="font-medium text-[#0B1220]">Nenhum contrato no período</p>
+                  <p className="mt-1 text-sm text-[#6B7A90]">
+                    Ajuste os filtros ou aguarde novos contratos
+                  </p>
                 </td>
               </tr>
             ) : (
-              rows.map((r) => (
-                <tr key={r.id} className="border-b border-[#E8ECF2] last:border-0 hover:bg-[#F8FAFC]">
-                  <td className="px-4 py-3">
-                    <Link to={`/contratos/${r.id}`} className="text-[#1E6FBF] hover:underline">
-                      #{r.id.slice(0, 4).toUpperCase()}
-                    </Link>
+              <>
+                {rows.map((r) => {
+                  const prev = r.margem_prevista ?? 0;
+                  const real = r.margem_realizada ?? 0;
+                  const desvio = real - prev;
+                  const finalizado = r.status === "finalizado";
+                  const vendedorNome =
+                    vendedores.find((v) => v.id === r.vendedor_id)?.nome ?? "—";
+                  return (
+                    <tr
+                      key={r.id}
+                      className="border-b border-[#E8ECF2] last:border-0 hover:bg-[#F8FAFC]"
+                      style={{ backgroundColor: real < 15 ? "#FFF8F8" : undefined }}
+                    >
+                      <td className="px-4 py-3">
+                        <Link
+                          to={`/contratos/${r.id}`}
+                          className="text-[#1E6FBF] hover:underline"
+                        >
+                          #{r.id.slice(0, 4).toUpperCase()}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 text-[#0B1220]">{r.cliente_nome}</td>
+                      <td className="px-4 py-3 text-[#6B7A90]">{vendedorNome}</td>
+                      <td className="px-4 py-3 text-right">{fmt(r.valor_venda)}</td>
+                      <td
+                        className="px-4 py-3 text-right font-medium"
+                        style={{ color: margemColor(prev) }}
+                      >
+                        {prev.toFixed(1)}%
+                      </td>
+                      <td
+                        className="px-4 py-3 text-right font-medium"
+                        style={{ color: margemColor(real) }}
+                      >
+                        {real.toFixed(1)}%
+                      </td>
+                      <td
+                        className="px-4 py-3 text-right"
+                        style={{
+                          color:
+                            desvio > 0 ? "#12B76A" : desvio < 0 ? "#E53935" : "#B0BAC9",
+                        }}
+                      >
+                        {desvio === 0
+                          ? "—"
+                          : `${desvio > 0 ? "▲ +" : "▼ "}${desvio
+                              .toFixed(1)
+                              .replace("-", "−")}pp`}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
+                          style={{
+                            backgroundColor: finalizado ? "#D1FAE5" : "#E6F3FF",
+                            color: finalizado ? "#05873C" : "#1E6FBF",
+                          }}
+                        >
+                          {finalizado ? "Finalizado" : "Em andamento"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => navigate(`/contratos/${r.id}?tab=dre`)}
+                            className="rounded p-1.5 text-[#6B7A90] hover:bg-[#F5F7FA] hover:text-[#1E6FBF]"
+                            title="Ver contrato"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => window.print()}
+                            className="rounded p-1.5 text-[#6B7A90] hover:bg-[#F5F7FA] hover:text-[#1E6FBF]"
+                            title="Exportar PDF"
+                          >
+                            <FileText className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                <tr className="border-t border-[#E8ECF2] bg-[#F5F7FA] font-medium">
+                  <td className="px-4 py-3 text-[#0B1220]">Total</td>
+                  <td className="px-4 py-3 text-[#B0BAC9]">—</td>
+                  <td className="px-4 py-3 text-[#B0BAC9]">—</td>
+                  <td className="px-4 py-3 text-right text-[#0B1220]">
+                    {fmt(metrics.faturamento)}
                   </td>
-                  <td className="px-4 py-3 text-[#0B1220]">{r.cliente_nome}</td>
-                  <td className="px-4 py-3 capitalize text-[#6B7A90]">{r.status}</td>
-                  <td className="px-4 py-3 text-right">{fmt(r.valor_venda)}</td>
-                  <td className="px-4 py-3 text-right">{(r.margem_prevista ?? 0).toFixed(1)}%</td>
-                  <td className="px-4 py-3 text-right">{(r.margem_realizada ?? 0).toFixed(1)}%</td>
                   <td
                     className="px-4 py-3 text-right"
-                    style={{ color: (r.desvio_total ?? 0) > 0 ? "#E53935" : "#12B76A" }}
+                    style={{ color: margemColor(metrics.mediaPrev) }}
                   >
-                    {fmt(r.desvio_total)}
+                    {fmtPct(metrics.mediaPrev)}
                   </td>
+                  <td
+                    className="px-4 py-3 text-right"
+                    style={{ color: margemColor(metrics.media) }}
+                  >
+                    {fmtPct(metrics.media)}
+                  </td>
+                  <td className="px-4 py-3 text-[#B0BAC9]">—</td>
+                  <td className="px-4 py-3 text-[#B0BAC9]">—</td>
+                  <td className="px-4 py-3 text-[#B0BAC9]">—</td>
                 </tr>
-              ))
+              </>
             )}
           </tbody>
         </table>
