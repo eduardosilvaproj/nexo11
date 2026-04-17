@@ -6,6 +6,7 @@ import { ContratoStepper } from "@/components/contrato/ContratoStepper";
 import { ContratoFinanceStrip } from "@/components/contrato/ContratoFinanceStrip";
 import { ContratoTabs, useContratoTabs } from "@/components/contrato/ContratoTabs";
 import { ContratoActivityLog } from "@/components/contrato/ContratoActivityLog";
+import { ContratoComercialTab } from "@/components/contrato/ContratoComercialTab";
 
 export default function ContratoDetail() {
   const { id } = useParams<{ id: string }>();
@@ -47,8 +48,14 @@ export default function ContratoDetail() {
           padding: "24px 32px",
         }}
       >
-        <div className="text-sm text-muted-foreground">
-          Conteúdo da aba “{active}” em construção.
+        <div>
+          {active === "comercial" ? (
+            <ContratoComercialTab contrato={contrato} />
+          ) : (
+            <div className="text-sm text-muted-foreground">
+              Conteúdo da aba “{active}” em construção.
+            </div>
+          )}
         </div>
         <ContratoActivityLog contratoId={contrato.id} />
       </div>
