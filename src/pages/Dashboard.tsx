@@ -145,6 +145,7 @@ export default function Dashboard() {
           value={stats?.margemMedia != null ? `${stats.margemMedia.toFixed(1)}%` : "—"}
           icon={Percent}
           color="#12B76A"
+          valueColor={stats?.margemMedia != null ? "#0D1117" : "#B0BAC9"}
         />
         <MetricCard
           label="Leads ativos"
