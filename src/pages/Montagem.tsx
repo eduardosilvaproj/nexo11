@@ -29,6 +29,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { checkAgendamentoConflict, diffHoras as diffH } from "@/lib/agendamento-conflict";
+import { useAuth } from "@/contexts/AuthContext";
 
 const STATUS_BADGE: Record<string, { bg: string; fg: string; label: string }> = {
   agendado: { bg: "#E6F3FF", fg: "#1E6FBF", label: "Agendado" },
@@ -47,6 +48,8 @@ function diffHoras(ini?: string | null, fim?: string | null): number {
 export default function Montagem() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { hasRole } = useAuth();
+  const podeAgendar = hasRole("admin") || hasRole("gerente");
   const [weekOffset, setWeekOffset] = useState(0);
   const [editId, setEditId] = useState<string | null>(null);
   
@@ -129,7 +132,7 @@ export default function Montagem() {
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>
-            <AgendarDialog equipes={equipes} onCreated={() => qc.invalidateQueries({ queryKey: ["agendamentos-semana"] })} />
+            {podeAgendar && <AgendarDialog equipes={equipes} onCreated={() => qc.invalidateQueries({ queryKey: ["agendamentos-semana"] })} />}
           </div>
 
           <div className="grid grid-cols-5 gap-3">

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EntregaConfirmDialog } from "@/components/logistica/EntregaConfirmDialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString("pt-BR") : "—");
 const fmtMoney = (v?: number | null) =>
@@ -26,6 +27,8 @@ function MetricCard({ label, value, hint }: { label: string; value: string; hint
 
 export default function Logistica() {
   const navigate = useNavigate();
+  const { hasRole } = useAuth();
+  const podeConfirmar = hasRole("admin") || hasRole("gerente") || hasRole("tecnico");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [confirmTarget, setConfirmTarget] = useState<{ id: string; contratoId: string } | null>(null);
@@ -136,7 +139,7 @@ export default function Logistica() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      {e.status === "pendente" && (
+                      {e.status === "pendente" && podeConfirmar && (
                         <Button size="sm" style={{ backgroundColor: "#12B76A" }} onClick={() => setConfirmTarget({ id: e.id, contratoId: e.contrato_id })}>
                           Confirmar
                         </Button>

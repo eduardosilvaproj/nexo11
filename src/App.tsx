@@ -53,12 +53,12 @@ const App = () => (
                 </ProtectedRoute>
               } />
               <Route path="/logistica" element={
-                <ProtectedRoute>
+                <ProtectedRoute roles={["admin","gerente","tecnico","franqueador"]}>
                   <Logistica />
                 </ProtectedRoute>
               } />
               <Route path="/montagem" element={
-                <ProtectedRoute>
+                <ProtectedRoute roles={["admin","gerente","montador","tecnico","franqueador"]}>
                   <Montagem />
                 </ProtectedRoute>
               } />
