@@ -74,6 +74,7 @@ export type Database = {
         Row: {
           contrato_id: string
           created_at: string
+          custo: number
           data_abertura: string
           data_fechamento: string | null
           descricao: string
@@ -87,6 +88,7 @@ export type Database = {
         Insert: {
           contrato_id: string
           created_at?: string
+          custo?: number
           data_abertura?: string
           data_fechamento?: string | null
           descricao: string
@@ -100,6 +102,7 @@ export type Database = {
         Update: {
           contrato_id?: string
           created_at?: string
+          custo?: number
           data_abertura?: string
           data_fechamento?: string | null
           descricao?: string
@@ -593,6 +596,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      outros_custos_sync_dre: {
+        Args: { _contrato_id: string }
+        Returns: undefined
       }
     }
     Enums: {
