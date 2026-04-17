@@ -394,7 +394,7 @@ export function ComissoesRelatorioTab({
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex justify-end">
-                      {!pago && (
+                      {!pago && podePagar && (
                         <Button
                           size="sm"
                           className="h-7 px-2 text-white hover:opacity-90"
