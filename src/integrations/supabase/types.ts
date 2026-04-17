@@ -153,6 +153,7 @@ export type Database = {
           loja_id: string
           obrigatorio: boolean
           ordem: number
+          tipo: string
           updated_at: string
         }
         Insert: {
@@ -163,6 +164,7 @@ export type Database = {
           loja_id: string
           obrigatorio?: boolean
           ordem?: number
+          tipo?: string
           updated_at?: string
         }
         Update: {
@@ -173,6 +175,7 @@ export type Database = {
           loja_id?: string
           obrigatorio?: boolean
           ordem?: number
+          tipo?: string
           updated_at?: string
         }
         Relationships: [
