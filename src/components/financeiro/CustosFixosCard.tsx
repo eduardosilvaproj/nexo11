@@ -42,8 +42,9 @@ interface Props {
 }
 
 export function CustosFixosCard({ onTotalChange, onMesChange }: Props) {
-  const { perfil } = useAuth();
+  const { perfil, hasRole } = useAuth();
   const lojaId = perfil?.loja_id ?? null;
+  const canEdit = hasRole("admin") || hasRole("franqueador");
   const meses = useMemo(buildMonthOptions, []);
   const [mes, setMes] = useState<string>(monthKey(new Date()));
   const [itens, setItens] = useState<CustoFixo[]>([]);
@@ -142,12 +143,16 @@ export function CustosFixosCard({ onTotalChange, onMesChange }: Props) {
                 <>
                   <span className="flex-1 text-sm">{it.descricao}</span>
                   <span className="w-32 text-right text-sm tabular-nums">{fmtBRL(Number(it.valor))}</span>
-                  <Button size="icon" variant="ghost" onClick={() => startEdit(it)} aria-label="Editar">
-                    <Pencil className="h-4 w-4 text-[#6B7A90]" />
-                  </Button>
-                  <Button size="icon" variant="ghost" onClick={() => setConfirmDel(it.id)} aria-label="Remover">
-                    <Trash2 className="h-4 w-4 text-[#E53935]" />
-                  </Button>
+                  {canEdit && (
+                    <>
+                      <Button size="icon" variant="ghost" onClick={() => startEdit(it)} aria-label="Editar">
+                        <Pencil className="h-4 w-4 text-[#6B7A90]" />
+                      </Button>
+                      <Button size="icon" variant="ghost" onClick={() => setConfirmDel(it.id)} aria-label="Remover">
+                        <Trash2 className="h-4 w-4 text-[#E53935]" />
+                      </Button>
+                    </>
+                  )}
                 </>
               )}
             </div>
@@ -175,7 +180,7 @@ export function CustosFixosCard({ onTotalChange, onMesChange }: Props) {
           <span className="tabular-nums">{fmtBRL(total)}</span>
         </div>
 
-        {!adding && (
+        {!adding && canEdit && (
           <Button variant="outline" size="sm" onClick={() => setAdding(true)} className="w-full">
             <Plus className="mr-1 h-4 w-4" /> Adicionar custo fixo
           </Button>
