@@ -40,6 +40,7 @@ type LinhaVendedor = {
   base: number;
   bonus: number;
   total: number;
+  contrato_ids: string[];
 };
 
 function fmtBRL(v: number) {
