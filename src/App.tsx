@@ -9,6 +9,7 @@ import AppLayout from "@/components/AppLayout";
 import AuthPage from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Placeholder from "./pages/Placeholder";
+import Comercial from "./pages/Comercial";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -33,7 +34,7 @@ const App = () => (
               <Route path="/" element={<Dashboard />} />
 
               {/* Operação */}
-              <Route path="/comercial" element={<Placeholder title="NEXO Comercial" description="Kanban de leads e contratos." />} />
+              <Route path="/comercial" element={<Comercial />} />
               <Route path="/tecnico" element={
                 <ProtectedRoute roles={["admin","gerente","tecnico"]}>
                   <Placeholder title="NEXO Técnico" description="Checklists técnicos por contrato." />
