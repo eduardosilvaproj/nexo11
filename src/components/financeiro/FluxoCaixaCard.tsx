@@ -236,7 +236,7 @@ export function FluxoCaixaCard() {
           size="sm"
           className="text-white hover:opacity-90"
           style={{ background: "#1E6FBF" }}
-          onClick={() => {/* TODO: abrir dialog de novo lançamento */}}
+          onClick={() => setDialogOpen(true)}
         >
           <Plus className="mr-1 h-4 w-4" /> Lançamento
         </Button>
@@ -355,7 +355,7 @@ export function FluxoCaixaCard() {
           {lancamentosOrdenados.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
               <p className="text-sm text-[#6B7A90]">Nenhum lançamento em {labelMes(mesAtivo)}</p>
-              <Button size="sm" className="text-white hover:opacity-90" style={{ background: "#1E6FBF" }}>
+              <Button size="sm" className="text-white hover:opacity-90" style={{ background: "#1E6FBF" }} onClick={() => setDialogOpen(true)}>
                 <Plus className="mr-1 h-4 w-4" /> Criar primeiro lançamento
               </Button>
             </div>
