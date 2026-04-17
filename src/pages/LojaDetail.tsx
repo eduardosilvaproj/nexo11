@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { LojasKpiRow } from "@/components/lojas/LojasKpiRow";
 import { LojaResumoTab } from "@/components/lojas/LojaResumoTab";
+import { LojaContratosTab } from "@/components/lojas/LojaContratosTab";
 
 const fmtBRL = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
