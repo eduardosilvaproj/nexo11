@@ -180,7 +180,7 @@ export function CustosFixosCard({ onTotalChange, onMesChange }: Props) {
           <span className="tabular-nums">{fmtBRL(total)}</span>
         </div>
 
-        {!adding && (
+        {!adding && canEdit && (
           <Button variant="outline" size="sm" onClick={() => setAdding(true)} className="w-full">
             <Plus className="mr-1 h-4 w-4" /> Adicionar custo fixo
           </Button>
