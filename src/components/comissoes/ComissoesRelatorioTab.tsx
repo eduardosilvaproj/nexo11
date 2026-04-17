@@ -46,6 +46,16 @@ type LinhaVendedor = {
 function fmtBRL(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
+function Row({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
+  return (
+    <div className="flex items-baseline justify-between">
+      <span className="text-xs text-[#6B7A90]">{label}</span>
+      <span className="text-sm font-medium tabular-nums" style={valueColor ? { color: valueColor } : undefined}>
+        {value}
+      </span>
+    </div>
+  );
+}
 function iniciais(nome: string) {
   const parts = nome.trim().split(/\s+/);
   const a = parts[0]?.[0] ?? "";
