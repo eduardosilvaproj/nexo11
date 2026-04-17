@@ -127,7 +127,7 @@ export function ChecklistTemplateDialog({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
-          <DialogTitle>Itens padrão do checklist técnico</DialogTitle>
+          <DialogTitle>Itens padrão da conferência técnica</DialogTitle>
           <p className="text-xs" style={{ color: "#6B7A90" }}>
             Gerados automaticamente para cada novo contrato
           </p>

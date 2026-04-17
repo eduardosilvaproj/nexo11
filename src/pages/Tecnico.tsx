@@ -126,7 +126,7 @@ export default function Tecnico() {
           style={{ borderColor: "#1E6FBF", color: "#1E6FBF" }}
         >
           <Settings className="mr-2 h-4 w-4" />
-          Configurar checklist
+          Configurar conferência
         </Button>
       </div>
 
@@ -164,7 +164,7 @@ export default function Tecnico() {
         });
         const cards = [
           { label: "Contratos aguardando", value: aguardando, color: "#E8A020" },
-          { label: "Checklists em andamento", value: emAndamento, color: "#1E6FBF" },
+          { label: "Conferências em andamento", value: emAndamento, color: "#1E6FBF" },
           { label: "Liberados para produção", value: liberados, color: "#12B76A" },
         ];
         return (
@@ -192,7 +192,7 @@ export default function Tecnico() {
               <TableHead>Nº</TableHead>
               <TableHead>Cliente</TableHead>
               <TableHead>Vendedor</TableHead>
-              <TableHead>Progresso checklist</TableHead>
+              <TableHead>Progresso conferência</TableHead>
               <TableHead>Projeto</TableHead>
               <TableHead>Trava</TableHead>
               <TableHead className="text-right">Ações</TableHead>
@@ -324,7 +324,7 @@ export default function Tecnico() {
                           padding: "6px 14px",
                         }}
                       >
-                        Abrir checklist
+                        Abrir conferência
                       </button>
                     </TableCell>
                   </TableRow>
