@@ -324,7 +324,7 @@ export default function Tecnico() {
                           padding: "6px 14px",
                         }}
                       >
-                        Abrir checklist
+                        Abrir conferência
                       </button>
                     </TableCell>
                   </TableRow>
