@@ -35,6 +35,8 @@ export default function PortalCliente() {
   const [error, setError] = useState<string | null>(null);
   const [contrato, setContrato] = useState<any>(null);
   const [logs, setLogs] = useState<any[]>([]);
+  const [vendedorNome, setVendedorNome] = useState<string | null>(null);
+  const [entregaPrevista, setEntregaPrevista] = useState<string | null>(null);
   const [npsRespondido, setNpsRespondido] = useState(false);
   const [npsNota, setNpsNota] = useState<number | null>(null);
   const [npsComentario, setNpsComentario] = useState("");
