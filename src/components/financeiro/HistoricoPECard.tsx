@@ -77,7 +77,9 @@ export function HistoricoPECard() {
           faturamento: Number(found?.faturamento_realizado ?? 0),
         });
       }
-      setData(series);
+      // Se todos os valores forem zero, mantém o fallback para o gráfico ter escala
+      const hasAny = series.some((r) => r.pe > 0 || r.faturamento > 0);
+      if (hasAny) setData(series);
     })();
   }, [lojaId]);
 
