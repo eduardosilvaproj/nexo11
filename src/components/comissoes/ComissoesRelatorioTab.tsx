@@ -72,9 +72,17 @@ interface Props {
   mes: string; // YYYY-MM-01
   mesLabel?: string;
   regra?: RegraComissao;
+  podePagar?: boolean;
+  apenasProprio?: boolean;
 }
 
-export function ComissoesRelatorioTab({ mes, mesLabel, regra = REGRA_PADRAO }: Props) {
+export function ComissoesRelatorioTab({
+  mes,
+  mesLabel,
+  regra = REGRA_PADRAO,
+  podePagar = true,
+  apenasProprio = false,
+}: Props) {
   const [linhas, setLinhas] = useState<LinhaVendedor[]>([]);
   const [pagos, setPagos] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
