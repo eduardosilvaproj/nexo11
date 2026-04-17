@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -11,6 +11,8 @@ import {
 import { ComissoesRelatorioTab, REGRA_PADRAO, type RegraComissao } from "@/components/comissoes/ComissoesRelatorioTab";
 import { ComissoesRegrasTab } from "@/components/comissoes/ComissoesRegrasTab";
 import { RegraEditDialog } from "@/components/comissoes/RegraEditDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 function fmtBRL(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
