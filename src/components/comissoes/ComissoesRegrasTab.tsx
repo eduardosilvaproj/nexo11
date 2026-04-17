@@ -36,16 +36,18 @@ export function ComissoesRegrasTab({ regra = REGRA_PADRAO, onEdit }: Props) {
             Ativa ✓
           </span>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onEdit}
-          className="h-8"
-          style={{ borderColor: "#1E6FBF", color: "#1E6FBF" }}
-        >
-          <Pencil className="mr-1 h-3 w-3" />
-          Editar regra
-        </Button>
+        {onEdit && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onEdit}
+            className="h-8"
+            style={{ borderColor: "#1E6FBF", color: "#1E6FBF" }}
+          >
+            <Pencil className="mr-1 h-3 w-3" />
+            Editar regra
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-6 p-4 md:grid-cols-2">
