@@ -224,6 +224,7 @@ export function ContratoDreTab({ contratoId, contratoNumero, contratoStatus }: C
           DRE do contrato {numeroFmt}
         </h2>
         <div className="flex items-center gap-3">
+          <SharePortalButton contratoId={contratoId} />
           <button
             type="button"
             onClick={() => window.print()}
