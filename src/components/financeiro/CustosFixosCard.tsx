@@ -143,12 +143,16 @@ export function CustosFixosCard({ onTotalChange, onMesChange }: Props) {
                 <>
                   <span className="flex-1 text-sm">{it.descricao}</span>
                   <span className="w-32 text-right text-sm tabular-nums">{fmtBRL(Number(it.valor))}</span>
-                  <Button size="icon" variant="ghost" onClick={() => startEdit(it)} aria-label="Editar">
-                    <Pencil className="h-4 w-4 text-[#6B7A90]" />
-                  </Button>
-                  <Button size="icon" variant="ghost" onClick={() => setConfirmDel(it.id)} aria-label="Remover">
-                    <Trash2 className="h-4 w-4 text-[#E53935]" />
-                  </Button>
+                  {canEdit && (
+                    <>
+                      <Button size="icon" variant="ghost" onClick={() => startEdit(it)} aria-label="Editar">
+                        <Pencil className="h-4 w-4 text-[#6B7A90]" />
+                      </Button>
+                      <Button size="icon" variant="ghost" onClick={() => setConfirmDel(it.id)} aria-label="Remover">
+                        <Trash2 className="h-4 w-4 text-[#E53935]" />
+                      </Button>
+                    </>
+                  )}
                 </>
               )}
             </div>
