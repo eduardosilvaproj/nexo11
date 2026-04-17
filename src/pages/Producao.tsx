@@ -1,49 +1,15 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { toast } from "sonner";
-import { Loader2, Plus, ArrowRight, Factory, CheckCircle2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { PrazoCell } from "@/components/producao/PrazoBadge";
 import type { Database } from "@/integrations/supabase/types";
 
 type OpStatus = Database["public"]["Enums"]["op_status"];
-
-type Contrato = {
-  id: string;
-  cliente_nome: string;
-  status: string;
-  valor_venda: number;
-};
-
-type OP = {
-  id: string;
-  contrato_id: string;
-  status: OpStatus;
-  custo_real: number | null;
-  data_inicio: string | null;
-  data_previsao: string | null;
-  data_conclusao: string | null;
-  itens_json: any;
-};
-
-const STATUS_FLOW: Record<OpStatus, OpStatus | null> = {
-  aguardando: "em_corte",
-  em_corte: "em_montagem",
-  em_montagem: "concluido",
-  concluido: null,
-};
 
 const STATUS_LABEL: Record<OpStatus, string> = {
   aguardando: "Aguardando",
@@ -52,257 +18,160 @@ const STATUS_LABEL: Record<OpStatus, string> = {
   concluido: "Concluído",
 };
 
-const STATUS_BADGE: Record<OpStatus, string> = {
-  aguardando: "bg-nexo-gray-light text-nexo-gray-dark",
-  em_corte: "bg-nexo-amber-light text-nexo-amber",
-  em_montagem: "bg-nexo-blue-bg text-nexo-blue",
-  concluido: "bg-nexo-green-light text-nexo-green-dark",
+const STATUS_BADGE: Record<OpStatus, { bg: string; fg: string }> = {
+  aguardando: { bg: "#E8ECF2", fg: "#6B7A90" },
+  em_corte: { bg: "#FEF3C7", fg: "#E8A020" },
+  em_montagem: { bg: "#E6F3FF", fg: "#1E6FBF" },
+  concluido: { bg: "#D1FAE5", fg: "#05873C" },
 };
 
 export default function Producao() {
-  const qc = useQueryClient();
-  const [novaOpContrato, setNovaOpContrato] = useState<string>("");
-  const [openNova, setOpenNova] = useState(false);
-  const [custoEditando, setCustoEditando] = useState<{ id: string; valor: string } | null>(null);
+  const navigate = useNavigate();
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [fornecedorFilter, setFornecedorFilter] = useState<string>("all");
+  const [search, setSearch] = useState("");
 
-  const { data: contratos = [] } = useQuery({
-    queryKey: ["contratos-producao"],
+  const { data: ops, isLoading } = useQuery({
+    queryKey: ["producao-list"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("contratos")
-        .select("id,cliente_nome,status,valor_venda")
-        .in("status", ["producao", "tecnico"])
+      const { data, error } = await (supabase as unknown as {
+        from: (t: string) => {
+          select: (s: string) => { order: (c: string, o: { ascending: boolean }) => Promise<{ data: unknown[] | null; error: Error | null }> };
+        };
+      })
+        .from("ordens_producao")
+        .select(`
+          id, status, data_previsao, data_conclusao, fornecedor_id, contrato_id,
+          contratos:contrato_id ( id, cliente_nome ),
+          fornecedores:fornecedor_id ( id, nome )
+        `)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data as Contrato[];
+      return (data ?? []) as Array<{
+        id: string;
+        status: OpStatus;
+        data_previsao: string | null;
+        data_conclusao: string | null;
+        fornecedor_id: string | null;
+        contrato_id: string;
+        contratos?: { cliente_nome?: string } | null;
+        fornecedores?: { nome?: string } | null;
+      }>;
     },
   });
 
-  const { data: ops = [], isLoading } = useQuery({
-    queryKey: ["ordens-producao"],
+  const { data: fornecedores } = useQuery({
+    queryKey: ["fornecedores-ativos"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("ordens_producao")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as OP[];
+      const { data } = await (supabase as unknown as {
+        from: (t: string) => {
+          select: (s: string) => { eq: (c: string, v: boolean) => { order: (c: string) => Promise<{ data: Array<{ id: string; nome: string }> | null }> } };
+        };
+      })
+        .from("fornecedores")
+        .select("id, nome")
+        .eq("ativo", true)
+        .order("nome");
+      return data ?? [];
     },
   });
 
-  const criarOP = useMutation({
-    mutationFn: async (contrato_id: string) => {
-      const { error } = await supabase
-        .from("ordens_producao")
-        .insert({ contrato_id, status: "aguardando", data_inicio: new Date().toISOString() });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["ordens-producao"] });
-      setOpenNova(false);
-      setNovaOpContrato("");
-      toast.success("Ordem de produção criada");
-    },
-    onError: (e: any) => toast.error(e.message),
-  });
-
-  const avancarStatus = useMutation({
-    mutationFn: async (op: OP) => {
-      const proximo = STATUS_FLOW[op.status];
-      if (!proximo) return;
-      const updates: any = { status: proximo };
-      if (proximo === "concluido") updates.data_conclusao = new Date().toISOString();
-      const { error } = await supabase.from("ordens_producao").update(updates).eq("id", op.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["ordens-producao"] });
-      toast.success("Status atualizado");
-    },
-    onError: (e: any) => toast.error(e.message),
-  });
-
-  const salvarCusto = useMutation({
-    mutationFn: async ({ id, valor }: { id: string; valor: number }) => {
-      const { error } = await supabase
-        .from("ordens_producao")
-        .update({ custo_real: valor })
-        .eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["ordens-producao"] });
-      setCustoEditando(null);
-      toast.success("Custo real registrado");
-    },
-    onError: (e: any) => toast.error(e.message),
-  });
-
-  const contratosSemOP = contratos.filter((c) => !ops.some((o) => o.contrato_id === c.id));
-  const contratoNome = (id: string) =>
-    contratos.find((c) => c.id === id)?.cliente_nome ?? "—";
+  const filtered = useMemo(() => {
+    if (!ops) return [];
+    return ops.filter((op) => {
+      if (statusFilter !== "all" && op.status !== statusFilter) return false;
+      if (fornecedorFilter !== "all" && op.fornecedor_id !== fornecedorFilter) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        const cliente = op.contratos?.cliente_nome?.toLowerCase() ?? "";
+        const num = op.contrato_id?.slice(0, 4) ?? "";
+        if (!cliente.includes(q) && !num.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [ops, statusFilter, fornecedorFilter, search]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">NEXO Produção</h1>
-          <p className="text-sm text-muted-foreground">
-            Ordens de produção por contrato. Conclusão libera para Logística.
-          </p>
-        </div>
-
-        <Dialog open={openNova} onOpenChange={setOpenNova}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4" />
-              Nova OP
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Nova ordem de produção</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-2">
-              <Label>Contrato</Label>
-              {contratosSemOP.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Todos os contratos elegíveis já têm OP.
-                </p>
-              ) : (
-                <select
-                  className="w-full rounded-md border border-input bg-background p-2 text-sm"
-                  value={novaOpContrato}
-                  onChange={(e) => setNovaOpContrato(e.target.value)}
-                >
-                  <option value="">Selecione...</option>
-                  {contratosSemOP.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.cliente_nome} · R$ {Number(c.valor_venda).toLocaleString("pt-BR")}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-            <DialogFooter>
-              <Button
-                onClick={() => criarOP.mutate(novaOpContrato)}
-                disabled={!novaOpContrato || criarOP.isPending}
-              >
-                Criar OP
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+    <div className="p-8">
+      <div className="mb-6">
+        <h1 style={{ fontSize: 22, fontWeight: 600, color: "#0D1117" }}>NEXO Produção</h1>
+        <p style={{ fontSize: 13, color: "#6B7A90" }}>Ordens de produção ativas</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Ordens de produção</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : ops.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-12 text-center">
-              <Factory className="h-8 w-8 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                Nenhuma ordem de produção ainda. Crie uma a partir de um contrato.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {ops.map((op) => {
-                const proximo = STATUS_FLOW[op.status];
-                const isEditing = custoEditando?.id === op.id;
-                return (
-                  <div
-                    key={op.id}
-                    className="flex flex-col gap-3 rounded-md border border-border p-4 md:flex-row md:items-center md:justify-between"
-                  >
-                    <div className="flex-1 space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm font-medium">{contratoNome(op.contrato_id)}</p>
-                        <Badge className={STATUS_BADGE[op.status]} variant="secondary">
-                          {STATUS_LABEL[op.status]}
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {op.data_inicio
-                          ? `Iniciada em ${new Date(op.data_inicio).toLocaleDateString("pt-BR")}`
-                          : "Sem início"}
-                        {op.data_conclusao &&
-                          ` · Concluída em ${new Date(op.data_conclusao).toLocaleDateString("pt-BR")}`}
-                      </p>
-                    </div>
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            {(Object.keys(STATUS_LABEL) as OpStatus[]).map((s) => (
+              <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-                    <div className="flex flex-wrap items-center gap-2">
-                      {isEditing ? (
-                        <>
-                          <Input
-                            type="number"
-                            placeholder="Custo R$"
-                            className="h-9 w-32"
-                            value={custoEditando.valor}
-                            onChange={(e) =>
-                              setCustoEditando({ ...custoEditando, valor: e.target.value })
-                            }
-                          />
-                          <Button
-                            size="sm"
-                            onClick={() =>
-                              salvarCusto.mutate({
-                                id: op.id,
-                                valor: parseFloat(custoEditando.valor) || 0,
-                              })
-                            }
-                            disabled={salvarCusto.isPending}
-                          >
-                            Salvar
-                          </Button>
-                          <Button size="sm" variant="ghost" onClick={() => setCustoEditando(null)}>
-                            Cancelar
-                          </Button>
-                        </>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            setCustoEditando({
-                              id: op.id,
-                              valor: op.custo_real?.toString() ?? "",
-                            })
-                          }
-                        >
-                          {op.custo_real != null
-                            ? `Custo: R$ ${Number(op.custo_real).toLocaleString("pt-BR")}`
-                            : "Registrar custo"}
-                        </Button>
-                      )}
+        <Select value={fornecedorFilter} onValueChange={setFornecedorFilter}>
+          <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os fornecedores</SelectItem>
+            {fornecedores?.map((f) => (
+              <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-                      {proximo ? (
-                        <Button
-                          size="sm"
-                          onClick={() => avancarStatus.mutate(op)}
-                          disabled={avancarStatus.isPending}
-                        >
-                          <ArrowRight className="h-4 w-4" />
-                          {STATUS_LABEL[proximo]}
-                        </Button>
-                      ) : (
-                        <Badge className="bg-nexo-green-light text-nexo-green-dark" variant="secondary">
-                          <CheckCircle2 className="mr-1 h-3 w-3" /> Finalizada
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input className="pl-9" placeholder="Buscar cliente ou nº..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-xl bg-white" style={{ border: "0.5px solid #E8ECF2" }}>
+        <table className="w-full">
+          <thead style={{ backgroundColor: "#F7F9FC" }}>
+            <tr>
+              {["Nº", "Cliente", "Fornecedor", "Status O.P.", "Prazo", "Dias restantes", "Ações"].map((h) => (
+                <th key={h} className="px-4 py-3 text-left" style={{ fontSize: 11, color: "#6B7A90", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading && (
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">Carregando...</td></tr>
+            )}
+            {!isLoading && filtered.length === 0 && (
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">Nenhuma ordem de produção encontrada.</td></tr>
+            )}
+            {filtered.map((op) => {
+              const badge = STATUS_BADGE[op.status];
+              return (
+                <tr key={op.id} style={{ borderTop: "0.5px solid #E8ECF2" }} className="hover:bg-muted/30">
+                  <td className="px-4 py-3 text-sm font-medium">#{op.contrato_id?.slice(0, 4)}</td>
+                  <td className="px-4 py-3 text-sm">{op.contratos?.cliente_nome ?? "—"}</td>
+                  <td className="px-4 py-3 text-sm">{op.fornecedores?.nome ?? "—"}</td>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center rounded-full px-2.5 py-0.5" style={{ backgroundColor: badge.bg, color: badge.fg, fontSize: 11, fontWeight: 500 }}>
+                      {STATUS_LABEL[op.status]}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {op.data_previsao ? new Date(op.data_previsao).toLocaleDateString("pt-BR") : "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    <PrazoCell dataPrevista={op.data_previsao} concluido={op.status === "concluido"} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <Button size="sm" variant="outline" onClick={() => navigate(`/contratos/${op.contrato_id}?tab=producao`)}>
+                      Abrir O.P.
+                    </Button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
