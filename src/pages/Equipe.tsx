@@ -106,9 +106,7 @@ export default function Equipe() {
           <PontoTab />
         </TabsContent>
         <TabsContent value="desempenho" className="mt-6">
-          <p style={{ fontSize: 13, color: "#6B7A90" }}>
-            Sem dados de desempenho.
-          </p>
+          <DesempenhoTab />
         </TabsContent>
       </Tabs>
 
