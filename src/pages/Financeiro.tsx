@@ -39,24 +39,8 @@ function EmConstrucaoBanner() {
   );
 }
 
-function FluxoCaixaPlaceholder() {
-  return (
-    <div>
-      <EmConstrucaoBanner />
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Fluxo de caixa</CardTitle>
-          <CardDescription>
-            Entradas e saídas previstas e realizadas no período.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          Aqui você verá o gráfico mensal de entradas vs. saídas, o saldo
-          projetado e a comparação com o mês anterior.
-        </CardContent>
-      </Card>
-    </div>
-  );
+function FluxoCaixaTab() {
+  return <FluxoCaixaCard />;
 }
 
 function ContasPlaceholder() {
