@@ -112,6 +112,27 @@ export function ComissoesRelatorioTab({ mes, mesLabel, regra = REGRA_PADRAO }: P
         return;
       }
       const lista = (contratos ?? []) as ContratoDre[];
+
+      // Carregar status de pagamento existente para o período
+      const contratoIds = lista.map((c) => c.id);
+      const pagosVend = new Set<string>();
+      if (contratoIds.length) {
+        const { data: comExistentes } = await supabase
+          .from("comissoes")
+          .select("vendedor_id, pago")
+          .in("contrato_id", contratoIds);
+        const porVend: Record<string, { total: number; pagos: number }> = {};
+        (comExistentes ?? []).forEach((c) => {
+          const v = c.vendedor_id as string;
+          if (!porVend[v]) porVend[v] = { total: 0, pagos: 0 };
+          porVend[v].total++;
+          if (c.pago) porVend[v].pagos++;
+        });
+        Object.entries(porVend).forEach(([v, s]) => {
+          if (s.total > 0 && s.pagos === s.total) pagosVend.add(v);
+        });
+      }
+      if (!cancel) setPagos(pagosVend);
       const ids = Array.from(new Set(lista.map((c) => c.vendedor_id!).filter(Boolean)));
       const nomes: Record<string, string> = {};
       if (ids.length) {
