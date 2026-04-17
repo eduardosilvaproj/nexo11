@@ -383,6 +383,7 @@ export function ComissoesRelatorioTab({ mes, regra = REGRA_PADRAO }: Props) {
         </div>
       )}
 
+      <Dialog open={!!alvo} onOpenChange={(v) => !v && setAlvo(null)}>
         <DialogContent className="sm:max-w-[420px]">
           <DialogHeader>
             <DialogTitle>Confirmar pagamento de comissão</DialogTitle>
