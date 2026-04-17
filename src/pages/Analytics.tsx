@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { AlertasBanner } from "@/components/analytics/AlertasBanner";
 import { KpiRow } from "@/components/analytics/KpiRow";
+import { FaturamentoVsPeChart } from "@/components/analytics/FaturamentoVsPeChart";
 
 type Loja = { id: string; nome: string };
 
@@ -93,6 +94,13 @@ export default function Analytics() {
       </div>
 
       <KpiRow mes={mes} lojaId={lojaId} />
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <div className="lg:col-span-3">
+          <FaturamentoVsPeChart />
+        </div>
+        <div className="lg:col-span-2" />
+      </div>
     </div>
   );
 }
