@@ -468,6 +468,50 @@ export type Database = {
           },
         ]
       }
+      retrabalhos: {
+        Row: {
+          contrato_id: string
+          created_at: string
+          custo: number
+          data_resolucao: string | null
+          id: string
+          motivo: string
+          resolvido: boolean
+          responsavel: string | null
+          updated_at: string
+        }
+        Insert: {
+          contrato_id: string
+          created_at?: string
+          custo?: number
+          data_resolucao?: string | null
+          id?: string
+          motivo: string
+          resolvido?: boolean
+          responsavel?: string | null
+          updated_at?: string
+        }
+        Update: {
+          contrato_id?: string
+          created_at?: string
+          custo?: number
+          data_resolucao?: string | null
+          id?: string
+          motivo?: string
+          resolvido?: boolean
+          responsavel?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "retrabalhos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
