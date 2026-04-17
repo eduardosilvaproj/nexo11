@@ -95,16 +95,60 @@ function PontoEquilibrio() {
   );
 }
 
-function EmBreve({ titulo }: { titulo: string }) {
+function EmConstrucaoBanner() {
   return (
-    <Card>
-      <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-        <p className="text-base font-medium">{titulo}</p>
-        <p className="mt-1 text-sm text-muted-foreground">Em breve.</p>
-      </CardContent>
-    </Card>
+    <div
+      className="mb-4 rounded-md px-4 py-3 text-sm"
+      style={{
+        background: "#F5F7FA",
+        border: "1px dashed #B0BAC9",
+        color: "#6B7A90",
+      }}
+    >
+      Em construção — disponível em breve
+    </div>
   );
 }
+
+function FluxoCaixaPlaceholder() {
+  return (
+    <div>
+      <EmConstrucaoBanner />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Fluxo de caixa</CardTitle>
+          <CardDescription>
+            Entradas e saídas previstas e realizadas no período.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">
+          Aqui você verá o gráfico mensal de entradas vs. saídas, o saldo
+          projetado e a comparação com o mês anterior.
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function ContasPlaceholder() {
+  return (
+    <div>
+      <EmConstrucaoBanner />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Contas a pagar e receber</CardTitle>
+          <CardDescription>
+            Acompanhe vencimentos, pagamentos e recebimentos da loja.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">
+          Listagem de contas com status, vencimento, valor e responsável.
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 
 export default function Financeiro() {
   return (
@@ -115,19 +159,32 @@ export default function Financeiro() {
       </header>
 
       <Tabs defaultValue="ponto-equilibrio">
-        <TabsList>
-          <TabsTrigger value="ponto-equilibrio">Ponto de equilíbrio</TabsTrigger>
-          <TabsTrigger value="fluxo-caixa">Fluxo de caixa</TabsTrigger>
-          <TabsTrigger value="contas">Contas</TabsTrigger>
+        <TabsList
+          className="h-auto justify-start rounded-none bg-transparent p-0 border-b"
+          style={{ borderColor: "#E8ECF2" }}
+        >
+          {[
+            { v: "ponto-equilibrio", l: "Ponto de equilíbrio" },
+            { v: "fluxo-caixa", l: "Fluxo de caixa" },
+            { v: "contas", l: "Contas" },
+          ].map((t) => (
+            <TabsTrigger
+              key={t.v}
+              value={t.v}
+              className="rounded-none bg-transparent px-4 py-2 text-[#6B7A90] shadow-none data-[state=active]:bg-transparent data-[state=active]:text-[#1E6FBF] data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#1E6FBF] -mb-px"
+            >
+              {t.l}
+            </TabsTrigger>
+          ))}
         </TabsList>
         <TabsContent value="ponto-equilibrio" className="mt-4">
           <PontoEquilibrio />
         </TabsContent>
         <TabsContent value="fluxo-caixa" className="mt-4">
-          <EmBreve titulo="Fluxo de caixa" />
+          <FluxoCaixaPlaceholder />
         </TabsContent>
         <TabsContent value="contas" className="mt-4">
-          <EmBreve titulo="Contas a pagar e receber" />
+          <ContasPlaceholder />
         </TabsContent>
       </Tabs>
     </div>
