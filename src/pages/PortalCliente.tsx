@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Check, Clock, AlertCircle, Package, Truck, Wrench, Headphones, FileText } from "lucide-react";
+import { Check, Clock, Link2Off, Package, Truck, Wrench, Headphones, FileText } from "lucide-react";
+import { LogoNexo } from "@/components/LogoNexo";
 
 const STAGES = [
   { key: "comercial", label: "Comercial", icon: FileText },
@@ -82,14 +83,51 @@ export default function PortalCliente() {
 
   if (error || !contrato) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA] p-6">
-        <div className="bg-white rounded-xl shadow p-8 max-w-md text-center">
-          <AlertCircle className="mx-auto mb-3 text-[#E53935]" size={40} />
-          <h1 className="text-lg font-semibold mb-2">Não foi possível abrir</h1>
-          <p className="text-sm text-muted-foreground">
-            {error ?? "Contrato não encontrado."}
-          </p>
+      <div
+        className="min-h-screen flex flex-col items-center px-6"
+        style={{ backgroundColor: "#F5F7FA" }}
+      >
+        <div
+          className="w-full flex justify-center py-8"
+          style={{ backgroundColor: "#0D1117" }}
+        >
+          <LogoNexo size="lg" />
         </div>
+
+        <div className="flex-1 w-full flex items-center justify-center">
+          <div
+            className="bg-white rounded-xl shadow-sm p-8 text-center"
+            style={{ width: 400, maxWidth: "100%" }}
+          >
+            <Link2Off
+              className="mx-auto mb-4"
+              size={24}
+              color="#B0BAC9"
+            />
+            <h1 style={{ fontSize: 18, fontWeight: 500, color: "#0D1117" }}>
+              Link inválido ou expirado
+            </h1>
+            <p
+              style={{
+                fontSize: 14,
+                color: "#6B7A90",
+                marginTop: 12,
+                lineHeight: 1.5,
+              }}
+            >
+              Este link de acompanhamento não é mais válido.
+              <br />
+              Entre em contato com a loja para obter um novo link.
+            </p>
+          </div>
+        </div>
+
+        <footer
+          className="py-6"
+          style={{ fontSize: 12, color: "#B0BAC9" }}
+        >
+          NEXO · Gestão de Planejados
+        </footer>
       </div>
     );
   }
