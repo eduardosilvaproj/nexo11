@@ -63,7 +63,7 @@ export default function PortalCliente() {
       }
       const cid = (tk as any).contrato_id;
 
-      const [{ data: c, error: cErr }, { data: l }, { data: chs }] =
+      const [{ data: c, error: cErr }, { data: l }, { data: chs }, { data: ents }] =
         await Promise.all([
           supabase.from("contratos").select("*, lojas(nome, cidade, estado)").eq("id", cid).maybeSingle(),
           supabase
@@ -77,11 +77,19 @@ export default function PortalCliente() {
             .eq("contrato_id", cid)
             .not("nps", "is", null)
             .limit(1),
+          supabase
+            .from("entregas")
+            .select("data_prevista")
+            .eq("contrato_id", cid)
+            .not("data_prevista", "is", null)
+            .order("data_prevista", { ascending: true })
+            .limit(1),
         ]);
       if (cErr) throw cErr;
       setContrato(c);
       setLogs(l ?? []);
       setNpsRespondido((chs ?? []).length > 0);
+      setEntregaPrevista((ents?.[0] as any)?.data_prevista ?? null);
     } catch (e: any) {
       setError(e.message ?? "Erro ao carregar");
     } finally {
