@@ -88,6 +88,25 @@ export default function Dre() {
   const fmt = (n: number | null) =>
     (n ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+  const metrics = useMemo(() => {
+    const faturamento = rows.reduce((s, r) => s + (r.valor_venda ?? 0), 0);
+    const margens = rows
+      .map((r) => r.margem_realizada)
+      .filter((m): m is number => m !== null && m !== undefined);
+    const media = margens.length ? margens.reduce((a, b) => a + b, 0) / margens.length : null;
+    const melhor = margens.length ? Math.max(...margens) : null;
+    const pior = margens.length ? Math.min(...margens) : null;
+    return { faturamento, media, melhor, pior };
+  }, [rows]);
+
+  const margemColor = (m: number | null) => {
+    if (m === null) return "#6B7A90";
+    if (m >= 25) return "#12B76A";
+    if (m >= 15) return "#E8A020";
+    return "#E53935";
+  };
+  const fmtPct = (m: number | null) => (m === null ? "—" : `${m.toFixed(1)}%`);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -142,6 +161,48 @@ export default function Dre() {
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          {
+            label: "Faturamento total",
+            value: fmt(metrics.faturamento),
+            border: "#1E6FBF",
+            valueColor: "#0B1220",
+          },
+          {
+            label: "Margem média",
+            value: fmtPct(metrics.media),
+            border: margemColor(metrics.media),
+            valueColor: margemColor(metrics.media),
+          },
+          {
+            label: "Melhor margem",
+            value: fmtPct(metrics.melhor),
+            border: "#12B76A",
+            valueColor: "#12B76A",
+          },
+          {
+            label: "Pior margem",
+            value: fmtPct(metrics.pior),
+            border: "#E53935",
+            valueColor: metrics.pior !== null ? "#E53935" : "#6B7A90",
+          },
+        ].map((c) => (
+          <div
+            key={c.label}
+            className="rounded-lg border border-[#E8ECF2] bg-white p-4"
+            style={{ borderTop: `3px solid ${c.border}` }}
+          >
+            <p className="text-xs font-medium uppercase tracking-wide text-[#6B7A90]">
+              {c.label}
+            </p>
+            <p className="mt-2 text-2xl font-semibold" style={{ color: c.valueColor }}>
+              {c.value}
+            </p>
+          </div>
+        ))}
       </div>
 
       <div className="rounded-lg border border-[#E8ECF2] bg-white">
