@@ -204,27 +204,27 @@ export default function Dashboard() {
         <div className="flex flex-col bg-white p-5" style={cardStyle}>
           <h2
             className="mb-4"
-            style={{ fontSize: 14, fontWeight: 600, color: "#0D1117" }}
+            style={{ fontSize: 15, fontWeight: 500, color: "#0D1117" }}
           >
             Ponto de equilíbrio
           </h2>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span style={{ fontSize: 12, color: "#6B7A90" }}>Custo fixo mensal</span>
-              <span style={{ fontSize: 14, fontWeight: 500, color: "#0D1117" }}>
+              <span style={{ fontSize: 13, color: "#6B7A90" }}>Custo fixo mensal</span>
+              <span style={{ fontSize: 13, fontWeight: 500, color: "#0D1117" }}>
                 {formatBRL(custoFixo)}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span style={{ fontSize: 12, color: "#6B7A90" }}>PE calculado</span>
-              <span style={{ fontSize: 14, fontWeight: 500, color: "#0D1117" }}>
+              <span style={{ fontSize: 13, color: "#6B7A90" }}>PE calculado</span>
+              <span style={{ fontSize: 13, fontWeight: 500, color: "#0D1117" }}>
                 {formatBRL(pe)}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span style={{ fontSize: 12, color: "#6B7A90" }}>Faturamento atual</span>
-              <span style={{ fontSize: 14, fontWeight: 500, color: "#0D1117" }}>
+              <span style={{ fontSize: 13, color: "#6B7A90" }}>Faturamento atual</span>
+              <span style={{ fontSize: 13, fontWeight: 500, color: "#0D1117" }}>
                 {formatBRL(faturamentoAtual)}
               </span>
             </div>
@@ -232,8 +232,8 @@ export default function Dashboard() {
 
           <div className="mt-5">
             <div className="mb-1.5 flex items-center justify-between">
-              <span style={{ fontSize: 11, color: "#6B7A90" }}>% do PE atingido</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: "#0D1117" }}>
+              <span style={{ fontSize: 12, color: "#6B7A90" }}>% do PE atingido</span>
+              <span style={{ fontSize: 12, color: "#6B7A90" }}>
                 {peProgress.toFixed(0)}%
               </span>
             </div>
@@ -245,12 +245,7 @@ export default function Dashboard() {
                 className="h-full transition-all"
                 style={{
                   width: `${peProgress}%`,
-                  background:
-                    peProgress >= 100
-                      ? "#12B76A"
-                      : peProgress >= 50
-                      ? "#1E6FBF"
-                      : "#E8A020",
+                  background: "#1E6FBF",
                   borderRadius: 999,
                 }}
               />
@@ -259,8 +254,8 @@ export default function Dashboard() {
 
           <Link
             to="/financeiro"
-            className="mt-5 inline-flex items-center gap-1 self-start"
-            style={{ fontSize: 13, fontWeight: 500, color: "#1E6FBF" }}
+            className="mt-5 inline-flex items-center gap-1 self-start text-[#1E6FBF] transition-colors hover:text-[#00AAFF]"
+            style={{ fontSize: 13, fontWeight: 500 }}
           >
             Configurar custos fixos
             <ArrowRight className="h-4 w-4" />
