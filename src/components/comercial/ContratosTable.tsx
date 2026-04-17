@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Eye, Pencil, Folder, Plus } from "lucide-react";
@@ -34,6 +35,7 @@ interface Props {
 
 export function ContratosTable({ onCreate }: Props) {
   const { perfil } = useAuth();
+  const navigate = useNavigate();
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["contratos-table", perfil?.loja_id],
@@ -193,6 +195,7 @@ export function ContratosTable({ onCreate }: Props) {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
                       <button
+                        onClick={() => navigate(`/contratos/${c.id}`)}
                         className="rounded-md p-1.5 transition-colors hover:bg-[#E8ECF2]"
                         style={{ color: "#6B7A90" }}
                         title="Ver contrato"
