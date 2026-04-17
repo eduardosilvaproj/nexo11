@@ -84,6 +84,41 @@ export function FluxoCaixaCard() {
 
   return (
     <div className="space-y-4">
+      {/* Header de navegação por mês */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMesAtivo((d) => shiftMes(d, -1))}
+            className="gap-1 text-[#6B7A90] hover:text-[#1E6FBF]"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            <span className="text-sm">{labelMes(shiftMes(mesAtivo, -1))}</span>
+          </Button>
+          <span className="min-w-[140px] text-center text-base font-medium">
+            {labelMes(mesAtivo)}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMesAtivo((d) => shiftMes(d, 1))}
+            className="gap-1 text-[#6B7A90] hover:text-[#1E6FBF]"
+          >
+            <span className="text-sm">{labelMes(shiftMes(mesAtivo, 1))}</span>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+        <Button
+          size="sm"
+          className="text-white hover:opacity-90"
+          style={{ background: "#1E6FBF" }}
+          onClick={() => {/* TODO: abrir dialog de novo lançamento */}}
+        >
+          <Plus className="mr-1 h-4 w-4" /> Lançamento
+        </Button>
+      </div>
+
       {/* KPIs */}
       <div className="grid gap-4 md:grid-cols-4">
         <KpiCard
