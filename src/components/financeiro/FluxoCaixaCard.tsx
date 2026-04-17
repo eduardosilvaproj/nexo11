@@ -296,6 +296,117 @@ export function FluxoCaixaCard() {
         </CardContent>
       </Card>
 
+      {/* Lançamentos do mês */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Lançamentos — {labelMes(mesAtivo)}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {lancamentosOrdenados.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+              <p className="text-sm text-[#6B7A90]">Nenhum lançamento em {labelMes(mesAtivo)}</p>
+              <Button size="sm" className="text-white hover:opacity-90" style={{ background: "#1E6FBF" }}>
+                <Plus className="mr-1 h-4 w-4" /> Criar primeiro lançamento
+              </Button>
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-md border" style={{ borderColor: "#E8ECF2" }}>
+              <table className="w-full text-sm">
+                <thead style={{ background: "#F5F7FA", color: "#6B7A90" }}>
+                  <tr>
+                    <th className="px-3 py-2 text-left font-medium">Data</th>
+                    <th className="px-3 py-2 text-left font-medium">Descrição</th>
+                    <th className="px-3 py-2 text-left font-medium">Categoria</th>
+                    <th className="px-3 py-2 text-left font-medium">Tipo</th>
+                    <th className="px-3 py-2 text-right font-medium">Valor</th>
+                    <th className="px-3 py-2 text-left font-medium">Vencimento</th>
+                    <th className="px-3 py-2 text-left font-medium">Status</th>
+                    <th className="px-3 py-2 text-right font-medium">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y" style={{ borderColor: "#E8ECF2" }}>
+                  {lancamentosOrdenados.map((l) => {
+                    const atrasado = l.status === "pendente" && l.vencimento < hojeStr;
+                    const statusKey: LancamentoStatus | "atrasado" = atrasado ? "atrasado" : l.status;
+                    const statusStyle = {
+                      pendente: { bg: "#FEF3C7", fg: "#E8A020", label: "Pendente" },
+                      pago: { bg: "#D1FAE5", fg: "#05873C", label: "Pago" },
+                      atrasado: { bg: "#FDECEA", fg: "#E53935", label: "Atrasado" },
+                      cancelado: { bg: "#E8ECF2", fg: "#B0BAC9", label: "Cancelado" },
+                    }[statusKey];
+                    const tipoStyle =
+                      l.tipo === "receita"
+                        ? { bg: "#D1FAE5", fg: "#05873C", label: "Receita" }
+                        : { bg: "#FDECEA", fg: "#E53935", label: "Despesa" };
+                    const cancelado = l.status === "cancelado";
+                    const podeMarcarPago = l.status === "pendente";
+                    return (
+                      <tr
+                        key={l.id}
+                        style={atrasado ? { background: "#FFF8F8" } : undefined}
+                        className={cancelado ? "line-through" : undefined}
+                      >
+                        <td className="px-3 py-2">{fmtData(l.data)}</td>
+                        <td className="px-3 py-2">{l.descricao}</td>
+                        <td className="px-3 py-2 text-[#6B7A90]">{l.categoria}</td>
+                        <td className="px-3 py-2">
+                          <span
+                            className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                            style={{ background: tipoStyle.bg, color: tipoStyle.fg }}
+                          >
+                            {tipoStyle.label}
+                          </span>
+                        </td>
+                        <td
+                          className="px-3 py-2 text-right tabular-nums"
+                          style={{ color: l.tipo === "receita" ? "#05873C" : "#E53935" }}
+                        >
+                          {fmtBRL(l.valor)}
+                        </td>
+                        <td className="px-3 py-2">{fmtData(l.vencimento)}</td>
+                        <td className="px-3 py-2">
+                          <span
+                            className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                            style={{ background: statusStyle.bg, color: statusStyle.fg }}
+                          >
+                            {statusStyle.label}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2">
+                          <div className="flex items-center justify-end gap-2">
+                            {podeMarcarPago && (
+                              <Button
+                                size="sm"
+                                className="h-7 px-2 text-white hover:opacity-90"
+                                style={{ background: "#05873C" }}
+                                onClick={() => marcarPago(l.id)}
+                              >
+                                <Check className="mr-1 h-3 w-3" /> Marcar pago
+                              </Button>
+                            )}
+                            {!cancelado && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 text-[#6B7A90] hover:text-[#E53935]"
+                                onClick={() => cancelar(l.id)}
+                                aria-label="Cancelar lançamento"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Tabela mensal */}
       <Card>
         <CardHeader>
