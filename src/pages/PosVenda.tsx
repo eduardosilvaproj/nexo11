@@ -202,17 +202,25 @@ export default function PosVenda() {
   const abrirChamado = useMutation({
     mutationFn: async () => {
       if (!contratoId) throw new Error("Selecione um contrato");
-      if (!titulo && !descricao) throw new Error("Informe título ou descrição");
-      const desc = titulo
-        ? `${titulo}${descricao ? "\n\n" + descricao : ""}`
-        : descricao;
+      const tit = titulo.trim().slice(0, 80);
+      if (!tit) throw new Error("Informe um título");
+      const desc = `${tit}${descricao.trim() ? "\n\n" + descricao.trim() : ""}`;
+      const custoNum = custo === "" ? 0 : Number(custo);
+      if (Number.isNaN(custoNum) || custoNum < 0) throw new Error("Custo inválido");
       const { error } = await supabase.from("chamados_pos_venda").insert({
         contrato_id: contratoId,
         tipo,
         descricao: desc,
-        custo: Number(custo) || 0,
+        custo: custoNum,
       });
       if (error) throw error;
+      // log no contrato (autor_id obrigatório pela RLS é injetado via trigger SECURITY DEFINER)
+      await supabase.rpc("contrato_log_inserir", {
+        _contrato_id: contratoId,
+        _acao: "chamado_aberto",
+        _titulo: `Chamado aberto: ${tit}`,
+        _descricao: TIPO_LABEL[tipo],
+      });
     },
     onSuccess: () => {
       toast.success("Chamado aberto");
