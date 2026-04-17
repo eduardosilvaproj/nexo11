@@ -95,16 +95,60 @@ function PontoEquilibrio() {
   );
 }
 
-function EmBreve({ titulo }: { titulo: string }) {
+function EmConstrucaoBanner() {
   return (
-    <Card>
-      <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-        <p className="text-base font-medium">{titulo}</p>
-        <p className="mt-1 text-sm text-muted-foreground">Em breve.</p>
-      </CardContent>
-    </Card>
+    <div
+      className="mb-4 rounded-md px-4 py-3 text-sm"
+      style={{
+        background: "#F5F7FA",
+        border: "1px dashed #B0BAC9",
+        color: "#6B7A90",
+      }}
+    >
+      Em construção — disponível em breve
+    </div>
   );
 }
+
+function FluxoCaixaPlaceholder() {
+  return (
+    <div>
+      <EmConstrucaoBanner />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Fluxo de caixa</CardTitle>
+          <CardDescription>
+            Entradas e saídas previstas e realizadas no período.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">
+          Aqui você verá o gráfico mensal de entradas vs. saídas, o saldo
+          projetado e a comparação com o mês anterior.
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function ContasPlaceholder() {
+  return (
+    <div>
+      <EmConstrucaoBanner />
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Contas a pagar e receber</CardTitle>
+          <CardDescription>
+            Acompanhe vencimentos, pagamentos e recebimentos da loja.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">
+          Listagem de contas com status, vencimento, valor e responsável.
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 
 export default function Financeiro() {
   return (
