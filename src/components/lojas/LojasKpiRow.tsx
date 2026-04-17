@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-type Props = { mes: string };
+type Props = { mes: string; lojaId?: string };
 
 function monthRange(mes: string) {
   const [y, m] = mes.split("-").map(Number);
@@ -48,23 +48,32 @@ function Card({
   );
 }
 
-export function LojasKpiRow({ mes }: Props) {
+export function LojasKpiRow({ mes, lojaId }: Props) {
   const { inicio, fim } = monthRange(mes);
 
   const { data } = useQuery({
-    queryKey: ["lojas-kpi", mes],
+    queryKey: ["lojas-kpi", mes, lojaId ?? "all"],
     queryFn: async () => {
+      const lojasQ = supabase.from("lojas").select("id", { count: "exact", head: true });
+      const dreQ = supabase
+        .from("vw_contratos_dre")
+        .select("valor_venda, margem_realizada")
+        .gte("data_criacao", inicio)
+        .lt("data_criacao", fim);
+      const ativosQ = supabase
+        .from("contratos")
+        .select("id", { count: "exact", head: true })
+        .not("status", "in", "(finalizado)");
+
+      if (lojaId) {
+        dreQ.eq("loja_id", lojaId);
+        ativosQ.eq("loja_id", lojaId);
+      }
+
       const [{ count: lojasCount }, { data: dre }, { count: ativosCount }] = await Promise.all([
-        supabase.from("lojas").select("id", { count: "exact", head: true }),
-        supabase
-          .from("vw_contratos_dre")
-          .select("valor_venda, margem_realizada")
-          .gte("data_criacao", inicio)
-          .lt("data_criacao", fim),
-        supabase
-          .from("contratos")
-          .select("id", { count: "exact", head: true })
-          .not("status", "in", "(finalizado)"),
+        lojasQ,
+        dreQ,
+        ativosQ,
       ]);
 
       let faturamento = 0;
