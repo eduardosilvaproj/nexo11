@@ -68,6 +68,13 @@ export type Database = {
             referencedRelation: "contratos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "agendamentos_montagem_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
         ]
       }
       chamados_pos_venda: {
@@ -121,6 +128,13 @@ export type Database = {
             referencedRelation: "contratos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "chamados_pos_venda_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
         ]
       }
       checklists_tecnicos: {
@@ -165,6 +179,13 @@ export type Database = {
             referencedRelation: "contratos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "checklists_tecnicos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
         ]
       }
       contrato_logs: {
@@ -204,6 +225,13 @@ export type Database = {
             columns: ["contrato_id"]
             isOneToOne: false
             referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrato_logs_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
             referencedColumns: ["id"]
           },
         ]
@@ -324,6 +352,13 @@ export type Database = {
             referencedRelation: "contratos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "dre_contrato_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: true
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
         ]
       }
       entregas: {
@@ -375,6 +410,13 @@ export type Database = {
             columns: ["contrato_id"]
             isOneToOne: false
             referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entregas_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
             referencedColumns: ["id"]
           },
         ]
@@ -510,6 +552,13 @@ export type Database = {
             referencedRelation: "contratos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "ordens_producao_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
         ]
       }
       retrabalhos: {
@@ -552,6 +601,13 @@ export type Database = {
             columns: ["contrato_id"]
             isOneToOne: false
             referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "retrabalhos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
             referencedColumns: ["id"]
           },
         ]
@@ -625,9 +681,51 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      vw_contratos_dre: {
+        Row: {
+          assinado: boolean | null
+          cliente_contato: string | null
+          cliente_nome: string | null
+          created_at: string | null
+          custo_comissao_previsto: number | null
+          custo_comissao_real: number | null
+          custo_frete_previsto: number | null
+          custo_frete_real: number | null
+          custo_montagem_previsto: number | null
+          custo_montagem_real: number | null
+          custo_produto_previsto: number | null
+          custo_produto_real: number | null
+          data_criacao: string | null
+          data_finalizacao: string | null
+          desvio_total: number | null
+          dre_updated_at: string | null
+          id: string | null
+          loja_id: string | null
+          margem_prevista: number | null
+          margem_realizada: number | null
+          outros_custos_previstos: number | null
+          outros_custos_reais: number | null
+          status: Database["public"]["Enums"]["contrato_status"] | null
+          updated_at: string | null
+          valor_venda: number | null
+          vendedor_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contratos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      avancar_contrato: {
+        Args: { p_contrato_id: string; p_usuario_id?: string }
+        Returns: Json
+      }
       contrato_da_loja: { Args: { _contrato_id: string }; Returns: boolean }
       contrato_log_inserir: {
         Args: {
