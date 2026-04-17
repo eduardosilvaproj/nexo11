@@ -685,7 +685,15 @@ export default function PosVenda() {
                         <Button
                           size="sm"
                           style={{ backgroundColor: "#12B76A" }}
-                          onClick={() => resolverChamado.mutate(c.id)}
+                          onClick={() =>
+                            openResolveDialog({
+                              id: c.id,
+                              contrato_id: c.contrato_id,
+                              tipo: c.tipo,
+                              descricao: c.descricao,
+                              custo: Number(c.custo ?? 0),
+                            })
+                          }
                         >
                           Resolver
                         </Button>
