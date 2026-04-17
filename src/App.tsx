@@ -14,6 +14,7 @@ import Tecnico from "./pages/Tecnico";
 import Producao from "./pages/Producao";
 import Logistica from "./pages/Logistica";
 import Montagem from "./pages/Montagem";
+import Equipe from "./pages/Equipe";
 
 import PosVenda from "./pages/PosVenda";
 import Dre from "./pages/Dre";
