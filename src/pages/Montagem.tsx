@@ -282,6 +282,17 @@ export default function Montagem() {
           )}
         </TabsContent>
       </Tabs>
+
+      <EditarAgendamentoDialog
+        agendamento={editAgendamento}
+        equipes={equipes}
+        open={!!editId}
+        onOpenChange={(o) => !o && setEditId(null)}
+        onChanged={() => {
+          qc.invalidateQueries({ queryKey: ["agendamentos-semana"] });
+          setEditId(null);
+        }}
+      />
     </div>
   );
 }
