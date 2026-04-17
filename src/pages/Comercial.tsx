@@ -263,9 +263,11 @@ export default function Comercial() {
     <div className="flex h-full flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 style={{ fontSize: 18, fontWeight: 500, color: "#0D1117" }}>Leads</h1>
+          <h1 style={{ fontSize: 18, fontWeight: 500, color: "#0D1117" }}>
+            {tab === "contratos" ? "Contratos" : "Leads"}
+          </h1>
           <p className="mt-0.5" style={{ fontSize: 13, color: "#6B7A90" }}>
-            Pipeline comercial
+            {tab === "contratos" ? "Todos os contratos da loja" : "Pipeline comercial"}
           </p>
         </div>
         <button
@@ -273,7 +275,7 @@ export default function Comercial() {
           className="inline-flex items-center gap-1.5 px-4 py-2 text-white transition-colors hover:bg-[#1759A0]"
           style={{ background: "#1E6FBF", borderRadius: 8, fontSize: 13, fontWeight: 500 }}
         >
-          <Plus className="h-4 w-4" /> Novo lead
+          <Plus className="h-4 w-4" /> {tab === "contratos" ? "Novo contrato" : "Novo lead"}
         </button>
       </div>
 
