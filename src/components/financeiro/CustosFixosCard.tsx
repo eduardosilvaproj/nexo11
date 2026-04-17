@@ -42,8 +42,9 @@ interface Props {
 }
 
 export function CustosFixosCard({ onTotalChange, onMesChange }: Props) {
-  const { perfil } = useAuth();
+  const { perfil, hasRole } = useAuth();
   const lojaId = perfil?.loja_id ?? null;
+  const canEdit = hasRole("admin") || hasRole("franqueador");
   const meses = useMemo(buildMonthOptions, []);
   const [mes, setMes] = useState<string>(monthKey(new Date()));
   const [itens, setItens] = useState<CustoFixo[]>([]);
