@@ -98,7 +98,7 @@ export default function Equipe() {
         </TabsList>
 
         <TabsContent value="membros" className="mt-6">
-          <MembrosTab />
+          <MembrosTab onAddMember={() => setNovoOpen(true)} />
         </TabsContent>
         <TabsContent value="ponto" className="mt-6">
           <p style={{ fontSize: 13, color: "#6B7A90" }}>
