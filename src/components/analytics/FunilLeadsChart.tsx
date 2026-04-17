@@ -6,25 +6,59 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
-type Etapa = { etapa: string; valor: number; cor: string };
+type Props = { mes: string; lojaId: string };
 
-const ETAPAS: Etapa[] = [
-  { etapa: "Entrada", valor: 41, cor: "#B5D4F4" },
-  { etapa: "Atendimento", valor: 32, cor: "#85B7EB" },
-  { etapa: "Visita", valor: 18, cor: "#378ADD" },
-  { etapa: "Proposta", valor: 13, cor: "#185FA5" },
-  { etapa: "Convertido", valor: 8, cor: "#12B76A" },
-];
+const CORES = ["#B5D4F4", "#85B7EB", "#378ADD", "#185FA5", "#12B76A"];
+const LABELS = ["Entrada", "Atendimento", "Visita", "Proposta", "Convertido"];
+// Cumulative stages: each stage counts leads that reached it or beyond
+const ORDEM = ["novo", "atendimento", "visita", "proposta", "convertido"];
 
-export function FunilLeadsChart() {
-  const total = ETAPAS[0].valor;
-  const convertidos = ETAPAS[ETAPAS.length - 1].valor;
+function monthRange(mes: string) {
+  const [y, m] = mes.split("-").map(Number);
+  return {
+    inicio: new Date(y, m - 1, 1).toISOString(),
+    fim: new Date(y, m, 1).toISOString(),
+  };
+}
+
+export function FunilLeadsChart({ mes, lojaId }: Props) {
+  const { inicio, fim } = monthRange(mes);
+
+  const { data: rawCounts } = useQuery({
+    queryKey: ["funil-leads", mes, lojaId],
+    queryFn: async () => {
+      let q = supabase
+        .from("leads")
+        .select("status")
+        .gte("data_entrada", inicio)
+        .lt("data_entrada", fim);
+      if (lojaId !== "all") q = q.eq("loja_id", lojaId);
+      const { data } = await q;
+      const acc: Record<string, number> = {};
+      (data ?? []).forEach((l: any) => {
+        acc[l.status] = (acc[l.status] ?? 0) + 1;
+      });
+      return acc;
+    },
+  });
+
+  const counts = rawCounts ?? {};
+  // Cumulative: a lead at "proposta" already passed through "novo", "atendimento", "visita"
+  const cumulative = ORDEM.map((_, i) =>
+    ORDEM.slice(i).reduce((s, k) => s + (counts[k] ?? 0), 0)
+  );
+  const total = cumulative[0];
+  const convertidos = counts["convertido"] ?? 0;
   const taxa = total > 0 ? (convertidos / total) * 100 : 0;
 
-  const data = ETAPAS.map((e) => ({
-    ...e,
-    pct: total > 0 ? Math.round((e.valor / total) * 100) : 0,
+  const data = LABELS.map((label, i) => ({
+    etapa: label,
+    valor: cumulative[i],
+    cor: CORES[i],
+    pct: total > 0 ? Math.round((cumulative[i] / total) * 100) : 0,
   }));
 
   const taxaColor = taxa >= 20 ? "#12B76A" : taxa >= 10 ? "#E8A020" : "#D92D20";
