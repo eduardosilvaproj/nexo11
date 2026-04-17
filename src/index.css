@@ -140,4 +140,33 @@
     -webkit-text-fill-color: transparent;
     color: transparent;
   }
+
+  /* Sidebar typography per NEXO spec */
+  .nexo-sidebar-subtitle {
+    font-size: 11px;
+    color: var(--nexo-gray-text);
+  }
+  .nexo-sidebar-label {
+    font-size: 10px;
+    color: var(--nexo-gray-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+  }
+  .nexo-sidebar-user-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: #FFFFFF;
+  }
+  .nexo-sidebar-user-email {
+    font-size: 11px;
+    color: var(--nexo-gray-text);
+  }
+  .nexo-sidebar-logout {
+    color: var(--nexo-gray-text);
+  }
+  .nexo-sidebar-logout:hover {
+    color: var(--nexo-red) !important;
+    background: transparent !important;
+  }
 }
