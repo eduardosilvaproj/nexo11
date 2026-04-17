@@ -158,7 +158,7 @@ export default function Montagem() {
                   ) : (
                     <div className="flex flex-col gap-2">
                       {items.map((a) => {
-                        const eq = a.equipe_id ? equipeMap.get(a.equipe_id) : null;
+                        const eq = a.equipes ?? null;
                         const badge = STATUS_BADGE[a.status];
                         return (
                           <button
