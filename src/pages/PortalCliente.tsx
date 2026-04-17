@@ -212,19 +212,44 @@ export default function PortalCliente() {
 
   return (
     <div
-      className="min-h-screen flex flex-col"
+      className="portal-root min-h-screen flex flex-col"
       style={{ backgroundColor: "#F5F7FA" }}
     >
+      <style>{`
+        .portal-current-stage { display: none; }
+        @media (max-width: 480px) {
+          .portal-root .portal-header { padding: 16px !important; }
+          .portal-root .portal-header-inner {
+            flex-direction: column !important;
+            align-items: center !important;
+            text-align: center !important;
+            gap: 8px !important;
+          }
+          .portal-root .portal-header-right { text-align: center !important; align-items: center !important; }
+          .portal-root .portal-main { padding-left: 12px !important; padding-right: 12px !important; }
+          .portal-root .portal-card { padding: 16px !important; max-width: 100% !important; margin-top: 16px !important; }
+          .portal-root .portal-status-card { flex-direction: column !important; align-items: stretch !important; }
+          .portal-root .portal-status-right { text-align: left !important; }
+          .portal-root .portal-stepper > div { padding: 12px 8px !important; }
+          .portal-root .portal-stepper .h-8.w-8 { height: 24px !important; width: 24px !important; }
+          .portal-root .portal-stepper .h-8.w-8 svg { width: 12px !important; height: 12px !important; }
+          .portal-root .portal-stepper span.mt-2 { display: none !important; }
+          .portal-root .portal-current-stage { display: block !important; }
+          .portal-root .portal-nps-grid { display: grid !important; grid-template-columns: repeat(5, 1fr) !important; gap: 6px !important; }
+          .portal-root .portal-nps-grid > button { width: 100% !important; height: 44px !important; }
+        }
+      `}</style>
+
       {/* 1. Header público */}
-      <header style={{ backgroundColor: "#0D1117", padding: "20px 32px" }}>
-        <div className="max-w-3xl mx-auto flex items-center justify-between">
-          <div className="flex flex-col gap-1">
+      <header className="portal-header" style={{ backgroundColor: "#0D1117", padding: "20px 32px" }}>
+        <div className="portal-header-inner max-w-3xl mx-auto flex items-center justify-between">
+          <div className="flex flex-col gap-1 items-start">
             <LogoNexo size="lg" />
             <div style={{ fontSize: 12, color: "#6B7A90" }}>
               Acompanhamento de pedido
             </div>
           </div>
-          <div className="text-right flex flex-col gap-1">
+          <div className="portal-header-right text-right flex flex-col gap-1">
             <div style={{ color: "#fff", fontSize: 13, fontWeight: 500 }}>
               {contrato.lojas?.nome ?? numero}
             </div>
@@ -237,7 +262,7 @@ export default function PortalCliente() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-3xl w-full mx-auto px-6 py-8 space-y-6">
+      <main className="portal-main flex-1 max-w-3xl w-full mx-auto px-6 py-8 space-y-6">
         {/* 2. Status atual — card de destaque */}
         <section
           className="bg-white rounded-xl mx-auto flex items-center justify-between gap-6 flex-wrap"
