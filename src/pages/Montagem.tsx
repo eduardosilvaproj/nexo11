@@ -48,6 +48,8 @@ export default function Montagem() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [weekOffset, setWeekOffset] = useState(0);
+  const [editId, setEditId] = useState<string | null>(null);
+  const editAgendamento = agendamentos.find((a) => a.id === editId) ?? null;
 
   const inicioSemana = useMemo(
     () => startOfWeek(addWeeks(new Date(), weekOffset), { weekStartsOn: 1 }),
