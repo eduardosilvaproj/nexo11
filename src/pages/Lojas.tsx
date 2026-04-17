@@ -6,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { LojasKpiRow } from "@/components/lojas/LojasKpiRow";
 
 function buildMonthOptions(months = 12) {
   const opts: { value: string; label: string }[] = [];
@@ -70,8 +71,10 @@ export default function Lojas() {
           >
             + Nova loja
           </button>
-        </div>
       </div>
+
+      <LojasKpiRow mes={mes} />
+    </div>
     </div>
   );
 }
