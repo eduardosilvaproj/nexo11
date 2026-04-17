@@ -97,7 +97,7 @@ const App = () => (
                 </ProtectedRoute>
               } />
               <Route path="/lojas" element={
-                <ProtectedRoute roles={["admin","franqueador"]}>
+                <ProtectedRoute roles={["admin","franqueador"]} redirectTo="/" redirectMessage="Acesso restrito">
                   <Placeholder title="NEXO Lojas" description="Comparativo entre unidades." />
                 </ProtectedRoute>
               } />

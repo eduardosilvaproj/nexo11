@@ -1,18 +1,31 @@
+import { useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Database } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 
 interface Props {
   children: React.ReactNode;
   roles?: AppRole[]; // se vazio, basta estar autenticado
+  redirectTo?: string; // se setado, redireciona em vez de mostrar "acesso negado"
+  redirectMessage?: string;
 }
 
-export function ProtectedRoute({ children, roles }: Props) {
+export function ProtectedRoute({ children, roles, redirectTo, redirectMessage }: Props) {
   const { user, roles: userRoles, loading } = useAuth();
   const location = useLocation();
+
+  const denied =
+    !loading && user && roles && roles.length > 0 && !roles.some((r) => userRoles.includes(r));
+
+  useEffect(() => {
+    if (denied && redirectTo) {
+      toast.error(redirectMessage ?? "Acesso restrito");
+    }
+  }, [denied, redirectTo, redirectMessage]);
 
   if (loading) {
     return (
@@ -26,7 +39,10 @@ export function ProtectedRoute({ children, roles }: Props) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  if (roles && roles.length > 0 && !roles.some((r) => userRoles.includes(r))) {
+  if (denied) {
+    if (redirectTo) {
+      return <Navigate to={redirectTo} replace />;
+    }
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 p-12 text-center">
         <h2 className="text-xl font-semibold">Acesso negado</h2>
@@ -39,3 +55,4 @@ export function ProtectedRoute({ children, roles }: Props) {
 
   return <>{children}</>;
 }
+
