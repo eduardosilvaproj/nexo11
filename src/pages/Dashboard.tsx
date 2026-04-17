@@ -26,6 +26,7 @@ interface MetricCardProps {
   value: string;
   icon: LucideIcon;
   color: string;
+  valueColor?: string;
 }
 
 const cardStyle: React.CSSProperties = {
@@ -33,7 +34,7 @@ const cardStyle: React.CSSProperties = {
   borderRadius: "12px",
 };
 
-function MetricCard({ label, value, icon: Icon, color }: MetricCardProps) {
+function MetricCard({ label, value, icon: Icon, color, valueColor = "#0D1117" }: MetricCardProps) {
   return (
     <div className="relative bg-white p-5" style={cardStyle}>
       <Icon
@@ -43,7 +44,7 @@ function MetricCard({ label, value, icon: Icon, color }: MetricCardProps) {
       <p style={{ fontSize: 12, color: "#6B7A90" }}>{label}</p>
       <p
         className="mt-2"
-        style={{ fontSize: 24, fontWeight: 500, color: "#0D1117", lineHeight: 1.2 }}
+        style={{ fontSize: 24, fontWeight: 500, color: valueColor, lineHeight: 1.2 }}
       >
         {value}
       </p>
