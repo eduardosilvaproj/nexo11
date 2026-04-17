@@ -12,6 +12,7 @@ import { ContratoProducaoTab } from "@/components/contrato/ContratoProducaoTab";
 import { ContratoLogisticaTab } from "@/components/contrato/ContratoLogisticaTab";
 import { ContratoMontagemTab } from "@/components/contrato/ContratoMontagemTab";
 import { ContratoPosVendaTab } from "@/components/contrato/ContratoPosVendaTab";
+import { ContratoDreTab } from "@/components/contrato/ContratoDreTab";
 
 export default function ContratoDetail() {
   const { id } = useParams<{ id: string }>();
@@ -66,6 +67,12 @@ export default function ContratoDetail() {
             <ContratoMontagemTab contratoId={contrato.id} />
           ) : active === "pos_venda" ? (
             <ContratoPosVendaTab contratoId={contrato.id} />
+          ) : active === "dre" ? (
+            <ContratoDreTab
+              contratoId={contrato.id}
+              contratoNumero={contrato.id.slice(0, 8)}
+              contratoStatus={contrato.status}
+            />
           ) : (
             <div className="text-sm text-muted-foreground">
               Conteúdo da aba “{active}” em construção.
