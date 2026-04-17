@@ -263,56 +263,9 @@ export default function PortalCliente() {
           </div>
         </section>
 
-        {/* 3. Barra de progresso das etapas */}
-        <section className="bg-white rounded-xl shadow-sm p-6">
-          <h2
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#0D1117",
-              marginBottom: 20,
-            }}
-          >
-            Progresso do pedido
-          </h2>
-          <div className="flex items-center justify-between gap-2 overflow-x-auto">
-            {STAGES.map((s, i) => {
-              const Icon = s.icon;
-              const done = i < currentIdx || isFinalizado;
-              const active = i === currentIdx && !isFinalizado;
-              const color = done ? "#12B76A" : active ? "#1E6FBF" : "#CBD5E1";
-              return (
-                <div
-                  key={s.key}
-                  className="flex flex-col items-center"
-                  style={{ minWidth: 72 }}
-                >
-                  <div
-                    className="rounded-full flex items-center justify-center"
-                    style={{
-                      width: 40,
-                      height: 40,
-                      backgroundColor: done || active ? color : "#F1F5F9",
-                      color: done || active ? "#fff" : "#94A3B8",
-                    }}
-                  >
-                    <Icon size={18} />
-                  </div>
-                  <div
-                    className="text-center"
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 500,
-                      marginTop: 8,
-                      color: done || active ? "#0D1117" : "#94A3B8",
-                    }}
-                  >
-                    {s.label}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        {/* 3. Barra de progresso das etapas — reutiliza componente interno */}
+        <section className="mx-auto w-full" style={{ maxWidth: 680 }}>
+          <ContratoStepper current={contrato.status} />
         </section>
 
         {/* 4. Detalhes do contrato */}
