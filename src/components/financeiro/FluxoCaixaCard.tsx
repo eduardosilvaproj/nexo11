@@ -48,10 +48,10 @@ function CustomTooltip({ active, payload, label }: any) {
 }
 
 function KpiCard({
-  label, valor, hint, icon, color,
-}: { label: string; valor: string; hint?: string; icon: React.ReactNode; color: string }) {
+  label, valor, hint, icon, color, topBorder,
+}: { label: string; valor: string; hint?: string; icon: React.ReactNode; color: string; topBorder?: string }) {
   return (
-    <Card>
+    <Card style={topBorder ? { borderTop: `3px solid ${topBorder}` } : undefined}>
       <CardContent className="flex items-start justify-between gap-3 p-4">
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground">{label}</p>
