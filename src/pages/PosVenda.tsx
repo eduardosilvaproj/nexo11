@@ -351,6 +351,35 @@ export default function PosVenda() {
         />
       </div>
 
+      <div
+        className="mb-4 flex items-center gap-6"
+        style={{ borderBottom: "0.5px solid #E8ECF2" }}
+      >
+        {([
+          ["chamados", "Chamados"],
+          ["nps", "NPS"],
+        ] as const).map(([key, label]) => {
+          const active = tab === key;
+          return (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className="pb-2 -mb-px"
+              style={{
+                fontSize: 13,
+                fontWeight: active ? 600 : 500,
+                color: active ? "#1E6FBF" : "#6B7A90",
+                borderBottom: active ? "2px solid #1E6FBF" : "2px solid transparent",
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
+      {tab === "chamados" && (
+      <>
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-48">
