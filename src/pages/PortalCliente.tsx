@@ -425,10 +425,15 @@ export default function PortalCliente() {
 
       {/* 7. Rodapé */}
       <footer
-        className="text-center py-6"
-        style={{ fontSize: 12, color: "#B0BAC9" }}
+        className="text-center"
+        style={{ backgroundColor: "#0D1117", padding: "20px 32px", marginTop: 32 }}
       >
-        NEXO · Gestão de Planejados
+        <div style={{ fontSize: 13, color: "#fff" }}>
+          NEXO · Gestão de Planejados
+        </div>
+        <div style={{ fontSize: 11, color: "#6B7A90", marginTop: 4 }}>
+          Este link é exclusivo para acompanhamento do seu pedido
+        </div>
       </footer>
     </div>
   );
