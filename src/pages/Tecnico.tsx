@@ -1,51 +1,32 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
-import { Plus, ArrowRight, Loader2, Lock } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Loader2, Settings, Paperclip, ArrowRight } from "lucide-react";
 
 type Contrato = {
   id: string;
   cliente_nome: string;
   status: string;
-  valor_venda: number;
+  vendedor_id: string | null;
+  created_at: string;
 };
-
-type Checklist = {
-  id: string;
-  contrato_id: string;
-  item: string;
-  concluido: boolean;
-  observacao: string | null;
-  data: string | null;
-};
-
-const ITENS_PADRAO = [
-  "Medição final no local",
-  "Conferência de projeto técnico",
-  "Validação de materiais e acabamentos",
-  "Aprovação do cliente (assinatura técnica)",
-  "Liberação para produção",
-];
 
 export default function Tecnico() {
-  const qc = useQueryClient();
-  const [selectedContrato, setSelectedContrato] = useState<string | null>(null);
-  const [novoItem, setNovoItem] = useState("");
+  const navigate = useNavigate();
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [search, setSearch] = useState("");
 
-  const { data: contratos = [], isLoading: loadingContratos } = useQuery({
-    queryKey: ["contratos-tecnico"],
+  const { data: contratos = [], isLoading } = useQuery({
+    queryKey: ["contratos-tecnico-list"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contratos")
-        .select("id,cliente_nome,status,valor_venda")
+        .select("id,cliente_nome,status,vendedor_id,created_at")
         .in("status", ["tecnico", "comercial"])
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -53,258 +34,213 @@ export default function Tecnico() {
     },
   });
 
-  const { data: checklist = [], isLoading: loadingCheck } = useQuery({
-    queryKey: ["checklist", selectedContrato],
+  const contratoIds = contratos.map((c) => c.id);
+
+  const { data: checklists = [] } = useQuery({
+    queryKey: ["checklists-by-contratos", contratoIds],
+    enabled: contratoIds.length > 0,
     queryFn: async () => {
-      if (!selectedContrato) return [];
       const { data, error } = await supabase
         .from("checklists_tecnicos")
-        .select("*")
-        .eq("contrato_id", selectedContrato)
-        .order("created_at", { ascending: true });
+        .select("contrato_id, concluido")
+        .in("contrato_id", contratoIds);
       if (error) throw error;
-      return data as Checklist[];
-    },
-    enabled: !!selectedContrato,
-  });
-
-  const seedMutation = useMutation({
-    mutationFn: async () => {
-      if (!selectedContrato) return;
-      const rows = ITENS_PADRAO.map((item) => ({
-        contrato_id: selectedContrato,
-        item,
-      }));
-      const { error } = await supabase.from("checklists_tecnicos").insert(rows);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["checklist", selectedContrato] });
-      toast.success("Checklist padrão criado");
-    },
-    onError: (e: any) => toast.error(e.message),
-  });
-
-  const addMutation = useMutation({
-    mutationFn: async (item: string) => {
-      if (!selectedContrato) return;
-      const { error } = await supabase
-        .from("checklists_tecnicos")
-        .insert({ contrato_id: selectedContrato, item });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["checklist", selectedContrato] });
-      setNovoItem("");
-    },
-    onError: (e: any) => toast.error(e.message),
-  });
-
-  const toggleMutation = useMutation({
-    mutationFn: async ({ id, concluido }: { id: string; concluido: boolean }) => {
-      const { error } = await supabase
-        .from("checklists_tecnicos")
-        .update({ concluido, data: concluido ? new Date().toISOString() : null })
-        .eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["checklist", selectedContrato] }),
-    onError: (e: any) => toast.error(e.message),
-  });
-
-  const avancarMutation = useMutation({
-    mutationFn: async () => {
-      if (!selectedContrato) return;
-      const { error } = await supabase
-        .from("contratos")
-        .update({ status: "producao" })
-        .eq("id", selectedContrato);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Contrato avançado para Produção");
-      qc.invalidateQueries({ queryKey: ["contratos-tecnico"] });
-      setSelectedContrato(null);
-    },
-    onError: (e: any) => {
-      if (e.message?.includes("TRAVA_TECNICO")) {
-        toast.error("Trava: complete 100% do checklist antes de avançar");
-      } else {
-        toast.error(e.message);
-      }
+      return data ?? [];
     },
   });
 
-  const total = checklist.length;
-  const concluidos = checklist.filter((c) => c.concluido).length;
-  const progresso = total > 0 ? Math.round((concluidos / total) * 100) : 0;
-  const podeAvancar = total > 0 && concluidos === total;
-  const contratoAtual = contratos.find((c) => c.id === selectedContrato);
+  const { data: usuarios = [] } = useQuery({
+    queryKey: ["usuarios-min-tecnico"],
+    queryFn: async () => {
+      const { data } = await supabase.from("usuarios").select("id,nome");
+      return data ?? [];
+    },
+  });
+  const userMap = useMemo(() => new Map(usuarios.map((u) => [u.id, u.nome])), [usuarios]);
+
+  const { data: arquivosMap = {} } = useQuery({
+    queryKey: ["arquivos-by-contratos", contratoIds],
+    enabled: contratoIds.length > 0,
+    queryFn: async () => {
+      const result: Record<string, { name: string } | null> = {};
+      await Promise.all(
+        contratoIds.map(async (id) => {
+          const { data } = await supabase.storage
+            .from("contrato-arquivos")
+            .list(id, { limit: 1, sortBy: { column: "created_at", order: "desc" } });
+          result[id] = data && data.length > 0 ? { name: data[0].name } : null;
+        }),
+      );
+      return result;
+    },
+  });
+
+  const checklistStats = useMemo(() => {
+    const m = new Map<string, { total: number; done: number }>();
+    for (const ch of checklists) {
+      const cur = m.get(ch.contrato_id) ?? { total: 0, done: 0 };
+      cur.total += 1;
+      if (ch.concluido) cur.done += 1;
+      m.set(ch.contrato_id, cur);
+    }
+    return m;
+  }, [checklists]);
+
+  const filtered = contratos.filter((c) => {
+    if (statusFilter !== "all" && c.status !== statusFilter) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      if (!c.cliente_nome.toLowerCase().includes(q) && !c.id.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+
+  const handleDownload = async (contratoId: string, name: string) => {
+    const { data } = await supabase.storage
+      .from("contrato-arquivos")
+      .createSignedUrl(`${contratoId}/${name}`, 60);
+    if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+  };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">NEXO Técnico</h1>
-        <p className="text-sm text-muted-foreground">
-          Checklist técnico por contrato. 100% concluído libera para Produção.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">NEXO Técnico</h1>
+          <p className="text-sm text-muted-foreground">Contratos aguardando validação técnica</p>
+        </div>
+        <Button variant="outline" size="sm">
+          <Settings className="mr-2 h-4 w-4" />
+          Configurar checklist
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Contratos</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {loadingContratos ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : contratos.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum contrato em fase técnica.</p>
-            ) : (
-              contratos.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => setSelectedContrato(c.id)}
-                  className={`w-full rounded-md border p-3 text-left transition-colors ${
-                    selectedContrato === c.id
-                      ? "border-nexo-blue bg-nexo-blue-bg"
-                      : "border-border hover:bg-accent"
-                  }`}
-                >
-                  <p className="text-sm font-medium">{c.cliente_nome}</p>
-                  <div className="mt-1 flex items-center justify-between">
-                    <Badge variant="outline" className="text-xs">
-                      {c.status}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      R$ {Number(c.valor_venda).toLocaleString("pt-BR")}
-                    </span>
-                  </div>
-                </button>
-              ))
-            )}
-          </CardContent>
-        </Card>
+      <div className="flex flex-wrap items-center gap-3">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Todos os status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            <SelectItem value="comercial">Comercial</SelectItem>
+            <SelectItem value="tecnico">Técnico</SelectItem>
+          </SelectContent>
+        </Select>
+        <Input
+          placeholder="Buscar cliente ou nº..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="max-w-sm"
+        />
+      </div>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <CardTitle className="text-base">
-                  {contratoAtual ? `Checklist · ${contratoAtual.cliente_nome}` : "Selecione um contrato"}
-                </CardTitle>
-                {contratoAtual && (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Status atual: {contratoAtual.status}
-                  </p>
-                )}
-              </div>
-              {selectedContrato && (
-                <Button
-                  size="sm"
-                  disabled={!podeAvancar || avancarMutation.isPending || contratoAtual?.status !== "tecnico"}
-                  onClick={() => avancarMutation.mutate()}
-                >
-                  {podeAvancar ? <ArrowRight className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
-                  Avançar para Produção
-                </Button>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {!selectedContrato ? (
-              <p className="text-sm text-muted-foreground">
-                Escolha um contrato à esquerda para ver e editar o checklist.
-              </p>
-            ) : (
-              <>
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">
-                      {concluidos} de {total} concluídos
-                    </span>
-                    <span
-                      className={`font-medium ${
-                        progresso === 100
-                          ? "text-nexo-green-dark"
-                          : progresso >= 50
-                          ? "text-nexo-blue"
-                          : "text-nexo-amber"
-                      }`}
-                    >
-                      {progresso}%
-                    </span>
-                  </div>
-                  <Progress value={progresso} />
-                </div>
+      <div className="rounded-xl bg-white" style={{ border: "0.5px solid #E8ECF2" }}>
+        {isLoading ? (
+          <div className="flex items-center justify-center p-12">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="p-12 text-center">
+            <p className="text-sm font-medium" style={{ color: "#0D1117" }}>
+              Nenhum contrato em fase técnica
+            </p>
+            <p className="mt-1 text-xs" style={{ color: "#6B7A90" }}>
+              Contratos avançam para cá após assinatura no Comercial
+            </p>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nº</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Vendedor</TableHead>
+                <TableHead>Progresso checklist</TableHead>
+                <TableHead>Projeto</TableHead>
+                <TableHead>Trava</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((c) => {
+                const stats = checklistStats.get(c.id) ?? { total: 0, done: 0 };
+                const pct = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0;
+                const arquivo = arquivosMap[c.id];
+                const trava =
+                  stats.total === 0
+                    ? { label: "Aguardando", bg: "#E8ECF2", color: "#6B7A90" }
+                    : stats.done === stats.total
+                    ? { label: "Liberado ✓", bg: "#D1FAE5", color: "#05873C" }
+                    : { label: "Bloqueado", bg: "#FDECEA", color: "#E53935" };
 
-                {loadingCheck ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : checklist.length === 0 ? (
-                  <div className="rounded-md border border-dashed p-6 text-center">
-                    <p className="mb-3 text-sm text-muted-foreground">
-                      Nenhum item no checklist ainda.
-                    </p>
-                    <Button size="sm" onClick={() => seedMutation.mutate()} disabled={seedMutation.isPending}>
-                      Criar checklist padrão
-                    </Button>
-                  </div>
-                ) : (
-                  <ul className="space-y-2">
-                    {checklist.map((c) => (
-                      <li
-                        key={c.id}
-                        className="flex items-start gap-3 rounded-md border border-border p-3"
-                      >
-                        <Checkbox
-                          checked={c.concluido}
-                          onCheckedChange={(v) =>
-                            toggleMutation.mutate({ id: c.id, concluido: !!v })
-                          }
-                          className="mt-0.5"
-                        />
-                        <div className="flex-1">
-                          <p
-                            className={`text-sm ${
-                              c.concluido ? "text-muted-foreground line-through" : ""
-                            }`}
-                          >
-                            {c.item}
-                          </p>
-                          {c.data && (
-                            <p className="mt-0.5 text-xs text-muted-foreground">
-                              Concluído em {new Date(c.data).toLocaleString("pt-BR")}
-                            </p>
-                          )}
+                return (
+                  <TableRow key={c.id}>
+                    <TableCell className="font-mono text-xs text-muted-foreground">
+                      {c.id.slice(0, 8)}
+                    </TableCell>
+                    <TableCell className="font-medium">{c.cliente_nome}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {c.vendedor_id ? userMap.get(c.vendedor_id) ?? "—" : "—"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="h-2 overflow-hidden rounded-full"
+                          style={{ width: 120, backgroundColor: "#E8ECF2" }}
+                        >
+                          <div
+                            className="h-full transition-all"
+                            style={{ width: `${pct}%`, backgroundColor: "#1E6FBF" }}
+                          />
                         </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Adicionar novo item ao checklist..."
-                    value={novoItem}
-                    onChange={(e) => setNovoItem(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && novoItem.trim()) {
-                        addMutation.mutate(novoItem.trim());
-                      }
-                    }}
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => novoItem.trim() && addMutation.mutate(novoItem.trim())}
-                    disabled={!novoItem.trim() || addMutation.isPending}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+                        <span className="text-xs text-muted-foreground">
+                          {stats.done}/{stats.total} itens
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {arquivo ? (
+                        <button
+                          onClick={() => handleDownload(c.id, arquivo.name)}
+                          className="inline-flex items-center gap-1.5 text-xs hover:underline"
+                          style={{ color: "#1E6FBF" }}
+                        >
+                          <Paperclip className="h-3 w-3" />
+                          {arquivo.name.replace(/^\d+-/, "").slice(0, 24)}
+                        </button>
+                      ) : (
+                        <span
+                          className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                          style={{ backgroundColor: "#FEF3C7", color: "#E8A020" }}
+                        >
+                          Sem projeto
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
+                        style={{ backgroundColor: trava.bg, color: trava.color }}
+                      >
+                        {trava.label}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigate(`/contratos/${c.id}?tab=tecnico`)}
+                      >
+                        Abrir checklist
+                        <ArrowRight className="ml-1 h-3 w-3" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
       </div>
     </div>
   );
