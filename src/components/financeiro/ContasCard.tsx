@@ -91,6 +91,7 @@ export function ContasCard() {
     setFiltro,
     totalCor,
     acaoLabel,
+    variant,
   }: {
     titulo: string;
     arr: Conta[];
@@ -98,6 +99,7 @@ export function ContasCard() {
     setFiltro: (f: FiltroKey) => void;
     totalCor: string;
     acaoLabel: string;
+    variant: "receber" | "pagar";
   }) {
     const totalGeral = arr.filter((c) => c.status !== "cancelado").reduce((s, c) => s + Number(c.valor), 0);
     const rows = aplicaFiltro(arr, filtro);
