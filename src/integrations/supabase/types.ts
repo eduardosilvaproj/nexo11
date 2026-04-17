@@ -823,6 +823,79 @@ export type Database = {
           },
         ]
       }
+      transacoes: {
+        Row: {
+          categoria: string
+          contrato_id: string | null
+          created_at: string
+          criado_por: string | null
+          data_pagamento: string | null
+          data_vencimento: string
+          descricao: string
+          id: string
+          loja_id: string
+          observacoes: string | null
+          status: Database["public"]["Enums"]["transacao_status"]
+          tipo: Database["public"]["Enums"]["transacao_tipo"]
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          categoria: string
+          contrato_id?: string | null
+          created_at?: string
+          criado_por?: string | null
+          data_pagamento?: string | null
+          data_vencimento: string
+          descricao: string
+          id?: string
+          loja_id: string
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["transacao_status"]
+          tipo: Database["public"]["Enums"]["transacao_tipo"]
+          updated_at?: string
+          valor?: number
+        }
+        Update: {
+          categoria?: string
+          contrato_id?: string | null
+          created_at?: string
+          criado_por?: string | null
+          data_pagamento?: string | null
+          data_vencimento?: string
+          descricao?: string
+          id?: string
+          loja_id?: string
+          observacoes?: string | null
+          status?: Database["public"]["Enums"]["transacao_status"]
+          tipo?: Database["public"]["Enums"]["transacao_tipo"]
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transacoes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transacoes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transacoes_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1044,6 +1117,8 @@ export type Database = {
         | "convertido"
         | "perdido"
       op_status: "aguardando" | "em_corte" | "em_montagem" | "concluido"
+      transacao_status: "pendente" | "pago" | "cancelado"
+      transacao_tipo: "receita" | "despesa"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1201,6 +1276,8 @@ export const Constants = {
         "perdido",
       ],
       op_status: ["aguardando", "em_corte", "em_montagem", "concluido"],
+      transacao_status: ["pendente", "pago", "cancelado"],
+      transacao_tipo: ["receita", "despesa"],
     },
   },
 } as const
