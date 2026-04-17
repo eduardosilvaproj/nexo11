@@ -202,6 +202,9 @@ export default function Comercial() {
   const [convertLead, setConvertLead] = useState<Lead | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("leads");
+  const [filterStatus, setFilterStatus] = useState<"all" | LeadStatus>("all");
+  const [filterVendedor, setFilterVendedor] = useState<string>("all");
+  const [search, setSearch] = useState("");
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
@@ -257,7 +260,21 @@ export default function Comercial() {
 
   const activeLead = activeId ? leads.find((l) => l.id === activeId) : null;
 
-  const grouped = COLUMNS.map((c) => ({ ...c, leads: leads.filter((l) => l.status === c.id) }));
+  const filteredLeads = leads.filter((l) => {
+    if (filterStatus !== "all" && l.status !== filterStatus) return false;
+    if (filterVendedor !== "all" && l.vendedor_id !== filterVendedor) return false;
+    if (search.trim() && !l.nome.toLowerCase().includes(search.trim().toLowerCase())) return false;
+    return true;
+  });
+
+  const vendedoresUnicos = Array.from(
+    new Set(leads.map((l) => l.vendedor_id).filter(Boolean) as string[]),
+  );
+
+  const grouped = COLUMNS.map((c) => ({
+    ...c,
+    leads: filteredLeads.filter((l) => l.status === c.id),
+  }));
 
   return (
     <div className="flex h-full flex-col gap-4">
