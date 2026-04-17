@@ -66,6 +66,7 @@ function KpiCard({
 
 export function FluxoCaixaCard() {
   const [periodo, setPeriodo] = useState<"6m" | "3m">("6m");
+  const [mesAtivo, setMesAtivo] = useState<Date>(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
 
   const data = useMemo(() => {
     const base = periodo === "3m" ? SERIE_FAKE.slice(-3) : SERIE_FAKE;
