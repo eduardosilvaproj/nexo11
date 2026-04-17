@@ -509,6 +509,13 @@ export function FluxoCaixaCard() {
           </div>
         </CardContent>
       </Card>
+
+      <LancamentoFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        lojaId={lojaId}
+        onSaved={carregar}
+      />
     </div>
   );
 }
