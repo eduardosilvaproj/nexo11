@@ -266,6 +266,7 @@ export default function Tecnico() {
               <TableHead>Nº</TableHead>
               <TableHead>Cliente</TableHead>
               <TableHead>Vendedor</TableHead>
+              <TableHead>Responsável</TableHead>
               <TableHead>Progresso conferência</TableHead>
               <TableHead>Projeto</TableHead>
               <TableHead>Trava</TableHead>
