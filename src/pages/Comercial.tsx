@@ -318,7 +318,7 @@ export default function Comercial() {
                 key={col.id}
                 status={col.id}
                 title={col.title}
-                tone={col.tone}
+                
                 leads={col.leads}
                 onConvert={setConvertLead}
               />
