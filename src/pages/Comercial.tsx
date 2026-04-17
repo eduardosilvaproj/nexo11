@@ -20,6 +20,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LeadFormDialog } from "@/components/comercial/LeadFormDialog";
 import { ConvertLeadDialog } from "@/components/comercial/ConvertLeadDialog";
+import { ContratosTable } from "@/components/comercial/ContratosTable";
 import type { Database } from "@/integrations/supabase/types";
 
 type LeadStatus = Database["public"]["Enums"]["lead_status"];
