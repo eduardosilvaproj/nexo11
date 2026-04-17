@@ -115,9 +115,29 @@ export function FluxoCaixaCard() {
     ? ((mesAtual.saldo - mesAnterior.saldo) / Math.max(Math.abs(mesAnterior.saldo), 1)) * 100
     : 0;
 
-  // Previstos do mês ativo (sem dados reais ainda → R$ 0)
-  const entradasPrevistas = 0;
-  const saidasPrevistas = 0;
+  // Lançamentos do mês ativo (mock — começa vazio)
+  const [lancamentos, setLancamentos] = useState<Lancamento[]>([]);
+  const hojeStr = new Date().toISOString().slice(0, 10);
+
+  const lancamentosOrdenados = useMemo(
+    () => [...lancamentos].sort((a, b) => a.vencimento.localeCompare(b.vencimento)),
+    [lancamentos],
+  );
+
+  const entradasPrevistas = lancamentos
+    .filter((l) => l.tipo === "receita" && l.status !== "cancelado")
+    .reduce((s, l) => s + l.valor, 0);
+  const saidasPrevistas = lancamentos
+    .filter((l) => l.tipo === "despesa" && l.status !== "cancelado")
+    .reduce((s, l) => s + l.valor, 0);
+
+  function marcarPago(id: string) {
+    setLancamentos((arr) => arr.map((l) => (l.id === id ? { ...l, status: "pago" } : l)));
+  }
+  function cancelar(id: string) {
+    if (!window.confirm("Cancelar este lançamento?")) return;
+    setLancamentos((arr) => arr.map((l) => (l.id === id ? { ...l, status: "cancelado" } : l)));
+  }
   const saldoProjetado = entradasPrevistas - saidasPrevistas;
   const saldoColor = saldoProjetado >= 0 ? "#12B76A" : "#E53935";
 
