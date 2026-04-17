@@ -25,13 +25,13 @@ import type { Database } from "@/integrations/supabase/types";
 type LeadStatus = Database["public"]["Enums"]["lead_status"];
 type Lead = Database["public"]["Tables"]["leads"]["Row"];
 
-const COLUMNS: { id: LeadStatus; title: string; tone: string }[] = [
-  { id: "novo", title: "Novo", tone: "bg-nexo-gray-light text-nexo-gray-dark" },
-  { id: "atendimento", title: "Atendimento", tone: "bg-nexo-blue-bg text-nexo-blue" },
-  { id: "visita", title: "Visita", tone: "bg-nexo-blue-bg text-nexo-blue-dark" },
-  { id: "proposta", title: "Proposta", tone: "bg-nexo-amber-light text-nexo-amber" },
-  { id: "convertido", title: "Convertido", tone: "bg-nexo-green-light text-nexo-green-dark" },
-  { id: "perdido", title: "Perdido", tone: "bg-nexo-red-light text-nexo-red" },
+const COLUMNS: { id: LeadStatus; title: string }[] = [
+  { id: "novo", title: "Novo" },
+  { id: "atendimento", title: "Atendimento" },
+  { id: "visita", title: "Visita" },
+  { id: "proposta", title: "Proposta" },
+  { id: "convertido", title: "Convertido" },
+  { id: "perdido", title: "Perdido" },
 ];
 
 function formatDate(value: string | null) {
@@ -42,87 +42,151 @@ function formatDate(value: string | null) {
 function LeadCard({ lead, onConvert }: { lead: Lead; onConvert: (l: Lead) => void }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: lead.id });
 
+  const isConvertido = lead.status === "convertido";
+  const isPerdido = lead.status === "perdido";
+
+  const cardStyle: React.CSSProperties = {
+    background: "#FFFFFF",
+    border: "0.5px solid #E8ECF2",
+    borderRadius: 8,
+    padding: 12,
+    opacity: isPerdido ? 0.6 : 1,
+    borderLeft: isConvertido
+      ? "3px solid #12B76A"
+      : isPerdido
+        ? "3px solid #E53935"
+        : "0.5px solid #E8ECF2",
+  };
+
   return (
-    <Card
+    <div
       ref={setNodeRef}
-      className={`group border-nexo-border bg-card p-3 transition-shadow hover:shadow-md ${
+      {...attributes}
+      {...listeners}
+      className={`cursor-grab transition-shadow hover:shadow-sm active:cursor-grabbing ${
         isDragging ? "opacity-30" : ""
       }`}
+      style={cardStyle}
     >
-      <div className="flex items-start gap-2">
-        <button
-          {...attributes}
-          {...listeners}
-          className="mt-0.5 cursor-grab text-nexo-gray-mid hover:text-nexo-blue active:cursor-grabbing"
-          aria-label="Arrastar lead"
-        >
-          <GripVertical className="h-4 w-4" />
-        </button>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-foreground">{lead.nome}</p>
-          {lead.contato && (
-            <p className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
-              <Phone className="h-3 w-3" /> {lead.contato}
-            </p>
-          )}
-          <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Calendar className="h-3 w-3" /> {formatDate(lead.data_entrada)}
-            </span>
-            {lead.origem && <Badge variant="outline" className="text-[10px]">{lead.origem}</Badge>}
-          </div>
-          {lead.status !== "convertido" && lead.status !== "perdido" && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-2 h-7 w-full justify-start text-xs text-nexo-blue hover:bg-nexo-blue-bg hover:text-nexo-blue-dark"
-              onClick={() => onConvert(lead)}
-            >
-              <ArrowRightLeft className="mr-1 h-3 w-3" /> Converter em contrato
-            </Button>
-          )}
+      <p style={{ fontSize: 13, fontWeight: 500, color: "#0D1117" }} className="truncate">
+        {lead.nome}
+      </p>
+      {lead.contato && (
+        <p className="mt-0.5 truncate" style={{ fontSize: 12, color: "#6B7A90" }}>
+          {lead.contato}
+        </p>
+      )}
+
+      {lead.origem && (
+        <div className="mt-2">
+          <span
+            style={{
+              fontSize: 11,
+              background: "#E6F3FF",
+              color: "#1E6FBF",
+              padding: "2px 8px",
+              borderRadius: 999,
+            }}
+          >
+            {lead.origem}
+          </span>
         </div>
+      )}
+
+      <div className="mt-2 flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <span
+            className="inline-flex items-center justify-center"
+            style={{
+              width: 20,
+              height: 20,
+              borderRadius: 999,
+              background: "#E8ECF2",
+              color: "#6B7A90",
+              fontSize: 10,
+              fontWeight: 600,
+            }}
+          >
+            {lead.vendedor_id ? "•" : "?"}
+          </span>
+          <span style={{ fontSize: 11, color: "#6B7A90" }}>
+            {lead.vendedor_id ? "Vendedor" : "Sem responsável"}
+          </span>
+        </div>
+        <span style={{ fontSize: 11, color: "#B0BAC9" }}>{formatDate(lead.data_entrada)}</span>
       </div>
-    </Card>
+
+      {!isConvertido && !isPerdido && (
+        <button
+          onClick={() => onConvert(lead)}
+          className="mt-2 inline-flex w-full items-center justify-center gap-1 rounded-md py-1 transition-colors hover:bg-[#E6F3FF]"
+          style={{ fontSize: 11, color: "#1E6FBF", fontWeight: 500 }}
+        >
+          <ArrowRightLeft className="h-3 w-3" /> Converter em contrato
+        </button>
+      )}
+    </div>
   );
 }
 
 function Column({
   status,
   title,
-  tone,
   leads,
   onConvert,
 }: {
   status: LeadStatus;
   title: string;
-  tone: string;
   leads: Lead[];
   onConvert: (l: Lead) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
-    <div className="flex h-full min-w-[260px] flex-1 flex-col rounded-lg border border-nexo-border bg-nexo-bg-light/60">
-      <div className="flex items-center justify-between border-b border-nexo-border px-3 py-2">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-foreground">{title}</span>
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${tone}`}>
-            {leads.length}
-          </span>
-        </div>
+    <div
+      className="flex h-full flex-col"
+      style={{ width: 200, minWidth: 200, background: "#F5F7FA", borderRadius: 8 }}
+    >
+      <div className="flex items-center justify-between px-3 py-2.5">
+        <span
+          style={{
+            fontSize: 12,
+            color: "#6B7A90",
+            textTransform: "uppercase",
+            letterSpacing: "0.04em",
+            fontWeight: 600,
+          }}
+        >
+          {title}
+        </span>
+        <span
+          className="inline-flex items-center justify-center"
+          style={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: "#6B7A90",
+            background: "#E8ECF2",
+            borderRadius: 999,
+            padding: "1px 8px",
+            minWidth: 22,
+          }}
+        >
+          {leads.length}
+        </span>
       </div>
       <div
         ref={setNodeRef}
-        className={`flex flex-1 flex-col gap-2 p-2 transition-colors ${
-          isOver ? "bg-nexo-blue-bg/60" : ""
+        className={`flex flex-1 flex-col gap-2 px-2 pb-2 transition-colors ${
+          isOver ? "bg-[#E6F3FF]/40" : ""
         }`}
       >
         {leads.map((l) => (
           <LeadCard key={l.id} lead={l} onConvert={onConvert} />
         ))}
         {leads.length === 0 && (
-          <p className="py-8 text-center text-xs text-nexo-gray-mid">Sem leads</p>
+          <p className="py-8 text-center" style={{ fontSize: 11, color: "#B0BAC9" }}>
+            Sem leads
+          </p>
         )}
       </div>
     </div>
