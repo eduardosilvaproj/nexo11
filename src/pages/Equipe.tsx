@@ -4,6 +4,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { MembrosTab } from "@/components/equipe/MembrosTab";
 import { NovoMembroDialog } from "@/components/equipe/NovoMembroDialog";
 import { PontoTab } from "@/components/equipe/PontoTab";
+import { DesempenhoTab } from "@/components/equipe/DesempenhoTab";
 
 type Metric = {
   label: string;
