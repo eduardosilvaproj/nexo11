@@ -1,6 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, FileText, BarChart3 } from "lucide-react";
+import {
+  ComposedChart,
+  Area,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ReferenceLine,
+  ResponsiveContainer,
+} from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Select,
@@ -36,6 +47,9 @@ export default function Dre() {
   const [statusFiltro, setStatusFiltro] = useState<string>("all");
   const [rows, setRows] = useState<Row[]>([]);
   const [vendedores, setVendedores] = useState<{ id: string; nome: string }[]>([]);
+  const [evolucao, setEvolucao] = useState<
+    { mes: string; prevista: number | null; realizada: number | null }[]
+  >([]);
   const [loading, setLoading] = useState(true);
 
   // Opções de mês/ano (12 meses retroativos + atual)
