@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Settings, Paperclip } from "lucide-react";
+import { Loader2, Settings, Paperclip, ClipboardList } from "lucide-react";
 
 type Contrato = {
   id: string;
@@ -154,12 +154,13 @@ export default function Tecnico() {
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="p-12 text-center">
-            <p className="text-sm font-medium" style={{ color: "#0D1117" }}>
+          <div className="flex flex-col items-center justify-center p-12 text-center">
+            <ClipboardList size={32} style={{ color: "#B0BAC9" }} />
+            <p className="mt-3" style={{ fontSize: 13, color: "#6B7A90", fontWeight: 500 }}>
               Nenhum contrato em fase técnica
             </p>
-            <p className="mt-1 text-xs" style={{ color: "#6B7A90" }}>
-              Contratos avançam para cá após assinatura no Comercial
+            <p className="mt-1" style={{ fontSize: 13, color: "#6B7A90" }}>
+              Contratos aparecem aqui após assinatura no módulo Comercial
             </p>
           </div>
         ) : (
