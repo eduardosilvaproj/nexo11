@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { LogoNexo } from "@/components/LogoNexo";
 
 const operacao = [
   { title: "Comercial", url: "/comercial", icon: Users },
@@ -63,26 +64,23 @@ export function AppSidebar() {
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     isActive
-      ? "bg-primary/10 text-primary font-medium"
-      : "text-foreground hover:bg-muted/60";
+      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium border-l-2 border-sidebar-primary"
+      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground";
 
   const canSee = (item: { roles?: string[] }) =>
     !item.roles || item.roles.some((r) => roles.includes(r as any));
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b px-4 py-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-primary-foreground font-bold">
-            N
+      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
+        {collapsed ? (
+          <LogoNexo size="sm" />
+        ) : (
+          <div>
+            <LogoNexo size="md" />
+            <p className="mt-0.5 text-xs text-nexo-gray-text">Gestão de Planejados</p>
           </div>
-          {!collapsed && (
-            <div>
-              <p className="text-base font-bold tracking-tight text-primary">NEXO</p>
-              <p className="text-xs text-muted-foreground">Móveis Planejados</p>
-            </div>
-          )}
-        </div>
+        )}
       </SidebarHeader>
 
       <SidebarContent>

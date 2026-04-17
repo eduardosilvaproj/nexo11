@@ -57,6 +57,29 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        nexo: {
+          "bg-dark": "#0D1117",
+          "surface-dark": "#1A2332",
+          navy: "#2A3F5F",
+          "bg-light": "#F5F7FA",
+          "surface-light": "#FFFFFF",
+          "gray-dark": "#3D4A5C",
+          "gray-text": "#6B7A90",
+          "gray-mid": "#B0BAC9",
+          "gray-light": "#E8ECF2",
+          border: "#D1D9E6",
+          blue: "#1E6FBF",
+          "blue-light": "#00AAFF",
+          "blue-dark": "#0B4A8A",
+          "blue-bg": "#E6F3FF",
+          green: "#12B76A",
+          "green-dark": "#05873C",
+          "green-light": "#D1FAE5",
+          amber: "#E8A020",
+          "amber-light": "#FEF3C7",
+          red: "#E53935",
+          "red-light": "#FDECEA",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -65,25 +88,22 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        "nexo-pulse": {
+          "0%, 100%": { boxShadow: "0 0 0 0 rgba(0, 170, 255, 0.5)" },
+          "50%": { boxShadow: "0 0 0 8px rgba(0, 170, 255, 0)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "nexo-pulse": "nexo-pulse 2s ease-in-out infinite",
       },
     },
   },
