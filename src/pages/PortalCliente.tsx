@@ -183,18 +183,22 @@ export default function PortalCliente() {
       style={{ backgroundColor: "#F5F7FA" }}
     >
       {/* 1. Header público */}
-      <header style={{ backgroundColor: "#0D1117" }}>
-        <div className="max-w-3xl mx-auto px-6 py-6 flex items-center justify-between">
-          <LogoNexo size="lg" />
-          <div className="text-right">
-            <div
-              className="uppercase tracking-wider"
-              style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}
-            >
-              Acompanhamento
+      <header style={{ backgroundColor: "#0D1117", padding: "20px 32px" }}>
+        <div className="max-w-3xl mx-auto flex items-center justify-between">
+          <div className="flex flex-col gap-1">
+            <LogoNexo size="lg" />
+            <div style={{ fontSize: 12, color: "#6B7A90" }}>
+              Acompanhamento de pedido
             </div>
+          </div>
+          <div className="text-right flex flex-col gap-1">
             <div style={{ color: "#fff", fontSize: 13, fontWeight: 500 }}>
-              {numero}
+              {contrato.lojas?.nome ?? numero}
+            </div>
+            <div style={{ fontSize: 12, color: "#6B7A90" }}>
+              {contrato.lojas?.cidade && contrato.lojas?.estado
+                ? `${contrato.lojas.cidade} · ${contrato.lojas.estado}`
+                : numero}
             </div>
           </div>
         </div>
