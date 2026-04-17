@@ -44,7 +44,7 @@ const App = () => (
               } />
               <Route path="/producao" element={
                 <ProtectedRoute roles={["admin","gerente","tecnico"]}>
-                  <Placeholder title="NEXO Produção" description="Ordens de produção." />
+                  <Producao />
                 </ProtectedRoute>
               } />
               <Route path="/logistica" element={
