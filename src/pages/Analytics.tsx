@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AlertasBanner } from "@/components/analytics/AlertasBanner";
 
 type Loja = { id: string; nome: string };
 
@@ -42,6 +43,7 @@ export default function Analytics() {
 
   return (
     <div className="flex flex-col gap-6">
+      <AlertasBanner />
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
