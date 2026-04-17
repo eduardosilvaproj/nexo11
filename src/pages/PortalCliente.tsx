@@ -2,27 +2,19 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import {
-  Check,
-  Clock,
-  Link2Off,
-  Package,
-  Truck,
-  Wrench,
-  Headphones,
-  FileText,
-} from "lucide-react";
+import { Clock, Link2Off } from "lucide-react";
 import { LogoNexo } from "@/components/LogoNexo";
+import { ContratoStepper } from "@/components/contrato/ContratoStepper";
 
-const STAGES = [
-  { key: "comercial", label: "Comercial", icon: FileText },
-  { key: "tecnico", label: "Técnico", icon: Wrench },
-  { key: "producao", label: "Produção", icon: Package },
-  { key: "logistica", label: "Logística", icon: Truck },
-  { key: "montagem", label: "Montagem", icon: Wrench },
-  { key: "pos_venda", label: "Pós-venda", icon: Headphones },
-  { key: "finalizado", label: "Finalizado", icon: Check },
-];
+const STAGE_LABELS: Record<string, string> = {
+  comercial: "Comercial",
+  tecnico: "Técnico",
+  producao: "Produção",
+  logistica: "Logística",
+  montagem: "Montagem",
+  pos_venda: "Pós-venda",
+  finalizado: "Finalizado",
+};
 
 const fmtDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString("pt-BR") : "—";
@@ -181,11 +173,9 @@ export default function PortalCliente() {
     );
   }
 
-  const currentIdx = STAGES.findIndex((s) => s.key === contrato.status);
   const numero = "#" + contrato.id.slice(0, 8).toUpperCase();
   const isFinalizado = contrato.status === "finalizado";
-  const stageLabel =
-    STAGES.find((s) => s.key === contrato.status)?.label ?? contrato.status;
+  const stageLabel = STAGE_LABELS[contrato.status] ?? contrato.status;
 
   return (
     <div
@@ -273,56 +263,9 @@ export default function PortalCliente() {
           </div>
         </section>
 
-        {/* 3. Barra de progresso das etapas */}
-        <section className="bg-white rounded-xl shadow-sm p-6">
-          <h2
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#0D1117",
-              marginBottom: 20,
-            }}
-          >
-            Progresso do pedido
-          </h2>
-          <div className="flex items-center justify-between gap-2 overflow-x-auto">
-            {STAGES.map((s, i) => {
-              const Icon = s.icon;
-              const done = i < currentIdx || isFinalizado;
-              const active = i === currentIdx && !isFinalizado;
-              const color = done ? "#12B76A" : active ? "#1E6FBF" : "#CBD5E1";
-              return (
-                <div
-                  key={s.key}
-                  className="flex flex-col items-center"
-                  style={{ minWidth: 72 }}
-                >
-                  <div
-                    className="rounded-full flex items-center justify-center"
-                    style={{
-                      width: 40,
-                      height: 40,
-                      backgroundColor: done || active ? color : "#F1F5F9",
-                      color: done || active ? "#fff" : "#94A3B8",
-                    }}
-                  >
-                    <Icon size={18} />
-                  </div>
-                  <div
-                    className="text-center"
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 500,
-                      marginTop: 8,
-                      color: done || active ? "#0D1117" : "#94A3B8",
-                    }}
-                  >
-                    {s.label}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        {/* 3. Barra de progresso das etapas — reutiliza componente interno */}
+        <section className="mx-auto w-full" style={{ maxWidth: 680 }}>
+          <ContratoStepper current={contrato.status} />
         </section>
 
         {/* 4. Detalhes do contrato */}
