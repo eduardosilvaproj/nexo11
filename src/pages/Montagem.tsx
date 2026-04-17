@@ -495,6 +495,7 @@ function EditarAgendamentoDialog({
   onOpenChange: (o: boolean) => void;
   onChanged: () => void;
 }) {
+  const navigate = useNavigate();
   const [equipeId, setEquipeId] = useState("");
   const [data, setData] = useState<Date | undefined>();
   const [ini, setIni] = useState("08:00");
