@@ -393,73 +393,33 @@ export default function PortalCliente() {
           })()}
         </section>
 
-        {/* 6. NPS — somente se ainda não respondido */}
-        {!npsRespondido && (
-          <section className="bg-white rounded-xl shadow-sm p-6">
-            <h2
+        {/* 6. NPS — coleta pública (somente pos_venda ou finalizado) */}
+        {(contrato.status === "pos_venda" || contrato.status === "finalizado") && (
+          npsRespondido ? (
+            <section
+              className="rounded-xl mx-auto w-full text-center"
               style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: "#0D1117",
-                marginBottom: 6,
-              }}
-            >
-              Como foi sua experiência?
-            </h2>
-            <p style={{ fontSize: 13, color: "#6B7A90", marginBottom: 16 }}>
-              De 0 a 10, qual a chance de você nos recomendar?
-            </p>
-            <div className="flex flex-wrap gap-2 mb-4">
-              {Array.from({ length: 11 }, (_, i) => i).map((n) => {
-                const selected = npsNota === n;
-                return (
-                  <button
-                    key={n}
-                    onClick={() => setNpsNota(n)}
-                    className="rounded-md transition-colors"
-                    style={{
-                      width: 40,
-                      height: 40,
-                      fontSize: 14,
-                      fontWeight: 500,
-                      border: `1px solid ${selected ? "#1E6FBF" : "#E8ECF2"}`,
-                      backgroundColor: selected ? "#1E6FBF" : "#fff",
-                      color: selected ? "#fff" : "#0D1117",
-                    }}
-                  >
-                    {n}
-                  </button>
-                );
-              })}
-            </div>
-            <textarea
-              value={npsComentario}
-              onChange={(e) => setNpsComentario(e.target.value)}
-              placeholder="Deixe um comentário (opcional)"
-              rows={3}
-              className="w-full rounded-md p-3 mb-4"
-              style={{
-                fontSize: 13,
-                border: "1px solid #E8ECF2",
-                color: "#0D1117",
-                resize: "vertical",
-              }}
-            />
-            <button
-              onClick={handleSubmitNps}
-              disabled={npsNota === null || npsSubmitting}
-              className="rounded-md transition-opacity disabled:opacity-50"
-              style={{
-                backgroundColor: "#1E6FBF",
-                color: "#fff",
+                maxWidth: 680,
+                backgroundColor: "#F0FDF9",
+                border: "1px solid #12B76A",
+                padding: 20,
                 fontSize: 14,
                 fontWeight: 500,
-                padding: "10px 20px",
+                color: "#05873C",
               }}
             >
-              {npsSubmitting ? "Enviando…" : "Enviar avaliação"}
-            </button>
-          </section>
+              Avaliação registrada — obrigado! ★
+            </section>
+          ) : (
+            <NpsCard
+              nota={npsNota}
+              setNota={setNpsNota}
+              comentario={npsComentario}
+              setComentario={setNpsComentario}
+              onSubmit={handleSubmitNps}
+              submitting={npsSubmitting}
+            />
+          )
         )}
       </main>
 
