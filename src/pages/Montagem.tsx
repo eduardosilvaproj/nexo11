@@ -311,13 +311,53 @@ function AgendarDialog({
     enabled: open,
   });
 
+  const dataStr = data ? format(data, "yyyy-MM-dd") : "";
+
+  // Busca agendamentos existentes da equipe na data selecionada
+  const { data: existentes = [] } = useQuery({
+    queryKey: ["agendamentos-conflito", equipeId, dataStr],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("agendamentos_montagem")
+        .select("id, hora_inicio, hora_fim, contrato_id")
+        .eq("equipe_id", equipeId)
+        .eq("data", dataStr)
+        .neq("status", "cancelado");
+      return data ?? [];
+    },
+    enabled: open && !!equipeId && !!dataStr,
+  });
+
+  const equipeSel = equipes.find((e) => e.id === equipeId);
+  const capacidade = (equipeSel as any)?.capacidade_horas_dia ?? 8;
+
+  const novaIni = ini;
+  const novaFim = fim;
+  const conflito = existentes.find((a) => {
+    if (!a.hora_inicio || !a.hora_fim || !novaIni || !novaFim) return false;
+    return a.hora_inicio < novaFim && novaIni < a.hora_fim;
+  });
+
+  const horasReservadas = existentes.reduce(
+    (acc, a) => acc + diffHoras(a.hora_inicio ?? "", a.hora_fim ?? ""),
+    0
+  );
+  const horasNovas = diffHoras(novaIni, novaFim);
+  const excedeCapacidade = equipeId && horasReservadas + horasNovas > capacidade;
+
   const mut = useMutation({
     mutationFn: async () => {
       if (!contratoId || !data) throw new Error("Preencha contrato e data");
+      if (novaIni && novaFim && novaIni >= novaFim)
+        throw new Error("Hora fim deve ser maior que hora início");
+      if (conflito)
+        throw new Error(`Conflito de horário: equipe já agendada das ${conflito.hora_inicio?.slice(0, 5)} às ${conflito.hora_fim?.slice(0, 5)}`);
+      if (excedeCapacidade)
+        throw new Error(`Excede capacidade diária da equipe (${capacidade}h). Já reservadas: ${horasReservadas.toFixed(1)}h`);
       const { error } = await supabase.from("agendamentos_montagem").insert({
         contrato_id: contratoId,
         equipe_id: equipeId || null,
-        data: format(data, "yyyy-MM-dd"),
+        data: dataStr,
         hora_inicio: ini || null,
         hora_fim: fim || null,
       });
