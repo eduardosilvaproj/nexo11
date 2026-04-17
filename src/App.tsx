@@ -21,6 +21,7 @@ import Dre from "./pages/Dre";
 import Financeiro from "./pages/Financeiro";
 import Comissoes from "./pages/Comissoes";
 import ContratoDetail from "./pages/ContratoDetail";
+import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -102,7 +103,11 @@ const App = () => (
               } />
 
               {/* Inteligência */}
-              <Route path="/analytics" element={<Placeholder title="NEXO Analytics" />} />
+              <Route path="/analytics" element={
+                <ProtectedRoute roles={["admin","gerente","franqueador"]}>
+                  <Analytics />
+                </ProtectedRoute>
+              } />
               <Route path="/integracoes" element={
                 <ProtectedRoute roles={["admin"]}>
                   <Placeholder title="NEXO Integrações" />
