@@ -199,7 +199,7 @@ export function ComissoesRelatorioTab({
     return () => {
       cancel = true;
     };
-  }, [inicio, fim, regra]);
+  }, [inicio, fim, regra, apenasProprio]);
 
   const totais = useMemo(() => {
     const fat = linhas.reduce((s, l) => s + l.faturamento, 0);
