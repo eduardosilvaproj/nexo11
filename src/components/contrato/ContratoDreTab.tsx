@@ -28,6 +28,14 @@ const marginColor = (m: number) => {
 };
 
 export function ContratoDreTab({ contratoId, contratoNumero, contratoStatus }: ContratoDreTabProps) {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("print") === "1") {
+      const t = setTimeout(() => window.print(), 600);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
   const { data: dre } = useQuery({
     queryKey: ["dre-tab", contratoId],
     queryFn: async () => {
