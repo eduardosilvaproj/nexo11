@@ -166,11 +166,33 @@ export function ComissoesRelatorioTab({ mes, mesLabel, regra = REGRA_PADRAO }: P
     return { fat, base, bonus, total, margemPond };
   }, [linhas]);
 
-  function confirmarPago() {
-    if (!alvo) return;
-    setPagos((p) => new Set(p).add(alvo.vendedor_id));
-    toast.success("Comissão marcada como paga");
-    setAlvo(null);
+  async function confirmarPago() {
+    if (!alvo || confirmando) return;
+    setConfirmando(true);
+    try {
+      const periodo = mesLabel ?? mes;
+      const descricao = `Comissão ${periodo} — base ${fmtBRL(alvo.base)} + bônus ${fmtBRL(
+        alvo.bonus
+      )} = ${fmtBRL(alvo.total)}. Pago em ${dataPagamento}.`;
+      const linhasLog = alvo.contrato_ids.map((cid) => ({
+        contrato_id: cid,
+        acao: "comissao_paga",
+        titulo: "Comissão paga",
+        descricao,
+      }));
+      if (linhasLog.length) {
+        const { error } = await supabase.from("contrato_logs").insert(linhasLog);
+        if (error) throw error;
+      }
+      setPagos((p) => new Set(p).add(alvo.vendedor_id));
+      toast.success(`Comissão de ${alvo.nome} marcada como paga`);
+      setAlvo(null);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Erro ao registrar pagamento";
+      toast.error(msg);
+    } finally {
+      setConfirmando(false);
+    }
   }
 
   const rankFat = useMemo(
