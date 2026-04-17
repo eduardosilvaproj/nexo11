@@ -12,6 +12,7 @@ import Placeholder from "./pages/Placeholder";
 import Comercial from "./pages/Comercial";
 import Tecnico from "./pages/Tecnico";
 import Producao from "./pages/Producao";
+import Logistica from "./pages/Logistica";
 import ContratoDetail from "./pages/ContratoDetail";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -50,8 +51,8 @@ const App = () => (
                 </ProtectedRoute>
               } />
               <Route path="/logistica" element={
-                <ProtectedRoute roles={["admin","gerente"]}>
-                  <Placeholder title="NEXO Logística" description="Entregas e fretes." />
+                <ProtectedRoute>
+                  <Logistica />
                 </ProtectedRoute>
               } />
               <Route path="/montagem" element={
