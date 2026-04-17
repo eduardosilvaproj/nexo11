@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { Eye, Plus, Search } from "lucide-react";
+import { CheckCircle2, Eye, Plus, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -29,10 +29,17 @@ type ChamadoTipo = Database["public"]["Enums"]["chamado_tipo"];
 type ChamadoStatus = Database["public"]["Enums"]["chamado_status"];
 
 const TIPO_LABEL: Record<ChamadoTipo, string> = {
-  assistencia: "Assistência",
+  assistencia: "Assistência técnica",
   reclamacao: "Reclamação",
   garantia: "Garantia",
   solicitacao: "Solicitação",
+};
+
+const TIPO_BADGE: Record<ChamadoTipo, { bg: string; fg: string }> = {
+  assistencia: { bg: "#E6F3FF", fg: "#1E6FBF" },
+  reclamacao: { bg: "#FDECEA", fg: "#E53935" },
+  garantia: { bg: "#EEEDFE", fg: "#534AB7" },
+  solicitacao: { bg: "#E8ECF2", fg: "#6B7A90" },
 };
 
 const STATUS_LABEL: Record<ChamadoStatus, string> = {
@@ -42,7 +49,7 @@ const STATUS_LABEL: Record<ChamadoStatus, string> = {
 };
 
 const STATUS_BADGE: Record<ChamadoStatus, { bg: string; fg: string }> = {
-  aberto: { bg: "#FEE2E2", fg: "#E53935" },
+  aberto: { bg: "#FDECEA", fg: "#E53935" },
   em_andamento: { bg: "#FEF3C7", fg: "#E8A020" },
   resolvido: { bg: "#D1FAE5", fg: "#05873C" },
 };
@@ -419,19 +426,6 @@ export default function PosVenda() {
       {tab === "chamados" && (
       <>
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
-            {(Object.keys(STATUS_LABEL) as ChamadoStatus[]).map((s) => (
-              <SelectItem key={s} value={s}>
-                {STATUS_LABEL[s]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         <Select value={tipoFilter} onValueChange={setTipoFilter}>
           <SelectTrigger className="w-48">
             <SelectValue />
@@ -445,11 +439,24 @@ export default function PosVenda() {
             ))}
           </SelectContent>
         </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os status</SelectItem>
+            {(Object.keys(STATUS_LABEL) as ChamadoStatus[]).map((s) => (
+              <SelectItem key={s} value={s}>
+                {STATUS_LABEL[s]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="pl-9"
-            placeholder="Buscar cliente, nº ou descrição..."
+            placeholder="Buscar cliente ou nº..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -463,7 +470,7 @@ export default function PosVenda() {
         <table className="w-full">
           <thead style={{ backgroundColor: "#F7F9FC" }}>
             <tr>
-              {["Nº", "Cliente", "Tipo", "Título", "Aberto em", "NPS", "Status", "Ações"].map(
+              {["Nº", "Contrato", "Cliente", "Tipo", "Título", "Status", "Custo", "Aberto em", "Ações"].map(
                 (h) => (
                   <th
                     key={h}
@@ -485,53 +492,84 @@ export default function PosVenda() {
           <tbody>
             {isLoading && (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                <td colSpan={9} className="px-4 py-8 text-center text-sm text-muted-foreground">
                   Carregando...
                 </td>
               </tr>
             )}
             {!isLoading && filtered.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                  Nenhum chamado encontrado.
+                <td colSpan={9} className="px-12 py-12 text-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <CheckCircle2 className="h-10 w-10" style={{ color: "#12B76A" }} />
+                    <div style={{ color: "#12B76A", fontSize: 14, fontWeight: 500 }}>
+                      Nenhum chamado aberto ✓
+                    </div>
+                  </div>
                 </td>
               </tr>
             )}
-            {filtered.map((c) => {
+            {filtered.map((c, idx) => {
               const cliente =
                 (c as { contratos?: { cliente_nome?: string } }).contratos?.cliente_nome;
               const tituloChamado = (c.descricao ?? "").split("\n")[0];
-              const badge = STATUS_BADGE[c.status];
+              const statusBadge = STATUS_BADGE[c.status];
+              const tipoBadge = TIPO_BADGE[c.tipo];
+              const custoNum = Number(c.custo) || 0;
+              const rowBg = c.status === "aberto" ? "#FFF8F8" : undefined;
               return (
-                <tr key={c.id} style={{ borderTop: "0.5px solid #E8ECF2" }}>
+                <tr
+                  key={c.id}
+                  style={{ borderTop: "0.5px solid #E8ECF2", backgroundColor: rowBg }}
+                >
+                  <td className="px-4 py-3 text-sm font-medium" style={{ color: "#6B7A90" }}>
+                    {String(idx + 1).padStart(3, "0")}
+                  </td>
                   <td className="px-4 py-3 text-sm font-medium">
                     #{c.contrato_id?.slice(0, 4)}
                   </td>
                   <td className="px-4 py-3 text-sm">{cliente ?? "—"}</td>
-                  <td className="px-4 py-3 text-sm">{TIPO_LABEL[c.tipo]}</td>
-                  <td className="px-4 py-3 text-sm">{tituloChamado || "—"}</td>
-                  <td className="px-4 py-3 text-sm">
-                    {new Date(c.data_abertura).toLocaleDateString("pt-BR")}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    {typeof c.nps === "number" ? (
-                      <span style={{ color: npsColor(c.nps), fontWeight: 600 }}>{c.nps}</span>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
                   <td className="px-4 py-3">
                     <span
                       className="inline-flex items-center rounded-full px-2.5 py-0.5"
                       style={{
-                        backgroundColor: badge.bg,
-                        color: badge.fg,
+                        backgroundColor: tipoBadge.bg,
+                        color: tipoBadge.fg,
+                        fontSize: 11,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {TIPO_LABEL[c.tipo]}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-sm">{tituloChamado || "—"}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className="inline-flex items-center rounded-full px-2.5 py-0.5"
+                      style={{
+                        backgroundColor: statusBadge.bg,
+                        color: statusBadge.fg,
                         fontSize: 11,
                         fontWeight: 500,
                       }}
                     >
                       {STATUS_LABEL[c.status]}
                     </span>
+                  </td>
+                  <td
+                    className="px-4 py-3 text-sm"
+                    style={{
+                      color: custoNum > 0 ? "#E53935" : "#B0BAC9",
+                      fontWeight: custoNum > 0 ? 600 : 400,
+                    }}
+                  >
+                    {custoNum.toLocaleString("pt-BR", {
+                      style: "currency",
+                      currency: "BRL",
+                    })}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {new Date(c.data_abertura).toLocaleDateString("pt-BR")}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
