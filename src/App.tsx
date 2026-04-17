@@ -12,6 +12,7 @@ import Placeholder from "./pages/Placeholder";
 import Comercial from "./pages/Comercial";
 import Tecnico from "./pages/Tecnico";
 import Producao from "./pages/Producao";
+import ContratoDetail from "./pages/ContratoDetail";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -37,7 +38,7 @@ const App = () => (
 
               {/* Operação */}
               <Route path="/comercial" element={<Comercial />} />
-              <Route path="/contratos/:id" element={<Placeholder title="Detalhe do contrato" description="Tela em construção." />} />
+              <Route path="/contratos/:id" element={<ContratoDetail />} />
               <Route path="/tecnico" element={
                 <ProtectedRoute roles={["admin","gerente","tecnico"]}>
                   <Tecnico />
