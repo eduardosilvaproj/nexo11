@@ -111,6 +111,6 @@ export default function Lojas() {
         <div style={{ fontSize: 13, color: "#6B7A90" }}>Comparativo em breve.</div>
       )}
     </div>
-    </div>
   );
 }
+
