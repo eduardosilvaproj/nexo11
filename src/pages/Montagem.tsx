@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { checkAgendamentoConflict, diffHoras as diffH } from "@/lib/agendamento-conflict";
 
 const STATUS_BADGE: Record<string, { bg: string; fg: string; label: string }> = {
   agendado: { bg: "#E6F3FF", fg: "#1E6FBF", label: "Agendado" },
