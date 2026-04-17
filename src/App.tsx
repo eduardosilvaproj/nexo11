@@ -17,6 +17,7 @@ import Montagem from "./pages/Montagem";
 import Equipes from "./pages/Equipes";
 import PosVenda from "./pages/PosVenda";
 import Dre from "./pages/Dre";
+import Financeiro from "./pages/Financeiro";
 import ContratoDetail from "./pages/ContratoDetail";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -74,7 +75,7 @@ const App = () => (
               {/* Gestão */}
               <Route path="/financeiro" element={
                 <ProtectedRoute roles={["admin","gerente","franqueador"]}>
-                  <Placeholder title="NEXO Financeiro" />
+                  <Financeiro />
                 </ProtectedRoute>
               } />
               <Route path="/comissoes" element={
