@@ -963,6 +963,21 @@ export type Database = {
           },
         ]
       }
+      vw_ponto_equilibrio: {
+        Row: {
+          ano: number | null
+          custo_fixo_total: number | null
+          faturamento_realizado: number | null
+          loja_id: string | null
+          margem_media: number | null
+          mes: string | null
+          mes_num: number | null
+          pe_calculado: number | null
+          ticket_medio: number | null
+          total_contratos: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       avancar_contrato: {

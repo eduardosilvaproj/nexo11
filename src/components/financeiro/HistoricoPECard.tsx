@@ -1,18 +1,14 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
+  Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Row = { mes: string; pe: number; faturamento: number };
 
-const DATA: Row[] = [
+const FALLBACK: Row[] = [
   { mes: "Nov", pe: 135000, faturamento: 142000 },
   { mes: "Dez", pe: 135000, faturamento: 168000 },
   { mes: "Jan", pe: 148000, faturamento: 125000 },
@@ -20,6 +16,8 @@ const DATA: Row[] = [
   { mes: "Mar", pe: 148000, faturamento: 184000 },
   { mes: "Abr", pe: 155000, faturamento: 0 },
 ];
+
+const MES_ABREV = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 
 function fmtBRL(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -35,10 +33,7 @@ function CustomTooltip({ active, payload, label }: any) {
   const diff = row.faturamento - row.pe;
   const isLucro = diff >= 0;
   return (
-    <div
-      className="rounded-md border bg-white p-3 text-sm shadow-md"
-      style={{ borderColor: "#E8ECF2" }}
-    >
+    <div className="rounded-md border bg-white p-3 text-sm shadow-md" style={{ borderColor: "#E8ECF2" }}>
       <p className="mb-1 font-medium">{label}</p>
       <p style={{ color: "#1E6FBF" }}>PE do mês: {fmtBRL(row.pe)}</p>
       <p style={{ color: "#12B76A" }}>Faturamento: {fmtBRL(row.faturamento)}</p>
@@ -50,8 +45,43 @@ function CustomTooltip({ active, payload, label }: any) {
 }
 
 export function HistoricoPECard() {
-  // Build segments to color the gap area: green where fat>=pe, red where fat<pe
-  const enriched = DATA.map((d) => ({
+  const { perfil } = useAuth();
+  const lojaId = perfil?.loja_id ?? null;
+  const [data, setData] = useState<Row[]>(FALLBACK);
+
+  useEffect(() => {
+    if (!lojaId) return;
+    (async () => {
+      // Last 6 months including current
+      const start = new Date();
+      start.setMonth(start.getMonth() - 5, 1);
+      const startKey = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-01`;
+      const { data: rows, error } = await supabase
+        .from("vw_ponto_equilibrio")
+        .select("mes, pe_calculado, faturamento_realizado")
+        .eq("loja_id", lojaId)
+        .gte("mes", startKey)
+        .order("mes", { ascending: true });
+
+      if (error || !rows || rows.length === 0) return; // keep fallback
+
+      // Build a 6-month series, filling missing months with zeros
+      const series: Row[] = [];
+      for (let i = 0; i < 6; i++) {
+        const d = new Date(start.getFullYear(), start.getMonth() + i, 1);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+        const found = rows.find((r: any) => String(r.mes).startsWith(key.slice(0, 7)));
+        series.push({
+          mes: MES_ABREV[d.getMonth()],
+          pe: Number(found?.pe_calculado ?? 0),
+          faturamento: Number(found?.faturamento_realizado ?? 0),
+        });
+      }
+      setData(series);
+    })();
+  }, [lojaId]);
+
+  const enriched = data.map((d) => ({
     ...d,
     lucro: d.faturamento >= d.pe ? d.faturamento - d.pe : 0,
     deficit: d.faturamento < d.pe ? d.pe - d.faturamento : 0,
@@ -89,12 +119,9 @@ export function HistoricoPECard() {
                   { value: "faturamento", type: "line", color: "#12B76A" },
                 ]}
               />
-              {/* Stacked invisible base + lucro/déficit to color the gap area */}
               <Area type="monotone" dataKey="base" stackId="gap" stroke="none" fill="transparent" legendType="none" tooltipType="none" />
               <Area type="monotone" dataKey="lucro" stackId="gap" stroke="none" fill="#12B76A" fillOpacity={0.18} legendType="none" tooltipType="none" />
               <Area type="monotone" dataKey="deficit" stackId="gap" stroke="none" fill="#E53935" fillOpacity={0.15} legendType="none" tooltipType="none" />
-
-              {/* Main lines + faint area fill */}
               <Area type="monotone" dataKey="pe" stroke="#1E6FBF" strokeWidth={1.5} fill="url(#peFill)" />
               <Area type="monotone" dataKey="faturamento" stroke="#12B76A" strokeWidth={1.5} fill="url(#fatFill)" />
             </AreaChart>

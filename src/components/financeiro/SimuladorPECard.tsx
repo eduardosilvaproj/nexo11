@@ -8,7 +8,7 @@ interface Props {
   mes: string; // 'YYYY-MM-01'
 }
 
-const TICKET_MEDIO = 35000;
+const TICKET_MEDIO_FALLBACK = 35000;
 
 function fmtBRL(v: number) {
   if (!isFinite(v)) return "—";
@@ -23,6 +23,7 @@ export function SimuladorPECard({ custoFixoTotal, mes }: Props) {
   const [custoFixo, setCustoFixo] = useState<number>(48000);
   const [meta, setMeta] = useState<number>(0);
   const [faturamentoAtual, setFaturamentoAtual] = useState<number>(0);
+  const [ticketMedio, setTicketMedio] = useState<number>(TICKET_MEDIO_FALLBACK);
   const [manualOverride, setManualOverride] = useState<boolean>(false);
 
   // Sync custo fixo with left column total (unless user manually overrode it)
@@ -41,28 +42,29 @@ export function SimuladorPECard({ custoFixoTotal, mes }: Props) {
     if (custoFixoTotal > 0) setCustoFixo(Math.round(custoFixoTotal));
   }
 
-  // Load faturamento atual from vw_contratos_dre for the selected month
+  // Load faturamento + ticket médio for the selected month from vw_ponto_equilibrio
   useEffect(() => {
     if (!lojaId || !mes) return;
-    const start = mes;
-    const d = new Date(mes);
-    d.setMonth(d.getMonth() + 1);
-    const end = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
     (async () => {
       const { data, error } = await supabase
-        .from("vw_contratos_dre")
-        .select("valor_venda,created_at")
+        .from("vw_ponto_equilibrio")
+        .select("faturamento_realizado, ticket_medio")
         .eq("loja_id", lojaId)
-        .gte("created_at", start)
-        .lt("created_at", end);
-      if (error) { setFaturamentoAtual(0); return; }
-      setFaturamentoAtual((data ?? []).reduce((s, r) => s + Number(r.valor_venda || 0), 0));
+        .eq("mes", mes)
+        .maybeSingle();
+      if (error || !data) {
+        setFaturamentoAtual(0);
+        setTicketMedio(TICKET_MEDIO_FALLBACK);
+        return;
+      }
+      setFaturamentoAtual(Number(data.faturamento_realizado || 0));
+      setTicketMedio(Number(data.ticket_medio) > 0 ? Number(data.ticket_medio) : TICKET_MEDIO_FALLBACK);
     })();
   }, [lojaId, mes]);
 
   const peBasico = useMemo(() => (margem > 0 ? custoFixo / (margem / 100) : Infinity), [custoFixo, margem]);
   const peComLucro = useMemo(() => (margem > 0 ? (custoFixo + meta) / (margem / 100) : Infinity), [custoFixo, meta, margem]);
-  const contratos = useMemo(() => Math.ceil((peComLucro || 0) / TICKET_MEDIO), [peComLucro]);
+  const contratos = useMemo(() => Math.ceil((peComLucro || 0) / (ticketMedio || TICKET_MEDIO_FALLBACK)), [peComLucro, ticketMedio]);
 
   const pct = peBasico > 0 && isFinite(peBasico) ? Math.min(200, (faturamentoAtual / peBasico) * 100) : 0;
   const fillColor = pct >= 100 ? "#12B76A" : "#1E6FBF";
@@ -150,7 +152,7 @@ export function SimuladorPECard({ custoFixoTotal, mes }: Props) {
         )}
         <div>
           <p className="text-[12px]" style={{ color: "#6B7A90" }}>
-            Contratos/mês (ticket médio {fmtBRL(TICKET_MEDIO)})
+            Contratos/mês (ticket médio {fmtBRL(ticketMedio)})
           </p>
           <p className="text-[16px]">~{isFinite(contratos) ? contratos : "—"} contratos</p>
         </div>
