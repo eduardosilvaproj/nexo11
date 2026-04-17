@@ -95,10 +95,29 @@ export default function Dre() {
     const margens = rows
       .map((r) => r.margem_realizada)
       .filter((m): m is number => m !== null && m !== undefined);
-    const media = margens.length ? margens.reduce((a, b) => a + b, 0) / margens.length : null;
     const melhor = margens.length ? Math.max(...margens) : null;
     const pior = margens.length ? Math.min(...margens) : null;
-    return { faturamento, media, melhor, pior };
+    // Médias ponderadas pelo valor de venda
+    const weighted = (key: "margem_prevista" | "margem_realizada") => {
+      let totalW = 0;
+      let acc = 0;
+      for (const r of rows) {
+        const v = r.valor_venda ?? 0;
+        const m = r[key];
+        if (v > 0 && m !== null && m !== undefined) {
+          acc += m * v;
+          totalW += v;
+        }
+      }
+      return totalW > 0 ? acc / totalW : null;
+    };
+    return {
+      faturamento,
+      media: weighted("margem_realizada"),
+      mediaPrev: weighted("margem_prevista"),
+      melhor,
+      pior,
+    };
   }, [rows]);
 
   const margemColor = (m: number | null) => {
