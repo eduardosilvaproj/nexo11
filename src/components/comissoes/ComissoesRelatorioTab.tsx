@@ -165,6 +165,25 @@ export function ComissoesRelatorioTab({ mes, regra = REGRA_PADRAO }: Props) {
     setAlvo(null);
   }
 
+  const rankFat = useMemo(
+    () => [...linhas].sort((a, b) => b.faturamento - a.faturamento).slice(0, 5),
+    [linhas]
+  );
+  const rankMargem = useMemo(
+    () => [...linhas].sort((a, b) => b.margemMedia - a.margemMedia).slice(0, 5),
+    [linhas]
+  );
+  const topFat = rankFat[0];
+  const topMargem = rankMargem[0];
+  const mostrarAlerta =
+    !!(topFat && topMargem && topFat.vendedor_id !== topMargem.vendedor_id);
+  const diffPp = mostrarAlerta ? topMargem!.margemMedia - topFat!.margemMedia : 0;
+
+  function fmtCompactBRL(v: number) {
+    if (v >= 1000) return `R$ ${(v / 1000).toFixed(0)}k`;
+    return fmtBRL(v);
+  }
+
   if (!loading && linhas.length === 0) {
     return (
       <div
@@ -177,25 +196,6 @@ export function ComissoesRelatorioTab({ mes, regra = REGRA_PADRAO }: Props) {
         </p>
       </div>
     );
-  }
-
-  const rankFat = useMemo(
-    () => [...linhas].sort((a, b) => b.faturamento - a.faturamento).slice(0, 5),
-    [linhas]
-  );
-  const rankMargem = useMemo(
-    () => [...linhas].sort((a, b) => b.margemMedia - a.margemMedia).slice(0, 5),
-    [linhas]
-  );
-  const topFat = rankFat[0];
-  const topMargem = rankMargem[0];
-  const mostrarAlerta =
-    topFat && topMargem && topFat.vendedor_id !== topMargem.vendedor_id;
-  const diffPp = mostrarAlerta ? topMargem!.margemMedia - topFat!.margemMedia : 0;
-
-  function fmtCompactBRL(v: number) {
-    if (v >= 1000) return `R$ ${(v / 1000).toFixed(0)}k`;
-    return fmtBRL(v);
   }
 
   return (
