@@ -482,6 +482,192 @@ function AgendarDialog({
   );
 }
 
+function EditarAgendamentoDialog({
+  agendamento,
+  equipes,
+  open,
+  onOpenChange,
+  onChanged,
+}: {
+  agendamento: any;
+  equipes: Array<{ id: string; nome: string; cor: string; capacidade_horas_dia?: number }>;
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onChanged: () => void;
+}) {
+  const [equipeId, setEquipeId] = useState("");
+  const [data, setData] = useState<Date | undefined>();
+  const [ini, setIni] = useState("08:00");
+  const [fim, setFim] = useState("17:00");
+
+  useMemo(() => {
+    if (agendamento) {
+      setEquipeId(agendamento.equipe_id ?? "");
+      setData(agendamento.data ? new Date(agendamento.data + "T00:00:00") : undefined);
+      setIni(agendamento.hora_inicio?.slice(0, 5) ?? "08:00");
+      setFim(agendamento.hora_fim?.slice(0, 5) ?? "17:00");
+    }
+  }, [agendamento?.id]);
+
+  const dataStr = data ? format(data, "yyyy-MM-dd") : "";
+  const equipeSel = equipes.find((e) => e.id === equipeId) as any;
+  const capacidade = equipeSel?.capacidade_horas_dia ?? 8;
+
+  const { data: check } = useQuery({
+    queryKey: ["agendamento-check-edit", agendamento?.id, equipeId, dataStr, ini, fim],
+    queryFn: () =>
+      checkAgendamentoConflict({
+        equipeId: equipeId || null,
+        data: dataStr,
+        horaInicio: ini || null,
+        horaFim: fim || null,
+        capacidadeHorasDia: capacidade,
+        excludeId: agendamento?.id,
+      }),
+    enabled: open && !!equipeId && !!dataStr,
+  });
+
+  const conflito = check?.conflito ?? null;
+  const excede = !!check?.excedeCapacidade;
+
+  const salvar = useMutation({
+    mutationFn: async () => {
+      if (!agendamento) return;
+      if (!data) throw new Error("Selecione a data");
+      const result = await checkAgendamentoConflict({
+        equipeId: equipeId || null,
+        data: dataStr,
+        horaInicio: ini || null,
+        horaFim: fim || null,
+        capacidadeHorasDia: capacidade,
+        excludeId: agendamento.id,
+      });
+      if (result.error) throw new Error(result.error);
+      if (result.conflito)
+        throw new Error(
+          `Conflito: equipe já agendada das ${result.conflito.hora_inicio?.slice(0, 5)} às ${result.conflito.hora_fim?.slice(0, 5)}`,
+        );
+      if (result.excedeCapacidade)
+        throw new Error(
+          `Excede capacidade diária (${result.capacidade}h). Já reservadas: ${result.horasReservadas.toFixed(1)}h`,
+        );
+      const { error } = await supabase
+        .from("agendamentos_montagem")
+        .update({
+          equipe_id: equipeId || null,
+          data: dataStr,
+          hora_inicio: ini || null,
+          hora_fim: fim || null,
+        })
+        .eq("id", agendamento.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Agendamento atualizado");
+      onChanged();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const cancelar = useMutation({
+    mutationFn: async () => {
+      if (!agendamento) return;
+      const { error } = await supabase
+        .from("agendamentos_montagem")
+        .update({ status: "cancelado" })
+        .eq("id", agendamento.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Agendamento cancelado");
+      onChanged();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  if (!agendamento) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Editar agendamento</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-3">
+          <div style={{ fontSize: 13, color: "#6B7A90" }}>
+            Contrato: <strong>{agendamento.contratos?.cliente_nome ?? "—"}</strong> · #
+            {agendamento.contrato_id?.slice(0, 4)}
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label>Equipe</Label>
+            <Select value={equipeId} onValueChange={setEquipeId}>
+              <SelectTrigger><SelectValue placeholder="Sem equipe" /></SelectTrigger>
+              <SelectContent>
+                {equipes.map((e) => (
+                  <SelectItem key={e.id} value={e.id}>{e.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label>Data</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className={cn("justify-start text-left font-normal", !data && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {data ? format(data, "dd/MM/yyyy") : "Selecione"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar mode="single" selected={data} onSelect={setData} initialFocus className="p-3 pointer-events-auto" />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1">
+              <Label>Hora início</Label>
+              <Input type="time" value={ini} onChange={(e) => setIni(e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label>Hora fim</Label>
+              <Input type="time" value={fim} onChange={(e) => setFim(e.target.value)} />
+            </div>
+          </div>
+          {conflito && (
+            <div className="rounded-md border border-destructive/50 bg-destructive/10 p-2 text-xs text-destructive">
+              ⚠ Conflito: equipe já agendada das {conflito.hora_inicio?.slice(0, 5)} às {conflito.hora_fim?.slice(0, 5)}.
+            </div>
+          )}
+          {!conflito && excede && (
+            <div className="rounded-md border border-amber-500/50 bg-amber-500/10 p-2 text-xs text-amber-600">
+              ⚠ Excede capacidade diária ({check?.capacidade}h).
+            </div>
+          )}
+        </div>
+        <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
+          <Button
+            variant="destructive"
+            onClick={() => cancelar.mutate()}
+            disabled={cancelar.isPending || agendamento.status === "cancelado"}
+          >
+            {cancelar.isPending ? "Cancelando..." : "Cancelar agendamento"}
+          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Fechar</Button>
+            <Button
+              onClick={() => salvar.mutate()}
+              disabled={salvar.isPending || !!conflito || excede}
+              style={{ backgroundColor: "#1E6FBF" }}
+            >
+              {salvar.isPending ? "Salvando..." : "Salvar"}
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function CriarEquipeDialog({ onCreated }: { onCreated: () => void }) {
   const [open, setOpen] = useState(false);
   const [nome, setNome] = useState("");
