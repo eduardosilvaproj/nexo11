@@ -23,6 +23,7 @@ import Comissoes from "./pages/Comissoes";
 import ContratoDetail from "./pages/ContratoDetail";
 import Analytics from "./pages/Analytics";
 import Lojas from "./pages/Lojas";
+import LojaDetail from "./pages/LojaDetail";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -100,6 +101,11 @@ const App = () => (
               <Route path="/lojas" element={
                 <ProtectedRoute roles={["admin","franqueador"]} redirectTo="/" redirectMessage="Acesso restrito">
                   <Lojas />
+                </ProtectedRoute>
+              } />
+              <Route path="/lojas/:id" element={
+                <ProtectedRoute roles={["admin","franqueador"]} redirectTo="/" redirectMessage="Acesso restrito">
+                  <LojaDetail />
                 </ProtectedRoute>
               } />
 
