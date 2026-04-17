@@ -80,7 +80,7 @@ export default function Montagem() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("agendamentos_montagem")
-        .select("*, contratos(id, cliente_nome)")
+        .select("*, contratos(id, cliente_nome), equipes(nome, cor)")
         .gte("data", inicioStr)
         .lte("data", fimStr)
         .order("data");
@@ -89,7 +89,6 @@ export default function Montagem() {
     },
   });
 
-  const equipeMap = new Map(equipes.map((e) => [e.id, e]));
   const editAgendamento = agendamentos.find((a) => a.id === editId) ?? null;
 
   return (
@@ -159,7 +158,7 @@ export default function Montagem() {
                   ) : (
                     <div className="flex flex-col gap-2">
                       {items.map((a) => {
-                        const eq = a.equipe_id ? equipeMap.get(a.equipe_id) : null;
+                        const eq = a.equipes ?? null;
                         const badge = STATUS_BADGE[a.status];
                         return (
                           <button
