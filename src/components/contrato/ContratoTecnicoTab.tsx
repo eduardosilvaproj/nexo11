@@ -374,6 +374,30 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
             );
           })}
         </ul>
+
+        {contrato?.trava_medicao_ok && (
+          <div
+            className="mt-4 -mx-5 -mb-5 rounded-b-xl"
+            style={{
+              backgroundColor: "#F0FDF9",
+              borderTop: "0.5px solid #12B76A",
+              padding: "10px 16px",
+              fontSize: 13,
+              color: "#05873C",
+            }}
+          >
+            Medição concluída
+            {(() => {
+              const data = itensMedicao
+                .filter((i) => i.concluido && i.data)
+                .map((i) => new Date(i.data!).getTime())
+                .sort((a, b) => b - a)[0];
+              return data
+                ? ` em ${new Date(data).toLocaleDateString("pt-BR")} ✓`
+                : " ✓";
+            })()}
+          </div>
+        )}
       </Card>
 
       {/* Checklist conferência (mantido) */}
