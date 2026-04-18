@@ -52,6 +52,9 @@ serve(async (req) => {
   });
 
   try {
+    // ----------------------------------------------------------------
+    // 1. Verificar autenticação do usuário
+    // ----------------------------------------------------------------
     const {
       data: { user },
       error: authError,
@@ -76,7 +79,9 @@ serve(async (req) => {
       return json({ ok: false, erro: "Sem permissão para sincronizar esta loja." }, 403);
     }
 
-    // Buscar credenciais
+    // ----------------------------------------------------------------
+    // 2. Buscar credenciais da integração Promob
+    // ----------------------------------------------------------------
     const { data: integracao, error: integErr } = await supabase
       .from("integracoes")
       .select("config, ativo, ultima_sincronizacao")
@@ -113,11 +118,21 @@ serve(async (req) => {
     }
 
     // ----------------------------------------------------------------
-    // PASSO 1 — GET na página de login para obter CSRF token e cookies
+    // 3. Gerar hash SHA-256 da senha em UPPERCASE (padrão Promob)
     // ----------------------------------------------------------------
+    const encoder = new TextEncoder();
+    const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(senha.toUpperCase()));
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const senhaHash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+
+    console.log("sync-promob hash", senhaHash.substring(0, 16) + "...");
+
     const UA =
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
+    // ----------------------------------------------------------------
+    // 4. GET na página de login para obter cookies iniciais
+    // ----------------------------------------------------------------
     const getResp = await fetch("https://consultasweb.promob.com/Authentication/Index", {
       method: "GET",
       headers: {
@@ -126,39 +141,27 @@ serve(async (req) => {
         "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
       },
     });
-
     const loginPageHtml = await getResp.text();
     const getSetCookie = getResp.headers.get("set-cookie") || "";
-
-    // Extrair cookies iniciais (anti-CSRF / sessão)
-    const initialCookieParts = getSetCookie
+    const initialCookieStr = getSetCookie
       .split(/,(?=\s*[A-Za-z0-9_.-]+=)/)
       .map((c: string) => c.split(";")[0].trim())
-      .filter(Boolean);
+      .filter(Boolean)
+      .join("; ");
 
-    // Extrair token CSRF do HTML (campo oculto __RequestVerificationToken)
-    const csrfMatch =
-      loginPageHtml.match(/name="__RequestVerificationToken"[^>]*value="([^"]+)"/) ||
-      loginPageHtml.match(/__RequestVerificationToken[^\n]*value="([^"]+)"/);
+    // Extrair CSRF token se existir
+    const csrfMatch = loginPageHtml.match(/name="__RequestVerificationToken"[^>]*value="([^"]+)"/);
     const csrfToken = csrfMatch ? csrfMatch[1] : "";
-
-    console.log(
-      "sync-promob csrf",
-      JSON.stringify({
-        csrfFound: !!csrfToken,
-        csrfPreview: csrfToken.substring(0, 20),
-        initialCookies: initialCookieParts.length,
-      }),
-    );
+    console.log("sync-promob csrf", !!csrfToken);
 
     // ----------------------------------------------------------------
-    // PASSO 2 — POST com CSRF token e cookies iniciais
+    // 5. POST de login com campos corretos e senha hasheada
     // ----------------------------------------------------------------
     const postBody: Record<string, string> = {
-      Empresa: empresa,
-      UserName: usuario,
-      Password: senha,
-      RememberMe: "false",
+      company: empresa,
+      username: usuario,
+      password: senhaHash,
+      requestUrl: "/",
     };
     if (csrfToken) {
       postBody["__RequestVerificationToken"] = csrfToken;
@@ -172,7 +175,7 @@ serve(async (req) => {
         Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "pt-BR,pt;q=0.9",
         Referer: "https://consultasweb.promob.com/Authentication/Index",
-        Cookie: initialCookieParts.join("; "),
+        Cookie: initialCookieStr,
       },
       body: new URLSearchParams(postBody),
       redirect: "manual",
@@ -181,15 +184,15 @@ serve(async (req) => {
     const setCookieHeader = loginResp.headers.get("set-cookie") || "";
     const locationHeader = loginResp.headers.get("location") || "";
 
+    // Combinar cookies iniciais + cookies do login
     const allCookieParts = [
-      ...initialCookieParts,
+      ...initialCookieStr.split("; ").filter(Boolean),
       ...setCookieHeader
         .split(/,(?=\s*[A-Za-z0-9_.-]+=)/)
         .map((c: string) => c.split(";")[0].trim())
         .filter(Boolean),
     ];
 
-    // Deduplicar cookies (manter o mais recente de cada nome)
     const cookieMap = new Map<string, string>();
     for (const part of allCookieParts) {
       const [name] = part.split("=");
@@ -197,7 +200,7 @@ serve(async (req) => {
     }
     const cookies = [...cookieMap.values()].join("; ");
 
-    const hasSessionCookie = allCookieParts.some((c) => /^(?:\.ASPXAUTH|ASP\.NET_SessionId|AUTH|\.AspNet)/i.test(c));
+    const hasSessionCookie = [...cookieMap.keys()].some((k) => /^\.CWEBAUTH|\.CWEBUSER|ASP\.NET_SessionId/i.test(k));
 
     console.log(
       "sync-promob login",
@@ -205,15 +208,12 @@ serve(async (req) => {
         status: loginResp.status,
         location: locationHeader,
         hasSessionCookie,
-        totalCookies: cookieMap.size,
+        cookieKeys: [...cookieMap.keys()],
       }),
     );
 
-    // Login bem sucedido = redirecionou para fora de /Authentication
     const loginFalhou =
-      !hasSessionCookie ||
-      locationHeader.toLowerCase().includes("authentication") ||
-      (loginResp.status !== 302 && loginResp.status !== 301);
+      !hasSessionCookie || loginResp.status === 500 || locationHeader.toLowerCase().includes("authentication");
 
     if (loginFalhou) {
       await supabase
@@ -226,14 +226,18 @@ serve(async (req) => {
         {
           ok: false,
           erro: "Login no Promob falhou. Verifique Empresa, Usuário e Senha.",
-          detalhe: { status: loginResp.status, location: locationHeader, hasSessionCookie },
+          detalhe: {
+            status: loginResp.status,
+            location: locationHeader,
+            hasSessionCookie,
+          },
         },
         401,
       );
     }
 
     // ----------------------------------------------------------------
-    // PASSO 3 — Buscar pedidos
+    // 6. Buscar pedidos — últimos 60 dias
     // ----------------------------------------------------------------
     const hoje = new Date();
     const inicio = new Date(hoje.getTime() - 60 * 24 * 60 * 60 * 1000);
@@ -250,21 +254,27 @@ serve(async (req) => {
         Cookie: cookies,
         "User-Agent": UA,
         Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        Referer: "https://consultasweb.promob.com/",
         "Accept-Language": "pt-BR,pt;q=0.9",
+        Referer: "https://consultasweb.promob.com/",
       },
     });
 
     if (!pedidosResp.ok) {
-      return json({ ok: false, erro: "Não foi possível ler o portal do Promob." }, 502);
+      return json({ ok: false, erro: "Não foi possível acessar os pedidos no portal Promob." }, 502);
     }
 
     const html = await pedidosResp.text();
-    console.log("sync-promob html", JSON.stringify({ length: html.length, preview: html.substring(0, 300) }));
+    console.log(
+      "sync-promob html",
+      JSON.stringify({
+        length: html.length,
+        preview: html.substring(0, 200),
+      }),
+    );
 
     // ----------------------------------------------------------------
-    // PASSO 4 — Parsear tabela de pedidos
-    // Colunas: Pedido | DtEmis | T | St | Situa | OC | L | DataP | Cliente... | Transp
+    // 7. Parsear tabela HTML de pedidos
+    // Colunas: Pedido(0) | DtEmis(1) | T(2) | St(3) | Situa(4) | OC(5) | L(6) | DataP(7) | ...Transp(14)
     // ----------------------------------------------------------------
     const pedidos: Array<{
       numeroPedido: string;
@@ -311,7 +321,7 @@ serve(async (req) => {
     );
 
     // ----------------------------------------------------------------
-    // PASSO 5 — Cruzar com contratos ativos
+    // 8. Buscar contratos ativos da loja
     // ----------------------------------------------------------------
     const { data: contratos, error: contratosError } = await supabase
       .from("contratos")
@@ -323,6 +333,9 @@ serve(async (req) => {
       return json({ ok: false, erro: "Não foi possível carregar os contratos da loja." }, 500);
     }
 
+    // ----------------------------------------------------------------
+    // 9. Cruzar OC com nome do cliente (normalizado)
+    // ----------------------------------------------------------------
     const normalize = (s: string) =>
       s
         .toLowerCase()
@@ -342,11 +355,13 @@ serve(async (req) => {
       });
       if (!contrato) continue;
 
+      // Converter data BR para ISO
       const [d, m, a] = pedido.dataPrevista.split("/");
       if (!d || !m || !a) continue;
       const dataISO = `${a}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
       if (Number.isNaN(Date.parse(dataISO))) continue;
 
+      // Atualizar ou criar entrega
       const { data: ex } = await supabase.from("entregas").select("id").eq("contrato_id", contrato.id).maybeSingle();
 
       if (ex) {
@@ -367,6 +382,7 @@ serve(async (req) => {
         });
       }
 
+      // Log no contrato
       await supabase.from("contrato_logs").insert({
         contrato_id: contrato.id,
         acao: "promob_sincronizado",
@@ -377,11 +393,15 @@ serve(async (req) => {
     }
 
     // ----------------------------------------------------------------
-    // PASSO 6 — Atualizar timestamp
+    // 10. Atualizar timestamp da última sincronização
     // ----------------------------------------------------------------
     await supabase
       .from("integracoes")
-      .update({ ativo: true, ultima_sincronizacao: new Date().toISOString() })
+      .update({
+        ativo: true,
+        ultima_sincronizacao: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
       .eq("loja_id", loja_id)
       .eq("tipo", "promob");
 
@@ -392,7 +412,7 @@ serve(async (req) => {
       mensagem:
         atualizados > 0
           ? `${atualizados} contrato(s) atualizado(s) com previsão do Promob`
-          : `${pedidos.length} pedidos encontrados mas nenhum cruzou com contratos ativos`,
+          : `${pedidos.length} pedidos encontrados mas nenhum cruzou com contratos ativos. Verifique se os nomes dos clientes no NEXO coincidem com o campo OC do Promob.`,
     });
   } catch (error) {
     console.error("Erro sync-promob:", error);
