@@ -51,7 +51,7 @@ serve(async (req) => {
       .eq("tipo", "promob")
       .single();
 
-    if (integErr || !integracao?.config?.usuario || !integracao?.config?.senha) {
+    if (integErr || !integracao?.config?.empresa || !integracao?.config?.usuario || !integracao?.config?.senha) {
       return new Response(
         JSON.stringify({
           ok: false,
