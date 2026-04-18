@@ -167,6 +167,10 @@ export function ImportPromobXlsDialog({ open, onOpenChange, lojaId }: Props) {
     if (!lojaId || !rows.length) return;
     setImporting(true);
     try {
+      const { data: userData } = await supabase.auth.getUser();
+      const uid = userData.user?.id ?? null;
+      const autorNome = userData.user?.user_metadata?.nome || userData.user?.email || null;
+
       let atualizados = 0;
       for (const p of rows) {
         if (!p.matched || !p.contratoId) continue;
@@ -181,16 +185,18 @@ export function ImportPromobXlsDialog({ open, onOpenChange, lojaId }: Props) {
           .maybeSingle();
 
         if (ex) {
-          await supabase
+          const { error: upErr } = await supabase
             .from("entregas")
             .update({ data_prevista: iso, transportadora: p.transportadora || null })
             .eq("contrato_id", p.contratoId);
+          if (upErr) { console.error(upErr); continue; }
         } else {
-          await supabase.from("entregas").insert({
+          const { error: insErr } = await supabase.from("entregas").insert({
             contrato_id: p.contratoId,
             data_prevista: iso,
             transportadora: p.transportadora || null,
           });
+          if (insErr) { console.error(insErr); continue; }
         }
 
         await supabase.from("contrato_logs").insert({
@@ -198,6 +204,8 @@ export function ImportPromobXlsDialog({ open, onOpenChange, lojaId }: Props) {
           acao: "promob_sincronizado",
           titulo: "Importação Promob XLS",
           descricao: `Pedido #${p.numeroPedido || "—"} · Previsão: ${p.dataPrevista} · ${p.transportadora || "—"}`,
+          autor_id: uid,
+          autor_nome: autorNome,
         });
         atualizados++;
       }
