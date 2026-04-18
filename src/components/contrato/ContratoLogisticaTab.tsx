@@ -63,19 +63,85 @@ export function ContratoLogisticaTab({ contratoId }: Props) {
     },
   });
 
+  const { data: promobLog } = useQuery({
+    queryKey: ["promob_log", contratoId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contrato_logs")
+        .select("descricao, created_at")
+        .eq("contrato_id", contratoId)
+        .eq("acao", "promob_sincronizado")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Parse: "Pedido Promob #140167 — Previsão: 2026-05-19 — JOTRANS"
+  const promob = (() => {
+    if (!promobLog?.descricao) return null;
+    const d = promobLog.descricao;
+    const pedido = d.match(/#(\d+)/)?.[1] ?? null;
+    const prev = d.match(/Previsão:\s*([\d-]+)/)?.[1] ?? null;
+    const parts = d.split("—").map((s) => s.trim());
+    const transp = parts[parts.length - 1] && !parts[parts.length - 1].startsWith("Previsão")
+      ? parts[parts.length - 1]
+      : null;
+    return {
+      pedido,
+      data_prevista: prev,
+      transportadora: transp,
+      sincronizado_em: promobLog.created_at,
+    };
+  })();
+
   if (!entrega) {
     return (
       <>
+        {promob && (
+          <div
+            className="mb-4"
+            style={{
+              backgroundColor: "#E6F3FF",
+              border: "1px solid #1E6FBF",
+              borderRadius: 8,
+              padding: 10,
+            }}
+          >
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#1E6FBF", marginBottom: 4 }}>
+              Previsão sincronizada do Promob
+            </div>
+            <div style={{ fontSize: 12, color: "#0D1117" }}>
+              {promob.pedido && <>Pedido: <strong>#{promob.pedido}</strong></>}
+              {promob.transportadora && <> · Transportadora: <strong>{promob.transportadora}</strong></>}
+            </div>
+            {promob.data_prevista && (
+              <div style={{ fontSize: 12, color: "#0D1117" }}>
+                Data prevista: <strong>{fmtDate(promob.data_prevista)}</strong>
+              </div>
+            )}
+            <div style={{ fontSize: 12, color: "#6B7A90", marginTop: 4 }}>
+              Sincronizado em {new Date(promob.sincronizado_em).toLocaleString("pt-BR")}
+            </div>
+          </div>
+        )}
         <div
           className="flex flex-col items-center justify-center gap-3 rounded-xl py-12"
           style={{ backgroundColor: "#F5F7FA", border: "1px dashed #B0BAC9" }}
         >
           <span style={{ fontSize: 13, color: "#6B7A90" }}>Nenhuma entrega cadastrada</span>
           <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="mr-1 h-4 w-4" /> Cadastrar entrega
+            <Plus className="mr-1 h-4 w-4" /> {promob ? "Cadastrar com dados do Promob" : "Cadastrar entrega"}
           </Button>
         </div>
-        <EntregaCreateDialog open={createOpen} onOpenChange={setCreateOpen} contratoId={contratoId} />
+        <EntregaCreateDialog
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          contratoId={contratoId}
+          prefill={promob}
+        />
       </>
     );
   }
@@ -96,6 +162,33 @@ export function ContratoLogisticaTab({ contratoId }: Props) {
           </span>
         }
       >
+        {promob && (
+          <div
+            className="mb-4"
+            style={{
+              backgroundColor: "#E6F3FF",
+              border: "1px solid #1E6FBF",
+              borderRadius: 8,
+              padding: 10,
+            }}
+          >
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#1E6FBF", marginBottom: 4 }}>
+              Previsão sincronizada do Promob
+            </div>
+            <div style={{ fontSize: 12, color: "#0D1117" }}>
+              {promob.pedido && <>Pedido: <strong>#{promob.pedido}</strong></>}
+              {promob.transportadora && <> · Transportadora: <strong>{promob.transportadora}</strong></>}
+            </div>
+            {promob.data_prevista && (
+              <div style={{ fontSize: 12, color: "#0D1117" }}>
+                Data prevista: <strong>{fmtDate(promob.data_prevista)}</strong>
+              </div>
+            )}
+            <div style={{ fontSize: 12, color: "#6B7A90", marginTop: 4 }}>
+              Sincronizado em {new Date(promob.sincronizado_em).toLocaleString("pt-BR")}
+            </div>
+          </div>
+        )}
         <Field label="Transportadora" value={entrega.transportadora ?? "—"} />
         <Field label="Data prevista" value={fmtDate(entrega.data_prevista)} />
         <Field label="Rota / endereço" value={entrega.rota ?? "—"} />
