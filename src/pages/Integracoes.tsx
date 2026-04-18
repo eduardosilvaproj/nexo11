@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 
 type IntegracaoConfig = {
+  empresa?: string;
   usuario?: string;
   senha?: string;
   auto_sync?: boolean;
@@ -29,8 +30,9 @@ type IntegracaoRow = {
 };
 
 const credSchema = z.object({
+  empresa: z.string().trim().min(1, "Empresa obrigatória").max(120),
   usuario: z.string().trim().min(1, "Usuário obrigatório").max(120),
-  senha: z.string().min(1, "Senha obrigatória").max(200),
+  senha: z.string().max(200),
 });
 
 function formatDate(iso: string | null) {
@@ -44,6 +46,7 @@ export default function Integracoes() {
   const lojaId = perfil?.loja_id ?? null;
   const qc = useQueryClient();
 
+  const [empresa, setEmpresa] = useState("");
   const [usuario, setUsuario] = useState("");
   const [senha, setSenha] = useState("");
   const [autoSync, setAutoSync] = useState(false);
@@ -67,29 +70,42 @@ export default function Integracoes() {
 
   useEffect(() => {
     if (integracao) {
+      setEmpresa(integracao.config?.empresa ?? "");
       setUsuario(integracao.config?.usuario ?? "");
-      setSenha(integracao.config?.senha ?? "");
+      setSenha(""); // nunca exibir senha salva
       setAutoSync(integracao.config?.auto_sync ?? false);
     }
   }, [integracao]);
 
-  const conectado = !!(integracao?.config?.usuario && integracao?.config?.senha);
+  const senhaSalva = !!integracao?.config?.senha;
+  const conectado = !!(
+    integracao?.config?.empresa &&
+    integracao?.config?.usuario &&
+    integracao?.config?.senha
+  );
 
   const salvar = async () => {
     if (!lojaId) {
       toast.error("Loja não identificada");
       return;
     }
-    const parsed = credSchema.safeParse({ usuario, senha });
+    const parsed = credSchema.safeParse({ empresa, usuario, senha });
     if (!parsed.success) {
       toast.error(parsed.error.errors[0]?.message ?? "Dados inválidos");
+      return;
+    }
+    // Se senha em branco e não há senha salva, exigir
+    if (!parsed.data.senha && !senhaSalva) {
+      toast.error("Senha obrigatória");
       return;
     }
     setSaving(true);
     try {
       const config: IntegracaoConfig = {
+        empresa: parsed.data.empresa,
         usuario: parsed.data.usuario,
-        senha: parsed.data.senha,
+        // mantém senha anterior se usuário deixou em branco
+        senha: parsed.data.senha || integracao?.config?.senha || "",
         auto_sync: autoSync,
       };
       const { error } = await (supabase as any)
@@ -99,7 +115,8 @@ export default function Integracoes() {
           { onConflict: "loja_id,tipo" },
         );
       if (error) throw error;
-      toast.success("Credenciais salvas com segurança");
+      toast.success("Credenciais salvas");
+      setSenha(""); // limpa campo após salvar
       qc.invalidateQueries({ queryKey: ["integracao-promob", lojaId] });
     } catch (e: any) {
       toast.error(e.message ?? "Erro ao salvar");
@@ -184,13 +201,24 @@ export default function Integracoes() {
 
         <CardContent className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor="empresa">Empresa *</Label>
+              <Input
+                id="empresa"
+                value={empresa}
+                onChange={(e) => setEmpresa(e.target.value)}
+                placeholder="Nome da empresa no portal Promob"
+                autoComplete="off"
+                maxLength={120}
+              />
+            </div>
             <div className="space-y-1.5">
-              <Label htmlFor="usuario">Usuário/Login *</Label>
+              <Label htmlFor="usuario">Nome de usuário *</Label>
               <Input
                 id="usuario"
                 value={usuario}
                 onChange={(e) => setUsuario(e.target.value)}
-                placeholder="seu_usuario_promob"
+                placeholder="Seu usuário do portal Promob"
                 autoComplete="off"
                 maxLength={120}
               />
@@ -202,10 +230,15 @@ export default function Integracoes() {
                 type="password"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Sua senha"
                 autoComplete="new-password"
                 maxLength={200}
               />
+              {senhaSalva && (
+                <p className="text-xs text-muted-foreground">
+                  Senha já configurada — deixe em branco para manter
+                </p>
+              )}
             </div>
           </div>
 
