@@ -83,37 +83,29 @@ export default function PortalCliente() {
     setLoading(true);
     setError(null);
     try {
-      const publicClient = supabase;
-      const headers = { "x-portal-token": token };
-
       const [{ data: c, error: cErr }, { data: l }, { data: chs }, { data: ents }] =
         await Promise.all([
-          publicClient
+          portalClient
             .from("contratos")
             .select("*, lojas(nome, cidade, estado)")
-            .eq("id", token)
-            .maybeSingle({ head: false }),
-          publicClient
+            .limit(1)
+            .maybeSingle(),
+          portalClient
             .from("contrato_logs")
             .select("*")
             .order("created_at", { ascending: false }),
-          publicClient
+          portalClient
             .from("chamados_pos_venda")
             .select("nps")
             .not("nps", "is", null)
             .limit(1),
-          publicClient
+          portalClient
             .from("entregas")
             .select("data_prevista")
             .not("data_prevista", "is", null)
             .order("data_prevista", { ascending: true })
             .limit(1),
-        ].map(async (queryPromise) => {
-          const query = await queryPromise;
-          return query;
-        }));
-
-      void headers;
+        ]);
 
       if (cErr || !c) {
         setError("Link inválido ou expirado.");
