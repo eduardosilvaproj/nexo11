@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Check,
@@ -95,6 +95,31 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
       return data;
     },
   });
+
+  // Realtime: quando triggers do banco atualizarem sub_etapa/travas, refazemos as queries
+  useEffect(() => {
+    const channel = supabase
+      .channel(`tecnico-contrato-${contratoId}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "contratos", filter: `id=eq.${contratoId}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ["contrato-tecnico", contratoId] });
+          qc.invalidateQueries({ queryKey: ["contrato_dre_view", contratoId] });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "checklists_tecnicos", filter: `contrato_id=eq.${contratoId}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ["checklist", contratoId] });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [contratoId, qc]);
 
   const { data: itens = [] } = useQuery({
     queryKey: ["checklist", contratoId],
