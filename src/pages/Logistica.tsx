@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { Eye } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Eye, RefreshCw, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,11 +28,15 @@ function MetricCard({ label, value, hint }: { label: string; value: string; hint
 
 export default function Logistica() {
   const navigate = useNavigate();
-  const { hasRole } = useAuth();
+  const qc = useQueryClient();
+  const { hasRole, perfil } = useAuth();
   const podeConfirmar = hasRole("admin") || hasRole("gerente") || hasRole("tecnico");
+  const podeSincronizar = hasRole("admin") || hasRole("gerente");
+  const lojaId = perfil?.loja_id ?? null;
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [confirmTarget, setConfirmTarget] = useState<{ id: string; contratoId: string } | null>(null);
+  const [syncing, setSyncing] = useState(false);
 
   const { data: entregas, isLoading } = useQuery({
     queryKey: ["logistica-list"],
@@ -47,6 +52,55 @@ export default function Logistica() {
       return data;
     },
   });
+
+  // Buscar último log Promob por contrato para extrair número do pedido
+  const { data: promobLogs } = useQuery({
+    queryKey: ["logistica-promob-logs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contrato_logs")
+        .select("contrato_id, descricao, created_at")
+        .eq("acao", "promob_sincronizado")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      const map = new Map<string, string>();
+      for (const log of data ?? []) {
+        if (map.has(log.contrato_id)) continue;
+        // descricao formato: "Pedido Promob #140167 — Previsão: ... — ..."
+        const m = log.descricao?.match(/#(\d+)/);
+        if (m) map.set(log.contrato_id, m[1]);
+      }
+      return map;
+    },
+  });
+
+  const sincronizarPromob = async () => {
+    if (!lojaId) {
+      toast.error("Loja não identificada");
+      return;
+    }
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("sync-promob", {
+        body: { loja_id: lojaId },
+      });
+      if (error) throw error;
+      const resp = data as { ok?: boolean; atualizados?: number; erro?: string };
+      if (resp?.ok) {
+        toast.success(`${resp.atualizados ?? 0} contratos atualizados com previsão do Promob ✓`);
+        qc.invalidateQueries({ queryKey: ["logistica-list"] });
+        qc.invalidateQueries({ queryKey: ["logistica-promob-logs"] });
+      } else if (resp?.erro?.toLowerCase().includes("login") || resp?.erro?.toLowerCase().includes("credenc")) {
+        toast.error("Login falhou — verifique usuário e senha");
+      } else {
+        toast.warning(resp?.erro ?? "Não foi possível ler o portal — tente novamente");
+      }
+    } catch (e) {
+      toast.warning("Não foi possível ler o portal — tente novamente");
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const metrics = useMemo(() => {
     if (!entregas) return { pendentes: 0, hoje: 0, custoMes: 0 };
@@ -80,9 +134,21 @@ export default function Logistica() {
 
   return (
     <div className="p-8">
-      <div className="mb-6">
-        <h1 style={{ fontSize: 22, fontWeight: 600, color: "#0D1117" }}>NEXO Logística</h1>
-        <p style={{ fontSize: 13, color: "#6B7A90" }}>Entregas pendentes e realizadas</p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 600, color: "#0D1117" }}>NEXO Logística</h1>
+          <p style={{ fontSize: 13, color: "#6B7A90" }}>Entregas pendentes e realizadas</p>
+        </div>
+        {podeSincronizar && (
+          <Button
+            onClick={sincronizarPromob}
+            disabled={syncing}
+            style={{ backgroundColor: "#1E6FBF", color: "#fff" }}
+          >
+            {syncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+            Sincronizar Promob
+          </Button>
+        )}
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -107,7 +173,7 @@ export default function Logistica() {
         <table className="w-full">
           <thead style={{ backgroundColor: "#F7F9FC" }}>
             <tr>
-              {["Nº", "Cliente", "Data prevista", "Transportadora", "Custo frete", "Status", "Ações"].map((h) => (
+              {["Nº", "Cliente", "Data prevista", "Transportadora", "Custo frete", "Promob", "Status", "Ações"].map((h) => (
                 <th key={h} className="px-4 py-3 text-left" style={{ fontSize: 11, color: "#6B7A90", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   {h}
                 </th>
@@ -115,9 +181,9 @@ export default function Logistica() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">Carregando...</td></tr>}
+            {isLoading && <tr><td colSpan={8} className="px-4 py-8 text-center text-sm text-muted-foreground">Carregando...</td></tr>}
             {!isLoading && filtered.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">Nenhuma entrega encontrada.</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-sm text-muted-foreground">Nenhuma entrega encontrada.</td></tr>
             )}
             {filtered.map((e) => {
               const cliente = (e as { contratos?: { cliente_nome?: string } }).contratos?.cliente_nome;
@@ -125,6 +191,7 @@ export default function Logistica() {
               const badge = e.status === "confirmada"
                 ? { bg: "#D1FAE5", fg: "#05873C", label: "Confirmada" }
                 : { bg: "#FEF3C7", fg: "#E8A020", label: "Pendente" };
+              const promobNum = promobLogs?.get(e.contrato_id);
               return (
                 <tr key={e.id} style={{ borderTop: "0.5px solid #E8ECF2", backgroundColor: vencida ? "#FEF8F8" : undefined }}>
                   <td className="px-4 py-3 text-sm font-medium">#{e.contrato_id?.slice(0, 4)}</td>
@@ -132,6 +199,15 @@ export default function Logistica() {
                   <td className="px-4 py-3 text-sm">{fmtDate(e.data_prevista)}</td>
                   <td className="px-4 py-3 text-sm">{e.transportadora ?? "—"}</td>
                   <td className="px-4 py-3 text-sm">{fmtMoney(Number(e.custo_frete))}</td>
+                  <td className="px-4 py-3">
+                    {promobNum ? (
+                      <span className="inline-flex items-center rounded-full px-2.5 py-0.5" style={{ backgroundColor: "#E6F3FF", color: "#1E6FBF", fontSize: 11, fontWeight: 500 }}>
+                        #{promobNum}
+                      </span>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">—</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <span className="inline-flex items-center rounded-full px-2.5 py-0.5" style={{ backgroundColor: badge.bg, color: badge.fg, fontSize: 11, fontWeight: 500 }}>
                       {badge.label}
