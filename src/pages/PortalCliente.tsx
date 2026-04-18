@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { createClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Link2Off, ArrowRight, CheckCircle2 } from "lucide-react";
@@ -67,50 +68,58 @@ export default function PortalCliente() {
   const [npsComentario, setNpsComentario] = useState("");
   const [npsSubmitting, setNpsSubmitting] = useState(false);
 
+  const portalClient = createClient(
+    import.meta.env.VITE_SUPABASE_URL,
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    {
+      global: {
+        headers: token ? { "x-portal-token": token } : {},
+      },
+    },
+  );
+
   async function load() {
     if (!token) return;
     setLoading(true);
     setError(null);
     try {
-      const { data: tk, error: tkErr } = await supabase
-        .from("portal_tokens" as any)
-        .select("contrato_id, expires_at")
-        .eq("token", token)
-        .maybeSingle();
-      if (tkErr) throw tkErr;
-      if (!tk) {
-        setError("Link inválido ou expirado.");
-        return;
-      }
-      if (new Date((tk as any).expires_at) < new Date()) {
-        setError("Este link expirou. Solicite um novo à sua loja.");
-        return;
-      }
-      const cid = (tk as any).contrato_id;
+      const publicClient = supabase;
+      const headers = { "x-portal-token": token };
 
       const [{ data: c, error: cErr }, { data: l }, { data: chs }, { data: ents }] =
         await Promise.all([
-          supabase.from("contratos").select("*, lojas(nome, cidade, estado)").eq("id", cid).maybeSingle(),
-          supabase
+          publicClient
+            .from("contratos")
+            .select("*, lojas(nome, cidade, estado)")
+            .eq("id", token)
+            .maybeSingle({ head: false }),
+          publicClient
             .from("contrato_logs")
             .select("*")
-            .eq("contrato_id", cid)
             .order("created_at", { ascending: false }),
-          supabase
+          publicClient
             .from("chamados_pos_venda")
             .select("nps")
-            .eq("contrato_id", cid)
             .not("nps", "is", null)
             .limit(1),
-          supabase
+          publicClient
             .from("entregas")
             .select("data_prevista")
-            .eq("contrato_id", cid)
             .not("data_prevista", "is", null)
             .order("data_prevista", { ascending: true })
             .limit(1),
-        ]);
-      if (cErr) throw cErr;
+        ].map(async (queryPromise) => {
+          const query = await queryPromise;
+          return query;
+        }));
+
+      void headers;
+
+      if (cErr || !c) {
+        setError("Link inválido ou expirado.");
+        return;
+      }
+
       setContrato(c);
       setLogs(l ?? []);
       setNpsRespondido((chs ?? []).length > 0);
