@@ -78,7 +78,7 @@ export function ImportPromobXlsDialog({ open, onOpenChange, lojaId }: Props) {
       const buf = await f.arrayBuffer();
       const wb = XLSX.read(buf, { type: "array", cellDates: false });
       const ws = wb.Sheets[wb.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { header: 1, defval: "" });
+      const json = XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, defval: "" });
       if (!json.length) throw new Error("Planilha vazia");
 
       // Find header row (first row containing "pedido" or "OC")
