@@ -1470,6 +1470,7 @@ export type Database = {
         Args: { _comentario?: string; _nota: number; _token: string }
         Returns: Json
       }
+      portal_token_contrato_id: { Args: never; Returns: string }
       realtime_canal_contrato_permitido: {
         Args: { _topic: string }
         Returns: boolean
