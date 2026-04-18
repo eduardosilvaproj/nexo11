@@ -140,7 +140,27 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
     },
   });
 
-  // Itens de medição
+  // Conferentes da loja do contrato
+  const { data: conferentes = [] } = useQuery({
+    queryKey: ["conferentes", contrato?.loja_id],
+    enabled: !!contrato?.loja_id,
+    queryFn: async () => {
+      const { data: roles, error } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "conferente")
+        .eq("loja_id", contrato!.loja_id);
+      if (error) throw error;
+      const ids = (roles ?? []).map((r) => r.user_id);
+      if (ids.length === 0) return [];
+      const { data: us } = await supabase
+        .from("usuarios")
+        .select("id, nome")
+        .in("id", ids);
+      return us ?? [];
+    },
+  });
+
   const itensMedicao = itens.filter((i) => i.sub_etapa === "medicao");
   const itensConferencia = itens.filter((i) => i.sub_etapa !== "medicao");
 
