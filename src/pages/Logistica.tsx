@@ -65,12 +65,11 @@ export default function Logistica() {
         .eq("acao", "promob_sincronizado")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      const map = new Map<string, string>();
+      const map = new Map<string, { numero: string; createdAt: string }>();
       for (const log of data ?? []) {
         if (map.has(log.contrato_id)) continue;
-        // descricao formato: "Pedido Promob #140167 — Previsão: ... — ..."
         const m = log.descricao?.match(/#(\d+)/);
-        if (m) map.set(log.contrato_id, m[1]);
+        if (m) map.set(log.contrato_id, { numero: m[1], createdAt: log.created_at });
       }
       return map;
     },
@@ -215,8 +214,12 @@ export default function Logistica() {
                   <td className="px-4 py-3 text-sm">{fmtMoney(Number(e.custo_frete))}</td>
                   <td className="px-4 py-3">
                     {promobNum ? (
-                      <span className="inline-flex items-center rounded-full px-2.5 py-0.5" style={{ backgroundColor: "#E6F3FF", color: "#1E6FBF", fontSize: 11, fontWeight: 500 }}>
-                        #{promobNum}
+                      <span
+                        className="inline-flex items-center rounded-full px-2.5 py-0.5 cursor-help"
+                        style={{ backgroundColor: "#E6F3FF", color: "#1E6FBF", fontSize: 11, fontWeight: 500 }}
+                        title={`Importado do Promob em ${new Date(promobNum.createdAt).toLocaleString("pt-BR")}`}
+                      >
+                        #{promobNum.numero}
                       </span>
                     ) : (
                       <span className="text-sm text-muted-foreground">—</span>
