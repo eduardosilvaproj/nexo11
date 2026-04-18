@@ -709,6 +709,47 @@ export type Database = {
           },
         ]
       }
+      integracoes: {
+        Row: {
+          ativo: boolean
+          config: Json
+          created_at: string
+          id: string
+          loja_id: string
+          tipo: string
+          ultima_sincronizacao: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          config?: Json
+          created_at?: string
+          id?: string
+          loja_id: string
+          tipo: string
+          ultima_sincronizacao?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          config?: Json
+          created_at?: string
+          id?: string
+          loja_id?: string
+          tipo?: string
+          ultima_sincronizacao?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integracoes_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           contato: string | null
