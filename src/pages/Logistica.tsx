@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eye, RefreshCw, Loader2, Upload } from "lucide-react";
-import { ImportPromobXlsDialog } from "@/components/logistica/ImportPromobXlsDialog";
+import { Eye, RefreshCw, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -38,7 +37,6 @@ export default function Logistica() {
   const [search, setSearch] = useState("");
   const [confirmTarget, setConfirmTarget] = useState<{ id: string; contratoId: string } | null>(null);
   const [syncing, setSyncing] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
 
   const { data: entregas, isLoading } = useQuery({
     queryKey: ["logistica-list"],
@@ -143,14 +141,6 @@ export default function Logistica() {
         {podeSincronizar && (
           <div className="flex items-center gap-2">
             <Button
-              variant="outline"
-              onClick={() => setImportOpen(true)}
-              style={{ borderColor: "#1E6FBF", color: "#1E6FBF" }}
-            >
-              <Upload className="mr-2 h-4 w-4" />
-              Importar Promob XLS
-            </Button>
-            <Button
               onClick={sincronizarPromob}
               disabled={syncing}
               style={{ backgroundColor: "#1E6FBF", color: "#fff" }}
@@ -161,8 +151,6 @@ export default function Logistica() {
           </div>
         )}
       </div>
-
-      <ImportPromobXlsDialog open={importOpen} onOpenChange={setImportOpen} lojaId={lojaId} />
 
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
         <MetricCard label="Entregas pendentes" value={String(metrics.pendentes)} />

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PrazoCell } from "@/components/producao/PrazoBadge";
+import { TerceirizadaTab } from "@/components/producao/TerceirizadaTab";
 import type { Database } from "@/integrations/supabase/types";
 
 type OpStatus = Database["public"]["Enums"]["op_status"];
@@ -195,7 +196,7 @@ export default function Producao() {
         </TabsList>
 
         <TabsContent value="terceirizada" className="mt-0">
-          {tableNode}
+          <TerceirizadaTab />
         </TabsContent>
         <TabsContent value="interna" className="mt-0">
           <div
