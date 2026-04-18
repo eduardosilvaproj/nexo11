@@ -429,7 +429,7 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
               <button
                 onClick={() =>
                   canEdit &&
-                  toggleMutation.mutate({ id: item.id, concluido: item.concluido })
+                  toggleMutation.mutate({ id: item.id, concluido: item.concluido, sub_etapa: item.sub_etapa })
                 }
                 disabled={!canEdit}
                 className="flex h-5 w-5 shrink-0 items-center justify-center rounded transition-colors disabled:cursor-not-allowed"
