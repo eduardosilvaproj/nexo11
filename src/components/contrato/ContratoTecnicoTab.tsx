@@ -21,15 +21,17 @@ const Card = ({
   right,
   children,
   badge,
+  bg = "white",
 }: {
   title: string;
   right?: React.ReactNode;
   children: React.ReactNode;
   badge?: React.ReactNode;
+  bg?: string;
 }) => (
   <div
-    className="rounded-xl bg-white"
-    style={{ border: "0.5px solid #E8ECF2", padding: 20 }}
+    className="rounded-xl transition-colors"
+    style={{ border: "0.5px solid #E8ECF2", padding: 20, backgroundColor: bg }}
   >
     <div className="mb-4 flex items-center justify-between gap-3">
       <div className="flex items-center gap-2">
