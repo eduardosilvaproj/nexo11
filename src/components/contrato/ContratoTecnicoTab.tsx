@@ -141,7 +141,11 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
   const pct = total > 0 ? Math.round((concluidos / total) * 100) : 0;
 
   const toggleMutation = useMutation({
-    mutationFn: async (item: { id: string; concluido: boolean }) => {
+    mutationFn: async (item: {
+      id: string;
+      concluido: boolean;
+      sub_etapa: string;
+    }) => {
       const { error } = await supabase
         .from("checklists_tecnicos")
         .update({
@@ -150,8 +154,17 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
         })
         .eq("id", item.id);
       if (error) throw error;
+      return item;
     },
-    onSuccess: () => {
+    onSuccess: (item) => {
+      if (item.sub_etapa === "medicao" && !item.concluido) {
+        const restantes = itensMedicao.filter(
+          (i) => i.id !== item.id && !i.concluido,
+        ).length;
+        if (restantes === 0 && itensMedicao.length > 0) {
+          toast.success("Medição fina concluída! Conferência técnica liberada ✓");
+        }
+      }
       qc.invalidateQueries({ queryKey: ["checklist", contratoId] });
       qc.invalidateQueries({ queryKey: ["contrato-tecnico", contratoId] });
     },
