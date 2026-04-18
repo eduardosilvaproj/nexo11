@@ -63,6 +63,40 @@ export function ContratoLogisticaTab({ contratoId }: Props) {
     },
   });
 
+  const { data: promobLog } = useQuery({
+    queryKey: ["promob_log", contratoId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contrato_logs")
+        .select("descricao, created_at")
+        .eq("contrato_id", contratoId)
+        .eq("acao", "promob_sincronizado")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Parse: "Pedido Promob #140167 — Previsão: 2026-05-19 — JOTRANS"
+  const promob = (() => {
+    if (!promobLog?.descricao) return null;
+    const d = promobLog.descricao;
+    const pedido = d.match(/#(\d+)/)?.[1] ?? null;
+    const prev = d.match(/Previsão:\s*([\d-]+)/)?.[1] ?? null;
+    const parts = d.split("—").map((s) => s.trim());
+    const transp = parts[parts.length - 1] && !parts[parts.length - 1].startsWith("Previsão")
+      ? parts[parts.length - 1]
+      : null;
+    return {
+      pedido,
+      data_prevista: prev,
+      transportadora: transp,
+      sincronizado_em: promobLog.created_at,
+    };
+  })();
+
   if (!entrega) {
     return (
       <>
