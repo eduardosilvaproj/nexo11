@@ -1,6 +1,13 @@
 import { useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, Download, Paperclip, AlertTriangle, Lock } from "lucide-react";
+import {
+  Check,
+  Download,
+  Lock,
+  Upload,
+  Trash2,
+  FileText,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 interface TecnicoTabProps {
   contratoId: string;
@@ -67,6 +75,8 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
   const qc = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const [observacoesFinais, setObservacoesFinais] = useState("");
   const { hasRole } = useAuth();
   const canEdit = hasRole("admin") || hasRole("gerente") || hasRole("tecnico");
 
@@ -129,7 +139,27 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
     },
   });
 
-  // Itens de medição
+  // Conferentes da loja do contrato
+  const { data: conferentes = [] } = useQuery({
+    queryKey: ["conferentes", contrato?.loja_id],
+    enabled: !!contrato?.loja_id,
+    queryFn: async () => {
+      const { data: roles, error } = await supabase
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "conferente")
+        .eq("loja_id", contrato!.loja_id);
+      if (error) throw error;
+      const ids = (roles ?? []).map((r) => r.user_id);
+      if (ids.length === 0) return [];
+      const { data: us } = await supabase
+        .from("usuarios")
+        .select("id, nome")
+        .in("id", ids);
+      return us ?? [];
+    },
+  });
+
   const itensMedicao = itens.filter((i) => i.sub_etapa === "medicao");
   const itensConferencia = itens.filter((i) => i.sub_etapa !== "medicao");
 
@@ -167,6 +197,14 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
           toast.success("Medição fina concluída! Conferência técnica liberada ✓");
         }
       }
+      if (item.sub_etapa === "conferencia" && !item.concluido) {
+        const restantes = itensConferencia.filter(
+          (i) => i.id !== item.id && !i.concluido,
+        ).length;
+        if (restantes === 0 && itensConferencia.length > 0) {
+          toast.success("Conferência concluída! Contrato liberado para produção ✓");
+        }
+      }
       qc.invalidateQueries({ queryKey: ["checklist", contratoId] });
       qc.invalidateQueries({ queryKey: ["contrato-tecnico", contratoId] });
     },
@@ -198,6 +236,50 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const atribuirConferente = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase
+        .from("contratos")
+        .update({ conferencia_responsavel_id: userId })
+        .eq("id", contratoId);
+      if (error) throw error;
+      const nome = conferentes.find((c) => c.id === userId)?.nome ?? "—";
+      const { data: auth } = await supabase.auth.getUser();
+      await supabase.from("contrato_logs").insert({
+        contrato_id: contratoId,
+        acao: "conferente_atribuido",
+        titulo: "Conferente atribuído",
+        descricao: nome,
+        autor_id: auth.user?.id ?? null,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Conferente atribuído");
+      qc.invalidateQueries({ queryKey: ["contrato-tecnico", contratoId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const avancarMutation = useMutation({
+    mutationFn: async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      const { data, error } = await supabase.rpc("avancar_contrato", {
+        p_contrato_id: contratoId,
+        p_usuario_id: auth.user?.id ?? undefined,
+      });
+      if (error) throw error;
+      const res = data as { ok: boolean; erro?: string };
+      if (!res.ok) throw new Error(res.erro ?? "Falha ao avançar");
+      return res;
+    },
+    onSuccess: () => {
+      toast.success("Contrato liberado para produção! ✓");
+      qc.invalidateQueries({ queryKey: ["contrato-tecnico", contratoId] });
+      qc.invalidateQueries({ queryKey: ["contrato", contratoId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   // Status do card de medição
   let medStatus: { label: string; bg: string; fg: string };
   if (contrato?.trava_medicao_ok) {
@@ -206,6 +288,17 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
     medStatus = { label: "Em andamento", bg: "#E6F3FF", fg: "#1E6FBF" };
   } else {
     medStatus = { label: "Aguardando", bg: "#E8ECF2", fg: "#6B7A90" };
+  }
+
+  // Status do card de conferência
+  const algumConfConcluido = itensConferencia.some((i) => i.concluido);
+  let confStatus: { label: string; bg: string; fg: string };
+  if (contrato?.trava_tecnico_ok) {
+    confStatus = { label: "Liberado ✓", bg: "#D1FAE5", fg: "#05873C" };
+  } else if (algumConfConcluido) {
+    confStatus = { label: "Em andamento", bg: "#E6F3FF", fg: "#1E6FBF" };
+  } else {
+    confStatus = { label: "Aguardando", bg: "#E8ECF2", fg: "#6B7A90" };
   }
 
   // Arquivos
@@ -244,6 +337,34 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
       return;
     }
     window.open(data.signedUrl, "_blank");
+  };
+
+  const handleDelete = async (name: string) => {
+    const { error } = await supabase.storage
+      .from("contrato-arquivos")
+      .remove([`${contratoId}/${name}`]);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Arquivo removido");
+    refetchArquivos();
+  };
+
+  const handleFiles = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const f = files[0];
+    if (f.size > 50 * 1024 * 1024) {
+      toast.error("Arquivo excede 50MB");
+      return;
+    }
+    handleUpload(f);
+  };
+
+  const formatBytes = (b: number) => {
+    if (b < 1024) return `${b} B`;
+    if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
+    return `${(b / 1024 / 1024).toFixed(1)} MB`;
   };
 
   return (
@@ -420,43 +541,72 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
         </div>
       ) : (
       <Card
-        title="Checklist técnico (conferência)"
+        title="Conferência técnica"
+        badge={<StatusBadge {...confStatus} />}
+        bg={contrato?.trava_tecnico_ok ? "#F0FDF9" : "white"}
         right={
-          <div className="flex items-center gap-2">
-            {!canEdit && (
-              <span
-                className="inline-flex items-center gap-1 rounded px-2 py-0.5"
-                style={{ fontSize: 11, backgroundColor: "#F5F7FA", color: "#6B7A90" }}
-                title="Somente leitura — apenas técnico, gerente ou admin podem editar"
+          <div className="flex items-center gap-3">
+            <span style={{ fontSize: 12, color: "#6B7A90" }}>Responsável</span>
+            <div style={{ minWidth: 220 }}>
+              <Select
+                value={contrato?.conferencia_responsavel_id ?? undefined}
+                onValueChange={(v) => atribuirConferente.mutate(v)}
+                disabled={!canEdit || !!contrato?.trava_tecnico_ok}
               >
-                <Lock className="h-3 w-3" /> Somente leitura
-              </span>
-            )}
-            <span style={{ fontSize: 12, color: "#6B7A90" }}>
-              {concluidos} de {total} itens concluídos
-            </span>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Atribuir conferente →" />
+                </SelectTrigger>
+                <SelectContent>
+                  {conferentes.length === 0 && (
+                    <div
+                      className="px-3 py-2"
+                      style={{ fontSize: 12, color: "#6B7A90" }}
+                    >
+                      Nenhum conferente cadastrado
+                    </div>
+                  )}
+                  {conferentes.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         }
       >
-        {pendentes > 0 && (
-          <div
-            className="mb-4 flex items-center gap-2 rounded-lg px-3 py-2"
-            style={{ backgroundColor: "#FEF3C7", color: "#E8A020", fontSize: 12 }}
-          >
-            <AlertTriangle className="h-4 w-4" />
-            Checklist incompleto — {pendentes}{" "}
-            {pendentes === 1 ? "item pendente" : "itens pendentes"}. Conclua para
-            liberar produção.
-          </div>
-        )}
-
+        {/* Progresso conferência */}
+        <div className="mb-2 flex items-center justify-between">
+          <span style={{ fontSize: 13, color: "#6B7A90" }}>
+            {itensConferencia.filter((i) => i.concluido).length} de{" "}
+            {itensConferencia.length} itens concluídos
+          </span>
+        </div>
         <div
-          className="mb-4 h-2 w-full overflow-hidden rounded-full"
-          style={{ backgroundColor: "#E8ECF2" }}
+          className="mb-4 w-full overflow-hidden"
+          style={{ backgroundColor: "#E8ECF2", height: 6, borderRadius: 3 }}
         >
           <div
-            className="h-full transition-all"
-            style={{ width: `${pct}%`, backgroundColor: "#1E6FBF" }}
+            style={{
+              width: `${
+                itensConferencia.length > 0
+                  ? Math.round(
+                      (itensConferencia.filter((i) => i.concluido).length /
+                        itensConferencia.length) *
+                        100,
+                    )
+                  : 0
+              }%`,
+              backgroundColor:
+                itensConferencia.length > 0 &&
+                itensConferencia.every((i) => i.concluido)
+                  ? "#12B76A"
+                  : "#1E6FBF",
+              height: "100%",
+              borderRadius: 3,
+              transition: "width 400ms ease-out, background-color 300ms ease-out",
+            }}
           />
         </div>
 
@@ -466,108 +616,212 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
               Nenhum item de checklist cadastrado.
             </li>
           )}
-          {itensConferencia.map((item) => (
-            <li
-              key={item.id}
-              className="flex items-center gap-3 py-2"
-              style={{ borderTop: "0.5px solid #E8ECF2" }}
-            >
-              <button
-                onClick={() =>
-                  canEdit &&
-                  toggleMutation.mutate({ id: item.id, concluido: item.concluido, sub_etapa: item.sub_etapa })
-                }
-                disabled={!canEdit}
-                className="flex h-5 w-5 shrink-0 items-center justify-center rounded transition-colors disabled:cursor-not-allowed"
-                style={{
-                  backgroundColor: item.concluido ? "#12B76A" : "transparent",
-                  border: item.concluido
-                    ? "1px solid #12B76A"
-                    : "1.5px solid #B0BAC9",
-                  opacity: canEdit ? 1 : 0.7,
-                }}
-                aria-label="Toggle item"
+          {itensConferencia.map((item) => {
+            const confCompleto = !!contrato?.trava_tecnico_ok;
+            const itemEditavel = canEdit && !confCompleto;
+            return (
+              <li
+                key={item.id}
+                className="flex items-center gap-3 px-2 py-2 -mx-2 rounded transition-colors hover:bg-[#F5F7FA]"
+                style={{ borderTop: "0.5px solid #E8ECF2" }}
               >
-                {item.concluido && <Check className="h-3 w-3 text-white" />}
-              </button>
-              <span
-                className="flex-1"
-                style={{
-                  fontSize: 13,
-                  color: item.concluido ? "#6B7A90" : "#0D1117",
-                  textDecoration: item.concluido ? "line-through" : "none",
-                }}
-              >
-                {item.item}
-              </span>
-              <span style={{ fontSize: 12, color: "#6B7A90", minWidth: 110 }}>
-                {item.responsavel ? userMap.get(item.responsavel) ?? "—" : "—"}
-              </span>
-              <span style={{ fontSize: 12, color: "#6B7A90", minWidth: 90 }}>
-                {item.data ? new Date(item.data).toLocaleDateString("pt-BR") : "—"}
-              </span>
-            </li>
-          ))}
+                <button
+                  onClick={() =>
+                    itemEditavel &&
+                    toggleMutation.mutate({
+                      id: item.id,
+                      concluido: item.concluido,
+                      sub_etapa: item.sub_etapa,
+                    })
+                  }
+                  disabled={!itemEditavel}
+                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded transition-colors disabled:cursor-not-allowed"
+                  style={{
+                    backgroundColor: item.concluido ? "#12B76A" : "transparent",
+                    border: item.concluido
+                      ? "1px solid #12B76A"
+                      : "1.5px solid #B0BAC9",
+                    opacity: itemEditavel ? 1 : 0.7,
+                  }}
+                  aria-label="Toggle item"
+                >
+                  {item.concluido && (
+                    <Check
+                      className="h-3 w-3 text-white"
+                      style={{ animation: "checkPop 150ms ease-out" }}
+                    />
+                  )}
+                </button>
+                <span
+                  className="flex-1"
+                  style={{
+                    fontSize: 13,
+                    color: item.concluido ? "#6B7A90" : "#0D1117",
+                    textDecoration: item.concluido ? "line-through" : "none",
+                  }}
+                >
+                  {item.item}
+                </span>
+                <span style={{ fontSize: 12, color: "#6B7A90", minWidth: 110 }}>
+                  {item.responsavel ? userMap.get(item.responsavel) ?? "—" : "—"}
+                </span>
+                <span style={{ fontSize: 11, color: "#B0BAC9", minWidth: 80, textAlign: "right" }}>
+                  {item.concluido && item.data
+                    ? new Date(item.data).toLocaleDateString("pt-BR")
+                    : ""}
+                </span>
+              </li>
+            );
+          })}
         </ul>
+
+        {/* Arquivos do projeto */}
+        <div className="mt-6">
+          <h4 className="mb-3" style={{ fontSize: 13, fontWeight: 500, color: "#0D1117" }}>
+            Arquivos do projeto
+          </h4>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.png,.dwg,application/pdf,image/png"
+            className="hidden"
+            onChange={(e) => {
+              handleFiles(e.target.files);
+              e.target.value = "";
+            }}
+          />
+          {canEdit && !contrato?.trava_tecnico_ok && (
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(true);
+              }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragOver(false);
+                handleFiles(e.dataTransfer.files);
+              }}
+              className="cursor-pointer rounded-lg flex flex-col items-center justify-center text-center transition-colors"
+              style={{
+                border: `2px dashed ${dragOver ? "#1E6FBF" : "#B0BAC9"}`,
+                backgroundColor: dragOver ? "#EFF6FF" : "transparent",
+                padding: "24px 16px",
+              }}
+            >
+              <Upload style={{ width: 20, height: 20, color: dragOver ? "#1E6FBF" : "#6B7A90" }} />
+              <p className="mt-2" style={{ fontSize: 13, color: "#6B7A90" }}>
+                {uploading ? "Enviando..." : "Arraste o projeto aqui ou clique para selecionar"}
+              </p>
+              <p className="mt-1" style={{ fontSize: 11, color: "#B0BAC9" }}>
+                PDF, PNG, DWG — máx 50MB
+              </p>
+            </div>
+          )}
+
+          <ul className="mt-3 flex flex-col">
+            {arquivos.length === 0 && (
+              <li style={{ fontSize: 13, color: "#6B7A90" }}>
+                Nenhum arquivo enviado ainda.
+              </li>
+            )}
+            {arquivos.map((arq) => (
+              <li
+                key={arq.id ?? arq.name}
+                className="flex items-center gap-3 py-2"
+                style={{ borderTop: "0.5px solid #E8ECF2" }}
+              >
+                <FileText className="h-4 w-4 shrink-0" style={{ color: "#6B7A90" }} />
+                <span className="flex-1 truncate" style={{ fontSize: 13, color: "#0D1117", fontWeight: 500 }}>
+                  {arq.name.replace(/^\d+-/, "")}
+                </span>
+                <span style={{ fontSize: 11, color: "#6B7A90", minWidth: 70, textAlign: "right" }}>
+                  {arq.metadata?.size ? formatBytes(arq.metadata.size as number) : "—"}
+                </span>
+                <span style={{ fontSize: 11, color: "#B0BAC9", minWidth: 80, textAlign: "right" }}>
+                  {arq.created_at ? new Date(arq.created_at).toLocaleDateString("pt-BR") : ""}
+                </span>
+                <button
+                  onClick={() => handleDownload(arq.name)}
+                  className="rounded p-1.5 hover:bg-muted"
+                  aria-label="Baixar"
+                >
+                  <Download className="h-4 w-4" style={{ color: "#1E6FBF" }} />
+                </button>
+                {canEdit && !contrato?.trava_tecnico_ok && (
+                  <button
+                    onClick={() => handleDelete(arq.name)}
+                    className="rounded p-1.5 hover:bg-muted"
+                    aria-label="Remover"
+                  >
+                    <Trash2 className="h-4 w-4" style={{ color: "#B42318" }} />
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {contrato?.trava_tecnico_ok && (
+          <div
+            className="mt-4 -mx-5 -mb-5 rounded-b-xl"
+            style={{
+              backgroundColor: "#F0FDF9",
+              borderTop: "0.5px solid #12B76A",
+              padding: "10px 16px",
+              fontSize: 13,
+              color: "#05873C",
+            }}
+          >
+            Conferência concluída
+            {(() => {
+              const data = itensConferencia
+                .filter((i) => i.concluido && i.data)
+                .map((i) => new Date(i.data!).getTime())
+                .sort((a, b) => b - a)[0];
+              return data
+                ? ` em ${new Date(data).toLocaleDateString("pt-BR")} ✓`
+                : " ✓";
+            })()}
+          </div>
+        )}
       </Card>
       )}
 
-      <Card title="Arquivos do projeto">
-        <input
-          ref={fileInputRef}
-          type="file"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) handleUpload(f);
-            e.target.value = "";
+      {/* Validação final */}
+      {contrato?.trava_tecnico_ok && (
+        <div
+          style={{
+            backgroundColor: "#F0FDF9",
+            border: "1px solid #12B76A",
+            borderRadius: 8,
+            padding: 16,
           }}
-        />
-        {canEdit && (
+        >
+          <h4 style={{ fontSize: 14, fontWeight: 500, color: "#05873C" }}>
+            Pronto para produção
+          </h4>
+          <div className="mt-3">
+            <label style={{ fontSize: 12, color: "#05873C" }}>Observações finais</label>
+            <Textarea
+              value={observacoesFinais}
+              onChange={(e) => setObservacoesFinais(e.target.value)}
+              rows={2}
+              className="mt-1"
+              placeholder="Notas para a equipe de produção..."
+            />
+          </div>
           <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-            style={{ backgroundColor: "#1E6FBF", fontSize: 13 }}
+            onClick={() => avancarMutation.mutate()}
+            disabled={avancarMutation.isPending}
+            className="mt-3 inline-flex items-center gap-2 rounded-lg px-4 py-2 text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+            style={{ backgroundColor: "#12B76A", fontSize: 13 }}
           >
-            <Paperclip className="h-4 w-4" />
-            {uploading ? "Enviando..." : "Anexar projeto Promob"}
+            {avancarMutation.isPending ? "Liberando..." : "Liberar para produção →"}
           </button>
-        )}
-
-        <ul className="mt-4 flex flex-col">
-          {arquivos.length === 0 && (
-            <li style={{ fontSize: 13, color: "#6B7A90" }}>
-              Nenhum arquivo enviado ainda.
-            </li>
-          )}
-          {arquivos.map((arq) => (
-            <li
-              key={arq.id ?? arq.name}
-              className="flex items-center justify-between py-2"
-              style={{ borderTop: "0.5px solid #E8ECF2" }}
-            >
-              <div className="flex flex-col">
-                <span style={{ fontSize: 13, color: "#0D1117", fontWeight: 500 }}>
-                  {arq.name.replace(/^\d+-/, "")}
-                </span>
-                <span style={{ fontSize: 11, color: "#6B7A90" }}>
-                  {arq.created_at
-                    ? new Date(arq.created_at).toLocaleDateString("pt-BR")
-                    : ""}
-                </span>
-              </div>
-              <button
-                onClick={() => handleDownload(arq.name)}
-                className="rounded p-2 hover:bg-muted"
-                aria-label="Baixar"
-              >
-                <Download className="h-4 w-4" style={{ color: "#1E6FBF" }} />
-              </button>
-            </li>
-          ))}
-        </ul>
-      </Card>
+        </div>
+      )}
     </div>
   );
 }
