@@ -34,6 +34,13 @@ export function OPStatusActions({ opId, contratoId, status }: Props) {
         update: (u: unknown) => { eq: (c: string, v: string) => Promise<{ error: Error | null }> };
       }).update(updates).eq("id", opId);
       if (error) throw error;
+
+      if (next.next === "concluido") {
+        const { error: cErr } = await (supabase.from("contratos") as unknown as {
+          update: (u: unknown) => { eq: (c: string, v: string) => Promise<{ error: Error | null }> };
+        }).update({ trava_producao_ok: true }).eq("id", contratoId);
+        if (cErr) throw cErr;
+      }
     },
     onSuccess: () => {
       toast.success(next?.next === "concluido" ? "Produção concluída ✓" : "Status atualizado");
