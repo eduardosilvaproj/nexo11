@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -12,14 +12,26 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   contratoId: string;
+  prefill?: {
+    transportadora?: string | null;
+    data_prevista?: string | null;
+    pedido?: string | null;
+  } | null;
 }
 
-export function EntregaCreateDialog({ open, onOpenChange, contratoId }: Props) {
+export function EntregaCreateDialog({ open, onOpenChange, contratoId, prefill }: Props) {
   const qc = useQueryClient();
   const [transportadora, setTransportadora] = useState("");
   const [dataPrevista, setDataPrevista] = useState("");
   const [rota, setRota] = useState("");
   const [custoFrete, setCustoFrete] = useState("");
+
+  useEffect(() => {
+    if (open && prefill) {
+      if (prefill.transportadora) setTransportadora(prefill.transportadora);
+      if (prefill.data_prevista) setDataPrevista(prefill.data_prevista);
+    }
+  }, [open, prefill]);
 
   const mutation = useMutation({
     mutationFn: async () => {
