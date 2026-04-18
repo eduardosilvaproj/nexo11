@@ -46,7 +46,7 @@ serve(async (req) => {
     // --------------------------------------------------------
     const { data: integracao, error: integErr } = await supabase
       .from("integracoes")
-      .select("config, status")
+      .select("config, ativo, ultima_sincronizacao")
       .eq("loja_id", loja_id)
       .eq("tipo", "promob")
       .single();
@@ -87,30 +87,14 @@ serve(async (req) => {
     const setCookieHeader = loginResp.headers.get("set-cookie") || "";
     const locationHeader = loginResp.headers.get("location") || "";
 
-    // Detecção de falha:
-    // - Sem cookies de sessão = falha
-    // - Redirect de volta para tela de Authentication = credenciais erradas
-    // - 200 + redirect para Authentication na própria página = falha
-    // Sucesso típico: 302 com Location apontando para home/Order/etc
-    const isRedirect = loginResp.status >= 300 && loginResp.status < 400;
-    const redirectParaLogin = locationHeader.toLowerCase().includes("authentication");
-    const temCookieSessao = /\.ASPXAUTH|ASP\.NET_SessionId|AUTH/i.test(setCookieHeader);
-
-    const loginFalhou = !temCookieSessao || (isRedirect && redirectParaLogin);
-
-    console.log("Promob login:", {
-      status: loginResp.status,
-      hasLocation: !!locationHeader,
-      redirectParaLogin,
-      temCookieSessao,
-      loginFalhou,
-    });
+    // Login bem sucedido redireciona para home (não para Authentication)
+    const loginFalhou = !setCookieHeader || locationHeader.includes("Authentication") || loginResp.status === 200; // 200 na tela de login = credenciais erradas
 
     if (loginFalhou) {
       // Atualizar status da integração para erro
       await supabase
         .from("integracoes")
-        .update({ status: "erro", updated_at: new Date().toISOString() })
+        .update({ ativo: false, updated_at: new Date().toISOString() })
         .eq("loja_id", loja_id)
         .eq("tipo", "promob");
 
@@ -124,11 +108,9 @@ serve(async (req) => {
     }
 
     // Extrair apenas os cookies necessários (sem as diretivas de segurança)
-    // Split por vírgula só quando seguida de "nome=" (não dentro de Expires=...,GMT)
     const cookies = setCookieHeader
-      .split(/,(?=\s*[A-Za-z0-9_\-\.]+=)/)
+      .split(",")
       .map((c) => c.split(";")[0].trim())
-      .filter(Boolean)
       .join("; ");
 
     // --------------------------------------------------------
@@ -366,8 +348,8 @@ serve(async (req) => {
     await supabase
       .from("integracoes")
       .update({
-        status: "conectado",
-        ultimo_sync: new Date().toISOString(),
+        ativo: true,
+        ultima_sincronizacao: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq("loja_id", loja_id)
