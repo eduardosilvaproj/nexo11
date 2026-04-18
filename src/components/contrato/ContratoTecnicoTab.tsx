@@ -237,6 +237,50 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const atribuirConferente = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase
+        .from("contratos")
+        .update({ conferencia_responsavel_id: userId })
+        .eq("id", contratoId);
+      if (error) throw error;
+      const nome = conferentes.find((c) => c.id === userId)?.nome ?? "—";
+      const { data: auth } = await supabase.auth.getUser();
+      await supabase.from("contrato_logs").insert({
+        contrato_id: contratoId,
+        acao: "conferente_atribuido",
+        titulo: "Conferente atribuído",
+        descricao: nome,
+        autor_id: auth.user?.id ?? null,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Conferente atribuído");
+      qc.invalidateQueries({ queryKey: ["contrato-tecnico", contratoId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const avancarMutation = useMutation({
+    mutationFn: async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      const { data, error } = await supabase.rpc("avancar_contrato", {
+        p_contrato_id: contratoId,
+        p_usuario_id: auth.user?.id ?? undefined,
+      });
+      if (error) throw error;
+      const res = data as { ok: boolean; erro?: string };
+      if (!res.ok) throw new Error(res.erro ?? "Falha ao avançar");
+      return res;
+    },
+    onSuccess: () => {
+      toast.success("Contrato liberado para produção! ✓");
+      qc.invalidateQueries({ queryKey: ["contrato-tecnico", contratoId] });
+      qc.invalidateQueries({ queryKey: ["contrato", contratoId] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   // Status do card de medição
   let medStatus: { label: string; bg: string; fg: string };
   if (contrato?.trava_medicao_ok) {
@@ -245,6 +289,17 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
     medStatus = { label: "Em andamento", bg: "#E6F3FF", fg: "#1E6FBF" };
   } else {
     medStatus = { label: "Aguardando", bg: "#E8ECF2", fg: "#6B7A90" };
+  }
+
+  // Status do card de conferência
+  const algumConfConcluido = itensConferencia.some((i) => i.concluido);
+  let confStatus: { label: string; bg: string; fg: string };
+  if (contrato?.trava_tecnico_ok) {
+    confStatus = { label: "Liberado ✓", bg: "#D1FAE5", fg: "#05873C" };
+  } else if (algumConfConcluido) {
+    confStatus = { label: "Em andamento", bg: "#E6F3FF", fg: "#1E6FBF" };
+  } else {
+    confStatus = { label: "Aguardando", bg: "#E8ECF2", fg: "#6B7A90" };
   }
 
   // Arquivos
