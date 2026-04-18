@@ -65,12 +65,11 @@ export default function Logistica() {
         .eq("acao", "promob_sincronizado")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      const map = new Map<string, string>();
+      const map = new Map<string, { numero: string; createdAt: string }>();
       for (const log of data ?? []) {
         if (map.has(log.contrato_id)) continue;
-        // descricao formato: "Pedido Promob #140167 — Previsão: ... — ..."
         const m = log.descricao?.match(/#(\d+)/);
-        if (m) map.set(log.contrato_id, m[1]);
+        if (m) map.set(log.contrato_id, { numero: m[1], createdAt: log.created_at });
       }
       return map;
     },
