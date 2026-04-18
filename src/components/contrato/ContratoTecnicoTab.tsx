@@ -270,20 +270,23 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
         }
       >
         {/* Progresso medição */}
-        <div className="mb-3 flex items-center justify-between">
-          <span style={{ fontSize: 12, color: "#6B7A90" }}>
+        <div className="mb-2 flex items-center justify-between">
+          <span style={{ fontSize: 13, color: "#6B7A90" }}>
             {medOk} de {medTotal} itens concluídos
           </span>
         </div>
         <div
-          className="mb-4 h-2 w-full overflow-hidden rounded-full"
-          style={{ backgroundColor: "#E8ECF2" }}
+          className="mb-4 w-full overflow-hidden"
+          style={{ backgroundColor: "#E8ECF2", height: 6, borderRadius: 3 }}
         >
           <div
-            className="h-full transition-all"
             style={{
               width: `${medTotal > 0 ? Math.round((medOk / medTotal) * 100) : 0}%`,
-              backgroundColor: contrato?.trava_medicao_ok ? "#12B76A" : "#1E6FBF",
+              backgroundColor:
+                medTotal > 0 && medOk === medTotal ? "#12B76A" : "#1E6FBF",
+              height: "100%",
+              borderRadius: 3,
+              transition: "width 400ms ease-out, background-color 300ms ease-out",
             }}
           />
         </div>
