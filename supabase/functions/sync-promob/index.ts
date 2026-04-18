@@ -1,413 +1,330 @@
-// ============================================================
-// NEXO ERP — Edge Function: sync-promob
-// Sincronização automática com consultasweb.promob.com
-// ============================================================
-// Como usar no Supabase:
-//   1. Supabase Dashboard → Edge Functions → New Function
-//   2. Nome: sync-promob
-//   3. Colar este código
-//   4. Deploy
-// ============================================================
-
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  })
 
 serve(async (req) => {
-  // CORS preflight
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
   }
 
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
+
+  if (!supabaseUrl || !serviceRoleKey || !anonKey) {
+    return json({ ok: false, erro: 'Configuração do servidor incompleta.' }, 500)
+  }
+
+  const authHeader = req.headers.get('authorization') ?? ''
+  if (!authHeader.startsWith('Bearer ')) {
+    return json({ ok: false, erro: 'Não autorizado.' }, 401)
+  }
+
+  let body: unknown
   try {
-    const { loja_id } = await req.json();
+    body = await req.json()
+  } catch {
+    return json({ ok: false, erro: 'Payload inválido.' }, 400)
+  }
 
-    if (!loja_id) {
-      return new Response(
-        JSON.stringify({
-          ok: false,
-          erro: "loja_id é obrigatório",
-        }),
-        { status: 400, headers: corsHeaders },
-      );
-    }
+  const loja_id =
+    typeof body === 'object' && body !== null && 'loja_id' in body && typeof body.loja_id === 'string'
+      ? body.loja_id.trim()
+      : ''
 
-    // --------------------------------------------------------
-    // 1. Conectar ao Supabase com service role
-    // --------------------------------------------------------
-    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  if (!loja_id) {
+    return json({ ok: false, erro: 'loja_id é obrigatório.' }, 400)
+  }
 
-    // --------------------------------------------------------
-    // 2. Buscar credenciais da loja
-    // --------------------------------------------------------
-    const { data: integracao, error: integErr } = await supabase
-      .from("integracoes")
-      .select("config, ativo, ultima_sincronizacao")
-      .eq("loja_id", loja_id)
-      .eq("tipo", "promob")
-      .single();
-
-    if (integErr || !integracao?.config?.empresa || !integracao?.config?.usuario || !integracao?.config?.senha) {
-      return new Response(
-        JSON.stringify({
-          ok: false,
-          erro: "Credenciais Promob não configuradas. Configure em Integrações.",
-        }),
-        { status: 400, headers: corsHeaders },
-      );
-    }
-
-    const { empresa, usuario, senha } = integracao.config;
-
-    // --------------------------------------------------------
-    // 3. Login no portal Promob
-    // --------------------------------------------------------
-    const loginResp = await fetch("https://consultasweb.promob.com/Authentication/Index", {
-      method: "POST",
+  const supabase = createClient(supabaseUrl, serviceRoleKey)
+  const authClient = createClient(supabaseUrl, anonKey, {
+    global: {
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "pt-BR,pt;q=0.9",
+        Authorization: authHeader,
+      },
+    },
+  })
+
+  try {
+    const {
+      data: { user },
+      error: authError,
+    } = await authClient.auth.getUser()
+
+    if (authError || !user) {
+      return json({ ok: false, erro: 'Não autorizado.' }, 401)
+    }
+
+    const [{ data: perfil }, { data: roles }] = await Promise.all([
+      supabase.from('usuarios').select('loja_id').eq('id', user.id).maybeSingle(),
+      supabase.from('user_roles').select('role, loja_id').eq('user_id', user.id),
+    ])
+
+    const isFranqueador = (roles ?? []).some((role) => role.role === 'franqueador')
+    const isStoreManager = (roles ?? []).some(
+      (role) =>
+        (role.role === 'admin' || role.role === 'gerente') &&
+        ((role.loja_id && role.loja_id === loja_id) || (!role.loja_id && perfil?.loja_id === loja_id))
+    )
+
+    if (!isFranqueador && !isStoreManager) {
+      return json({ ok: false, erro: 'Sem permissão para sincronizar esta loja.' }, 403)
+    }
+
+    const { data: integracao, error: integErr } = await supabase
+      .from('integracoes')
+      .select('config, ativo, ultima_sincronizacao')
+      .eq('loja_id', loja_id)
+      .eq('tipo', 'promob')
+      .single()
+
+    if (integErr || !integracao) {
+      return json(
+        {
+          ok: false,
+          erro: 'Integração Promob não encontrada para esta loja.',
+        },
+        400,
+      )
+    }
+
+    const empresa = integracao.config?.empresa
+    const usuario = integracao.config?.usuario
+    const senha = integracao.config?.senha
+
+    console.log(
+      'sync-promob credenciais',
+      JSON.stringify({
+        loja_id,
+        ativo: integracao.ativo,
+        hasEmpresa: !!empresa,
+        hasUsuario: !!usuario,
+        hasSenha: !!senha,
+      }),
+    )
+
+    if (!empresa || !usuario || !senha) {
+      return json(
+        {
+          ok: false,
+          erro: 'Credenciais incompletas. Preencha Empresa, Usuário e Senha em Integrações.',
+        },
+        400,
+      )
+    }
+
+    const loginResp = await fetch('https://consultasweb.promob.com/Authentication/Index', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'pt-BR,pt;q=0.9',
       },
       body: new URLSearchParams({
         Empresa: empresa,
         UserName: usuario,
         Password: senha,
-        RememberMe: "false",
+        RememberMe: 'false',
       }),
-      redirect: "manual",
-    });
+      redirect: 'manual',
+    })
 
-    // Extrair cookies de sessão
-    const setCookieHeader = loginResp.headers.get("set-cookie") || "";
-    const locationHeader = loginResp.headers.get("location") || "";
+    const setCookieHeader = loginResp.headers.get('set-cookie') || ''
+    const locationHeader = loginResp.headers.get('location') || ''
+    const cookieParts = setCookieHeader
+      .split(/,(?=\s*[A-Za-z0-9_.-]+=)/)
+      .map((cookie) => cookie.split(';')[0].trim())
+      .filter(Boolean)
 
-    // Login bem sucedido redireciona para home (não para Authentication)
-    const loginFalhou = !setCookieHeader || locationHeader.includes("Authentication") || loginResp.status === 200; // 200 na tela de login = credenciais erradas
+    const hasSessionCookie = cookieParts.some((cookie) =>
+      /^(?:\.ASPXAUTH|ASP\.NET_SessionId|AUTH)/i.test(cookie),
+    )
+
+    console.log(
+      'sync-promob login',
+      JSON.stringify({
+        status: loginResp.status,
+        location: locationHeader,
+        hasSessionCookie,
+      }),
+    )
+
+    const loginFalhou = !hasSessionCookie || locationHeader.toLowerCase().includes('authentication')
 
     if (loginFalhou) {
-      // Atualizar status da integração para erro
       await supabase
-        .from("integracoes")
+        .from('integracoes')
         .update({ ativo: false, updated_at: new Date().toISOString() })
-        .eq("loja_id", loja_id)
-        .eq("tipo", "promob");
+        .eq('loja_id', loja_id)
+        .eq('tipo', 'promob')
 
-      return new Response(
-        JSON.stringify({
+      return json(
+        {
           ok: false,
-          erro: "Login no Promob falhou. Verifique usuário e senha em Integrações.",
-        }),
-        { status: 401, headers: corsHeaders },
-      );
+          erro: 'Login no Promob falhou. Verifique Empresa, Usuário e Senha.',
+        },
+        401,
+      )
     }
 
-    // Extrair apenas os cookies necessários (sem as diretivas de segurança)
-    const cookies = setCookieHeader
-      .split(",")
-      .map((c) => c.split(";")[0].trim())
-      .join("; ");
+    const cookies = cookieParts.join('; ')
+    const hoje = new Date()
+    const inicio = new Date(hoje.getTime() - 60 * 24 * 60 * 60 * 1000)
+    const fmtBR = (date: Date) =>
+      `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`
 
-    // --------------------------------------------------------
-    // 4. Buscar pedidos — últimos 60 dias
-    // --------------------------------------------------------
-    const hoje = new Date();
-    const inicio = new Date(hoje.getTime() - 60 * 24 * 60 * 60 * 1000);
-
-    const fmtBR = (d: Date) => {
-      const dia = String(d.getDate()).padStart(2, "0");
-      const mes = String(d.getMonth() + 1).padStart(2, "0");
-      const ano = d.getFullYear();
-      return `${dia}/${mes}/${ano}`;
-    };
-
-    const pedidosUrl = new URL("https://consultasweb.promob.com/Order/Index");
-    pedidosUrl.searchParams.set("DataEmissaoInicial", fmtBR(inicio));
-    pedidosUrl.searchParams.set("DataEmissaoFinal", fmtBR(hoje));
-    pedidosUrl.searchParams.set("StatusPedido", "Todos");
+    const pedidosUrl = new URL('https://consultasweb.promob.com/Order/Index')
+    pedidosUrl.searchParams.set('DataEmissaoInicial', fmtBR(inicio))
+    pedidosUrl.searchParams.set('DataEmissaoFinal', fmtBR(hoje))
+    pedidosUrl.searchParams.set('StatusPedido', 'Todos')
 
     const pedidosResp = await fetch(pedidosUrl.toString(), {
       headers: {
         Cookie: cookies,
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        Referer: "https://consultasweb.promob.com/",
+        'User-Agent': 'Mozilla/5.0',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        Referer: 'https://consultasweb.promob.com/',
       },
-    });
+    })
 
     if (!pedidosResp.ok) {
-      return new Response(
-        JSON.stringify({
-          ok: false,
-          erro: "Não foi possível acessar a lista de pedidos. Tente novamente.",
-        }),
-        { status: 502, headers: corsHeaders },
-      );
+      await pedidosResp.text()
+      return json({ ok: false, erro: 'Não foi possível ler o portal do Promob.' }, 502)
     }
 
-    const html = await pedidosResp.text();
+    const html = await pedidosResp.text()
+    console.log('sync-promob pedidos_html', JSON.stringify({ length: html.length }))
 
-    // --------------------------------------------------------
-    // 5. Parsear tabela HTML
-    // Colunas visíveis na tela:
-    // Pedido | DtEmis | T | St | Situa | OC | L | DataP | Cliente... | Transp
-    // --------------------------------------------------------
-    interface PedidoPromob {
-      numeroPedido: string;
-      oc: string;
-      dataPrevista: string;
-      transportadora: string;
-      status: string;
-    }
+    const pedidos: Array<{
+      numeroPedido: string
+      oc: string
+      dataPrevista: string
+      transportadora: string
+    }> = []
 
-    const pedidos: PedidoPromob[] = [];
-
-    // Extrair linhas da tabela (<tr> com células <td>)
-    const trRegex = /<tr[^>]*class="[^"]*(?:odd|even|row)[^"]*"[^>]*>([\s\S]*?)<\/tr>/gi;
-    const tdRegex = /<td[^>]*>([\s\S]*?)<\/td>/gi;
-
-    let trMatch;
+    const trRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi
+    let trMatch: RegExpExecArray | null
     while ((trMatch = trRegex.exec(html)) !== null) {
-      const cells: string[] = [];
-      let tdMatch;
+      const cells: string[] = []
+      const tdLocal = /<td[^>]*>([\s\S]*?)<\/td>/gi
+      let tdMatch: RegExpExecArray | null
 
-      // Reset regex para cada linha
-      const tdRegexLocal = new RegExp(tdRegex.source, tdRegex.flags);
-      while ((tdMatch = tdRegexLocal.exec(trMatch[1])) !== null) {
-        // Remover tags HTML e limpar espaços
-        const texto = tdMatch[1]
-          .replace(/<a[^>]*href="([^"]*)"[^>]*>([^<]*)<\/a>/gi, "$2")
-          .replace(/<[^>]+>/g, "")
-          .replace(/&nbsp;/g, " ")
-          .replace(/\s+/g, " ")
-          .trim();
-        cells.push(texto);
+      while ((tdMatch = tdLocal.exec(trMatch[1])) !== null) {
+        cells.push(tdMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim())
       }
 
-      // Linha válida: primeira célula é número de pedido
       if (cells.length >= 8 && /^\d{5,}$/.test(cells[0])) {
         pedidos.push({
-          numeroPedido: cells[0], // Ex: 140167
-          oc: cells[5] || "", // Ex: MarianaNDormCasal
-          dataPrevista: cells[7] || "", // Ex: 19/05/2026
-          status: cells[3] || "", // Ex: L (Liberado)
-          transportadora: cells[14] || cells[13] || "", // Ex: JOTRANS
-        });
+          numeroPedido: cells[0],
+          oc: cells[5] || '',
+          dataPrevista: cells[7] || '',
+          transportadora: cells[14] || cells[13] || '',
+        })
       }
     }
 
-    // Fallback: tentar parsear tabela genérica se regex específico não encontrou nada
-    if (pedidos.length === 0) {
-      const trGeneric = /<tr>([\s\S]*?)<\/tr>/gi;
-      while ((trMatch = trGeneric.exec(html)) !== null) {
-        const cells: string[] = [];
-        let tdMatch;
-        const tdLocal = /<td[^>]*>([\s\S]*?)<\/td>/gi;
-        while ((tdMatch = tdLocal.exec(trMatch[1])) !== null) {
-          const texto = tdMatch[1]
-            .replace(/<[^>]+>/g, "")
-            .replace(/\s+/g, " ")
-            .trim();
-          cells.push(texto);
-        }
-        if (cells.length >= 8 && /^\d{5,}$/.test(cells[0])) {
-          pedidos.push({
-            numeroPedido: cells[0],
-            oc: cells[5] || "",
-            dataPrevista: cells[7] || "",
-            status: cells[3] || "",
-            transportadora: cells[14] || "",
-          });
-        }
-      }
+    const { data: contratos, error: contratosError } = await supabase
+      .from('contratos')
+      .select('id, cliente_nome')
+      .eq('loja_id', loja_id)
+      .neq('status', 'finalizado')
+
+    if (contratosError) {
+      return json({ ok: false, erro: 'Não foi possível carregar os contratos da loja.' }, 500)
     }
 
-    if (pedidos.length === 0) {
-      return new Response(
-        JSON.stringify({
-          ok: true,
-          total_pedidos: 0,
-          atualizados: 0,
-          mensagem: "Nenhum pedido encontrado no período. Verifique os filtros no portal Promob.",
-        }),
-        { headers: corsHeaders },
-      );
-    }
-
-    // --------------------------------------------------------
-    // 6. Buscar contratos ativos da loja
-    // --------------------------------------------------------
-    const { data: contratos } = await supabase
-      .from("contratos")
-      .select("id, cliente_nome")
-      .eq("loja_id", loja_id)
-      .not("status", "in", '("finalizado","cancelado")');
-
-    if (!contratos || contratos.length === 0) {
-      return new Response(
-        JSON.stringify({
-          ok: true,
-          total_pedidos: pedidos.length,
-          atualizados: 0,
-          mensagem: "Nenhum contrato ativo para cruzar com os pedidos.",
-        }),
-        { headers: corsHeaders },
-      );
-    }
-
-    // --------------------------------------------------------
-    // 7. Normalizar nomes para comparação
-    // --------------------------------------------------------
-    const normalize = (s: string): string =>
-      s
+    const normalize = (value: string) =>
+      value
         .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9]/g, "");
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]/g, '')
 
-    // --------------------------------------------------------
-    // 8. Cruzar e atualizar
-    // --------------------------------------------------------
-    let atualizados = 0;
-    const resultados: Array<{ contrato: string; pedido: string; data: string }> = [];
+    let atualizados = 0
 
     for (const pedido of pedidos) {
-      const ocNorm = normalize(pedido.oc);
-      if (!ocNorm || !pedido.dataPrevista) continue;
+      const ocNorm = normalize(pedido.oc)
+      if (!ocNorm || !pedido.dataPrevista) continue
 
-      // Buscar contrato com nome mais similar
-      const contrato = contratos.find((c) => {
-        const nomeNorm = normalize(c.cliente_nome);
-        // Match exato ou um contém o outro (mínimo 4 chars para evitar falso positivo)
+      const contrato = contratos?.find((item) => {
+        const nomeNormalizado = normalize(item.cliente_nome)
         return (
-          nomeNorm === ocNorm ||
-          (ocNorm.length >= 4 && nomeNorm.includes(ocNorm)) ||
-          (nomeNorm.length >= 4 && ocNorm.includes(nomeNorm))
-        );
-      });
+          nomeNormalizado === ocNorm ||
+          (ocNorm.length >= 4 && nomeNormalizado.includes(ocNorm)) ||
+          (nomeNormalizado.length >= 4 && ocNorm.includes(nomeNormalizado))
+        )
+      })
 
-      if (!contrato) continue;
+      if (!contrato) continue
 
-      // Converter data BR para ISO
-      const partes = pedido.dataPrevista.split("/");
-      if (partes.length !== 3) continue;
-      const [d, m, a] = partes;
-      const dataISO = `${a}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+      const [d, m, a] = pedido.dataPrevista.split('/')
+      if (!d || !m || !a) continue
 
-      // Verificar se data é válida
-      if (isNaN(Date.parse(dataISO))) continue;
+      const dataISO = `${a}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
+      if (Number.isNaN(Date.parse(dataISO))) continue
 
-      // Verificar se entrega já existe para este contrato
-      const { data: entregaExist } = await supabase
-        .from("entregas")
-        .select("id")
-        .eq("contrato_id", contrato.id)
-        .maybeSingle();
+      const { data: entregaExistente } = await supabase
+        .from('entregas')
+        .select('id')
+        .eq('contrato_id', contrato.id)
+        .maybeSingle()
 
-      if (entregaExist) {
+      if (entregaExistente) {
         await supabase
-          .from("entregas")
+          .from('entregas')
           .update({
             data_prevista: dataISO,
-            transportadora: pedido.transportadora || "Não informada",
+            transportadora: pedido.transportadora || 'Não informada',
             updated_at: new Date().toISOString(),
           })
-          .eq("contrato_id", contrato.id);
+          .eq('contrato_id', contrato.id)
       } else {
-        await supabase.from("entregas").insert({
+        await supabase.from('entregas').insert({
           contrato_id: contrato.id,
           data_prevista: dataISO,
-          transportadora: pedido.transportadora || "Não informada",
-          confirmado: false,
-        });
+          transportadora: pedido.transportadora || 'Não informada',
+          status: 'pendente',
+        })
       }
 
-      // Registrar no log do contrato
-      await supabase.from("contrato_logs").insert({
+      await supabase.from('contrato_logs').insert({
         contrato_id: contrato.id,
-        acao: "promob_sincronizado",
-        descricao: `Pedido Promob #${pedido.numeroPedido} sincronizado. Previsão: ${pedido.dataPrevista}. Transportadora: ${pedido.transportadora || "não informada"}.`,
-      });
+        acao: 'promob_sincronizado',
+        titulo: 'Promob sincronizado',
+        descricao: `Pedido #${pedido.numeroPedido} · Previsão: ${pedido.dataPrevista} · ${pedido.transportadora || 'não informada'}`,
+      })
 
-      resultados.push({
-        contrato: contrato.cliente_nome,
-        pedido: pedido.numeroPedido,
-        data: pedido.dataPrevista,
-      });
-      atualizados++;
+      atualizados++
     }
 
-    // --------------------------------------------------------
-    // 9. Atualizar timestamp da última sincronização
-    // --------------------------------------------------------
     await supabase
-      .from("integracoes")
-      .update({
-        ativo: true,
-        ultima_sincronizacao: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("loja_id", loja_id)
-      .eq("tipo", "promob");
+      .from('integracoes')
+      .update({ ativo: true, ultima_sincronizacao: new Date().toISOString() })
+      .eq('loja_id', loja_id)
+      .eq('tipo', 'promob')
 
-    // --------------------------------------------------------
-    // 10. Retornar resultado
-    // --------------------------------------------------------
-    return new Response(
-      JSON.stringify({
-        ok: true,
-        total_pedidos: pedidos.length,
-        atualizados,
-        resultados,
-        mensagem:
-          atualizados > 0
-            ? `${atualizados} contrato(s) atualizado(s) com previsão do Promob`
-            : `${pedidos.length} pedidos encontrados mas nenhum cruzou com contratos ativos. Verifique se os nomes dos clientes coincidem com o campo OC do Promob.`,
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
-    );
+    return json({
+      ok: true,
+      total_pedidos: pedidos.length,
+      atualizados,
+      mensagem:
+        atualizados > 0
+          ? `${atualizados} contrato(s) atualizado(s) com previsão do Promob`
+          : `${pedidos.length} pedidos encontrados mas nenhum cruzou com contratos ativos`,
+    })
   } catch (error) {
-    console.error("Erro sync-promob:", error);
-    return new Response(
-      JSON.stringify({
-        ok: false,
-        erro: "Erro interno na sincronização. Tente novamente.",
-        detalhe: error instanceof Error ? error.message : String(error),
-      }),
-      {
-        status: 500,
-        headers: corsHeaders,
-      },
-    );
+    console.error('Erro sync-promob:', error)
+    return json({ ok: false, erro: 'Erro interno na sincronização.' }, 500)
   }
-});
-
-// ============================================================
-// COMO INSTALAR NO SUPABASE:
-//
-// 1. Acesse: supabase.com → seu projeto → Edge Functions
-// 2. Clique "New Function"
-// 3. Nome: sync-promob
-// 4. Cole todo este código
-// 5. Clique "Deploy"
-//
-// COMO TESTAR:
-// No SQL Editor do Supabase, rode:
-//   SELECT net.http_post(
-//     url := '<sua-url-supabase>/functions/v1/sync-promob',
-//     headers := '{"Authorization": "Bearer <anon-key>"}',
-//     body := '{"loja_id": "<seu-loja-id>"}'
-//   );
-//
-// VARIÁVEIS DE AMBIENTE (já disponíveis automaticamente):
-//   SUPABASE_URL
-//   SUPABASE_SERVICE_ROLE_KEY
-// ============================================================
+})
