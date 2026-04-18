@@ -198,6 +198,14 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
           toast.success("Medição fina concluída! Conferência técnica liberada ✓");
         }
       }
+      if (item.sub_etapa === "conferencia" && !item.concluido) {
+        const restantes = itensConferencia.filter(
+          (i) => i.id !== item.id && !i.concluido,
+        ).length;
+        if (restantes === 0 && itensConferencia.length > 0) {
+          toast.success("Conferência concluída! Contrato liberado para produção ✓");
+        }
+      }
       qc.invalidateQueries({ queryKey: ["checklist", contratoId] });
       qc.invalidateQueries({ queryKey: ["contrato-tecnico", contratoId] });
     },
