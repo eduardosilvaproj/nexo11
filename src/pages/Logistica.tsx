@@ -214,8 +214,12 @@ export default function Logistica() {
                   <td className="px-4 py-3 text-sm">{fmtMoney(Number(e.custo_frete))}</td>
                   <td className="px-4 py-3">
                     {promobNum ? (
-                      <span className="inline-flex items-center rounded-full px-2.5 py-0.5" style={{ backgroundColor: "#E6F3FF", color: "#1E6FBF", fontSize: 11, fontWeight: 500 }}>
-                        #{promobNum}
+                      <span
+                        className="inline-flex items-center rounded-full px-2.5 py-0.5 cursor-help"
+                        style={{ backgroundColor: "#E6F3FF", color: "#1E6FBF", fontSize: 11, fontWeight: 500 }}
+                        title={`Importado do Promob em ${new Date(promobNum.createdAt).toLocaleString("pt-BR")}`}
+                      >
+                        #{promobNum.numero}
                       </span>
                     ) : (
                       <span className="text-sm text-muted-foreground">—</span>
