@@ -68,6 +68,23 @@ export function EntregaCreateDialog({ open, onOpenChange, contratoId, prefill }:
       <DialogContent>
         <DialogHeader><DialogTitle>Cadastrar entrega</DialogTitle></DialogHeader>
         <div className="space-y-3">
+          {prefill?.pedido && (
+            <div
+              style={{
+                backgroundColor: "#E6F3FF",
+                border: "1px solid #1E6FBF",
+                borderRadius: 8,
+                padding: 10,
+                fontSize: 12,
+                color: "#0D1117",
+              }}
+            >
+              <div style={{ fontWeight: 600, color: "#1E6FBF", marginBottom: 2 }}>
+                Pré-preenchido com dados do Promob
+              </div>
+              Pedido <strong>#{prefill.pedido}</strong> — você pode editar antes de salvar.
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label>Transportadora *</Label>
             <Input value={transportadora} onChange={(e) => setTransportadora(e.target.value)} />
