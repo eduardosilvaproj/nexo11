@@ -61,7 +61,7 @@ serve(async (req) => {
       );
     }
 
-    const { usuario, senha } = integracao.config;
+    const { empresa, usuario, senha } = integracao.config;
 
     // --------------------------------------------------------
     // 3. Login no portal Promob
