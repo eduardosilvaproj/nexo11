@@ -75,6 +75,7 @@ serve(async (req) => {
         "Accept-Language": "pt-BR,pt;q=0.9",
       },
       body: new URLSearchParams({
+        Empresa: empresa,
         UserName: usuario,
         Password: senha,
         RememberMe: "false",
