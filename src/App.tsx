@@ -26,6 +26,7 @@ import Lojas from "./pages/Lojas";
 import LojaDetail from "./pages/LojaDetail";
 import NotFound from "./pages/NotFound.tsx";
 import PortalCliente from "./pages/PortalCliente";
+import Integracoes from "./pages/Integracoes";
 
 const queryClient = new QueryClient();
 
@@ -118,8 +119,8 @@ const App = () => (
                 </ProtectedRoute>
               } />
               <Route path="/integracoes" element={
-                <ProtectedRoute roles={["admin"]}>
-                  <Placeholder title="NEXO Integrações" />
+                <ProtectedRoute roles={["admin","gerente"]}>
+                  <Integracoes />
                 </ProtectedRoute>
               } />
             </Route>
