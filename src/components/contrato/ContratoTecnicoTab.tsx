@@ -248,10 +248,12 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
 
   return (
     <div className="flex flex-col gap-4">
+      <style>{`@keyframes checkPop { 0% { transform: scale(1.2); } 100% { transform: scale(1); } }`}</style>
       {/* CARD 1 — Medição fina */}
       <Card
         title="Medição fina"
         badge={<StatusBadge {...medStatus} />}
+        bg={contrato?.trava_medicao_ok ? "#F0FDF9" : "white"}
         right={
           <div className="flex items-center gap-3">
             <span style={{ fontSize: 12, color: "#6B7A90" }}>Responsável</span>
