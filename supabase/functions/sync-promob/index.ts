@@ -87,8 +87,24 @@ serve(async (req) => {
     const setCookieHeader = loginResp.headers.get("set-cookie") || "";
     const locationHeader = loginResp.headers.get("location") || "";
 
-    // Login bem sucedido redireciona para home (não para Authentication)
-    const loginFalhou = !setCookieHeader || locationHeader.includes("Authentication") || loginResp.status === 200; // 200 na tela de login = credenciais erradas
+    // Detecção de falha:
+    // - Sem cookies de sessão = falha
+    // - Redirect de volta para tela de Authentication = credenciais erradas
+    // - 200 + redirect para Authentication na própria página = falha
+    // Sucesso típico: 302 com Location apontando para home/Order/etc
+    const isRedirect = loginResp.status >= 300 && loginResp.status < 400;
+    const redirectParaLogin = locationHeader.toLowerCase().includes("authentication");
+    const temCookieSessao = /\.ASPXAUTH|ASP\.NET_SessionId|AUTH/i.test(setCookieHeader);
+
+    const loginFalhou = !temCookieSessao || (isRedirect && redirectParaLogin);
+
+    console.log("Promob login:", {
+      status: loginResp.status,
+      hasLocation: !!locationHeader,
+      redirectParaLogin,
+      temCookieSessao,
+      loginFalhou,
+    });
 
     if (loginFalhou) {
       // Atualizar status da integração para erro
@@ -108,9 +124,11 @@ serve(async (req) => {
     }
 
     // Extrair apenas os cookies necessários (sem as diretivas de segurança)
+    // Split por vírgula só quando seguida de "nome=" (não dentro de Expires=...,GMT)
     const cookies = setCookieHeader
-      .split(",")
+      .split(/,(?=\s*[A-Za-z0-9_\-\.]+=)/)
       .map((c) => c.split(";")[0].trim())
+      .filter(Boolean)
       .join("; ");
 
     // --------------------------------------------------------
