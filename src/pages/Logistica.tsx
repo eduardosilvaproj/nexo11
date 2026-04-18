@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eye, RefreshCw, Loader2, Upload } from "lucide-react";
-import { ImportPromobXlsDialog } from "@/components/logistica/ImportPromobXlsDialog";
+import { Eye, RefreshCw, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
