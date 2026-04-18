@@ -368,6 +368,7 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
     return `${(b / 1024 / 1024).toFixed(1)} MB`;
   };
 
+  return (
     <div className="flex flex-col gap-4">
       <style>{`@keyframes checkPop { 0% { transform: scale(1.2); } 100% { transform: scale(1); } }`}</style>
       {/* CARD 1 — Medição fina */}
