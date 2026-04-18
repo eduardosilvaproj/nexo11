@@ -369,6 +369,7 @@ export type Database = {
           status: Database["public"]["Enums"]["contrato_status"]
           sub_etapa_tecnico: string
           trava_medicao_ok: boolean
+          trava_producao_ok: boolean
           trava_tecnico_ok: boolean
           updated_at: string
           valor_venda: number
@@ -388,6 +389,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["contrato_status"]
           sub_etapa_tecnico?: string
           trava_medicao_ok?: boolean
+          trava_producao_ok?: boolean
           trava_tecnico_ok?: boolean
           updated_at?: string
           valor_venda?: number
@@ -407,6 +409,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["contrato_status"]
           sub_etapa_tecnico?: string
           trava_medicao_ok?: boolean
+          trava_producao_ok?: boolean
           trava_tecnico_ok?: boolean
           updated_at?: string
           valor_venda?: number
@@ -1028,6 +1031,70 @@ export type Database = {
           },
         ]
       }
+      producao_terceirizada: {
+        Row: {
+          contrato_id: string | null
+          created_at: string
+          data_prevista: string | null
+          id: string
+          importado_em: string
+          loja_id: string
+          numero_pedido: string
+          oc: string | null
+          status: Database["public"]["Enums"]["producao_terceirizada_status"]
+          transportadora: string | null
+          updated_at: string
+        }
+        Insert: {
+          contrato_id?: string | null
+          created_at?: string
+          data_prevista?: string | null
+          id?: string
+          importado_em?: string
+          loja_id: string
+          numero_pedido: string
+          oc?: string | null
+          status?: Database["public"]["Enums"]["producao_terceirizada_status"]
+          transportadora?: string | null
+          updated_at?: string
+        }
+        Update: {
+          contrato_id?: string | null
+          created_at?: string
+          data_prevista?: string | null
+          id?: string
+          importado_em?: string
+          loja_id?: string
+          numero_pedido?: string
+          oc?: string | null
+          status?: Database["public"]["Enums"]["producao_terceirizada_status"]
+          transportadora?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "producao_terceirizada_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "producao_terceirizada_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "producao_terceirizada_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       registros_ponto: {
         Row: {
           created_at: string
@@ -1511,6 +1578,11 @@ export type Database = {
         | "perdido"
       op_status: "aguardando" | "em_corte" | "em_montagem" | "concluido"
       ponto_tipo: "entrada" | "saida"
+      producao_terceirizada_status:
+        | "aguardando_fabricacao"
+        | "em_producao"
+        | "pronto_retirada"
+        | "atrasado"
       transacao_status: "pendente" | "pago" | "cancelado"
       transacao_tipo: "receita" | "despesa"
     }
@@ -1673,6 +1745,12 @@ export const Constants = {
       ],
       op_status: ["aguardando", "em_corte", "em_montagem", "concluido"],
       ponto_tipo: ["entrada", "saida"],
+      producao_terceirizada_status: [
+        "aguardando_fabricacao",
+        "em_producao",
+        "pronto_retirada",
+        "atrasado",
+      ],
       transacao_status: ["pendente", "pago", "cancelado"],
       transacao_tipo: ["receita", "despesa"],
     },
