@@ -143,14 +143,6 @@ export default function Logistica() {
         {podeSincronizar && (
           <div className="flex items-center gap-2">
             <Button
-              variant="outline"
-              onClick={() => setImportOpen(true)}
-              style={{ borderColor: "#1E6FBF", color: "#1E6FBF" }}
-            >
-              <Upload className="mr-2 h-4 w-4" />
-              Importar Promob XLS
-            </Button>
-            <Button
               onClick={sincronizarPromob}
               disabled={syncing}
               style={{ backgroundColor: "#1E6FBF", color: "#fff" }}
@@ -161,8 +153,6 @@ export default function Logistica() {
           </div>
         )}
       </div>
-
-      <ImportPromobXlsDialog open={importOpen} onOpenChange={setImportOpen} lojaId={lojaId} />
 
       <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
         <MetricCard label="Entregas pendentes" value={String(metrics.pendentes)} />
