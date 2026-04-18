@@ -130,6 +130,33 @@ export function ContratoLogisticaTab({ contratoId }: Props) {
           </span>
         }
       >
+        {promob && (
+          <div
+            className="mb-4"
+            style={{
+              backgroundColor: "#E6F3FF",
+              border: "1px solid #1E6FBF",
+              borderRadius: 8,
+              padding: 10,
+            }}
+          >
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#1E6FBF", marginBottom: 4 }}>
+              Previsão sincronizada do Promob
+            </div>
+            <div style={{ fontSize: 12, color: "#0D1117" }}>
+              {promob.pedido && <>Pedido: <strong>#{promob.pedido}</strong></>}
+              {promob.transportadora && <> · Transportadora: <strong>{promob.transportadora}</strong></>}
+            </div>
+            {promob.data_prevista && (
+              <div style={{ fontSize: 12, color: "#0D1117" }}>
+                Data prevista: <strong>{fmtDate(promob.data_prevista)}</strong>
+              </div>
+            )}
+            <div style={{ fontSize: 12, color: "#6B7A90", marginTop: 4 }}>
+              Sincronizado em {new Date(promob.sincronizado_em).toLocaleString("pt-BR")}
+            </div>
+          </div>
+        )}
         <Field label="Transportadora" value={entrega.transportadora ?? "—"} />
         <Field label="Data prevista" value={fmtDate(entrega.data_prevista)} />
         <Field label="Rota / endereço" value={entrega.rota ?? "—"} />
