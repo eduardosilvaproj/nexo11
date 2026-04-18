@@ -21,15 +21,17 @@ const Card = ({
   right,
   children,
   badge,
+  bg = "white",
 }: {
   title: string;
   right?: React.ReactNode;
   children: React.ReactNode;
   badge?: React.ReactNode;
+  bg?: string;
 }) => (
   <div
-    className="rounded-xl bg-white"
-    style={{ border: "0.5px solid #E8ECF2", padding: 20 }}
+    className="rounded-xl transition-colors"
+    style={{ border: "0.5px solid #E8ECF2", padding: 20, backgroundColor: bg }}
   >
     <div className="mb-4 flex items-center justify-between gap-3">
       <div className="flex items-center gap-2">
@@ -141,7 +143,11 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
   const pct = total > 0 ? Math.round((concluidos / total) * 100) : 0;
 
   const toggleMutation = useMutation({
-    mutationFn: async (item: { id: string; concluido: boolean }) => {
+    mutationFn: async (item: {
+      id: string;
+      concluido: boolean;
+      sub_etapa: string;
+    }) => {
       const { error } = await supabase
         .from("checklists_tecnicos")
         .update({
@@ -150,8 +156,17 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
         })
         .eq("id", item.id);
       if (error) throw error;
+      return item;
     },
-    onSuccess: () => {
+    onSuccess: (item) => {
+      if (item.sub_etapa === "medicao" && !item.concluido) {
+        const restantes = itensMedicao.filter(
+          (i) => i.id !== item.id && !i.concluido,
+        ).length;
+        if (restantes === 0 && itensMedicao.length > 0) {
+          toast.success("Medição fina concluída! Conferência técnica liberada ✓");
+        }
+      }
       qc.invalidateQueries({ queryKey: ["checklist", contratoId] });
       qc.invalidateQueries({ queryKey: ["contrato-tecnico", contratoId] });
     },
@@ -233,10 +248,12 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
 
   return (
     <div className="flex flex-col gap-4">
+      <style>{`@keyframes checkPop { 0% { transform: scale(1.2); } 100% { transform: scale(1); } }`}</style>
       {/* CARD 1 — Medição fina */}
       <Card
         title="Medição fina"
         badge={<StatusBadge {...medStatus} />}
+        bg={contrato?.trava_medicao_ok ? "#F0FDF9" : "white"}
         right={
           <div className="flex items-center gap-3">
             <span style={{ fontSize: 12, color: "#6B7A90" }}>Responsável</span>
@@ -297,48 +314,65 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
               Nenhum item de medição cadastrado.
             </li>
           )}
-          {itensMedicao.map((item) => (
-            <li
-              key={item.id}
-              className="flex items-center gap-3 py-2"
-              style={{ borderTop: "0.5px solid #E8ECF2" }}
-            >
-              <button
-                onClick={() =>
-                  canEdit &&
-                  toggleMutation.mutate({ id: item.id, concluido: item.concluido })
-                }
-                disabled={!canEdit}
-                className="flex h-5 w-5 shrink-0 items-center justify-center rounded transition-colors disabled:cursor-not-allowed"
-                style={{
-                  backgroundColor: item.concluido ? "#12B76A" : "transparent",
-                  border: item.concluido
-                    ? "1px solid #12B76A"
-                    : "1.5px solid #B0BAC9",
-                  opacity: canEdit ? 1 : 0.7,
-                }}
-                aria-label="Toggle item"
+          {itensMedicao.map((item) => {
+            const medCompleto = !!contrato?.trava_medicao_ok;
+            const itemEditavel = canEdit && !medCompleto;
+            return (
+              <li
+                key={item.id}
+                className="flex items-center gap-3 px-2 py-2 -mx-2 rounded transition-colors hover:bg-[#F5F7FA]"
+                style={{ borderTop: "0.5px solid #E8ECF2" }}
               >
-                {item.concluido && <Check className="h-3 w-3 text-white" />}
-              </button>
-              <span
-                className="flex-1"
-                style={{
-                  fontSize: 13,
-                  color: item.concluido ? "#6B7A90" : "#0D1117",
-                  textDecoration: item.concluido ? "line-through" : "none",
-                }}
-              >
-                {item.item}
-              </span>
-              <span style={{ fontSize: 12, color: "#6B7A90", minWidth: 110 }}>
-                {item.responsavel ? userMap.get(item.responsavel) ?? "—" : "—"}
-              </span>
-              <span style={{ fontSize: 12, color: "#6B7A90", minWidth: 90 }}>
-                {item.data ? new Date(item.data).toLocaleDateString("pt-BR") : "—"}
-              </span>
-            </li>
-          ))}
+                <button
+                  onClick={() =>
+                    itemEditavel &&
+                    toggleMutation.mutate({
+                      id: item.id,
+                      concluido: item.concluido,
+                      sub_etapa: item.sub_etapa,
+                    })
+                  }
+                  disabled={!itemEditavel}
+                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded transition-colors disabled:cursor-not-allowed"
+                  style={{
+                    backgroundColor: item.concluido ? "#12B76A" : "transparent",
+                    border: item.concluido
+                      ? "1px solid #12B76A"
+                      : "1.5px solid #B0BAC9",
+                    opacity: itemEditavel ? 1 : 0.7,
+                  }}
+                  aria-label="Toggle item"
+                >
+                  {item.concluido && (
+                    <Check
+                      className="h-3 w-3 text-white"
+                      style={{
+                        animation: "checkPop 150ms ease-out",
+                      }}
+                    />
+                  )}
+                </button>
+                <span
+                  className="flex-1"
+                  style={{
+                    fontSize: 13,
+                    color: item.concluido ? "#6B7A90" : "#0D1117",
+                    textDecoration: item.concluido ? "line-through" : "none",
+                  }}
+                >
+                  {item.item}
+                </span>
+                <span style={{ fontSize: 12, color: "#6B7A90", minWidth: 110 }}>
+                  {item.responsavel ? userMap.get(item.responsavel) ?? "—" : "—"}
+                </span>
+                <span style={{ fontSize: 11, color: "#B0BAC9", minWidth: 80, textAlign: "right" }}>
+                  {item.concluido && item.data
+                    ? new Date(item.data).toLocaleDateString("pt-BR")
+                    : ""}
+                </span>
+              </li>
+            );
+          })}
         </ul>
       </Card>
 
@@ -399,7 +433,7 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
               <button
                 onClick={() =>
                   canEdit &&
-                  toggleMutation.mutate({ id: item.id, concluido: item.concluido })
+                  toggleMutation.mutate({ id: item.id, concluido: item.concluido, sub_etapa: item.sub_etapa })
                 }
                 disabled={!canEdit}
                 className="flex h-5 w-5 shrink-0 items-center justify-center rounded transition-colors disabled:cursor-not-allowed"
