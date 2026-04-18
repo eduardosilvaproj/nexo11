@@ -199,6 +199,45 @@ export function ImportPromobXlsDialog({ open, onOpenChange, lojaId }: Props) {
           if (insErr) { console.error(insErr); continue; }
         }
 
+        // Upsert into producao_terceirizada (one row per contrato_id+numero_pedido)
+        if (lojaId) {
+          const { data: existing } = await (supabase as unknown as {
+            from: (t: string) => {
+              select: (s: string) => {
+                eq: (c: string, v: string) => {
+                  eq: (c: string, v: string) => {
+                    maybeSingle: () => Promise<{ data: { id: string } | null }>;
+                  };
+                };
+              };
+            };
+          })
+            .from("producao_terceirizada")
+            .select("id")
+            .eq("contrato_id", p.contratoId)
+            .eq("numero_pedido", p.numeroPedido || "");
+
+          if (existing) {
+            await (supabase.from("producao_terceirizada") as unknown as {
+              update: (u: unknown) => { eq: (c: string, v: string) => Promise<unknown> };
+            })
+              .update({ data_prevista: iso, transportadora: p.transportadora || null, oc: p.oc, importado_em: new Date().toISOString() })
+              .eq("id", existing.id);
+          } else {
+            await (supabase.from("producao_terceirizada") as unknown as {
+              insert: (u: unknown) => Promise<unknown>;
+            }).insert({
+              loja_id: lojaId,
+              contrato_id: p.contratoId,
+              numero_pedido: p.numeroPedido || `s/n-${Date.now()}`,
+              oc: p.oc,
+              data_prevista: iso,
+              transportadora: p.transportadora || null,
+              status: "aguardando_fabricacao",
+            });
+          }
+        }
+
         await supabase.from("contrato_logs").insert({
           contrato_id: p.contratoId,
           acao: "promob_sincronizado",
