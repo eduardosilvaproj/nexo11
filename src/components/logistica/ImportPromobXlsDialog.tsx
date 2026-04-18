@@ -201,32 +201,26 @@ export function ImportPromobXlsDialog({ open, onOpenChange, lojaId }: Props) {
 
         // Upsert into producao_terceirizada (one row per contrato_id+numero_pedido)
         if (lojaId) {
-          const { data: existing } = await (supabase as unknown as {
+          const sb = supabase as unknown as {
             from: (t: string) => {
-              select: (s: string) => {
-                eq: (c: string, v: string) => {
-                  eq: (c: string, v: string) => {
-                    maybeSingle: () => Promise<{ data: { id: string } | null }>;
-                  };
-                };
-              };
+              select: (s: string) => { eq: (c: string, v: unknown) => { eq: (c: string, v: unknown) => { maybeSingle: () => Promise<{ data: { id: string } | null }> } } };
+              update: (u: unknown) => { eq: (c: string, v: unknown) => Promise<unknown> };
+              insert: (u: unknown) => Promise<unknown>;
             };
-          })
+          };
+          const { data: existing } = await sb
             .from("producao_terceirizada")
             .select("id")
             .eq("contrato_id", p.contratoId)
-            .eq("numero_pedido", p.numeroPedido || "");
+            .eq("numero_pedido", p.numeroPedido || "")
+            .maybeSingle();
 
           if (existing) {
-            await (supabase.from("producao_terceirizada") as unknown as {
-              update: (u: unknown) => { eq: (c: string, v: string) => Promise<unknown> };
-            })
+            await sb.from("producao_terceirizada")
               .update({ data_prevista: iso, transportadora: p.transportadora || null, oc: p.oc, importado_em: new Date().toISOString() })
               .eq("id", existing.id);
           } else {
-            await (supabase.from("producao_terceirizada") as unknown as {
-              insert: (u: unknown) => Promise<unknown>;
-            }).insert({
+            await sb.from("producao_terceirizada").insert({
               loja_id: lojaId,
               contrato_id: p.contratoId,
               numero_pedido: p.numeroPedido || `s/n-${Date.now()}`,
