@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PrazoCell } from "@/components/producao/PrazoBadge";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -91,13 +92,8 @@ export default function Producao() {
     });
   }, [ops, statusFilter, fornecedorFilter, search]);
 
-  return (
-    <div className="p-8">
-      <div className="mb-6">
-        <h1 style={{ fontSize: 22, fontWeight: 600, color: "#0D1117" }}>NEXO Produção</h1>
-        <p style={{ fontSize: 13, color: "#6B7A90" }}>Ordens de produção ativas</p>
-      </div>
-
+  const tableNode = (
+    <>
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
@@ -172,6 +168,45 @@ export default function Producao() {
           </tbody>
         </table>
       </div>
+    </>
+  );
+
+  return (
+    <div className="p-8">
+      <div className="mb-6">
+        <h1 style={{ fontSize: 22, fontWeight: 600, color: "#0D1117" }}>NEXO Produção</h1>
+        <p style={{ fontSize: 13, color: "#6B7A90" }}>Ordens de produção ativas</p>
+      </div>
+
+      <Tabs defaultValue="terceirizada" className="w-full">
+        <TabsList className="bg-transparent p-0 h-auto rounded-none border-b border-[#E8ECF2] w-full justify-start gap-6 mb-6">
+          <TabsTrigger
+            value="terceirizada"
+            className="rounded-none bg-transparent px-0 pb-3 pt-0 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-[#1E6FBF] data-[state=active]:border-b-2 data-[state=active]:border-[#1E6FBF] text-[#6B7A90] text-sm font-medium"
+          >
+            Terceirizada (Promob)
+          </TabsTrigger>
+          <TabsTrigger
+            value="interna"
+            className="rounded-none bg-transparent px-0 pb-3 pt-0 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-[#1E6FBF] data-[state=active]:border-b-2 data-[state=active]:border-[#1E6FBF] text-[#6B7A90] text-sm font-medium"
+          >
+            Interna
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="terceirizada" className="mt-0">
+          {tableNode}
+        </TabsContent>
+        <TabsContent value="interna" className="mt-0">
+          <div
+            className="rounded-xl flex flex-col items-center justify-center gap-2 py-16"
+            style={{ backgroundColor: "#F5F7FA", border: "1px dashed #B0BAC9" }}
+          >
+            <span style={{ fontSize: 14, color: "#0D1117", fontWeight: 500 }}>Produção interna em breve</span>
+            <span style={{ fontSize: 12, color: "#6B7A90" }}>Acompanhe ordens executadas pela equipe interna aqui.</span>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
