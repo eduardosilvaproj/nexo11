@@ -81,7 +81,7 @@ export function TerceirizadaTab() {
     const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
     for (const p of pedidos) {
       if (p.status === "pronto_retirada") m.pronto++;
-      else if (p.status === "atrasado" || (p.data_prevista && new Date(p.data_prevista) < hoje && p.status !== "pronto_retirada")) m.atrasado++;
+      else if (p.status === "atrasado" || (p.data_prevista && new Date(p.data_prevista) < hoje)) m.atrasado++;
       else if (p.status === "aguardando_fabricacao") m.aguardando++;
     }
     return m;
