@@ -38,7 +38,6 @@ export default function Logistica() {
   const [search, setSearch] = useState("");
   const [confirmTarget, setConfirmTarget] = useState<{ id: string; contratoId: string } | null>(null);
   const [syncing, setSyncing] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
 
   const { data: entregas, isLoading } = useQuery({
     queryKey: ["logistica-list"],
