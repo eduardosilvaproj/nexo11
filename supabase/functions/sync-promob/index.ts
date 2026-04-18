@@ -7,21 +7,8 @@ const app = new Hono();
 
 app.options("/*", () => new Response("ok", { headers: corsHeaders }));
 
-const ItemSchema = z.object({
-  codigo: z.string().trim().min(1).max(120),
-  descricao: z.string().trim().min(1).max(500),
-  quantidade: z.number().int().positive().max(100000),
-  largura_mm: z.number().nonnegative().max(100000).optional(),
-  altura_mm: z.number().nonnegative().max(100000).optional(),
-  profundidade_mm: z.number().nonnegative().max(100000).optional(),
-  material: z.string().trim().max(120).optional(),
-  observacoes: z.string().trim().max(1000).optional(),
-});
-
 const BodySchema = z.object({
-  contrato_id: z.string().uuid(),
-  itens: z.array(ItemSchema).min(1).max(2000),
-  observacoes: z.string().trim().max(2000).optional(),
+  loja_id: z.string().uuid(),
 });
 
 function jsonResponse(body: unknown, status = 200) {
@@ -30,6 +17,12 @@ function jsonResponse(body: unknown, status = 200) {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
+
+const normalize = (s: string) =>
+  s.toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "");
 
 app.post("/sync-promob", async (c) => {
   const authHeader = c.req.header("Authorization");
@@ -64,76 +57,180 @@ app.post("/sync-promob", async (c) => {
   }
   const parsed = BodySchema.safeParse(body);
   if (!parsed.success) {
-    return jsonResponse(
-      { error: parsed.error.flatten().fieldErrors },
-      400,
-    );
+    return jsonResponse({ error: parsed.error.flatten().fieldErrors }, 400);
   }
-  const { contrato_id, itens, observacoes } = parsed.data;
+  const { loja_id } = parsed.data;
 
-  // Authorization: caller must have access to this contract (admin/gerente/tecnico)
-  const [
-    { data: isAdmin },
-    { data: isGerente },
-    { data: isTecnico },
-  ] = await Promise.all([
+  // Authorization: admin or gerente of this loja
+  const [{ data: isAdmin }, { data: isGerente }] = await Promise.all([
     callerClient.rpc("has_role", { _user_id: callerId, _role: "admin" }),
-    callerClient.rpc("has_role", { _user_id: callerId, _role: "gerente" }),
-    callerClient.rpc("has_role", { _user_id: callerId, _role: "tecnico" }),
+    callerClient.rpc("has_role", {
+      _user_id: callerId,
+      _role: "gerente",
+      _loja_id: loja_id,
+    }),
   ]);
-  if (!isAdmin && !isGerente && !isTecnico) {
+  if (!isAdmin && !isGerente) {
     return jsonResponse({ error: "Forbidden" }, 403);
   }
 
-  // Verify contract belongs to caller's loja (RLS-enforced read)
-  const { data: contrato, error: contratoErr } = await callerClient
-    .from("contratos")
-    .select("id, loja_id, status")
-    .eq("id", contrato_id)
-    .maybeSingle();
-  if (contratoErr || !contrato) {
-    return jsonResponse({ error: "Contrato não encontrado" }, 404);
-  }
-
-  // Service-role client for writes (after authorization)
+  // Service role for cross-table writes after authorization
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
     auth: { persistSession: false },
   });
 
-  // Upsert ordem de produção for the contract with the synced items
-  const { data: existingOp } = await admin
-    .from("ordens_producao")
-    .select("id")
-    .eq("contrato_id", contrato_id)
+  // 1. Buscar credenciais da loja
+  const { data: integracao } = await admin
+    .from("integracoes")
+    .select("config")
+    .eq("loja_id", loja_id)
+    .eq("tipo", "promob")
+    .eq("ativo", true)
     .maybeSingle();
 
-  const payload = {
-    contrato_id,
-    itens_json: itens,
-    observacoes: observacoes ?? null,
-  };
-
-  let opId: string | null = existingOp?.id ?? null;
-  if (opId) {
-    const { error: updErr } = await admin
-      .from("ordens_producao")
-      .update(payload)
-      .eq("id", opId);
-    if (updErr) return jsonResponse({ error: updErr.message }, 400);
-  } else {
-    const { data: inserted, error: insErr } = await admin
-      .from("ordens_producao")
-      .insert({ ...payload, status: "aguardando" })
-      .select("id")
-      .single();
-    if (insErr) return jsonResponse({ error: insErr.message }, 400);
-    opId = inserted!.id;
+  const cfg = integracao?.config as
+    | { usuario?: string; senha?: string }
+    | undefined;
+  if (!cfg?.usuario || !cfg?.senha) {
+    return jsonResponse(
+      { ok: false, erro: "Credenciais Promob não configuradas" },
+      400,
+    );
   }
+
+  // 2. Login no portal Promob
+  const loginResp = await fetch(
+    "https://consultasweb.promob.com/Authentication/Index",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        UserName: cfg.usuario,
+        Password: cfg.senha,
+      }),
+      redirect: "manual",
+    },
+  );
+  await loginResp.body?.cancel();
+
+  const cookies = loginResp.headers.get("set-cookie") || "";
+  if (!cookies) {
+    return jsonResponse(
+      { ok: false, erro: "Login falhou — verifique as credenciais" },
+      401,
+    );
+  }
+
+  // 3. Buscar pedidos (últimos 60 dias)
+  const hoje = new Date();
+  const inicio = new Date(hoje.getTime() - 60 * 24 * 60 * 60 * 1000);
+  const fmt = (d: Date) =>
+    `${String(d.getDate()).padStart(2, "0")}/${
+      String(d.getMonth() + 1).padStart(2, "0")
+    }/${d.getFullYear()}`;
+
+  const pedidosResp = await fetch(
+    `https://consultasweb.promob.com/order?dataInicio=${fmt(inicio)}&dataFim=${
+      fmt(hoje)
+    }`,
+    { headers: { Cookie: cookies } },
+  );
+  const html = await pedidosResp.text();
+
+  // 4. Parsear tabela HTML — extrair linhas
+  const linhas: Array<
+    {
+      oc: string;
+      dataPrevista: string;
+      numeroPedido: string;
+      transportadora: string;
+    }
+  > = [];
+  const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+  let rowMatch: RegExpExecArray | null;
+  while ((rowMatch = rowRegex.exec(html)) !== null) {
+    const cells: string[] = [];
+    const cellRegex = /<td[^>]*>([\s\S]*?)<\/td>/gi;
+    let cellMatch: RegExpExecArray | null;
+    while ((cellMatch = cellRegex.exec(rowMatch[1])) !== null) {
+      cells.push(cellMatch[1].replace(/<[^>]+>/g, "").trim());
+    }
+    if (cells.length >= 8 && cells[0].match(/^\d+$/)) {
+      linhas.push({
+        numeroPedido: cells[0],
+        oc: cells[5] || "",
+        dataPrevista: cells[7] || "",
+        transportadora: cells[14] || "",
+      });
+    }
+  }
+
+  // 5. Buscar contratos ativos da loja
+  const { data: contratos } = await admin
+    .from("contratos")
+    .select("id, cliente_nome")
+    .eq("loja_id", loja_id)
+    .not("status", "in", '("finalizado")');
+
+  // 6. Cruzar OC com nome do cliente
+  let atualizados = 0;
+  for (const pedido of linhas) {
+    const ocNorm = normalize(pedido.oc);
+    if (!ocNorm) continue;
+
+    const contrato = contratos?.find((c) => {
+      const nomeNorm = normalize(c.cliente_nome);
+      return nomeNorm.includes(ocNorm) || ocNorm.includes(nomeNorm);
+    });
+    if (!contrato) continue;
+
+    const parts = pedido.dataPrevista.split("/");
+    if (parts.length !== 3) continue;
+    const [d, m, a] = parts;
+    const dataISO = `${a}-${m}-${d}`;
+
+    const { data: entregaExist } = await admin
+      .from("entregas")
+      .select("id")
+      .eq("contrato_id", contrato.id)
+      .maybeSingle();
+
+    if (entregaExist) {
+      await admin.from("entregas").update({
+        data_prevista: dataISO,
+        transportadora: pedido.transportadora,
+      }).eq("id", entregaExist.id);
+    } else {
+      await admin.from("entregas").insert({
+        contrato_id: contrato.id,
+        data_prevista: dataISO,
+        transportadora: pedido.transportadora,
+        status: "pendente",
+      });
+    }
+
+    await admin.rpc("contrato_log_inserir", {
+      _contrato_id: contrato.id,
+      _acao: "promob_sincronizado",
+      _titulo: "Sincronização Promob",
+      _descricao:
+        `Pedido #${pedido.numeroPedido} — Previsão: ${pedido.dataPrevista} — ${pedido.transportadora}`,
+    });
+
+    atualizados++;
+  }
+
+  await admin
+    .from("integracoes")
+    .update({ ultima_sincronizacao: new Date().toISOString() })
+    .eq("loja_id", loja_id)
+    .eq("tipo", "promob");
 
   return jsonResponse({
     ok: true,
-    ordem_producao_id: opId,
-    total_itens: itens.length,
+    total_pedidos: linhas.length,
+    atualizados,
+    mensagem: `${atualizados} contratos atualizados`,
   });
 });
 
