@@ -1,6 +1,14 @@
 import { useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, Download, Paperclip, AlertTriangle, Lock } from "lucide-react";
+import {
+  Check,
+  Download,
+  AlertTriangle,
+  Lock,
+  Upload,
+  Trash2,
+  FileText,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 interface TecnicoTabProps {
   contratoId: string;
