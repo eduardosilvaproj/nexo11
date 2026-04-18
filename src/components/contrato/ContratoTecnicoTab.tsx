@@ -78,6 +78,7 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [observacoesFinais, setObservacoesFinais] = useState("");
+  const { hasRole } = useAuth();
   const canEdit = hasRole("admin") || hasRole("gerente") || hasRole("tecnico");
 
   // Contrato (campos das travas / sub_etapa / responsáveis)
