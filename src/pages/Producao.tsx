@@ -199,13 +199,7 @@ export default function Producao() {
           <TerceirizadaTab />
         </TabsContent>
         <TabsContent value="interna" className="mt-0">
-          <div
-            className="rounded-xl flex flex-col items-center justify-center gap-2 py-16"
-            style={{ backgroundColor: "#F5F7FA", border: "1px dashed #B0BAC9" }}
-          >
-            <span style={{ fontSize: 14, color: "#0D1117", fontWeight: 500 }}>Produção interna em breve</span>
-            <span style={{ fontSize: 12, color: "#6B7A90" }}>Acompanhe ordens executadas pela equipe interna aqui.</span>
-          </div>
+          {tableNode}
         </TabsContent>
       </Tabs>
     </div>
