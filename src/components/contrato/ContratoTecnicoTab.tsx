@@ -401,6 +401,24 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
       </Card>
 
       {/* Checklist conferência (mantido) */}
+      {!contrato?.trava_medicao_ok ? (
+        <div
+          className="rounded-xl flex flex-col items-center justify-center text-center"
+          style={{
+            border: "0.5px dashed #B0BAC9",
+            backgroundColor: "#F5F7FA",
+            padding: "40px 20px",
+          }}
+        >
+          <Lock style={{ width: 20, height: 20, color: "#B0BAC9" }} />
+          <p className="mt-3" style={{ fontSize: 14, color: "#6B7A90" }}>
+            Disponível após conclusão da medição fina
+          </p>
+          <p className="mt-1" style={{ fontSize: 12, color: "#B0BAC9" }}>
+            Complete o checklist de medição para liberar
+          </p>
+        </div>
+      ) : (
       <Card
         title="Checklist técnico (conferência)"
         right={
@@ -492,6 +510,7 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
           ))}
         </ul>
       </Card>
+      )}
 
       <Card title="Arquivos do projeto">
         <input
