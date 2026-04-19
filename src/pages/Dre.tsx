@@ -88,6 +88,7 @@ export default function Dre() {
   const [ano, setAno] = useState<number>(today.getFullYear());
   const [vendedor, setVendedor] = useState<string>("all");
   const [statusFiltro, setStatusFiltro] = useState<string>("all");
+  const [custoFiltro, setCustoFiltro] = useState<string>("all");
   const [rankBy, setRankBy] = useState<"margem" | "faturamento">("margem");
   const [rows, setRows] = useState<Row[]>([]);
   const [vendedores, setVendedores] = useState<{ id: string; nome: string }[]>([]);
