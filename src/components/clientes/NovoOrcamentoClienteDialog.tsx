@@ -349,32 +349,40 @@ export function NovoOrcamentoClienteDialog({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Frete loja</Label>
+                <Label>Valor de venda sugerido (Promob)</Label>
                 <Input
                   type="number"
                   step={0.01}
                   min={0}
-                  value={freteLoja}
-                  onChange={(e) => setFreteLoja(Math.max(0, parseFloat(e.target.value) || 0))}
+                  value={valorSugerido}
+                  onChange={(e) => setValorSugerido(Math.max(0, parseFloat(e.target.value) || 0))}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Montagem loja</Label>
+                <Label>Desconto sobre valor sugerido (%)</Label>
                 <Input
                   type="number"
-                  step={0.01}
+                  step={0.5}
                   min={0}
-                  value={montagemLoja}
-                  onChange={(e) => setMontagemLoja(Math.max(0, parseFloat(e.target.value) || 0))}
+                  max={60}
+                  value={descontoGlobal}
+                  onChange={(e) =>
+                    setDescontoGlobal(Math.max(0, Math.min(60, parseFloat(e.target.value) || 0)))
+                  }
                 />
               </div>
             </div>
 
             <div className="rounded-lg p-4" style={{ background: "#0D1117" }}>
-              <div className="space-y-1.5 text-sm text-slate-400">
-                <Row label="Subtotal categorias" value={formatBRL(calc.subtotal)} />
-                <Row label="+ Frete" value={formatBRL(freteLoja)} />
-                <Row label="+ Montagem" value={formatBRL(montagemLoja)} />
+              <div className="space-y-1.5 text-sm">
+                <div className="flex items-center justify-between">
+                  <span style={{ color: "#6B7A90" }}>Valor sugerido Promob</span>
+                  <span style={{ color: "#6B7A90" }}>{formatBRL(valorSugerido)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span style={{ color: "#6B7A90" }}>Desconto negociado</span>
+                  <span style={{ color: "#6B7A90" }}>{calc.descGlobalSafe.toFixed(1)}%</span>
+                </div>
               </div>
               <div className="my-3 h-px bg-slate-800" />
               <div className="flex items-baseline justify-between">
