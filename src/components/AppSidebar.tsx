@@ -56,6 +56,7 @@ const gestao = [
   { title: "Lojas", url: "/lojas", icon: Building2, roles: ["admin", "franqueador"] },
   { title: "Cond. Pagamento", url: "/configuracoes/pagamento", icon: Settings, roles: ["admin", "gerente"] },
   { title: "Fornecedores", url: "/configuracoes/fornecedores", icon: Factory, roles: ["admin", "gerente"] },
+  { title: "Montadores", url: "/configuracoes/montadores", icon: Wrench, roles: ["admin", "gerente"] },
 ];
 
 const inteligencia = [
