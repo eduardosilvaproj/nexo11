@@ -73,10 +73,15 @@ export default function ClienteDetail() {
   const navigate = useNavigate();
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [orcamentos, setOrcamentos] = useState<Orcamento[]>([]);
-  const [contratosResumo, setContratosResumo] = useState<{ count: number; total: number }>({
-    count: 0,
-    total: 0,
-  });
+  const [contratos, setContratos] = useState<ContratoRow[]>([]);
+  const [historico, setHistorico] = useState<HistoricoItem[]>([]);
+  const contratosResumo = useMemo(() => {
+    const ativos = contratos.filter((c) => c.status !== "finalizado");
+    return {
+      count: ativos.length,
+      total: ativos.reduce((s, c) => s + Number(c.valor_venda || 0), 0),
+    };
+  }, [contratos]);
   const [editOpen, setEditOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [gerarOpen, setGerarOpen] = useState(false);
@@ -114,15 +119,57 @@ export default function ClienteDetail() {
     if (contratoIds.length > 0) {
       const { data: cs } = await supabase
         .from("contratos")
-        .select("id,status,valor_venda")
-        .in("id", contratoIds);
-      const ativos = (cs ?? []).filter((c) => c.status !== "finalizado");
-      setContratosResumo({
-        count: ativos.length,
-        total: ativos.reduce((s, c) => s + Number(c.valor_venda || 0), 0),
-      });
+        .select("id,cliente_nome,status,valor_venda,data_criacao")
+        .in("id", contratoIds)
+        .order("data_criacao", { ascending: false });
+      const list = (cs ?? []) as ContratoRow[];
+      setContratos(list);
+
+      const { data: logs } = await supabase
+        .from("contrato_logs")
+        .select("id,titulo,descricao,created_at,contrato_id")
+        .in("contrato_id", contratoIds)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      const histLogs: HistoricoItem[] = (logs ?? []).map((l) => ({
+        id: l.id,
+        tipo: "log",
+        titulo: l.titulo,
+        descricao: l.descricao,
+        data: l.created_at,
+      }));
+      const histOrcs: HistoricoItem[] = list.length > 0 || true
+        ? (orcs ?? []).map((o) => ({
+            id: `o-${o.id}`,
+            tipo: "orcamento",
+            titulo: `Orçamento criado: ${o.nome}`,
+            descricao: o.ordem_compra ? `OC ${o.ordem_compra}` : null,
+            data: o.created_at || new Date().toISOString(),
+          }))
+        : [];
+      const histContratos: HistoricoItem[] = list.map((c) => ({
+        id: `c-${c.id}`,
+        tipo: "contrato",
+        titulo: `Contrato gerado · ${c.status}`,
+        descricao: formatBRL(Number(c.valor_venda || 0)),
+        data: c.data_criacao,
+      }));
+      setHistorico(
+        [...histLogs, ...histOrcs, ...histContratos].sort(
+          (a, b) => new Date(b.data).getTime() - new Date(a.data).getTime(),
+        ),
+      );
     } else {
-      setContratosResumo({ count: 0, total: 0 });
+      setContratos([]);
+      setHistorico(
+        (orcs ?? []).map((o) => ({
+          id: `o-${o.id}`,
+          tipo: "orcamento",
+          titulo: `Orçamento criado: ${o.nome}`,
+          descricao: o.ordem_compra ? `OC ${o.ordem_compra}` : null,
+          data: o.created_at || new Date().toISOString(),
+        })),
+      );
     }
     setLoading(false);
   };
