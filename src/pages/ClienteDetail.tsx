@@ -461,7 +461,11 @@ export default function ClienteDetail() {
                       <Button size="sm" variant="outline">
                         <Eye className="mr-1.5 h-3.5 w-3.5" /> Ver detalhes
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigate(`/orcamentos/${o.id}/negociacao`)}
+                      >
                         <Pencil className="mr-1.5 h-3.5 w-3.5" /> Editar descontos
                       </Button>
                       {podeAprovar && (
