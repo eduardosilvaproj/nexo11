@@ -569,7 +569,7 @@ export default function PortalCliente() {
         </section>
 
         {/* 5.5 Pagamentos / parcelas */}
-        {parcelas.length > 0 && (() => {
+        {(() => {
           const today = new Date(); today.setHours(0,0,0,0);
           const totalPago = parcelas
             .filter((p) => p.status === "pago")
