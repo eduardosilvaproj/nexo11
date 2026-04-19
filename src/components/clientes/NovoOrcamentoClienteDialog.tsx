@@ -127,18 +127,17 @@ export function NovoOrcamentoClienteDialog({
     if (!parsed) return null;
     const linhas = parsed.categorias.map((c) => {
       const tabela = c.tabela || c.itens.reduce((s, x) => s + x.price * x.quantity, 0) || c.total;
-      const custoLinha = c.pedido || tabela; // ORDER por categoria (custo real)
       const desc = descontos[c.id] ?? 0;
       const negociado = tabela * (1 - desc / 100);
-      const margemReal = negociado > 0 ? ((negociado - custoLinha) / negociado) * 100 : 0;
-      return { id: c.id, descricao: c.description, tabela, desc, negociado, margem: margemReal };
+      return { id: c.id, descricao: c.description, tabela, desc, negociado };
     });
     const subtotal = linhas.reduce((s, l) => s + l.negociado, 0);
-    const valorVenda = subtotal + freteLoja + montagemLoja;
+    const descGlobalSafe = Math.max(0, Math.min(60, descontoGlobal || 0));
+    const valorVenda = Math.max(0, (valorSugerido || 0) * (1 - descGlobalSafe / 100));
     const custoProduto = parsed.total_pedido || parsed.total_tabela; // ORDER = custo real
     const margemPrev = valorVenda > 0 ? ((valorVenda - custoProduto) / valorVenda) * 100 : 0;
-    return { linhas, subtotal, valorVenda, custoProduto, margemPrev };
-  }, [parsed, descontos, freteLoja, montagemLoja]);
+    return { linhas, subtotal, valorVenda, custoProduto, margemPrev, descGlobalSafe };
+  }, [parsed, descontos, valorSugerido, descontoGlobal]);
 
   const margemColor = (m: number) =>
     m >= 30 ? "text-emerald-600" : m >= 15 ? "text-amber-600" : "text-destructive";
