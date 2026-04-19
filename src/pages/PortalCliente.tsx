@@ -109,7 +109,7 @@ export default function PortalCliente() {
             .limit(1),
           portalClient
             .from("orcamentos")
-            .select("id, nome, status, valor_negociado, total_pedido, created_at")
+            .select("id, nome, status, valor_negociado, total_pedido, parcelas, parcelas_datas, created_at")
             .order("created_at", { ascending: false }),
           portalClient
             .from("transacoes")
@@ -126,7 +126,37 @@ export default function PortalCliente() {
       setContrato(c);
       setLogs(l ?? []);
       setOrcamentos(orcs ?? []);
-      setParcelas(trs ?? []);
+
+      // Parcelas: prioridade transações → orcamento.parcelas_datas → orcamento.parcelas+valor
+      let parcelasFinal: any[] = trs ?? [];
+      if (parcelasFinal.length === 0 && orcs && orcs.length > 0) {
+        const orc: any = orcs[0];
+        const datas = Array.isArray(orc.parcelas_datas) ? orc.parcelas_datas : [];
+        if (datas.length > 0) {
+          parcelasFinal = datas.map((d: any, i: number) => ({
+            id: `pd-${i}`,
+            data_vencimento: d.data ?? d.vencimento ?? d,
+            valor: Number(d.valor ?? 0),
+            status: d.pago ? "pago" : "pendente",
+          }));
+        } else if (orc.parcelas && Number(orc.parcelas) > 0) {
+          const n = Number(orc.parcelas);
+          const total = Number(orc.valor_negociado ?? orc.total_pedido ?? 0);
+          const valorParc = total > 0 ? total / n : 0;
+          const base = new Date();
+          parcelasFinal = Array.from({ length: n }, (_, i) => {
+            const d = new Date(base);
+            d.setMonth(d.getMonth() + i);
+            return {
+              id: `calc-${i}`,
+              data_vencimento: d.toISOString().slice(0, 10),
+              valor: valorParc,
+              status: "pendente",
+            };
+          });
+        }
+      }
+      setParcelas(parcelasFinal);
       setNpsRespondido((chs ?? []).length > 0);
       setEntregaPrevista((ents?.[0] as any)?.data_prevista ?? null);
     } catch (e: any) {
@@ -539,7 +569,7 @@ export default function PortalCliente() {
         </section>
 
         {/* 5.5 Pagamentos / parcelas */}
-        {parcelas.length > 0 && (() => {
+        {(() => {
           const today = new Date(); today.setHours(0,0,0,0);
           const totalPago = parcelas
             .filter((p) => p.status === "pago")
@@ -549,6 +579,21 @@ export default function PortalCliente() {
             .reduce((s, p) => s + Number(p.valor || 0), 0);
           const fmtBRL = (n: number) =>
             n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+          if (parcelas.length === 0) {
+            return (
+              <section
+                className="portal-card bg-white rounded-xl mx-auto w-full"
+                style={{ maxWidth: 680, border: "0.5px solid #E8ECF2", padding: 24 }}
+              >
+                <h2 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117", marginBottom: 16 }}>
+                  Pagamentos
+                </h2>
+                <p style={{ fontSize: 13, color: "#6B7A90", textAlign: "center", padding: "16px 0" }}>
+                  Nenhuma parcela cadastrada para este contrato
+                </p>
+              </section>
+            );
+          }
           return (
             <section
               className="portal-card bg-white rounded-xl mx-auto w-full"
