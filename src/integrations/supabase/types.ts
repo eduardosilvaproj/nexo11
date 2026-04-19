@@ -410,52 +410,67 @@ export type Database = {
         Row: {
           contrato_id: string
           created_at: string
+          data_medicao: string | null
           data_montagem: string | null
           desconto_percentual: number
           id: string
           loja_id: string
+          medidor_id: string | null
           montador_id: string | null
           nome: string
           observacoes: string | null
+          percentual_medidor: number
           percentual_montador: number
+          status_medicao: Database["public"]["Enums"]["ambiente_status_montagem"]
           status_montagem: Database["public"]["Enums"]["ambiente_status_montagem"]
           updated_at: string
           valor_bruto: number
           valor_liquido: number
+          valor_medidor: number
           valor_montador: number
         }
         Insert: {
           contrato_id: string
           created_at?: string
+          data_medicao?: string | null
           data_montagem?: string | null
           desconto_percentual?: number
           id?: string
           loja_id: string
+          medidor_id?: string | null
           montador_id?: string | null
           nome: string
           observacoes?: string | null
+          percentual_medidor?: number
           percentual_montador?: number
+          status_medicao?: Database["public"]["Enums"]["ambiente_status_montagem"]
           status_montagem?: Database["public"]["Enums"]["ambiente_status_montagem"]
           updated_at?: string
           valor_bruto?: number
           valor_liquido?: number
+          valor_medidor?: number
           valor_montador?: number
         }
         Update: {
           contrato_id?: string
           created_at?: string
+          data_medicao?: string | null
           data_montagem?: string | null
           desconto_percentual?: number
           id?: string
           loja_id?: string
+          medidor_id?: string | null
           montador_id?: string | null
           nome?: string
           observacoes?: string | null
+          percentual_medidor?: number
           percentual_montador?: number
+          status_medicao?: Database["public"]["Enums"]["ambiente_status_montagem"]
           status_montagem?: Database["public"]["Enums"]["ambiente_status_montagem"]
           updated_at?: string
           valor_bruto?: number
           valor_liquido?: number
+          valor_medidor?: number
           valor_montador?: number
         }
         Relationships: [
@@ -478,6 +493,13 @@ export type Database = {
             columns: ["loja_id"]
             isOneToOne: false
             referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrato_ambientes_medidor_id_fkey"
+            columns: ["medidor_id"]
+            isOneToOne: false
+            referencedRelation: "tecnicos_montadores"
             referencedColumns: ["id"]
           },
           {
