@@ -504,7 +504,7 @@ export default function Dre() {
                   Carregando...
                 </td>
               </tr>
-            ) : rows.length === 0 ? (
+            ) : filteredRows.length === 0 ? (
               <tr>
                 <td colSpan={10} className="px-4 py-12 text-center">
                   <BarChart3 className="mx-auto mb-3 h-10 w-10 text-[#B0BAC9]" />
@@ -516,7 +516,7 @@ export default function Dre() {
               </tr>
             ) : (
               <>
-                {rows.map((r) => {
+                {filteredRows.map((r) => {
                   const prev = r.margem_prevista ?? 0;
                   const real = r.margem_realizada ?? 0;
                   const desvio = real - prev;
