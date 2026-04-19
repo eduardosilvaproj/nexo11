@@ -535,6 +535,7 @@ export default function ClienteDetail() {
         }}
         clienteId={cliente.id}
         clienteNome={cliente.nome}
+        clienteContato={cliente.celular || cliente.telefone}
         lojaId={cliente.loja_id}
         preselectedOrcamentoId={gerarPreselect}
         onCreated={fetchAll}
