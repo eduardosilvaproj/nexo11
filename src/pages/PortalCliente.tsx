@@ -579,6 +579,21 @@ export default function PortalCliente() {
             .reduce((s, p) => s + Number(p.valor || 0), 0);
           const fmtBRL = (n: number) =>
             n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+          if (parcelas.length === 0) {
+            return (
+              <section
+                className="portal-card bg-white rounded-xl mx-auto w-full"
+                style={{ maxWidth: 680, border: "0.5px solid #E8ECF2", padding: 24 }}
+              >
+                <h2 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117", marginBottom: 16 }}>
+                  Pagamentos
+                </h2>
+                <p style={{ fontSize: 13, color: "#6B7A90", textAlign: "center", padding: "16px 0" }}>
+                  Nenhuma parcela cadastrada para este contrato
+                </p>
+              </section>
+            );
+          }
           return (
             <section
               className="portal-card bg-white rounded-xl mx-auto w-full"
