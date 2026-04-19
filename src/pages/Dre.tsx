@@ -436,6 +436,17 @@ export default function Dre() {
               <SelectItem value="finalizado">Finalizado</SelectItem>
             </SelectContent>
           </Select>
+
+          <Select value={custoFiltro} onValueChange={setCustoFiltro}>
+            <SelectTrigger className="w-[210px]">
+              <SelectValue placeholder="Status de custo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os custos</SelectItem>
+              <SelectItem value="pendentes">Com custos pendentes</SelectItem>
+              <SelectItem value="pagos">Custos 100% pagos</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
