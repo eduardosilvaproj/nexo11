@@ -70,6 +70,8 @@ export function ContratoAmbientesTab({ contratoId, contratoLojaId }: Props) {
   const lojaId = contratoLojaId || perfil?.loja_id || null;
   const [importing, setImporting] = useState(false);
   const [openNew, setOpenNew] = useState(false);
+  const [editingValor, setEditingValor] = useState<string | null>(null);
+  const [agendarFor, setAgendarFor] = useState<Ambiente | null>(null);
 
   const { data: ambientes, isLoading } = useQuery<Ambiente[]>({
     queryKey: ["contrato_ambientes", contratoId],
@@ -148,8 +150,12 @@ export function ContratoAmbientesTab({ contratoId, contratoLojaId }: Props) {
 
   const updateAmbiente = async (id: string, patch: Partial<Ambiente>) => {
     const { error } = await sb.from("contrato_ambientes").update(patch).eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return false;
+    }
     qc.invalidateQueries({ queryKey: ["contrato_ambientes", contratoId] });
+    return true;
   };
 
   const handleMontadorChange = (a: Ambiente, montadorId: string) => {
@@ -159,6 +165,53 @@ export function ContratoAmbientesTab({ contratoId, contratoLojaId }: Props) {
       montador_id: realId,
       percentual_montador: m ? Number(m.percentual_padrao) : a.percentual_montador,
     });
+  };
+
+  const recalcularDreMontagem = async () => {
+    // Soma valor_montador dos ambientes pagos do contrato
+    const { data, error } = await sb
+      .from("contrato_ambientes")
+      .select("valor_montador,status_montagem")
+      .eq("contrato_id", contratoId);
+    if (error) return;
+    const total = ((data ?? []) as Array<{ valor_montador: number; status_montagem: StatusMontagem }>)
+      .filter((x) => x.status_montagem === "pago")
+      .reduce((s, x) => s + Number(x.valor_montador || 0), 0);
+    await sb.from("dre_contrato").update({ custo_montagem_real: total }).eq("contrato_id", contratoId);
+    qc.invalidateQueries({ queryKey: ["contrato_dre_view", contratoId] });
+    qc.invalidateQueries({ queryKey: ["dre", contratoId] });
+    qc.invalidateQueries({ queryKey: ["dre-tab", contratoId] });
+  };
+
+  const handleStatusChange = async (a: Ambiente, novo: StatusMontagem) => {
+    if (novo === a.status_montagem) return;
+
+    if (novo === "agendado") {
+      setAgendarFor(a);
+      return;
+    }
+
+    const ok = await updateAmbiente(a.id, { status_montagem: novo });
+    if (!ok) return;
+
+    if (novo === "pago") {
+      const m = montadores?.find((x) => x.id === a.montador_id);
+      const nomeMontador = m?.nome ?? "—";
+      const valor = fmtBRL(Number(a.valor_montador || 0));
+      try {
+        await (supabase as any).rpc("contrato_log_inserir", {
+          _contrato_id: contratoId,
+          _acao: "montador_pago",
+          _titulo: "Pagamento de montador",
+          _descricao: `Montador ${nomeMontador} pago — Ambiente ${a.nome} — ${valor}`,
+        });
+      } catch (e) {
+        console.warn("log montador_pago:", e);
+      }
+      await recalcularDreMontagem();
+      qc.invalidateQueries({ queryKey: ["contrato_logs", contratoId] });
+      toast.success("Pagamento registrado e DRE atualizado");
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -190,8 +243,8 @@ export function ContratoAmbientesTab({ contratoId, contratoLojaId }: Props) {
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-xl bg-white" style={{ border: "0.5px solid #E8ECF2" }}>
-        <table className="w-full">
+      <div className="overflow-x-auto rounded-xl bg-white" style={{ border: "0.5px solid #E8ECF2" }}>
+        <table className="w-full" style={{ minWidth: 1100 }}>
           <thead style={{ backgroundColor: "#F7F9FC" }}>
             <tr>
               {["Ambiente", "Valor bruto", "Desc %", "Valor líquido", "Montador", "%", "Valor montador", "Status", "Ações"].map((h) => (
@@ -212,26 +265,40 @@ export function ContratoAmbientesTab({ contratoId, contratoLojaId }: Props) {
             )}
             {ambientes?.map((a) => {
               const st = STATUS_STYLE[a.status_montagem];
+              const isEditingValor = editingValor === a.id;
               return (
                 <tr key={a.id} style={{ borderTop: "0.5px solid #E8ECF2" }}>
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-2" style={{ minWidth: 240 }}>
                     <Input
                       defaultValue={a.nome}
                       onBlur={(e) => e.target.value !== a.nome && updateAmbiente(a.id, { nome: e.target.value })}
-                      style={{ height: 32, fontSize: 13 }}
+                      style={{ height: 32, fontSize: 13, width: "100%" }}
                     />
                   </td>
-                  <td className="px-3 py-2" style={{ width: 120 }}>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      defaultValue={Number(a.valor_bruto)}
-                      onBlur={(e) => {
-                        const v = parseFloat(e.target.value) || 0;
-                        if (v !== Number(a.valor_bruto)) updateAmbiente(a.id, { valor_bruto: v });
-                      }}
-                      style={{ height: 32, fontSize: 13 }}
-                    />
+                  <td className="px-3 py-2" style={{ width: 150 }}>
+                    {isEditingValor ? (
+                      <Input
+                        type="number"
+                        step="0.01"
+                        autoFocus
+                        defaultValue={Number(a.valor_bruto)}
+                        onBlur={(e) => {
+                          const v = parseFloat(e.target.value) || 0;
+                          if (v !== Number(a.valor_bruto)) updateAmbiente(a.id, { valor_bruto: v });
+                          setEditingValor(null);
+                        }}
+                        style={{ height: 32, fontSize: 13 }}
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setEditingValor(a.id)}
+                        className="w-full rounded px-2 py-1 text-left text-sm font-medium hover:bg-[#F1F3F7]"
+                        style={{ color: "#0D1117" }}
+                      >
+                        {fmtBRL(Number(a.valor_bruto))}
+                      </button>
+                    )}
                   </td>
                   <td className="px-3 py-2" style={{ width: 90 }}>
                     <Input
@@ -245,7 +312,7 @@ export function ContratoAmbientesTab({ contratoId, contratoLojaId }: Props) {
                       style={{ height: 32, fontSize: 13 }}
                     />
                   </td>
-                  <td className="px-3 py-2 text-sm font-medium" style={{ color: "#0D1117" }}>
+                  <td className="px-3 py-2 text-sm font-medium" style={{ color: "#0D1117", whiteSpace: "nowrap" }}>
                     {fmtBRL(Number(a.valor_liquido))}
                   </td>
                   <td className="px-3 py-2" style={{ minWidth: 160 }}>
@@ -276,13 +343,13 @@ export function ContratoAmbientesTab({ contratoId, contratoLojaId }: Props) {
                       style={{ height: 32, fontSize: 13 }}
                     />
                   </td>
-                  <td className="px-3 py-2 text-sm" style={{ color: "#0D1117" }}>
+                  <td className="px-3 py-2 text-sm" style={{ color: "#0D1117", whiteSpace: "nowrap" }}>
                     {fmtBRL(Number(a.valor_montador))}
                   </td>
                   <td className="px-3 py-2">
                     <Select
                       value={a.status_montagem}
-                      onValueChange={(v) => updateAmbiente(a.id, { status_montagem: v as StatusMontagem })}
+                      onValueChange={(v) => handleStatusChange(a, v as StatusMontagem)}
                     >
                       <SelectTrigger style={{ height: 28, fontSize: 12, backgroundColor: st.bg, color: st.color, border: "none", fontWeight: 500, width: 120 }}>
                         <SelectValue />
@@ -345,7 +412,118 @@ export function ContratoAmbientesTab({ contratoId, contratoLojaId }: Props) {
         orcamentos={orcamentos ?? []}
         onCreated={() => qc.invalidateQueries({ queryKey: ["contrato_ambientes", contratoId] })}
       />
+
+      <AgendarMontagemDialog
+        open={!!agendarFor}
+        onOpenChange={(v) => { if (!v) setAgendarFor(null); }}
+        ambiente={agendarFor}
+        contratoId={contratoId}
+        montadores={montadores ?? []}
+        onSaved={() => {
+          qc.invalidateQueries({ queryKey: ["contrato_ambientes", contratoId] });
+          qc.invalidateQueries({ queryKey: ["agendamentos"] });
+          setAgendarFor(null);
+        }}
+      />
     </div>
+  );
+}
+
+interface AgendarDialogProps {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  ambiente: Ambiente | null;
+  contratoId: string;
+  montadores: MontadorOpt[];
+  onSaved: () => void;
+}
+
+function AgendarMontagemDialog({ open, onOpenChange, ambiente, contratoId, montadores, onSaved }: AgendarDialogProps) {
+  const [data, setData] = useState<string>("");
+  const [montadorId, setMontadorId] = useState<string>("__none__");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (open && ambiente) {
+      setData(ambiente.data_montagem ?? new Date().toISOString().slice(0, 10));
+      setMontadorId(ambiente.montador_id ?? "__none__");
+    }
+  }, [open, ambiente]);
+
+  const handleSave = async () => {
+    if (!ambiente) return;
+    if (!data) return toast.error("Informe a data de montagem");
+    const realMontadorId = montadorId === "__none__" ? null : montadorId;
+    const m = montadores.find((x) => x.id === realMontadorId);
+    setSaving(true);
+    try {
+      // 1) Atualiza ambiente
+      const patch: Partial<Ambiente> = {
+        status_montagem: "agendado",
+        data_montagem: data,
+        montador_id: realMontadorId,
+      };
+      if (m && (!ambiente.percentual_montador || ambiente.montador_id !== realMontadorId)) {
+        patch.percentual_montador = Number(m.percentual_padrao);
+      }
+      const { error: upErr } = await sb.from("contrato_ambientes").update(patch).eq("id", ambiente.id);
+      if (upErr) throw upErr;
+
+      // 2) Cria registro em agendamentos_montagem (1 por ambiente/data)
+      const { error: insErr } = await sb.from("agendamentos_montagem").insert({
+        contrato_id: contratoId,
+        data,
+        status: "agendado",
+      });
+      if (insErr) {
+        // Não bloqueia se falhar (ex: trigger de conflito) — apenas avisa
+        console.warn("agendamento insert:", insErr);
+        toast.warning("Ambiente agendado, mas registro em Montagem falhou: " + insErr.message);
+      } else {
+        toast.success("Ambiente agendado e registrado em Montagem");
+      }
+      onSaved();
+    } catch (e: any) {
+      toast.error(e.message ?? "Erro ao agendar");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Agendar montagem — {ambiente?.nome}</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-4 py-2">
+          <div className="flex flex-col gap-2">
+            <Label>Data de montagem</Label>
+            <Input type="date" value={data} onChange={(e) => setData(e.target.value)} />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label>Confirmar montador</Label>
+            <Select value={montadorId} onValueChange={setMontadorId}>
+              <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">— Sem montador —</SelectItem>
+                {montadores.map((m) => (
+                  <SelectItem key={m.id} value={m.id}>
+                    {m.nome} ({Number(m.percentual_padrao)}%)
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={handleSave} disabled={saving} style={{ backgroundColor: "#1E6FBF", color: "#fff" }}>
+            {saving ? "Salvando..." : "Agendar"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
