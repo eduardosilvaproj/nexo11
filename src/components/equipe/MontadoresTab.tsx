@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { MontadorFormDialog, type Montador } from "@/components/configuracoes/MontadorFormDialog";
 
-export default function ConfigMontadores() {
+export function MontadoresTab() {
   const qc = useQueryClient();
   const { perfil } = useAuth();
   const lojaId = perfil?.loja_id ?? null;
@@ -49,12 +49,11 @@ export default function ConfigMontadores() {
   };
 
   return (
-    <div className="p-8">
-      <div className="mb-6 flex items-end justify-between">
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 600, color: "#0D1117" }}>Montadores</h1>
-          <p style={{ fontSize: 13, color: "#6B7A90" }}>Cadastro de instaladores e percentuais padrão de comissão</p>
-        </div>
+    <div>
+      <div className="mb-4 flex items-end justify-between">
+        <p style={{ fontSize: 13, color: "#6B7A90" }}>
+          Cadastro de instaladores e percentuais padrão de comissão
+        </p>
         <Button onClick={() => { setEditing(null); setOpen(true); }} style={{ backgroundColor: "#1E6FBF", color: "#fff" }}>
           <Plus className="mr-2 h-4 w-4" /> Novo Montador
         </Button>
