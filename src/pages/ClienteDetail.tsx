@@ -88,6 +88,19 @@ export default function ClienteDetail() {
   const [gerarPreselect, setGerarPreselect] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
+  const aprovarOrcamento = async (orcId: string) => {
+    const { error } = await supabase
+      .from("orcamentos")
+      .update({ status: "aprovado" })
+      .eq("id", orcId);
+    if (error) {
+      toast.error("Não foi possível aprovar o orçamento");
+      return;
+    }
+    toast.success("Orçamento aprovado");
+    fetchAll();
+  };
+
   const fetchAll = async () => {
     if (!id) return;
     setLoading(true);
