@@ -86,7 +86,7 @@ export default function Equipe() {
         >
           {[
             { value: "membros", label: "Membros" },
-            { value: "montadores", label: "Montadores" },
+            { value: "montadores", label: "Técnicos / Montadores" },
             { value: "ponto", label: "Ponto" },
             { value: "desempenho", label: "Desempenho" },
           ].map((t) => (

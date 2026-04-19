@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -17,6 +18,7 @@ export type Montador = {
   email: string | null;
   percentual_padrao: number;
   ativo: boolean;
+  funcoes: string[] | null;
 };
 
 type Props = {
@@ -26,6 +28,12 @@ type Props = {
   montador: Montador | null;
 };
 
+const FUNCOES = [
+  { value: "montador", label: "Montador" },
+  { value: "medidor", label: "Medidor" },
+  { value: "conferente", label: "Conferente" },
+];
+
 export function MontadorFormDialog({ open, onOpenChange, lojaId, montador }: Props) {
   const qc = useQueryClient();
   const [nome, setNome] = useState("");
@@ -33,6 +41,7 @@ export function MontadorFormDialog({ open, onOpenChange, lojaId, montador }: Pro
   const [email, setEmail] = useState("");
   const [percentual, setPercentual] = useState<string>("0");
   const [ativo, setAtivo] = useState(true);
+  const [funcoes, setFuncoes] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -42,12 +51,18 @@ export function MontadorFormDialog({ open, onOpenChange, lojaId, montador }: Pro
       setEmail(montador?.email ?? "");
       setPercentual(String(montador?.percentual_padrao ?? 0));
       setAtivo(montador?.ativo ?? true);
+      setFuncoes(montador?.funcoes ?? []);
     }
   }, [open, montador]);
+
+  const toggleFuncao = (v: string) => {
+    setFuncoes((cur) => cur.includes(v) ? cur.filter(f => f !== v) : [...cur, v]);
+  };
 
   const handleSave = async () => {
     if (!lojaId) return toast.error("Loja não identificada");
     if (!nome.trim()) return toast.error("Informe o nome");
+    if (funcoes.length === 0) return toast.error("Selecione ao menos uma função");
     const pct = Number(String(percentual).replace(",", "."));
     if (Number.isNaN(pct) || pct < 0 || pct > 100) return toast.error("Percentual inválido");
 
@@ -59,6 +74,7 @@ export function MontadorFormDialog({ open, onOpenChange, lojaId, montador }: Pro
       email: email.trim() || null,
       percentual_padrao: pct,
       ativo,
+      funcoes,
     };
 
     const client = supabase as unknown as {
@@ -69,12 +85,12 @@ export function MontadorFormDialog({ open, onOpenChange, lojaId, montador }: Pro
     };
 
     const { error } = montador
-      ? await client.from("montadores").update(payload).eq("id", montador.id)
-      : await client.from("montadores").insert(payload);
+      ? await client.from("tecnicos_montadores").update(payload).eq("id", montador.id)
+      : await client.from("tecnicos_montadores").insert(payload);
 
     setSaving(false);
     if (error) return toast.error(error.message);
-    toast.success(montador ? "Montador atualizado" : "Montador cadastrado");
+    toast.success(montador ? "Cadastro atualizado" : "Cadastro criado");
     qc.invalidateQueries({ queryKey: ["montadores-config"] });
     onOpenChange(false);
   };
@@ -83,14 +99,30 @@ export function MontadorFormDialog({ open, onOpenChange, lojaId, montador }: Pro
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{montador ? "Editar montador" : "Novo montador"}</DialogTitle>
+          <DialogTitle>{montador ? "Editar pessoa" : "Nova pessoa (Técnico/Montador)"}</DialogTitle>
         </DialogHeader>
 
         <div className="grid gap-4 py-2">
           <div className="grid gap-2">
             <Label>Nome *</Label>
-            <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome do montador" />
+            <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome completo" />
           </div>
+
+          <div className="grid gap-2">
+            <Label>Funções *</Label>
+            <div className="flex flex-wrap gap-4 rounded-md border p-3">
+              {FUNCOES.map((f) => (
+                <label key={f.value} className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    checked={funcoes.includes(f.value)}
+                    onCheckedChange={() => toggleFuncao(f.value)}
+                  />
+                  <span className="text-sm">{f.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="grid gap-2">
               <Label>Telefone</Label>

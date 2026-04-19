@@ -8,6 +8,35 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { MontadorFormDialog, type Montador } from "@/components/configuracoes/MontadorFormDialog";
 
+const sb = supabase as unknown as { from: (t: string) => any };
+
+const FUNCAO_BADGES: Record<string, { label: string; bg: string; color: string }> = {
+  montador:   { label: "Montador",   bg: "#E3F0FB", color: "#1E6FBF" },
+  medidor:    { label: "Medidor",    bg: "#FCE9D6", color: "#C7741A" },
+  conferente: { label: "Conferente", bg: "#DDF3E5", color: "#117A40" },
+};
+
+function FuncaoBadges({ funcoes }: { funcoes: string[] | null | undefined }) {
+  const list = funcoes ?? [];
+  if (list.length === 0) return <span className="text-xs text-muted-foreground">—</span>;
+  return (
+    <div className="flex flex-wrap gap-1">
+      {list.map((f) => {
+        const cfg = FUNCAO_BADGES[f] ?? { label: f, bg: "#EEF1F5", color: "#6B7A90" };
+        return (
+          <span
+            key={f}
+            className="rounded-full px-2 py-0.5"
+            style={{ fontSize: 11, fontWeight: 500, backgroundColor: cfg.bg, color: cfg.color }}
+          >
+            {cfg.label}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 export function MontadoresTab() {
   const qc = useQueryClient();
   const { perfil } = useAuth();
@@ -19,29 +48,19 @@ export function MontadoresTab() {
     queryKey: ["montadores-config", lojaId],
     enabled: !!lojaId,
     queryFn: async () => {
-      const { data, error } = await (supabase as unknown as {
-        from: (t: string) => {
-          select: (s: string) => {
-            eq: (c: string, v: string) => {
-              order: (c: string, o: { ascending: boolean }) => Promise<{ data: Montador[] | null; error: Error | null }>;
-            };
-          };
-        };
-      })
-        .from("montadores")
-        .select("id, nome, telefone, email, percentual_padrao, ativo")
+      const { data, error } = await sb
+        .from("tecnicos_montadores")
+        .select("id, nome, telefone, email, percentual_padrao, ativo, funcoes")
         .eq("loja_id", lojaId!)
         .order("nome", { ascending: true });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as Montador[];
     },
   });
 
   const toggleAtivo = async (m: Montador) => {
-    const { error } = await (supabase as unknown as {
-      from: (t: string) => { update: (v: unknown) => { eq: (c: string, v: string) => Promise<{ error: Error | null }> } };
-    })
-      .from("montadores")
+    const { error } = await sb
+      .from("tecnicos_montadores")
       .update({ ativo: !m.ativo })
       .eq("id", m.id);
     if (error) return toast.error(error.message);
@@ -52,10 +71,10 @@ export function MontadoresTab() {
     <div>
       <div className="mb-4 flex items-end justify-between">
         <p style={{ fontSize: 13, color: "#6B7A90" }}>
-          Cadastro de instaladores e percentuais padrão de comissão
+          Cadastro de técnicos, medidores, conferentes e montadores
         </p>
         <Button onClick={() => { setEditing(null); setOpen(true); }} style={{ backgroundColor: "#1E6FBF", color: "#fff" }}>
-          <Plus className="mr-2 h-4 w-4" /> Novo Montador
+          <Plus className="mr-2 h-4 w-4" /> Nova Pessoa
         </Button>
       </div>
 
@@ -63,7 +82,7 @@ export function MontadoresTab() {
         <table className="w-full">
           <thead style={{ backgroundColor: "#F7F9FC" }}>
             <tr>
-              {["Nome", "Telefone", "Email", "% Padrão", "Ativo", "Ações"].map((h) => (
+              {["Nome", "Funções", "Telefone", "Email", "% Padrão", "Ativo", "Ações"].map((h) => (
                 <th key={h} className="px-4 py-3 text-left" style={{ fontSize: 11, color: "#6B7A90", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   {h}
                 </th>
@@ -71,13 +90,14 @@ export function MontadoresTab() {
             </tr>
           </thead>
           <tbody>
-            {isLoading && <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">Carregando...</td></tr>}
+            {isLoading && <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">Carregando...</td></tr>}
             {!isLoading && (!montadores || montadores.length === 0) && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">Nenhum montador cadastrado</td></tr>
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">Nenhuma pessoa cadastrada</td></tr>
             )}
             {montadores?.map((m) => (
               <tr key={m.id} style={{ borderTop: "0.5px solid #E8ECF2" }}>
                 <td className="px-4 py-3 text-sm font-medium">{m.nome}</td>
+                <td className="px-4 py-3"><FuncaoBadges funcoes={m.funcoes} /></td>
                 <td className="px-4 py-3 text-sm">{m.telefone ?? "—"}</td>
                 <td className="px-4 py-3 text-sm">{m.email ?? "—"}</td>
                 <td className="px-4 py-3 text-sm">{Number(m.percentual_padrao).toFixed(2).replace(".", ",")}%</td>

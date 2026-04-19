@@ -484,7 +484,7 @@ export type Database = {
             foreignKeyName: "contrato_ambientes_montador_id_fkey"
             columns: ["montador_id"]
             isOneToOne: false
-            referencedRelation: "montadores"
+            referencedRelation: "tecnicos_montadores"
             referencedColumns: ["id"]
           },
         ]
@@ -1096,50 +1096,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "metas_loja_loja_id_fkey"
-            columns: ["loja_id"]
-            isOneToOne: false
-            referencedRelation: "lojas"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      montadores: {
-        Row: {
-          ativo: boolean
-          created_at: string
-          email: string | null
-          id: string
-          loja_id: string
-          nome: string
-          percentual_padrao: number
-          telefone: string | null
-          updated_at: string
-        }
-        Insert: {
-          ativo?: boolean
-          created_at?: string
-          email?: string | null
-          id?: string
-          loja_id: string
-          nome: string
-          percentual_padrao?: number
-          telefone?: string | null
-          updated_at?: string
-        }
-        Update: {
-          ativo?: boolean
-          created_at?: string
-          email?: string | null
-          id?: string
-          loja_id?: string
-          nome?: string
-          percentual_padrao?: number
-          telefone?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "montadores_loja_id_fkey"
             columns: ["loja_id"]
             isOneToOne: false
             referencedRelation: "lojas"
@@ -1921,6 +1877,53 @@ export type Database = {
             columns: ["contrato_id"]
             isOneToOne: false
             referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tecnicos_montadores: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          email: string | null
+          funcoes: string[]
+          id: string
+          loja_id: string
+          nome: string
+          percentual_padrao: number
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          email?: string | null
+          funcoes?: string[]
+          id?: string
+          loja_id: string
+          nome: string
+          percentual_padrao?: number
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          email?: string | null
+          funcoes?: string[]
+          id?: string
+          loja_id?: string
+          nome?: string
+          percentual_padrao?: number
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "montadores_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
             referencedColumns: ["id"]
           },
         ]
