@@ -382,7 +382,7 @@ export function NovoOrcamentoClienteDialog({
               </div>
               <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
                 <div>
-                  <p className="text-slate-500">Custo do produto (tabela)</p>
+                  <p className="text-slate-500">Custo fabricante (ORDER)</p>
                   <p className="text-slate-200">{formatBRL(calc.custoProduto)}</p>
                 </div>
                 <div className="text-right">
