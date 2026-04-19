@@ -1,8 +1,13 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Upload, FileCode2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Upload, FileCode2, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { parsePromobXml, type PromobParsed } from "@/lib/promob-xml";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface Props {
   open: boolean;
@@ -29,11 +34,14 @@ function categoriaDescontoInicial(tabela: number, total: number): number {
 }
 
 export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
+  const navigate = useNavigate();
+  const { perfil, user } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [parsed, setParsed] = useState<PromobParsed | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [parsing, setParsing] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   // Negociação
   const [descontos, setDescontos] = useState<Record<string, number>>({});
@@ -108,6 +116,80 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
 
   const margemColor = (m: number) =>
     m >= 30 ? "#12B76A" : m >= 15 ? "#F59E0B" : "#E53935";
+
+  const handleCriarContrato = async () => {
+    if (!parsed || !calc) return;
+    if (!perfil?.loja_id) {
+      toast.error("Loja do usuário não encontrada");
+      return;
+    }
+    setCreating(true);
+    try {
+      const categoriasJson = calc.linhas.map((l) => ({
+        id: l.id,
+        descricao: l.descricao,
+        tabela: l.tabela,
+        desconto_pct: l.desc,
+        valor: l.valor,
+      }));
+
+      // 1) Contrato (trigger cria dre_contrato automaticamente)
+      const { data: contrato, error: contErr } = await supabase
+        .from("contratos")
+        .insert({
+          loja_id: perfil.loja_id,
+          cliente_nome: parsed.cliente_nome || "Cliente Promob",
+          valor_venda: calc.valorVenda,
+          vendedor_id: user?.id ?? null,
+        })
+        .select("id")
+        .single();
+      if (contErr) throw contErr;
+
+      // 2) Orçamento vinculado ao contrato
+      const { error: orcErr } = await supabase.from("orcamentos_promob").insert({
+        loja_id: perfil.loja_id,
+        contrato_id: contrato.id,
+        cliente_nome: parsed.cliente_nome || null,
+        ordem_compra: parsed.ordem_compra || null,
+        arquivo_nome: file?.name || null,
+        total_tabela: parsed.total_tabela,
+        total_pedido: parsed.total_pedido,
+        total_orcamento: parsed.total_orcamento,
+        categorias: categoriasJson as unknown as never,
+        itens: parsed.itens as unknown as never,
+        acrescimos: [
+          ...parsed.acrescimos,
+          { id: "frete", description: "Frete", value: frete, percentual: 0 },
+          { id: "montagem", description: "Montagem", value: montagem, percentual: 0 },
+        ] as unknown as never,
+        valor_negociado: calc.valorVenda,
+        status: "convertido",
+        criado_por: user?.id ?? null,
+      });
+      if (orcErr) throw orcErr;
+
+      // 3) DRE com custos previstos do XML
+      const { error: dreErr } = await supabase
+        .from("dre_contrato")
+        .update({
+          valor_venda: calc.valorVenda,
+          custo_produto_previsto: parsed.total_tabela,
+          custo_frete_previsto: frete,
+          custo_montagem_previsto: montagem,
+        })
+        .eq("contrato_id", contrato.id);
+      if (dreErr) throw dreErr;
+
+      toast.success("Contrato criado com DRE preenchido ✓");
+      handleClose(false);
+      navigate(`/contratos/${contrato.id}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao criar contrato");
+    } finally {
+      setCreating(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -298,9 +380,21 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
               </div>
             </section>
 
-            <p className="text-xs" style={{ color: "#B0BAC9" }}>
-              Próximo passo: salvar orçamento e converter em contrato.
-            </p>
+            <Button
+              onClick={handleCriarContrato}
+              disabled={creating || calc.valorVenda <= 0}
+              className="w-full text-white hover:opacity-90"
+              style={{ background: "#12B76A" }}
+            >
+              {creating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Criando contrato...
+                </>
+              ) : (
+                "Criar contrato com este orçamento →"
+              )}
+            </Button>
           </div>
         )}
       </DialogContent>
