@@ -380,9 +380,21 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
               </div>
             </section>
 
-            <p className="text-xs" style={{ color: "#B0BAC9" }}>
-              Próximo passo: salvar orçamento e converter em contrato.
-            </p>
+            <Button
+              onClick={handleCriarContrato}
+              disabled={creating || calc.valorVenda <= 0}
+              className="w-full text-white hover:opacity-90"
+              style={{ background: "#12B76A" }}
+            >
+              {creating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Criando contrato...
+                </>
+              ) : (
+                "Criar contrato com este orçamento →"
+              )}
+            </Button>
           </div>
         )}
       </DialogContent>
