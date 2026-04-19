@@ -170,3 +170,9 @@ export function calcularValorVenda(
   );
   return subtotal + frete + montagem;
 }
+
+// Helper: calcula margem prevista (%) sobre o valor de venda
+export function calcularMargem(valorVenda: number, custoTabela: number): number {
+  if (!valorVenda || valorVenda <= 0) return 0;
+  return Math.round(((valorVenda - custoTabela) / valorVenda) * 1000) / 10;
+}
