@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Pencil, Plus, Eye, ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Eye, ArrowRight, CheckCircle2, FileText, FileSignature, Activity } from "lucide-react";
 import { toast } from "sonner";
 import { ClienteFormDialog } from "@/components/clientes/ClienteFormDialog";
 import { NovoOrcamentoClienteDialog } from "@/components/clientes/NovoOrcamentoClienteDialog";
@@ -545,27 +545,49 @@ export default function ClienteDetail() {
         <TabsContent value="historico" className="space-y-3">
           {historico.length === 0 ? (
             <Card>
-              <CardContent className="py-8 text-center text-sm text-muted-foreground">
-                Sem histórico
+              <CardContent className="py-12 text-center space-y-2">
+                <p className="text-base font-medium">Sem histórico ainda</p>
+                <p className="text-sm text-muted-foreground">
+                  As atividades do cliente aparecerão aqui
+                </p>
               </CardContent>
             </Card>
           ) : (
             <Card>
-              <CardContent className="py-4 space-y-3">
-                {historico.map((h) => (
-                  <div key={h.id} className="flex items-start gap-3 border-b pb-3 last:border-0 last:pb-0">
-                    <div className="mt-1 h-2 w-2 rounded-full bg-primary shrink-0" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{h.titulo}</p>
-                      {h.descricao && (
-                        <p className="text-xs text-muted-foreground">{h.descricao}</p>
-                      )}
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
-                        {new Date(h.data).toLocaleString("pt-BR")}
-                      </p>
-                    </div>
+              <CardContent className="py-6">
+                <div className="relative">
+                  <div className="absolute left-[15px] top-2 bottom-2 w-px bg-border" />
+                  <div className="space-y-5">
+                    {historico.map((h) => {
+                      const meta =
+                        h.tipo === "contrato"
+                          ? { Icon: FileSignature, bg: "#D1FAE5", color: "#05873C" }
+                          : h.tipo === "orcamento"
+                          ? { Icon: FileText, bg: "#E6F3FF", color: "#1E6FBF" }
+                          : { Icon: Activity, bg: "#F5F7FA", color: "#6B7A90" };
+                      const { Icon } = meta;
+                      return (
+                        <div key={h.id} className="relative flex items-start gap-3">
+                          <div
+                            className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                            style={{ backgroundColor: meta.bg, border: "2px solid hsl(var(--background))" }}
+                          >
+                            <Icon size={14} color={meta.color} strokeWidth={2.5} />
+                          </div>
+                          <div className="flex-1 pt-1">
+                            <p className="text-sm font-medium leading-tight">{h.titulo}</p>
+                            {h.descricao && (
+                              <p className="text-xs text-muted-foreground mt-0.5">{h.descricao}</p>
+                            )}
+                            <p className="text-[11px] text-muted-foreground mt-1">
+                              {new Date(h.data).toLocaleString("pt-BR")}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
+                </div>
               </CardContent>
             </Card>
           )}
