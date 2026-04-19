@@ -17,21 +17,7 @@ interface Props {
 const formatBRL = (n: number) =>
   (Number.isFinite(n) ? n : 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-const FRETE_KEYS = ["frete", "transporte", "entrega"];
-const MONTAGEM_KEYS = ["montagem", "instalacao", "instalação"];
-
-function findAcrescimoValue(parsed: PromobParsed, keys: string[]): number {
-  const found = parsed.acrescimos.find((a) =>
-    keys.some((k) => (a.description || "").toLowerCase().includes(k))
-  );
-  return found?.value ?? 0;
-}
-
-function categoriaDescontoInicial(tabela: number, total: number): number {
-  if (tabela <= 0) return 0;
-  const pct = (1 - total / tabela) * 100;
-  return Math.max(0, Math.min(60, Math.round(pct * 10) / 10));
-}
+const clampDesc = (n: number) => Math.max(0, Math.min(60, Math.round(n * 10) / 10));
 
 export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
   const navigate = useNavigate();
@@ -83,14 +69,11 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
 
       const initialDesc: Record<string, number> = {};
       data.categorias.forEach((c) => {
-        const tabela = c.itens.reduce((s, x) => s + x.price * x.quantity, 0) || c.total;
-        initialDesc[c.id] = c.desconto_pct > 0
-          ? Math.min(60, c.desconto_pct)
-          : categoriaDescontoInicial(tabela, c.total);
+        initialDesc[c.id] = clampDesc(c.desconto_pct);
       });
       setDescontos(initialDesc);
-      setFrete(findAcrescimoValue(data, FRETE_KEYS));
-      setMontagem(findAcrescimoValue(data, MONTAGEM_KEYS));
+      setFrete(data.frete);
+      setMontagem(data.montagem);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Falha ao ler XML");
       setParsed(null);
@@ -102,7 +85,7 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
   const calc = useMemo(() => {
     if (!parsed) return null;
     const linhas = parsed.categorias.map((c) => {
-      const tabela = c.itens.reduce((s, x) => s + x.price * x.quantity, 0) || c.total;
+      const tabela = c.tabela || c.itens.reduce((s, x) => s + x.price * x.quantity, 0) || c.total;
       const desc = descontos[c.id] ?? 0;
       const valor = tabela * (1 - desc / 100);
       return { id: c.id, descricao: c.description, tabela, desc, valor };

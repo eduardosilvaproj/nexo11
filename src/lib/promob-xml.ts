@@ -21,6 +21,8 @@ export interface PromobCategoria {
   id: string;
   description: string;
   desconto_pct: number;
+  tabela: number;
+  pedido: number;
   total: number;
   itens: PromobItem[];
 }
@@ -31,21 +33,22 @@ export interface PromobParsed {
   total_tabela: number;
   total_pedido: number;
   total_orcamento: number;
+  frete: number;
+  montagem: number;
   acrescimos: PromobAcrescimo[];
   categorias: PromobCategoria[];
   itens: PromobItem[];
 }
 
 const num = (v: string | null | undefined): number => {
-  if (!v) return 0;
-  const n = parseFloat(String(v).replace(/\./g, "").replace(",", "."));
-  return Number.isFinite(n) ? n : parseFloat(String(v)) || 0;
-};
-
-const findData = (parent: Element | null, id: string): string => {
-  if (!parent) return "";
-  const el = parent.querySelector(`DATA[ID="${id}"], DATA[id="${id}"]`);
-  return el?.getAttribute("VALUE") ?? el?.getAttribute("value") ?? el?.textContent?.trim() ?? "";
+  if (v == null || v === "") return 0;
+  const s = String(v).trim();
+  // Aceita "1.234,56" e "1234.56"
+  const normalized = /,\d{1,2}$/.test(s)
+    ? s.replace(/\./g, "").replace(",", ".")
+    : s.replace(/,/g, "");
+  const n = parseFloat(normalized);
+  return Number.isFinite(n) ? n : 0;
 };
 
 const attr = (el: Element | null, ...names: string[]): string => {
@@ -57,57 +60,84 @@ const attr = (el: Element | null, ...names: string[]): string => {
   return "";
 };
 
+const findData = (parent: Element | null | Document, id: string): string => {
+  if (!parent) return "";
+  const sel = `DATA[ID="${id}"], DATA[id="${id}"], DATA[ID="${id.toUpperCase()}"]`;
+  const el = (parent as ParentNode).querySelector(sel);
+  return el?.getAttribute("VALUE") ?? el?.getAttribute("value") ?? el?.textContent?.trim() ?? "";
+};
+
 export function parsePromobXml(xmlText: string): PromobParsed {
   const parser = new DOMParser();
-  const doc = parser.parseFromString(xmlText, "application/xml");
+  const doc = parser.parseFromString(xmlText, "text/xml");
 
-  const parseError = doc.querySelector("parsererror");
-  if (parseError) {
+  if (doc.querySelector("parsererror")) {
     throw new Error("Arquivo XML inválido");
   }
 
-  const customers = doc.querySelector("CUSTOMERSDATA, customersdata");
-  const cliente_nome = findData(customers, "nomecliente") || findData(customers, "NOMECLIENTE");
-  const ordem_compra = findData(customers, "ordem_compra") || findData(customers, "ORDEM_COMPRA");
+  // Cliente
+  const cliente_nome = findData(doc, "nomecliente");
+  const ordem_compra = findData(doc, "ordem_compra");
 
-  const totalPrices = doc.querySelector("TOTALPRICES, totalprices");
-  const total_tabela = num(attr(totalPrices, "TABLE", "table"));
+  // Totais globais (LISTING > TOTALPRICES)
+  const listingTotal = doc.querySelector("LISTING > TOTALPRICES, listing > totalprices");
+  const total_tabela = num(attr(listingTotal, "TABLE"));
+  const orderEl = listingTotal?.querySelector("MARGINS ORDER, margins order") ?? null;
+  const budgetEl = listingTotal?.querySelector("MARGINS BUDGET, margins budget") ?? null;
+  const total_pedido = num(attr(orderEl, "VALUE"));
+  const total_orcamento = num(attr(budgetEl, "VALUE"));
 
-  const margins = totalPrices?.querySelector("MARGINS, margins") ?? null;
-  const orderEl = margins?.querySelector("ORDER, order") ?? null;
-  const budgetEl = margins?.querySelector("BUDGET, budget") ?? null;
-
-  const total_pedido = num(attr(orderEl, "VALUE", "value"));
-  const total_orcamento = num(attr(budgetEl, "VALUE", "value"));
-
+  // Acréscimos (BUDGET > MARGIN)
   const acrescimos: PromobAcrescimo[] = budgetEl
     ? Array.from(budgetEl.querySelectorAll(":scope > MARGIN, :scope > margin")).map((m, i) => ({
-        id: attr(m, "ID", "id") || `acr-${i}`,
-        description: attr(m, "DESCRIPTION", "description"),
-        value: num(attr(m, "VALUE", "value")),
-        percentual: num(attr(m, "PERCENTUAL", "percentual", "PERCENT", "percent")),
+        id: attr(m, "ID") || `acr-${i}`,
+        description: attr(m, "DESCRIPTION"),
+        value: num(attr(m, "VALUE")),
+        percentual: num(attr(m, "PERCENTUAL", "PERCENT")),
       }))
     : [];
 
-  const categoriaEls = Array.from(doc.querySelectorAll("AMBIENTS AMBIENT CATEGORIES > CATEGORY, ambients ambient categories > category"));
+  const matchAcr = (keys: string[]) =>
+    acrescimos.find(
+      (a) =>
+        keys.includes(a.id.toLowerCase()) ||
+        keys.some((k) => (a.description || "").toLowerCase().includes(k))
+    )?.value ?? 0;
 
+  const frete = matchAcr(["frete", "transporte", "entrega"]);
+  const montagem = matchAcr(["montagem", "instalacao", "instalação"]);
+
+  // Categorias
+  const categoriaEls = Array.from(doc.querySelectorAll("CATEGORY, category"));
   const categorias: PromobCategoria[] = categoriaEls.map((c, ci) => {
-    const itensEls = Array.from(c.querySelectorAll(":scope > ITEMS > ITEM, :scope > items > item"));
-    const itens: PromobItem[] = itensEls.map((it, ii) => ({
-      id: attr(it, "ID", "id") || `${ci}-${ii}`,
-      description: attr(it, "DESCRIPTION", "description"),
-      reference: attr(it, "REFERENCE", "reference"),
-      quantity: num(attr(it, "QUANTITY", "quantity")) || 1,
-      unit: attr(it, "UNIT", "unit"),
-      price: num(attr(it, "PRICE", "price")),
-      total: num(attr(it, "TOTAL", "total")),
-    }));
+    const tp = c.querySelector(":scope > TOTALPRICES, :scope > totalprices");
+    const tabela = num(attr(tp, "TABLE")) || num(attr(c, "TABLE"));
+    const catOrder = tp?.querySelector("MARGINS ORDER, margins order") ?? null;
+    const pedido = num(attr(catOrder, "VALUE")) || num(attr(c, "TOTAL"));
+    const desconto_pct =
+      tabela > 0 ? Math.max(0, Math.round((1 - pedido / tabela) * 1000) / 10) : 0;
+
+    const itensEls = Array.from(c.querySelectorAll(":scope ITEMS > ITEM, :scope items > item"));
+    const itens: PromobItem[] = itensEls.map((it, ii) => {
+      const price = it.querySelector(":scope > PRICE, :scope > price");
+      return {
+        id: attr(it, "ID") || `${ci}-${ii}`,
+        description: attr(it, "DESCRIPTION"),
+        reference: attr(it, "REFERENCE"),
+        quantity: num(attr(it, "QUANTITY")) || 1,
+        unit: attr(it, "UNIT"),
+        price: num(attr(price, "UNIT")) || num(attr(it, "PRICE")),
+        total: num(attr(price, "TOTAL")) || num(attr(it, "TOTAL")),
+      };
+    });
 
     return {
-      id: attr(c, "ID", "id") || `cat-${ci}`,
-      description: attr(c, "DESCRIPTION", "description"),
-      desconto_pct: num(attr(c, "DISCOUNT", "discount", "DESCONTO", "desconto")),
-      total: num(attr(c, "TOTAL", "total")) || itens.reduce((s, x) => s + x.total, 0),
+      id: attr(c, "ID") || `cat-${ci}`,
+      description: attr(c, "DESCRIPTION"),
+      desconto_pct,
+      tabela,
+      pedido,
+      total: pedido || itens.reduce((s, x) => s + x.total, 0),
       itens,
     };
   });
@@ -120,8 +150,23 @@ export function parsePromobXml(xmlText: string): PromobParsed {
     total_tabela,
     total_pedido,
     total_orcamento,
+    frete,
+    montagem,
     acrescimos,
     categorias,
     itens,
   };
+}
+
+// Helper: calcula valor de venda com descontos do vendedor
+export function calcularValorVenda(
+  categorias: { tabela: number; desconto_pct: number }[],
+  frete: number,
+  montagem: number
+): number {
+  const subtotal = categorias.reduce(
+    (sum, cat) => sum + cat.tabela * (1 - (cat.desconto_pct || 0) / 100),
+    0
+  );
+  return subtotal + frete + montagem;
 }
