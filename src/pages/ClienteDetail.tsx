@@ -244,13 +244,18 @@ export default function ClienteDetail() {
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Avatar className="h-12 w-12">
-            <AvatarFallback className="bg-primary/10 text-primary font-medium">
+          <Avatar className="h-[52px] w-[52px]">
+            <AvatarFallback
+              className="font-medium text-white"
+              style={{ backgroundColor: "#1E6FBF" }}
+            >
               {initials(cliente.nome)}
             </AvatarFallback>
           </Avatar>
           <div>
-            <h1 className="text-[22px] font-medium leading-tight">{cliente.nome}</h1>
+            <h1 className="text-[22px] font-medium leading-tight" style={{ color: "#0D1117" }}>
+              {cliente.nome}
+            </h1>
             <p className="text-[13px]" style={{ color: "#6B7A90" }}>
               {[cliente.telefone || cliente.celular, cliente.email].filter(Boolean).join(" · ") ||
                 "—"}
