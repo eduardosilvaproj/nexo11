@@ -399,6 +399,91 @@ export default function PortalCliente() {
           </dl>
         </section>
 
+        {/* 4.5 Orçamentos do cliente */}
+        {orcamentos.length > 0 && (
+          <section
+            className="portal-card bg-white rounded-xl mx-auto w-full"
+            style={{ maxWidth: 680, border: "0.5px solid #E8ECF2", padding: 24 }}
+          >
+            <h2 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117", marginBottom: 16 }}>
+              Orçamentos
+            </h2>
+            <div className="space-y-3">
+              {orcamentos.map((o) => {
+                const valor = Number(o.valor_negociado || o.total_pedido || 0);
+                const status = (o.status as string) || "rascunho";
+                const sMap: Record<string, { label: string; bg: string; fg: string }> = {
+                  rascunho: { label: "Rascunho", bg: "#E8ECF2", fg: "#6B7A90" },
+                  enviado: { label: "Enviado", bg: "#E6F3FF", fg: "#1E6FBF" },
+                  aprovado: { label: "Aprovado", bg: "#D1FAE5", fg: "#05873C" },
+                  recusado: { label: "Recusado", bg: "#FDECEA", fg: "#E53935" },
+                };
+                const s = sMap[status] ?? sMap.rascunho;
+                const podeAcao = status === "enviado";
+                return (
+                  <div
+                    key={o.id}
+                    className="rounded-lg flex items-center justify-between gap-3 flex-wrap"
+                    style={{ border: "1px solid #E8ECF2", padding: 16 }}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div style={{ fontSize: 14, fontWeight: 500, color: "#0D1117" }}>
+                        {o.nome || "Orçamento"}
+                      </div>
+                      <div style={{ fontSize: 13, color: "#6B7A90", marginTop: 2 }}>
+                        {valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                      </div>
+                    </div>
+                    <span
+                      className="rounded-full"
+                      style={{
+                        padding: "4px 12px",
+                        fontSize: 12,
+                        fontWeight: 500,
+                        backgroundColor: s.bg,
+                        color: s.fg,
+                      }}
+                    >
+                      {s.label}
+                    </span>
+                    {podeAcao && (
+                      <div className="flex gap-2 w-full sm:w-auto">
+                        <button
+                          onClick={() => handleOrcamentoStatus(o.id, "aprovado")}
+                          className="rounded-md flex-1 sm:flex-none"
+                          style={{
+                            backgroundColor: "#12B76A",
+                            color: "#fff",
+                            fontSize: 13,
+                            fontWeight: 500,
+                            padding: "8px 14px",
+                          }}
+                        >
+                          ✅ Aprovar
+                        </button>
+                        <button
+                          onClick={() => handleOrcamentoStatus(o.id, "recusado")}
+                          className="rounded-md flex-1 sm:flex-none"
+                          style={{
+                            backgroundColor: "#fff",
+                            color: "#E53935",
+                            border: "1px solid #E53935",
+                            fontSize: 13,
+                            fontWeight: 500,
+                            padding: "8px 14px",
+                          }}
+                        >
+                          ❌ Recusar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         {/* 5. Timeline de atividades — eventos públicos */}
         <section
           className="portal-card bg-white rounded-xl mx-auto w-full"
