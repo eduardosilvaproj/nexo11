@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Pencil, Plus, Eye, Send, ArrowRight } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Eye, ArrowRight, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { ClienteFormDialog } from "@/components/clientes/ClienteFormDialog";
 import { NovoOrcamentoClienteDialog } from "@/components/clientes/NovoOrcamentoClienteDialog";
@@ -87,6 +87,19 @@ export default function ClienteDetail() {
   const [gerarOpen, setGerarOpen] = useState(false);
   const [gerarPreselect, setGerarPreselect] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
+
+  const aprovarOrcamento = async (orcId: string) => {
+    const { error } = await supabase
+      .from("orcamentos")
+      .update({ status: "aprovado" })
+      .eq("id", orcId);
+    if (error) {
+      toast.error("Não foi possível aprovar o orçamento");
+      return;
+    }
+    toast.success("Orçamento aprovado");
+    fetchAll();
+  };
 
   const fetchAll = async () => {
     if (!id) return;
@@ -301,10 +314,25 @@ export default function ClienteDetail() {
         </TabsList>
 
         <TabsContent value="orcamentos" className="space-y-3">
+          <div className="flex justify-end">
+            <Button onClick={() => setImportOpen(true)} style={{ backgroundColor: "#1E6FBF" }}>
+              <Plus className="mr-2 h-4 w-4" /> Importar XML Promob
+            </Button>
+          </div>
+
           {orcamentos.length === 0 ? (
             <Card>
-              <CardContent className="py-8 text-center text-sm text-muted-foreground">
-                Nenhum orçamento cadastrado
+              <CardContent className="py-12 text-center space-y-3">
+                <p className="text-base font-medium">Nenhum orçamento ainda</p>
+                <p className="text-sm text-muted-foreground">
+                  Importe um XML do Promob para criar o primeiro orçamento
+                </p>
+                <Button
+                  onClick={() => setImportOpen(true)}
+                  style={{ backgroundColor: "#1E6FBF" }}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Importar XML Promob
+                </Button>
               </CardContent>
             </Card>
           ) : (
@@ -322,52 +350,72 @@ export default function ClienteDetail() {
                 ? (o.categorias as Array<{ descricao?: string }>)
                     .map((c) => c?.descricao)
                     .filter(Boolean)
-                    .join(" · ")
-                : "";
+                : [];
+
+              const podeAprovar =
+                !o.contrato_id && (o.status === "rascunho" || o.status === "enviado" || !o.status);
 
               return (
                 <Card key={o.id}>
                   <CardHeader className="flex-row items-start justify-between space-y-0 pb-3">
                     <div>
                       <p className="font-medium">{o.nome || "Orçamento"}</p>
-                      <p className="text-[12px] text-muted-foreground mt-0.5">
+                      <p className="text-[12px] mt-0.5" style={{ color: "#6B7A90" }}>
                         {o.created_at
                           ? new Date(o.created_at).toLocaleDateString("pt-BR")
                           : ""}
                       </p>
                     </div>
-                    <StatusBadge status={o.status} hasContrato={!!o.contrato_id} />
+                    <StatusBadge
+                      status={o.status}
+                      hasContrato={!!o.contrato_id}
+                      contratoId={o.contrato_id}
+                    />
                   </CardHeader>
-                  <CardContent className="space-y-2 pt-0">
+                  <CardContent className="space-y-3 pt-0">
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div className="text-muted-foreground">Ordem Promob:</div>
                       <div>{o.ordem_compra || "—"}</div>
-                      <div className="text-muted-foreground">Tabela:</div>
+                      <div className="text-muted-foreground">Tabela fábrica:</div>
                       <div>{formatBRL(tabela)}</div>
-                      <div className="text-muted-foreground">Negociado:</div>
+                      <div className="text-muted-foreground">Valor negociado:</div>
                       <div className="font-medium">{formatBRL(negociado)}</div>
-                      <div className="text-muted-foreground">Margem:</div>
+                      <div className="text-muted-foreground">Margem prevista:</div>
                       <div className={margemColor}>{margem.toFixed(1)}%</div>
-                      {cats && (
-                        <>
-                          <div className="text-muted-foreground">Categorias:</div>
-                          <div className="truncate">{cats}</div>
-                        </>
-                      )}
                     </div>
-                    <div className="flex flex-wrap gap-2 pt-2">
+
+                    {cats.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {cats.map((c, i) => (
+                          <Badge key={i} variant="secondary" className="font-normal">
+                            {c}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap gap-2 pt-1">
                       <Button size="sm" variant="outline">
                         <Eye className="mr-1.5 h-3.5 w-3.5" /> Ver detalhes
                       </Button>
                       <Button size="sm" variant="outline">
-                        <Pencil className="mr-1.5 h-3.5 w-3.5" /> Editar
+                        <Pencil className="mr-1.5 h-3.5 w-3.5" /> Editar descontos
                       </Button>
-                      <Button size="sm" variant="outline">
-                        <Send className="mr-1.5 h-3.5 w-3.5" /> Enviar para cliente
-                      </Button>
+                      {podeAprovar && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-emerald-600 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                          onClick={() => aprovarOrcamento(o.id)}
+                        >
+                          <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Marcar como aprovado
+                        </Button>
+                      )}
                       {o.status === "aprovado" && !o.contrato_id && (
                         <Button
                           size="sm"
+                          style={{ backgroundColor: "#12B76A" }}
+                          className="text-white hover:opacity-90"
                           onClick={() => {
                             setGerarPreselect(o.id);
                             setGerarOpen(true);
@@ -391,14 +439,6 @@ export default function ClienteDetail() {
               );
             })
           )}
-
-          <Button
-            variant="outline"
-            className="border-primary text-primary"
-            onClick={() => setImportOpen(true)}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Importar XML Promob
-          </Button>
         </TabsContent>
 
         <TabsContent value="contratos" className="space-y-3">
@@ -506,26 +546,30 @@ export default function ClienteDetail() {
 function StatusBadge({
   status,
   hasContrato,
+  contratoId,
 }: {
   status: string | null;
   hasContrato: boolean;
+  contratoId?: string | null;
 }) {
   if (hasContrato || status === "convertido") {
+    const short = contratoId ? contratoId.slice(0, 6).toUpperCase() : "";
     return (
-      <Badge className="bg-emerald-700 hover:bg-emerald-700 text-white">
-        Virou contrato
+      <Badge style={{ backgroundColor: "#05873C", color: "#fff" }} className="hover:opacity-90">
+        Contrato{short ? ` #${short}` : ""}
       </Badge>
     );
   }
-  const map: Record<string, { label: string; cls: string }> = {
-    rascunho: { label: "Rascunho", cls: "bg-muted text-muted-foreground hover:bg-muted" },
-    enviado: { label: "Enviado", cls: "bg-primary text-primary-foreground hover:bg-primary" },
-    aprovado: { label: "Aprovado", cls: "bg-emerald-500 hover:bg-emerald-500 text-white" },
-    recusado: {
-      label: "Recusado",
-      cls: "bg-destructive text-destructive-foreground hover:bg-destructive",
-    },
+  const map: Record<string, { label: string; bg: string; fg: string }> = {
+    rascunho: { label: "Rascunho", bg: "#E8ECF2", fg: "#6B7A90" },
+    enviado: { label: "Enviado", bg: "#E6F3FF", fg: "#1E6FBF" },
+    aprovado: { label: "Aprovado", bg: "#D1FAE5", fg: "#05873C" },
+    recusado: { label: "Recusado", bg: "#FDECEA", fg: "#E53935" },
   };
   const s = map[status || "rascunho"] ?? map.rascunho;
-  return <Badge className={s.cls}>{s.label}</Badge>;
+  return (
+    <Badge style={{ backgroundColor: s.bg, color: s.fg }} className="hover:opacity-90">
+      {s.label}
+    </Badge>
+  );
 }
