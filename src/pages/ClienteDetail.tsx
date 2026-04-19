@@ -134,12 +134,29 @@ export default function ClienteDetail() {
     );
     if (contratoIds.length > 0) {
       const { data: cs } = await supabase
-        .from("contratos")
-        .select("id,cliente_nome,status,valor_venda,data_criacao")
+        .from("vw_contratos_dre")
+        .select("id,cliente_nome,status,valor_venda,data_criacao,margem_prevista,margem_realizada")
         .in("id", contratoIds)
         .order("data_criacao", { ascending: false });
-      const list = (cs ?? []) as ContratoRow[];
-      setContratos(list);
+      const orcsByContrato = new Map<string, string[]>();
+      list.forEach((o) => {
+        if (o.contrato_id) {
+          const arr = orcsByContrato.get(o.contrato_id) ?? [];
+          arr.push(o.nome);
+          orcsByContrato.set(o.contrato_id, arr);
+        }
+      });
+      const contratosList: ContratoRow[] = (cs ?? []).map((c) => ({
+        id: c.id as string,
+        cliente_nome: (c.cliente_nome as string) ?? "",
+        status: (c.status as string) ?? "comercial",
+        valor_venda: Number(c.valor_venda || 0),
+        data_criacao: (c.data_criacao as string) ?? new Date().toISOString(),
+        margem_prevista: c.margem_prevista as number | null,
+        margem_realizada: c.margem_realizada as number | null,
+        descricao: orcsByContrato.get(c.id as string)?.join(", ") ?? null,
+      }));
+      setContratos(contratosList);
 
       const { data: logs } = await supabase
         .from("contrato_logs")
