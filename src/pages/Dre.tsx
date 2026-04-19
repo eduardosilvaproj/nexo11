@@ -466,6 +466,7 @@ export default function Dre() {
               <th className="px-4 py-3 font-medium">Cliente</th>
               <th className="px-4 py-3 font-medium">Vendedor</th>
               <th className="px-4 py-3 text-right font-medium">Valor</th>
+              <th className="px-4 py-3 text-right font-medium">Custo real</th>
               <th className="px-4 py-3 text-right font-medium">Margem prevista</th>
               <th className="px-4 py-3 text-right font-medium">Margem realizada</th>
               <th className="px-4 py-3 text-right font-medium">Desvio</th>
