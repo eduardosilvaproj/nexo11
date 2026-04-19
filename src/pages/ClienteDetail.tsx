@@ -180,7 +180,7 @@ export default function ClienteDetail() {
             data: o.created_at || new Date().toISOString(),
           }))
         : [];
-      const histContratos: HistoricoItem[] = list.map((c) => ({
+      const histContratos: HistoricoItem[] = contratosList.map((c) => ({
         id: `c-${c.id}`,
         tipo: "contrato",
         titulo: `Contrato gerado · ${c.status}`,
