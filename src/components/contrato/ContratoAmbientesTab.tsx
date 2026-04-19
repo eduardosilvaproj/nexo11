@@ -96,25 +96,44 @@ export function ContratoAmbientesTab({ contratoId, contratoLojaId }: Props) {
       if (importing) return;
       setImporting(true);
       try {
-        const { data: orc, error } = await supabase
+        // Buscar orçamento convertido vinculado ao contrato; fallback para qualquer orçamento
+        let { data: orc, error } = await supabase
           .from("orcamentos")
           .select("categorias")
           .eq("contrato_id", contratoId)
+          .eq("status", "convertido")
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
         if (error) throw error;
-        const cats = (orc?.categorias as Array<Record<string, unknown>> | null) ?? [];
+        if (!orc) {
+          const fb = await supabase
+            .from("orcamentos")
+            .select("categorias")
+            .eq("contrato_id", contratoId)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (fb.error) throw fb.error;
+          orc = fb.data;
+        }
+        const catsRaw = (orc?.categorias as Array<Record<string, unknown>> | null) ?? [];
+        // Filtrar apenas TABLEs (ambientes) — outros tipos (categorias agregadoras) são ignorados
+        const cats = catsRaw.filter((c) => {
+          const t = String((c as any).type ?? (c as any).tipo ?? "").toUpperCase();
+          return !t || t === "TABLE";
+        });
         if (!cats.length) return;
         const rows = cats.map((c) => {
-          const tabela = Number((c as any).tabela ?? (c as any).valor_bruto ?? 0);
-          const desc = Number((c as any).desconto_pct ?? (c as any).desconto_percentual ?? 0);
+          const tabela = Number(
+            (c as any).tabela ?? (c as any).valor_bruto ?? (c as any).valor ?? (c as any).total ?? 0
+          );
           return {
             contrato_id: contratoId,
             loja_id: lojaId,
-            nome: String((c as any).description ?? (c as any).nome ?? "Ambiente"),
+            nome: String((c as any).description ?? (c as any).nome ?? (c as any).name ?? "Ambiente"),
             valor_bruto: tabela,
-            desconto_percentual: desc,
+            desconto_percentual: 0,
             percentual_montador: 0,
             status_montagem: "pendente" as const,
           };
