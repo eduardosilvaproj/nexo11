@@ -149,7 +149,7 @@ export default function ClienteDetail() {
   return (
     <div className="space-y-6 p-6">
       <Button variant="ghost" size="sm" onClick={() => navigate("/clientes")}>
-        <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+        <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para Clientes
       </Button>
 
       {/* Header */}
@@ -162,17 +162,21 @@ export default function ClienteDetail() {
           </Avatar>
           <div>
             <h1 className="text-[22px] font-medium leading-tight">{cliente.nome}</h1>
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-[13px]" style={{ color: "#6B7A90" }}>
               {[cliente.telefone || cliente.celular, cliente.email].filter(Boolean).join(" · ") ||
                 "—"}
             </p>
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setEditOpen(true)}>
-            <Pencil className="mr-2 h-4 w-4" /> Editar
+          <Button
+            variant="outline"
+            onClick={() => setEditOpen(true)}
+            style={{ borderColor: "#1E6FBF", color: "#1E6FBF" }}
+          >
+            <Pencil className="mr-2 h-4 w-4" /> Editar cliente
           </Button>
-          <Button onClick={() => setImportOpen(true)}>
+          <Button onClick={() => setImportOpen(true)} style={{ backgroundColor: "#1E6FBF" }}>
             <Plus className="mr-2 h-4 w-4" /> Novo orçamento
           </Button>
         </div>
