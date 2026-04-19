@@ -29,6 +29,7 @@ import LojaDetail from "./pages/LojaDetail";
 import NotFound from "./pages/NotFound.tsx";
 import PortalCliente from "./pages/PortalCliente";
 import Integracoes from "./pages/Integracoes";
+import ConfigPagamento from "./pages/ConfigPagamento";
 
 const queryClient = new QueryClient();
 
@@ -125,6 +126,11 @@ const App = () => (
               <Route path="/integracoes" element={
                 <ProtectedRoute roles={["admin","gerente"]}>
                   <Integracoes />
+                </ProtectedRoute>
+              } />
+              <Route path="/configuracoes/pagamento" element={
+                <ProtectedRoute roles={["admin","gerente"]}>
+                  <ConfigPagamento />
                 </ProtectedRoute>
               } />
             </Route>
