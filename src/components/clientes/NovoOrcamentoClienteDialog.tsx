@@ -105,6 +105,10 @@ export function NovoOrcamentoClienteDialog({
       setDescontos(initial);
       setFreteLoja(data.frete);
       setMontagemLoja(data.montagem);
+      // Default: preencher nome com ordem_compra do XML, se ainda vazio
+      if (!nome.trim() && data.ordem_compra) {
+        setNome(data.ordem_compra);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Falha ao ler XML");
       setParsed(null);
@@ -327,6 +331,17 @@ export function NovoOrcamentoClienteDialog({
                     </tr>
                   ))}
                 </tbody>
+                <tfoot className="bg-muted/30 text-sm font-medium">
+                  <tr className="border-t">
+                    <td className="px-3 py-2">Total</td>
+                    <td className="px-3 py-2 text-right">
+                      {formatBRL(calc.linhas.reduce((s, l) => s + l.tabela, 0))}
+                    </td>
+                    <td className="px-3 py-2 text-right text-muted-foreground">—</td>
+                    <td className="px-3 py-2 text-right">{formatBRL(calc.subtotal)}</td>
+                    <td className="px-3 py-2"></td>
+                  </tr>
+                </tfoot>
               </table>
             </div>
 
@@ -395,10 +410,15 @@ export function NovoOrcamentoClienteDialog({
             Cancelar
           </Button>
           <Button variant="outline" onClick={() => save("rascunho")} disabled={saving || !parsed}>
-            Salvar como rascunho
+            Salvar rascunho
           </Button>
-          <Button onClick={() => save("enviado")} disabled={saving || !parsed}>
-            Salvar e enviar para aprovação →
+          <Button
+            onClick={() => save("enviado")}
+            disabled={saving || !parsed}
+            style={{ backgroundColor: "#1E6FBF" }}
+            className="text-white hover:opacity-90"
+          >
+            Salvar e marcar como enviado →
           </Button>
         </div>
       </DialogContent>
