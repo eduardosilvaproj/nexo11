@@ -324,6 +324,56 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
                       </p>
                     </div>
                   </div>
+                  {(() => {
+                    const cat = parsed.categorias.find((c) => c.id === l.id);
+                    if (!cat || cat.itens.length === 0) return null;
+                    const isOpen = !!expanded[l.id];
+                    return (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setExpanded((p) => ({ ...p, [l.id]: !isOpen }))}
+                          className="mt-2 flex items-center gap-1 text-xs font-medium hover:underline"
+                          style={{ color: "#1E6FBF" }}
+                        >
+                          {isOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                          {isOpen ? "Ocultar itens" : `Ver itens (${cat.itens.length})`}
+                        </button>
+                        {isOpen && (
+                          <div className="mt-2 overflow-x-auto rounded-md" style={{ border: "1px solid #E8ECF2" }}>
+                            <table className="w-full text-xs">
+                              <thead style={{ background: "#F5F7FA", color: "#6B7A90" }}>
+                                <tr>
+                                  <th className="px-2 py-1.5 text-left font-medium">Ref</th>
+                                  <th className="px-2 py-1.5 text-left font-medium">Descrição</th>
+                                  <th className="px-2 py-1.5 text-right font-medium">Qtd</th>
+                                  <th className="px-2 py-1.5 text-right font-medium">Tabela unit.</th>
+                                  <th className="px-2 py-1.5 text-right font-medium">Total tabela</th>
+                                  <th className="px-2 py-1.5 text-right font-medium">Total negociado</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {cat.itens.map((it) => {
+                                  const totalTabela = it.total || it.price * it.quantity;
+                                  const totalNeg = totalTabela * (1 - l.desc / 100);
+                                  return (
+                                    <tr key={it.id} style={{ borderTop: "1px solid #E8ECF2" }}>
+                                      <td className="px-2 py-1.5" style={{ color: "#6B7A90" }}>{it.reference || "—"}</td>
+                                      <td className="px-2 py-1.5" style={{ color: "#0D1117" }}>{it.description || "—"}</td>
+                                      <td className="px-2 py-1.5 text-right" style={{ color: "#0D1117" }}>{it.quantity}</td>
+                                      <td className="px-2 py-1.5 text-right" style={{ color: "#0D1117" }}>{formatBRL(it.price)}</td>
+                                      <td className="px-2 py-1.5 text-right" style={{ color: "#0D1117" }}>{formatBRL(totalTabela)}</td>
+                                      <td className="px-2 py-1.5 text-right font-medium" style={{ color: "#1E6FBF" }}>{formatBRL(totalNeg)}</td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               ))}
 
