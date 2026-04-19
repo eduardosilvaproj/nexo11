@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, AlertTriangle } from "lucide-react";
+import { Plus, AlertTriangle, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NovoPedidoTerceirizadoDialog } from "@/components/producao/NovoPedidoTerceirizadoDialog";
+import { VincularPedidoDialog } from "@/components/producao/VincularPedidoDialog";
 import { useAuth } from "@/contexts/AuthContext";
 
 type StatusT = "aguardando_fabricacao" | "em_producao" | "pronto_retirada" | "atrasado";
@@ -15,11 +16,15 @@ interface Pedido {
   numero_pedido: string;
   oc: string | null;
   contrato_id: string | null;
+  fornecedor_id: string | null;
   data_prevista: string | null;
   transportadora: string | null;
   status: StatusT;
   importado_em: string;
+  tipo_entrada?: string;
+  vinculo_status?: string;
   contratos?: { cliente_nome?: string } | null;
+  fornecedores?: { nome?: string } | null;
 }
 
 const STATUS_OPTS: { value: StatusT; label: string; bg: string; fg: string }[] = [
@@ -31,6 +36,8 @@ const STATUS_OPTS: { value: StatusT; label: string; bg: string; fg: string }[] =
 
 const statusInfo = (s: StatusT) => STATUS_OPTS.find((o) => o.value === s)!;
 
+const ALL = "__all__";
+
 function MetricCard({ label, value, color }: { label: string; value: number; color: string }) {
   return (
     <div className="rounded-xl bg-white p-5" style={{ border: "0.5px solid #E8ECF2", borderTop: `3px solid ${color}` }}>
@@ -40,15 +47,15 @@ function MetricCard({ label, value, color }: { label: string; value: number; col
   );
 }
 
-function diasRestantes(data: string | null): { dias: number; texto: string; color: string; warn: boolean } | null {
+function diasRestantes(data: string | null) {
   if (!data) return null;
   const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
   const d = new Date(data); d.setHours(0, 0, 0, 0);
   const diff = Math.round((d.getTime() - hoje.getTime()) / 86400000);
-  if (diff < 0) return { dias: diff, texto: `${Math.abs(diff)} dias atraso`, color: "#E53935", warn: true };
-  if (diff < 3) return { dias: diff, texto: `${diff}d`, color: "#E53935", warn: true };
-  if (diff <= 7) return { dias: diff, texto: `${diff}d`, color: "#E8A020", warn: false };
-  return { dias: diff, texto: `${diff}d`, color: "#12B76A", warn: false };
+  if (diff < 0) return { texto: `${Math.abs(diff)} dias atraso`, color: "#E53935", warn: true };
+  if (diff < 3) return { texto: `${diff}d`, color: "#E53935", warn: true };
+  if (diff <= 7) return { texto: `${diff}d`, color: "#E8A020", warn: false };
+  return { texto: `${diff}d`, color: "#12B76A", warn: false };
 }
 
 export function TerceirizadaTab() {
@@ -57,41 +64,55 @@ export function TerceirizadaTab() {
   const lojaId = perfil?.loja_id ?? null;
   const podeCriar = hasRole("admin") || hasRole("gerente") || hasRole("tecnico");
   const [novoOpen, setNovoOpen] = useState(false);
+  const [vincularId, setVincularId] = useState<string | null>(null);
+  const [filtroFornecedor, setFiltroFornecedor] = useState<string>(ALL);
+
+  const { data: fornecedores } = useQuery({
+    queryKey: ["fornecedores-filtro-producao", lojaId],
+    enabled: !!lojaId,
+    queryFn: async () => {
+      const { data } = await (supabase as unknown as {
+        from: (t: string) => { select: (s: string) => { eq: (c: string, v: unknown) => { eq: (c: string, v: unknown) => { order: (c: string) => Promise<{ data: { id: string; nome: string }[] | null }> } } } };
+      }).from("fornecedores").select("id, nome").eq("loja_id", lojaId!).eq("ativo", true).order("nome");
+      return data ?? [];
+    },
+  });
 
   const { data: pedidos, isLoading } = useQuery({
     queryKey: ["producao-terceirizada"],
     queryFn: async () => {
       const sb = supabase as unknown as {
-        from: (t: string) => {
-          select: (s: string) => { order: (c: string, o: { ascending: boolean }) => Promise<{ data: Pedido[] | null; error: Error | null }> };
-        };
+        from: (t: string) => { select: (s: string) => { order: (c: string, o: { ascending: boolean }) => Promise<{ data: Pedido[] | null; error: Error | null }> } };
       };
       const { data, error } = await sb
         .from("producao_terceirizada")
-        .select("id, numero_pedido, oc, contrato_id, data_prevista, transportadora, status, importado_em, contratos:contrato_id(cliente_nome)")
+        .select("id, numero_pedido, oc, contrato_id, fornecedor_id, data_prevista, transportadora, status, importado_em, tipo_entrada, vinculo_status, contratos:contrato_id(cliente_nome), fornecedores:fornecedor_id(nome)")
         .order("data_prevista", { ascending: true });
       if (error) throw error;
       return data ?? [];
     },
   });
 
+  const filtered = useMemo(() => {
+    if (!pedidos) return [];
+    if (filtroFornecedor === ALL) return pedidos;
+    return pedidos.filter((p) => p.fornecedor_id === filtroFornecedor);
+  }, [pedidos, filtroFornecedor]);
+
   const metrics = useMemo(() => {
     const m = { aguardando: 0, pronto: 0, atrasado: 0 };
-    if (!pedidos) return m;
     const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-    for (const p of pedidos) {
+    for (const p of filtered) {
       if (p.status === "pronto_retirada") m.pronto++;
       else if (p.status === "atrasado" || (p.data_prevista && new Date(p.data_prevista) < hoje)) m.atrasado++;
       else if (p.status === "aguardando_fabricacao") m.aguardando++;
     }
     return m;
-  }, [pedidos]);
+  }, [filtered]);
 
   const updateStatus = async (p: Pedido, novo: StatusT) => {
     const sb = supabase as unknown as {
-      from: (t: string) => {
-        update: (u: unknown) => { eq: (c: string, v: string) => Promise<{ error: Error | null }> };
-      };
+      from: (t: string) => { update: (u: unknown) => { eq: (c: string, v: string) => Promise<{ error: Error | null }> } };
     };
     const { error } = await sb.from("producao_terceirizada").update({ status: novo }).eq("id", p.id);
     if (error) { toast.error(error.message); return; }
@@ -134,11 +155,21 @@ export function TerceirizadaTab() {
         <MetricCard label="Atrasados" value={metrics.atrasado} color="#E53935" />
       </div>
 
+      <div className="mb-4 flex items-center gap-3">
+        <Select value={filtroFornecedor} onValueChange={setFiltroFornecedor}>
+          <SelectTrigger className="w-64"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL}>Todos os fornecedores</SelectItem>
+            {fornecedores?.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="overflow-hidden rounded-xl bg-white" style={{ border: "0.5px solid #E8ECF2" }}>
         <table className="w-full">
           <thead style={{ backgroundColor: "#F7F9FC" }}>
             <tr>
-              {["Nº pedido", "OC / Cliente", "Contrato", "Data prevista", "Dias restantes", "Status", "Ações"].map((h) => (
+              {["Nº pedido", "OC / Cliente", "Fornecedor", "Contrato", "Data prevista", "Dias restantes", "Vínculo", "Status", "Ações"].map((h) => (
                 <th key={h} className="px-4 py-3 text-left" style={{ fontSize: 11, color: "#6B7A90", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   {h}
                 </th>
@@ -147,20 +178,22 @@ export function TerceirizadaTab() {
           </thead>
           <tbody>
             {isLoading && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">Carregando...</td></tr>
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-sm text-muted-foreground">Carregando...</td></tr>
             )}
-            {!isLoading && (!pedidos || pedidos.length === 0) && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">
+            {!isLoading && filtered.length === 0 && (
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-sm text-muted-foreground">
                 Nenhum pedido cadastrado. Use "+ Novo Pedido" para começar.
               </td></tr>
             )}
-            {pedidos?.map((p) => {
+            {filtered.map((p) => {
               const dr = diasRestantes(p.data_prevista);
               const info = statusInfo(p.status);
+              const isPendente = p.vinculo_status === "pendente";
               return (
-                <tr key={p.id} style={{ borderTop: "0.5px solid #E8ECF2" }}>
+                <tr key={p.id} style={{ borderTop: "0.5px solid #E8ECF2", backgroundColor: isPendente ? "#FFFBEB" : undefined }}>
                   <td className="px-4 py-3 text-sm font-medium">#{p.numero_pedido}</td>
                   <td className="px-4 py-3 text-sm">{p.contratos?.cliente_nome ?? p.oc ?? "—"}</td>
+                  <td className="px-4 py-3 text-sm">{p.fornecedores?.nome ?? "—"}</td>
                   <td className="px-4 py-3 text-sm">{p.contrato_id ? `#${p.contrato_id.slice(0, 4)}` : "—"}</td>
                   <td className="px-4 py-3 text-sm">{p.data_prevista ? new Date(p.data_prevista).toLocaleDateString("pt-BR") : "—"}</td>
                   <td className="px-4 py-3">
@@ -172,19 +205,32 @@ export function TerceirizadaTab() {
                     ) : <span className="text-sm text-muted-foreground">—</span>}
                   </td>
                   <td className="px-4 py-3">
+                    {isPendente ? (
+                      <span className="inline-flex items-center rounded-full px-2 py-0.5" style={{ backgroundColor: "#FEF3C7", color: "#B45309", fontSize: 11, fontWeight: 500 }}>
+                        ⚠ Pendente
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center rounded-full px-2 py-0.5" style={{ backgroundColor: "#D1FAE5", color: "#05873C", fontSize: 11, fontWeight: 500 }}>
+                        ✓ Vinculado
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
                     <Select value={p.status} onValueChange={(v) => updateStatus(p, v as StatusT)}>
-                      <SelectTrigger className="h-8 w-48 text-xs" style={{ backgroundColor: info.bg, color: info.fg, borderColor: "transparent" }}>
+                      <SelectTrigger className="h-8 w-44 text-xs" style={{ backgroundColor: info.bg, color: info.fg, borderColor: "transparent" }}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {STATUS_OPTS.map((o) => (
-                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                        ))}
+                        {STATUS_OPTS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {new Date(p.importado_em).toLocaleDateString("pt-BR")}
+                  <td className="px-4 py-3">
+                    {isPendente && (
+                      <Button size="sm" variant="outline" onClick={() => setVincularId(p.id)}>
+                        <Link2 className="h-3 w-3 mr-1" /> Vincular
+                      </Button>
+                    )}
                   </td>
                 </tr>
               );
@@ -194,6 +240,7 @@ export function TerceirizadaTab() {
       </div>
 
       <NovoPedidoTerceirizadoDialog open={novoOpen} onOpenChange={setNovoOpen} lojaId={lojaId} />
+      <VincularPedidoDialog open={!!vincularId} onOpenChange={(o) => !o && setVincularId(null)} pedidoId={vincularId} lojaId={lojaId} />
     </>
   );
 }
