@@ -9,6 +9,7 @@ import { ArrowLeft, Pencil, Plus, Eye, Send, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { ClienteFormDialog } from "@/components/clientes/ClienteFormDialog";
 import { NovoOrcamentoClienteDialog } from "@/components/clientes/NovoOrcamentoClienteDialog";
+import { GerarContratoDialog } from "@/components/clientes/GerarContratoDialog";
 
 type Cliente = {
   id: string;
