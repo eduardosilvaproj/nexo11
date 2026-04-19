@@ -34,11 +34,14 @@ function categoriaDescontoInicial(tabela: number, total: number): number {
 }
 
 export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
+  const navigate = useNavigate();
+  const { perfil, user } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [parsed, setParsed] = useState<PromobParsed | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [parsing, setParsing] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   // Negociação
   const [descontos, setDescontos] = useState<Record<string, number>>({});
