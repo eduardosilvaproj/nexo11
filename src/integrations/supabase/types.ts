@@ -785,7 +785,9 @@ export type Database = {
           loja_id: string
           nome: string
           observacoes: string | null
+          prazo_padrao_dias: number
           telefone: string | null
+          tipo: string
           updated_at: string
         }
         Insert: {
@@ -797,7 +799,9 @@ export type Database = {
           loja_id: string
           nome: string
           observacoes?: string | null
+          prazo_padrao_dias?: number
           telefone?: string | null
+          tipo?: string
           updated_at?: string
         }
         Update: {
@@ -809,7 +813,9 @@ export type Database = {
           loja_id?: string
           nome?: string
           observacoes?: string | null
+          prazo_padrao_dias?: number
           telefone?: string | null
+          tipo?: string
           updated_at?: string
         }
         Relationships: [

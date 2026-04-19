@@ -31,6 +31,7 @@ import PortalCliente from "./pages/PortalCliente";
 import Integracoes from "./pages/Integracoes";
 import ConfigPagamento from "./pages/ConfigPagamento";
 import OrcamentoNegociacao from "./pages/OrcamentoNegociacao";
+import ConfigFornecedores from "./pages/ConfigFornecedores";
 
 const queryClient = new QueryClient();
 
@@ -137,6 +138,11 @@ const App = () => (
               <Route path="/configuracoes/pagamento" element={
                 <ProtectedRoute roles={["admin","gerente"]}>
                   <ConfigPagamento />
+                </ProtectedRoute>
+              } />
+              <Route path="/configuracoes/fornecedores" element={
+                <ProtectedRoute roles={["admin","gerente"]}>
+                  <ConfigFornecedores />
                 </ProtectedRoute>
               } />
             </Route>
