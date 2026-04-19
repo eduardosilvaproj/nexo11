@@ -84,7 +84,7 @@ export default function CondicaoPagamentoDialog({
     const payload = { ...parsed.data, loja_id: lojaId };
     const { error } = condicao
       ? await supabase.from("condicoes_pagamento").update(payload).eq("id", condicao.id)
-      : await supabase.from("condicoes_pagamento").insert(payload);
+      : await supabase.from("condicoes_pagamento").insert([payload]);
     setSaving(false);
     if (error) {
       toast.error("Erro ao salvar: " + error.message);
