@@ -61,6 +61,8 @@ export default function PortalCliente() {
   const [error, setError] = useState<string | null>(null);
   const [contrato, setContrato] = useState<any>(null);
   const [logs, setLogs] = useState<any[]>([]);
+  const [orcamentos, setOrcamentos] = useState<any[]>([]);
+  const [parcelas, setParcelas] = useState<any[]>([]);
   const [vendedorNome, setVendedorNome] = useState<string | null>(null);
   const [entregaPrevista, setEntregaPrevista] = useState<string | null>(null);
   const [npsRespondido, setNpsRespondido] = useState(false);
@@ -83,7 +85,7 @@ export default function PortalCliente() {
     setLoading(true);
     setError(null);
     try {
-      const [{ data: c, error: cErr }, { data: l }, { data: chs }, { data: ents }] =
+      const [{ data: c, error: cErr }, { data: l }, { data: chs }, { data: ents }, { data: orcs }, { data: trs }] =
         await Promise.all([
           portalClient
             .from("contratos")
@@ -105,6 +107,15 @@ export default function PortalCliente() {
             .not("data_prevista", "is", null)
             .order("data_prevista", { ascending: true })
             .limit(1),
+          portalClient
+            .from("orcamentos")
+            .select("id, nome, status, valor_negociado, total_pedido, created_at")
+            .order("created_at", { ascending: false }),
+          portalClient
+            .from("transacoes")
+            .select("id, descricao, valor, data_vencimento, data_pagamento, status, tipo")
+            .eq("tipo", "receita")
+            .order("data_vencimento", { ascending: true }),
         ]);
 
       if (cErr || !c) {
@@ -114,12 +125,28 @@ export default function PortalCliente() {
 
       setContrato(c);
       setLogs(l ?? []);
+      setOrcamentos(orcs ?? []);
+      setParcelas(trs ?? []);
       setNpsRespondido((chs ?? []).length > 0);
       setEntregaPrevista((ents?.[0] as any)?.data_prevista ?? null);
     } catch (e: any) {
       setError(e.message ?? "Erro ao carregar");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleOrcamentoStatus(orcId: string, novoStatus: "aprovado" | "recusado") {
+    try {
+      const { error } = await portalClient
+        .from("orcamentos")
+        .update({ status: novoStatus })
+        .eq("id", orcId);
+      if (error) throw error;
+      toast.success(novoStatus === "aprovado" ? "Orçamento aprovado!" : "Orçamento recusado");
+      load();
+    } catch (e: any) {
+      toast.error(e.message ?? "Não foi possível atualizar");
     }
   }
 
