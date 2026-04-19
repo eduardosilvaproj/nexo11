@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
+  UserRound,
   ClipboardCheck,
   Factory,
   Truck,
@@ -37,6 +38,7 @@ import { LogoNexo } from "@/components/LogoNexo";
 
 const operacao = [
   { title: "Comercial", url: "/comercial", icon: Users },
+  { title: "Clientes", url: "/clientes", icon: UserRound },
   { title: "Técnico", url: "/tecnico", icon: ClipboardCheck, roles: ["admin", "gerente", "tecnico", "franqueador"] },
   { title: "Produção", url: "/producao", icon: Factory, roles: ["admin", "gerente", "tecnico", "franqueador"] },
   { title: "Logística", url: "/logistica", icon: Truck, roles: ["admin", "gerente", "franqueador"] },
