@@ -129,7 +129,7 @@ export function GerarContratoDialog({
       0,
     );
     const custoProduto = selecionados.reduce(
-      (s, o) => s + Number(o.total_tabela || 0),
+      (s, o) => s + Number(o.total_pedido || 0),
       0,
     );
     const frete = selecionados.reduce(
