@@ -292,109 +292,181 @@ export default function ClienteDetail() {
         </Card>
       </div>
 
-      {/* Lista de orçamentos */}
-      <div className="space-y-3">
-        <h2 className="text-lg font-medium">Orçamentos</h2>
+      {/* Abas */}
+      <Tabs defaultValue="orcamentos" className="space-y-3">
+        <TabsList>
+          <TabsTrigger value="orcamentos">Orçamentos</TabsTrigger>
+          <TabsTrigger value="contratos">Contratos</TabsTrigger>
+          <TabsTrigger value="historico">Histórico</TabsTrigger>
+        </TabsList>
 
-        {orcamentos.length === 0 ? (
-          <Card>
-            <CardContent className="py-8 text-center text-sm text-muted-foreground">
-              Nenhum orçamento cadastrado
-            </CardContent>
-          </Card>
-        ) : (
-          orcamentos.map((o) => {
-            const tabela = Number(o.total_tabela || 0);
-            const negociado = Number(o.valor_negociado || o.total_pedido || 0);
-            const margem = negociado > 0 ? ((negociado - tabela) / negociado) * 100 : 0;
-            const margemColor =
-              margem >= 30
-                ? "text-emerald-600"
-                : margem >= 15
-                ? "text-amber-600"
-                : "text-destructive";
-            const cats = Array.isArray(o.categorias)
-              ? (o.categorias as Array<{ descricao?: string }>)
-                  .map((c) => c?.descricao)
-                  .filter(Boolean)
-                  .join(" · ")
-              : "";
+        <TabsContent value="orcamentos" className="space-y-3">
+          {orcamentos.length === 0 ? (
+            <Card>
+              <CardContent className="py-8 text-center text-sm text-muted-foreground">
+                Nenhum orçamento cadastrado
+              </CardContent>
+            </Card>
+          ) : (
+            orcamentos.map((o) => {
+              const tabela = Number(o.total_tabela || 0);
+              const negociado = Number(o.valor_negociado || o.total_pedido || 0);
+              const margem = negociado > 0 ? ((negociado - tabela) / negociado) * 100 : 0;
+              const margemColor =
+                margem >= 30
+                  ? "text-emerald-600"
+                  : margem >= 15
+                  ? "text-amber-600"
+                  : "text-destructive";
+              const cats = Array.isArray(o.categorias)
+                ? (o.categorias as Array<{ descricao?: string }>)
+                    .map((c) => c?.descricao)
+                    .filter(Boolean)
+                    .join(" · ")
+                : "";
 
-            return (
-              <Card key={o.id}>
+              return (
+                <Card key={o.id}>
+                  <CardHeader className="flex-row items-start justify-between space-y-0 pb-3">
+                    <div>
+                      <p className="font-medium">{o.nome || "Orçamento"}</p>
+                      <p className="text-[12px] text-muted-foreground mt-0.5">
+                        {o.created_at
+                          ? new Date(o.created_at).toLocaleDateString("pt-BR")
+                          : ""}
+                      </p>
+                    </div>
+                    <StatusBadge status={o.status} hasContrato={!!o.contrato_id} />
+                  </CardHeader>
+                  <CardContent className="space-y-2 pt-0">
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="text-muted-foreground">Ordem Promob:</div>
+                      <div>{o.ordem_compra || "—"}</div>
+                      <div className="text-muted-foreground">Tabela:</div>
+                      <div>{formatBRL(tabela)}</div>
+                      <div className="text-muted-foreground">Negociado:</div>
+                      <div className="font-medium">{formatBRL(negociado)}</div>
+                      <div className="text-muted-foreground">Margem:</div>
+                      <div className={margemColor}>{margem.toFixed(1)}%</div>
+                      {cats && (
+                        <>
+                          <div className="text-muted-foreground">Categorias:</div>
+                          <div className="truncate">{cats}</div>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      <Button size="sm" variant="outline">
+                        <Eye className="mr-1.5 h-3.5 w-3.5" /> Ver detalhes
+                      </Button>
+                      <Button size="sm" variant="outline">
+                        <Pencil className="mr-1.5 h-3.5 w-3.5" /> Editar
+                      </Button>
+                      <Button size="sm" variant="outline">
+                        <Send className="mr-1.5 h-3.5 w-3.5" /> Enviar para cliente
+                      </Button>
+                      {o.status === "aprovado" && !o.contrato_id && (
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setGerarPreselect(o.id);
+                            setGerarOpen(true);
+                          }}
+                        >
+                          Gerar contrato <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                      {o.contrato_id && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => navigate(`/contratos/${o.contrato_id}`)}
+                        >
+                          Ver contrato <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
+
+          <Button
+            variant="outline"
+            className="border-primary text-primary"
+            onClick={() => setImportOpen(true)}
+          >
+            <Plus className="mr-2 h-4 w-4" /> Importar XML Promob
+          </Button>
+        </TabsContent>
+
+        <TabsContent value="contratos" className="space-y-3">
+          {contratos.length === 0 ? (
+            <Card>
+              <CardContent className="py-8 text-center text-sm text-muted-foreground">
+                Nenhum contrato gerado
+              </CardContent>
+            </Card>
+          ) : (
+            contratos.map((c) => (
+              <Card key={c.id}>
                 <CardHeader className="flex-row items-start justify-between space-y-0 pb-3">
                   <div>
-                    <p className="font-medium">{o.nome || "Orçamento"}</p>
+                    <p className="font-medium">{c.cliente_nome}</p>
                     <p className="text-[12px] text-muted-foreground mt-0.5">
-                      {o.created_at
-                        ? new Date(o.created_at).toLocaleDateString("pt-BR")
-                        : ""}
+                      {new Date(c.data_criacao).toLocaleDateString("pt-BR")}
                     </p>
                   </div>
-                  <StatusBadge status={o.status} hasContrato={!!o.contrato_id} />
+                  <Badge variant="secondary">{c.status}</Badge>
                 </CardHeader>
-                <CardContent className="space-y-2 pt-0">
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="text-muted-foreground">Ordem Promob:</div>
-                    <div>{o.ordem_compra || "—"}</div>
-                    <div className="text-muted-foreground">Tabela:</div>
-                    <div>{formatBRL(tabela)}</div>
-                    <div className="text-muted-foreground">Negociado:</div>
-                    <div className="font-medium">{formatBRL(negociado)}</div>
-                    <div className="text-muted-foreground">Margem:</div>
-                    <div className={margemColor}>{margem.toFixed(1)}%</div>
-                    {cats && (
-                      <>
-                        <div className="text-muted-foreground">Categorias:</div>
-                        <div className="truncate">{cats}</div>
-                      </>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    <Button size="sm" variant="outline">
-                      <Eye className="mr-1.5 h-3.5 w-3.5" /> Ver detalhes
+                <CardContent className="flex items-center justify-between pt-0">
+                  <span className="text-sm text-muted-foreground">Valor</span>
+                  <div className="flex items-center gap-3">
+                    <span className="font-medium">{formatBRL(Number(c.valor_venda || 0))}</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => navigate(`/contratos/${c.id}`)}
+                    >
+                      Abrir <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
                     </Button>
-                    <Button size="sm" variant="outline">
-                      <Pencil className="mr-1.5 h-3.5 w-3.5" /> Editar
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      <Send className="mr-1.5 h-3.5 w-3.5" /> Enviar para cliente
-                    </Button>
-                    {o.status === "aprovado" && !o.contrato_id && (
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          setGerarPreselect(o.id);
-                          setGerarOpen(true);
-                        }}
-                      >
-                        Gerar contrato <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                    {o.contrato_id && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => navigate(`/contratos/${o.contrato_id}`)}
-                      >
-                        Ver contrato <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                      </Button>
-                    )}
                   </div>
                 </CardContent>
               </Card>
-            );
-          })
-        )}
+            ))
+          )}
+        </TabsContent>
 
-        <Button
-          variant="outline"
-          className="border-primary text-primary"
-          onClick={() => setImportOpen(true)}
-        >
-          <Plus className="mr-2 h-4 w-4" /> Importar XML Promob
-        </Button>
-      </div>
+        <TabsContent value="historico" className="space-y-3">
+          {historico.length === 0 ? (
+            <Card>
+              <CardContent className="py-8 text-center text-sm text-muted-foreground">
+                Sem histórico
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="py-4 space-y-3">
+                {historico.map((h) => (
+                  <div key={h.id} className="flex items-start gap-3 border-b pb-3 last:border-0 last:pb-0">
+                    <div className="mt-1 h-2 w-2 rounded-full bg-primary shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">{h.titulo}</p>
+                      {h.descricao && (
+                        <p className="text-xs text-muted-foreground">{h.descricao}</p>
+                      )}
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {new Date(h.data).toLocaleString("pt-BR")}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
 
       <ClienteFormDialog
         open={editOpen}
