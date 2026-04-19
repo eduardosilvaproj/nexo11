@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Pencil, Plus, Eye, ArrowRight, CheckCircle2, FileText, FileSignature, Activity } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Eye, ArrowRight, CheckCircle2, FileText, FileSignature, Activity, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { ClienteFormDialog } from "@/components/clientes/ClienteFormDialog";
 import { NovoOrcamentoClienteDialog } from "@/components/clientes/NovoOrcamentoClienteDialog";
 import { GerarContratoDialog } from "@/components/clientes/GerarContratoDialog";
+import { EnviarPortalDialog } from "@/components/clientes/EnviarPortalDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -90,6 +91,7 @@ export default function ClienteDetail() {
   const [importOpen, setImportOpen] = useState(false);
   const [gerarOpen, setGerarOpen] = useState(false);
   const [gerarPreselect, setGerarPreselect] = useState<string | undefined>(undefined);
+  const [portalOpen, setPortalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const aprovarOrcamento = async (orcId: string) => {
@@ -303,6 +305,13 @@ export default function ClienteDetail() {
           </div>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setPortalOpen(true)}
+            style={{ borderColor: "#1E6FBF", color: "#1E6FBF" }}
+          >
+            <Smartphone className="mr-2 h-4 w-4" /> 📲 Enviar Portal
+          </Button>
           <Button
             variant="outline"
             onClick={() => setEditOpen(true)}
@@ -686,6 +695,14 @@ export default function ClienteDetail() {
         lojaId={cliente.loja_id}
         preselectedOrcamentoId={gerarPreselect}
         onCreated={fetchAll}
+      />
+
+      <EnviarPortalDialog
+        open={portalOpen}
+        onOpenChange={setPortalOpen}
+        clienteId={cliente.id}
+        clienteNome={cliente.nome}
+        lojaId={cliente.loja_id}
       />
     </div>
   );
