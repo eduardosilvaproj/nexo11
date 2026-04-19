@@ -458,6 +458,7 @@ export type Database = {
         Row: {
           assinado: boolean
           cliente_contato: string | null
+          cliente_id: string | null
           cliente_nome: string
           conferencia_responsavel_id: string | null
           created_at: string
@@ -478,6 +479,7 @@ export type Database = {
         Insert: {
           assinado?: boolean
           cliente_contato?: string | null
+          cliente_id?: string | null
           cliente_nome: string
           conferencia_responsavel_id?: string | null
           created_at?: string
@@ -498,6 +500,7 @@ export type Database = {
         Update: {
           assinado?: boolean
           cliente_contato?: string | null
+          cliente_id?: string | null
           cliente_nome?: string
           conferencia_responsavel_id?: string | null
           created_at?: string
@@ -516,6 +519,13 @@ export type Database = {
           vendedor_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "contratos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "contratos_loja_id_fkey"
             columns: ["loja_id"]
