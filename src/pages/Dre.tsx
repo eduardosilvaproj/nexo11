@@ -187,18 +187,43 @@ export default function Dre() {
   const fmt = (n: number | null) =>
     (n ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+  // Soma os custos REAIS de um contrato (já vindos da view)
+  const custoRealRow = (r: Row) =>
+    (r.custo_produto_real ?? 0) +
+    (r.custo_montagem_real ?? 0) +
+    (r.custo_frete_real ?? 0) +
+    (r.custo_comissao_real ?? 0) +
+    (r.outros_custos_reais ?? 0);
+
+  const custoPrevRow = (r: Row) =>
+    (r.custo_produto_previsto ?? 0) +
+    (r.custo_montagem_previsto ?? 0) +
+    (r.custo_frete_previsto ?? 0) +
+    (r.custo_comissao_previsto ?? 0) +
+    (r.outros_custos_previstos ?? 0);
+
+  const custoPendRow = (r: Row) => Math.max(custoPrevRow(r) - custoRealRow(r), 0);
+
+  const filteredRows = useMemo(() => {
+    if (custoFiltro === "all") return rows;
+    if (custoFiltro === "pendentes") return rows.filter((r) => custoPendRow(r) > 0.01);
+    if (custoFiltro === "pagos") return rows.filter((r) => custoPendRow(r) <= 0.01);
+    return rows;
+  }, [rows, custoFiltro]);
+
   const metrics = useMemo(() => {
-    const faturamento = rows.reduce((s, r) => s + (r.valor_venda ?? 0), 0);
-    const margens = rows
+    const faturamento = filteredRows.reduce((s, r) => s + (r.valor_venda ?? 0), 0);
+    const custoRealTotalSum = filteredRows.reduce((s, r) => s + custoRealRow(r), 0);
+    const custoPendTotalSum = filteredRows.reduce((s, r) => s + custoPendRow(r), 0);
+    const margens = filteredRows
       .map((r) => r.margem_realizada)
       .filter((m): m is number => m !== null && m !== undefined);
     const melhor = margens.length ? Math.max(...margens) : null;
     const pior = margens.length ? Math.min(...margens) : null;
-    // Médias ponderadas pelo valor de venda
     const weighted = (key: "margem_prevista" | "margem_realizada") => {
       let totalW = 0;
       let acc = 0;
-      for (const r of rows) {
+      for (const r of filteredRows) {
         const v = r.valor_venda ?? 0;
         const m = r[key];
         if (v > 0 && m !== null && m !== undefined) {
@@ -210,12 +235,14 @@ export default function Dre() {
     };
     return {
       faturamento,
+      custoRealTotalSum,
+      custoPendTotalSum,
       media: weighted("margem_realizada"),
       mediaPrev: weighted("margem_prevista"),
       melhor,
       pior,
     };
-  }, [rows]);
+  }, [filteredRows]);
 
   const margemColor = (m: number | null) => {
     if (m === null) return "#6B7A90";
