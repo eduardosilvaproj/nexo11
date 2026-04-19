@@ -108,13 +108,25 @@ export default function ClienteDetail() {
   const fetchAll = async () => {
     if (!id) return;
     setLoading(true);
+    // Aguarda sessão estar pronta para RLS funcionar corretamente
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast.error("Sessão expirada, faça login novamente");
+      navigate("/auth");
+      return;
+    }
     const { data: cli, error } = await supabase
       .from("clientes")
       .select("*")
       .eq("id", id)
       .maybeSingle();
-    if (error || !cli) {
-      toast.error("Cliente não encontrado");
+    if (error) {
+      toast.error(`Erro ao carregar cliente: ${error.message}`);
+      setLoading(false);
+      return;
+    }
+    if (!cli) {
+      toast.error("Cliente não encontrado ou sem permissão de acesso");
       navigate("/clientes");
       return;
     }
