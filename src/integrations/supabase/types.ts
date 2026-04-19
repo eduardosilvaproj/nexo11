@@ -922,6 +922,91 @@ export type Database = {
         }
         Relationships: []
       }
+      orcamentos_promob: {
+        Row: {
+          acrescimos: Json | null
+          arquivo_nome: string | null
+          categorias: Json | null
+          cliente_nome: string | null
+          contrato_id: string | null
+          created_at: string
+          criado_por: string | null
+          desconto_global: number | null
+          id: string
+          itens: Json | null
+          loja_id: string
+          ordem_compra: string | null
+          status: string
+          total_orcamento: number | null
+          total_pedido: number | null
+          total_tabela: number | null
+          updated_at: string
+          valor_negociado: number | null
+        }
+        Insert: {
+          acrescimos?: Json | null
+          arquivo_nome?: string | null
+          categorias?: Json | null
+          cliente_nome?: string | null
+          contrato_id?: string | null
+          created_at?: string
+          criado_por?: string | null
+          desconto_global?: number | null
+          id?: string
+          itens?: Json | null
+          loja_id: string
+          ordem_compra?: string | null
+          status?: string
+          total_orcamento?: number | null
+          total_pedido?: number | null
+          total_tabela?: number | null
+          updated_at?: string
+          valor_negociado?: number | null
+        }
+        Update: {
+          acrescimos?: Json | null
+          arquivo_nome?: string | null
+          categorias?: Json | null
+          cliente_nome?: string | null
+          contrato_id?: string | null
+          created_at?: string
+          criado_por?: string | null
+          desconto_global?: number | null
+          id?: string
+          itens?: Json | null
+          loja_id?: string
+          ordem_compra?: string | null
+          status?: string
+          total_orcamento?: number | null
+          total_pedido?: number | null
+          total_tabela?: number | null
+          updated_at?: string
+          valor_negociado?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamentos_promob_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_promob_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_promob_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ordens_producao: {
         Row: {
           contrato_id: string
