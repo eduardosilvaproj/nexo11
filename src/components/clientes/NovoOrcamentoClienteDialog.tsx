@@ -301,7 +301,6 @@ export function NovoOrcamentoClienteDialog({
                     <th className="px-3 py-2 text-right font-medium">Tabela</th>
                     <th className="px-3 py-2 text-right font-medium">Desc %</th>
                     <th className="px-3 py-2 text-right font-medium">Negociado</th>
-                    <th className="px-3 py-2 text-right font-medium">Margem</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -324,9 +323,6 @@ export function NovoOrcamentoClienteDialog({
                         />
                       </td>
                       <td className="px-3 py-2 text-right font-medium">{formatBRL(l.negociado)}</td>
-                      <td className={`px-3 py-2 text-right ${margemColor(l.margem)}`}>
-                        {l.margem.toFixed(1)}%
-                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -338,7 +334,6 @@ export function NovoOrcamentoClienteDialog({
                     </td>
                     <td className="px-3 py-2 text-right text-muted-foreground">—</td>
                     <td className="px-3 py-2 text-right">{formatBRL(calc.subtotal)}</td>
-                    <td className="px-3 py-2"></td>
                   </tr>
                 </tfoot>
               </table>
