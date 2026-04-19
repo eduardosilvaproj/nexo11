@@ -22,6 +22,8 @@ import { LeadFormDialog } from "@/components/comercial/LeadFormDialog";
 import { ConvertLeadDialog } from "@/components/comercial/ConvertLeadDialog";
 import { ContratosTable } from "@/components/comercial/ContratosTable";
 import { ContratoFormDialog } from "@/components/comercial/ContratoFormDialog";
+import { ImportXmlPromobDialog } from "@/components/comercial/ImportXmlPromobDialog";
+import { FileCode2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type LeadStatus = Database["public"]["Enums"]["lead_status"];
@@ -202,6 +204,7 @@ export default function Comercial() {
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [contratoFormOpen, setContratoFormOpen] = useState(false);
+  const [importXmlOpen, setImportXmlOpen] = useState(false);
   const [convertLead, setConvertLead] = useState<Lead | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("leads");
@@ -290,13 +293,31 @@ export default function Comercial() {
             {tab === "contratos" ? "Todos os contratos da loja" : "Pipeline comercial"}
           </p>
         </div>
-        <button
-          onClick={() => (tab === "contratos" ? setContratoFormOpen(true) : setFormOpen(true))}
-          className="inline-flex items-center gap-1.5 px-4 py-2 text-white transition-colors hover:bg-[#1759A0]"
-          style={{ background: "#1E6FBF", borderRadius: 8, fontSize: 13, fontWeight: 500 }}
-        >
-          <Plus className="h-4 w-4" /> {tab === "contratos" ? "Novo contrato" : "Novo lead"}
-        </button>
+        <div className="flex items-center gap-2">
+          {tab === "contratos" && (
+            <button
+              onClick={() => setImportXmlOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 transition-colors hover:bg-[#E6F3FF]"
+              style={{
+                background: "#FFFFFF",
+                border: "1px solid #1E6FBF",
+                color: "#1E6FBF",
+                borderRadius: 8,
+                fontSize: 13,
+                fontWeight: 500,
+              }}
+            >
+              <FileCode2 className="h-4 w-4" /> Importar XML Promob
+            </button>
+          )}
+          <button
+            onClick={() => (tab === "contratos" ? setContratoFormOpen(true) : setFormOpen(true))}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-white transition-colors hover:bg-[#1759A0]"
+            style={{ background: "#1E6FBF", borderRadius: 8, fontSize: 13, fontWeight: 500 }}
+          >
+            <Plus className="h-4 w-4" /> {tab === "contratos" ? "Novo contrato" : "Novo lead"}
+          </button>
+        </div>
       </div>
 
       {/* Abas */}
@@ -424,6 +445,7 @@ export default function Comercial() {
 
       <LeadFormDialog open={formOpen} onOpenChange={setFormOpen} />
       <ContratoFormDialog open={contratoFormOpen} onOpenChange={setContratoFormOpen} />
+      <ImportXmlPromobDialog open={importXmlOpen} onOpenChange={setImportXmlOpen} />
       <ConvertLeadDialog
         lead={convertLead}
         open={!!convertLead}
