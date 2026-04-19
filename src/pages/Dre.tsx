@@ -629,7 +629,7 @@ export default function Dre() {
                     {fmt(metrics.faturamento)}
                   </td>
                   <td className="px-4 py-3 text-right text-[#0B1220]">
-                    {fmt(rows.reduce((s, r) => s + custoRealTotal(r), 0))}
+                    {fmt(metrics.custoRealTotalSum)}
                   </td>
                   <td
                     className="px-4 py-3 text-right"
