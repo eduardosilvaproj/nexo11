@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 
 type StatusMed = "pendente" | "agendado" | "concluido" | "pago";
-type Funcao = "medidor" | "conferente";
+type Funcao = "medidor" | "conferente" | "montador";
 
 interface AmbienteRow {
   id: string;
@@ -61,19 +61,22 @@ export function ContratoMedicaoAmbientesSection({
   const qc = useQueryClient();
 
   // Field name mapping per função
-  const F = {
-    pessoaId: funcao === "medidor" ? "medidor_id" : "conferente_id",
-    pct: funcao === "medidor" ? "percentual_medidor" : "percentual_conferente",
-    valor: funcao === "medidor" ? "valor_medidor" : "valor_conferente",
-    status: funcao === "medidor" ? "status_medicao" : "status_conferencia",
-    data: funcao === "medidor" ? "data_medicao" : "data_conferencia",
-    dreCol: funcao === "medidor" ? null : null, // both go into outros_custos_reais via log; see Pago handler
-  } as const;
+  const F =
+    funcao === "medidor"
+      ? { pessoaId: "medidor_id", pct: "percentual_medidor", valor: "valor_medidor", status: "status_medicao", data: "data_medicao" }
+      : funcao === "conferente"
+      ? { pessoaId: "conferente_id", pct: "percentual_conferente", valor: "valor_conferente", status: "status_conferencia", data: "data_conferencia" }
+      : { pessoaId: "montador_id", pct: "percentual_montador", valor: "valor_montador", status: "status_montagem", data: "data_montagem" };
 
-  const tituloSec = titulo ?? (funcao === "medidor" ? "Medição por ambiente" : "Conferência por ambiente");
-  const lblPessoa = labelPessoa ?? (funcao === "medidor" ? "Medidor" : "Conferente");
-  const lblValor = funcao === "medidor" ? "Valor medidor" : "Valor conferente";
-  const lblTotal = labelTotal ?? (funcao === "medidor" ? "Total a pagar medidores" : "Total a pagar conferentes");
+  const labelDefaults: Record<Funcao, { titulo: string; pessoa: string; valor: string; total: string }> = {
+    medidor: { titulo: "Medição por ambiente", pessoa: "Medidor", valor: "Valor medidor", total: "Total a pagar medidores" },
+    conferente: { titulo: "Conferência por ambiente", pessoa: "Conferente", valor: "Valor conferente", total: "Total a pagar conferentes" },
+    montador: { titulo: "Montagem por ambiente", pessoa: "Montador", valor: "Valor montador", total: "Total a pagar montadores" },
+  };
+  const tituloSec = titulo ?? labelDefaults[funcao].titulo;
+  const lblPessoa = labelPessoa ?? labelDefaults[funcao].pessoa;
+  const lblValor = labelDefaults[funcao].valor;
+  const lblTotal = labelTotal ?? labelDefaults[funcao].total;
 
   const { data: ambientes, isLoading } = useQuery<AmbienteRow[]>({
     queryKey: ["ambientes_med_conf", contratoId],
@@ -82,7 +85,7 @@ export function ContratoMedicaoAmbientesSection({
       const { data, error } = await sb
         .from("contrato_ambientes")
         .select(
-          "id, nome, valor_liquido, medidor_id, percentual_medidor, valor_medidor, status_medicao, data_medicao, conferente_id, percentual_conferente, valor_conferente, status_conferencia, data_conferencia",
+          "id, nome, valor_liquido, medidor_id, percentual_medidor, valor_medidor, status_medicao, data_medicao, conferente_id, percentual_conferente, valor_conferente, status_conferencia, data_conferencia, montador_id, percentual_montador, valor_montador, status_montagem, data_montagem",
         )
         .eq("contrato_id", contratoId)
         .order("created_at", { ascending: true });
@@ -128,6 +131,12 @@ export function ContratoMedicaoAmbientesSection({
   };
 
   const handleStatusChange = async (a: AmbienteRow, novo: StatusMed) => {
+    // Para montador: ao mudar para "agendado", a data é obrigatória
+    if (funcao === "montador" && novo === "agendado" && !a[F.data]) {
+      toast.error("Defina a data de montagem antes de marcar como Agendado.");
+      return;
+    }
+
     const ok = await updateAmbiente(a.id, { [F.status]: novo });
     if (!ok) return;
 
@@ -141,29 +150,35 @@ export function ContratoMedicaoAmbientesSection({
       try {
         await (sb as any).rpc?.("contrato_log_inserir", {
           _contrato_id: contratoId,
-          _acao: funcao === "medidor" ? "medidor_pago" : "conferente_pago",
+          _acao:
+            funcao === "medidor"
+              ? "medidor_pago"
+              : funcao === "conferente"
+              ? "conferente_pago"
+              : "montador_pago",
           _titulo: `${lblPessoa} pago`,
           _descricao: `${lblPessoa} ${pessoaNome} — Ambiente ${a.nome} — ${fmtBRL(valor)}`,
         });
       } catch (e: any) {
-        // log silencioso
         console.warn("log inserir falhou", e?.message);
       }
 
-      // 2) DRE — somar em outros_custos_reais
+      // 2) DRE — montador vai em custo_montagem_real; medidor/conferente em outros_custos_reais
+      const dreCol = funcao === "montador" ? "custo_montagem_real" : "outros_custos_reais";
       try {
         const { data: dre, error: dreErr } = await sb
           .from("dre_contrato")
-          .select("outros_custos_reais")
+          .select(dreCol)
           .eq("contrato_id", contratoId)
           .maybeSingle();
         if (!dreErr && dre) {
-          const novoTotal = Number(dre.outros_custos_reais || 0) + valor;
+          const novoTotal = Number(dre[dreCol] || 0) + valor;
           await sb
             .from("dre_contrato")
-            .update({ outros_custos_reais: novoTotal })
+            .update({ [dreCol]: novoTotal })
             .eq("contrato_id", contratoId);
           qc.invalidateQueries({ queryKey: ["dre", contratoId] });
+          qc.invalidateQueries({ queryKey: ["contrato_dre_view", contratoId] });
         }
       } catch (e: any) {
         console.warn("DRE update falhou", e?.message);
