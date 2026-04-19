@@ -14,6 +14,7 @@ import { ContratoTecnicoTab } from "@/components/contrato/ContratoTecnicoTab";
 import { ContratoProducaoTab } from "@/components/contrato/ContratoProducaoTab";
 import { ContratoLogisticaTab } from "@/components/contrato/ContratoLogisticaTab";
 import { ContratoMontagemTab } from "@/components/contrato/ContratoMontagemTab";
+import { ContratoAmbientesTab } from "@/components/contrato/ContratoAmbientesTab";
 import { ContratoPosVendaTab } from "@/components/contrato/ContratoPosVendaTab";
 import { ContratoDreTab } from "@/components/contrato/ContratoDreTab";
 import { ReadOnlyContext } from "@/components/contrato/ReadOnlyContext";
@@ -338,6 +339,8 @@ export default function ContratoDetail() {
               <ContratoLogisticaTab contratoId={contrato.id} />
             ) : active === "montagem" ? (
               <ContratoMontagemTab contratoId={contrato.id} />
+            ) : active === "ambientes" ? (
+              <ContratoAmbientesTab contratoId={contrato.id} contratoLojaId={contrato.loja_id} />
             ) : active === "pos_venda" ? (
               <ContratoPosVendaTab contratoId={contrato.id} />
             ) : active === "dre" ? (

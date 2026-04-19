@@ -6,6 +6,7 @@ export type ContratoTabKey =
   | "producao"
   | "logistica"
   | "montagem"
+  | "ambientes"
   | "pos_venda"
   | "dre";
 
@@ -15,6 +16,7 @@ const TABS: { key: ContratoTabKey; label: string }[] = [
   { key: "producao", label: "Produção" },
   { key: "logistica", label: "Logística" },
   { key: "montagem", label: "Montagem" },
+  { key: "ambientes", label: "Ambientes" },
   { key: "pos_venda", label: "Pós-venda" },
   { key: "dre", label: "DRE" },
 ];
