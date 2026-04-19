@@ -11,6 +11,7 @@ import { ClienteFormDialog } from "@/components/clientes/ClienteFormDialog";
 import { NovoOrcamentoClienteDialog } from "@/components/clientes/NovoOrcamentoClienteDialog";
 import { GerarContratoDialog } from "@/components/clientes/GerarContratoDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 type Cliente = {
   id: string;
@@ -47,6 +48,9 @@ type ContratoRow = {
   status: string;
   valor_venda: number;
   data_criacao: string;
+  margem_prevista?: number | null;
+  margem_realizada?: number | null;
+  descricao?: string | null;
 };
 
 type HistoricoItem = {
@@ -131,12 +135,29 @@ export default function ClienteDetail() {
     );
     if (contratoIds.length > 0) {
       const { data: cs } = await supabase
-        .from("contratos")
-        .select("id,cliente_nome,status,valor_venda,data_criacao")
+        .from("vw_contratos_dre")
+        .select("id,cliente_nome,status,valor_venda,data_criacao,margem_prevista,margem_realizada")
         .in("id", contratoIds)
         .order("data_criacao", { ascending: false });
-      const list = (cs ?? []) as ContratoRow[];
-      setContratos(list);
+      const orcsByContrato = new Map<string, string[]>();
+      list.forEach((o) => {
+        if (o.contrato_id) {
+          const arr = orcsByContrato.get(o.contrato_id) ?? [];
+          arr.push(o.nome);
+          orcsByContrato.set(o.contrato_id, arr);
+        }
+      });
+      const contratosList: ContratoRow[] = (cs ?? []).map((c) => ({
+        id: c.id as string,
+        cliente_nome: (c.cliente_nome as string) ?? "",
+        status: (c.status as string) ?? "comercial",
+        valor_venda: Number(c.valor_venda || 0),
+        data_criacao: (c.data_criacao as string) ?? new Date().toISOString(),
+        margem_prevista: c.margem_prevista as number | null,
+        margem_realizada: c.margem_realizada as number | null,
+        descricao: orcsByContrato.get(c.id as string)?.join(", ") ?? null,
+      }));
+      setContratos(contratosList);
 
       const { data: logs } = await supabase
         .from("contrato_logs")
@@ -160,7 +181,7 @@ export default function ClienteDetail() {
             data: o.created_at || new Date().toISOString(),
           }))
         : [];
-      const histContratos: HistoricoItem[] = list.map((c) => ({
+      const histContratos: HistoricoItem[] = contratosList.map((c) => ({
         id: `c-${c.id}`,
         tipo: "contrato",
         titulo: `Contrato gerado · ${c.status}`,
@@ -444,37 +465,80 @@ export default function ClienteDetail() {
         <TabsContent value="contratos" className="space-y-3">
           {contratos.length === 0 ? (
             <Card>
-              <CardContent className="py-8 text-center text-sm text-muted-foreground">
-                Nenhum contrato gerado
+              <CardContent className="py-12 text-center space-y-2">
+                <p className="text-base font-medium">Nenhum contrato ainda</p>
+                <p className="text-sm text-muted-foreground">
+                  Aprove um orçamento para gerar o primeiro contrato
+                </p>
               </CardContent>
             </Card>
           ) : (
-            contratos.map((c) => (
-              <Card key={c.id}>
-                <CardHeader className="flex-row items-start justify-between space-y-0 pb-3">
-                  <div>
-                    <p className="font-medium">{c.cliente_nome}</p>
-                    <p className="text-[12px] text-muted-foreground mt-0.5">
-                      {new Date(c.data_criacao).toLocaleDateString("pt-BR")}
-                    </p>
-                  </div>
-                  <Badge variant="secondary">{c.status}</Badge>
-                </CardHeader>
-                <CardContent className="flex items-center justify-between pt-0">
-                  <span className="text-sm text-muted-foreground">Valor</span>
-                  <div className="flex items-center gap-3">
-                    <span className="font-medium">{formatBRL(Number(c.valor_venda || 0))}</span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => navigate(`/contratos/${c.id}`)}
-                    >
-                      Abrir <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+            <Card>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nº contrato</TableHead>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Valor</TableHead>
+                    <TableHead className="text-right">Margem</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {contratos.map((c) => {
+                    const margem = c.margem_realizada ?? c.margem_prevista ?? 0;
+                    const margemColor =
+                      Number(margem) >= 30
+                        ? "text-emerald-600"
+                        : Number(margem) >= 15
+                        ? "text-amber-600"
+                        : "text-destructive";
+                    return (
+                      <TableRow
+                        key={c.id}
+                        className="cursor-pointer"
+                        onClick={() => navigate(`/contratos/${c.id}`)}
+                      >
+                        <TableCell className="font-mono text-xs">
+                          #{c.id.slice(0, 8)}
+                        </TableCell>
+                        <TableCell className="max-w-[260px] truncate">
+                          {c.descricao || "—"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="capitalize">
+                            {c.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right font-medium tabular-nums">
+                          {formatBRL(Number(c.valor_venda || 0))}
+                        </TableCell>
+                        <TableCell className={`text-right tabular-nums ${margemColor}`}>
+                          {Number(margem).toFixed(1)}%
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {new Date(c.data_criacao).toLocaleDateString("pt-BR")}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/contratos/${c.id}`);
+                            }}
+                          >
+                            Ver <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </Card>
           )}
         </TabsContent>
 
