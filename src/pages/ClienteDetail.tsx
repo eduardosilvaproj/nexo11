@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { ClienteFormDialog } from "@/components/clientes/ClienteFormDialog";
 import { NovoOrcamentoClienteDialog } from "@/components/clientes/NovoOrcamentoClienteDialog";
 import { GerarContratoDialog } from "@/components/clientes/GerarContratoDialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Cliente = {
   id: string;
@@ -38,6 +39,22 @@ type Orcamento = {
   ordem_compra: string | null;
   categorias: unknown;
   created_at: string | null;
+};
+
+type ContratoRow = {
+  id: string;
+  cliente_nome: string;
+  status: string;
+  valor_venda: number;
+  data_criacao: string;
+};
+
+type HistoricoItem = {
+  id: string;
+  tipo: "orcamento" | "contrato" | "log";
+  titulo: string;
+  descricao?: string | null;
+  data: string;
 };
 
 const formatBRL = (n: number) =>
