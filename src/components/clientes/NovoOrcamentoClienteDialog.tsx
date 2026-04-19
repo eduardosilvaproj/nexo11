@@ -375,27 +375,44 @@ export function NovoOrcamentoClienteDialog({
                   {formatBRL(calc.valorVenda)}
                 </span>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
-                <div>
-                  <p className="text-slate-500">Custo fabricante (ORDER)</p>
-                  <p className="text-slate-200">{formatBRL(calc.custoProduto)}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-slate-500">Margem prevista</p>
-                  <p
-                    className={
+              <div className="my-3 h-px bg-slate-800" />
+              <div className="flex items-center justify-between">
+                <span style={{ fontSize: 12, color: "#6B7A90" }}>Custo fabricante</span>
+                <span style={{ fontSize: 12, color: "#6B7A90" }}>{formatBRL(calc.custoProduto)}</span>
+              </div>
+              <div className="mt-1 flex items-center justify-between">
+                <span className="text-slate-300" style={{ fontSize: 14 }}>Margem prevista</span>
+                <span
+                  style={{
+                    fontSize: 16,
+                    fontWeight: 600,
+                    color:
                       calc.margemPrev >= 30
-                        ? "text-emerald-400"
+                        ? "#10B981"
                         : calc.margemPrev >= 15
-                        ? "text-amber-400"
-                        : "text-red-400"
-                    }
-                  >
-                    {calc.margemPrev.toFixed(1)}%
-                  </p>
-                </div>
+                        ? "#F59E0B"
+                        : "#E53935",
+                  }}
+                >
+                  {calc.margemPrev.toFixed(1)}%
+                </span>
               </div>
             </div>
+
+            {calc.margemPrev < 15 && (
+              <div
+                style={{
+                  background: "#FDECEA",
+                  border: "1px solid #E53935",
+                  borderRadius: 8,
+                  padding: 10,
+                  color: "#8B1F1B",
+                  fontSize: 13,
+                }}
+              >
+                ⚠ Margem abaixo do mínimo recomendado (15%). Considere reduzir o desconto ou aumentar o valor de venda.
+              </div>
+            )}
           </div>
         )}
 
