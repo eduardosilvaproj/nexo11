@@ -408,8 +408,10 @@ export type Database = {
       }
       contrato_ambientes: {
         Row: {
+          conferente_id: string | null
           contrato_id: string
           created_at: string
+          data_conferencia: string | null
           data_medicao: string | null
           data_montagem: string | null
           desconto_percentual: number
@@ -419,19 +421,24 @@ export type Database = {
           montador_id: string | null
           nome: string
           observacoes: string | null
+          percentual_conferente: number
           percentual_medidor: number
           percentual_montador: number
+          status_conferencia: Database["public"]["Enums"]["ambiente_status_montagem"]
           status_medicao: Database["public"]["Enums"]["ambiente_status_montagem"]
           status_montagem: Database["public"]["Enums"]["ambiente_status_montagem"]
           updated_at: string
           valor_bruto: number
+          valor_conferente: number
           valor_liquido: number
           valor_medidor: number
           valor_montador: number
         }
         Insert: {
+          conferente_id?: string | null
           contrato_id: string
           created_at?: string
+          data_conferencia?: string | null
           data_medicao?: string | null
           data_montagem?: string | null
           desconto_percentual?: number
@@ -441,19 +448,24 @@ export type Database = {
           montador_id?: string | null
           nome: string
           observacoes?: string | null
+          percentual_conferente?: number
           percentual_medidor?: number
           percentual_montador?: number
+          status_conferencia?: Database["public"]["Enums"]["ambiente_status_montagem"]
           status_medicao?: Database["public"]["Enums"]["ambiente_status_montagem"]
           status_montagem?: Database["public"]["Enums"]["ambiente_status_montagem"]
           updated_at?: string
           valor_bruto?: number
+          valor_conferente?: number
           valor_liquido?: number
           valor_medidor?: number
           valor_montador?: number
         }
         Update: {
+          conferente_id?: string | null
           contrato_id?: string
           created_at?: string
+          data_conferencia?: string | null
           data_medicao?: string | null
           data_montagem?: string | null
           desconto_percentual?: number
@@ -463,17 +475,27 @@ export type Database = {
           montador_id?: string | null
           nome?: string
           observacoes?: string | null
+          percentual_conferente?: number
           percentual_medidor?: number
           percentual_montador?: number
+          status_conferencia?: Database["public"]["Enums"]["ambiente_status_montagem"]
           status_medicao?: Database["public"]["Enums"]["ambiente_status_montagem"]
           status_montagem?: Database["public"]["Enums"]["ambiente_status_montagem"]
           updated_at?: string
           valor_bruto?: number
+          valor_conferente?: number
           valor_liquido?: number
           valor_medidor?: number
           valor_montador?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "contrato_ambientes_conferente_id_fkey"
+            columns: ["conferente_id"]
+            isOneToOne: false
+            referencedRelation: "tecnicos_montadores"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "contrato_ambientes_contrato_id_fkey"
             columns: ["contrato_id"]
