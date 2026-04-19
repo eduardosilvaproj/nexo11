@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ContratoMedicaoAmbientesSection } from "./ContratoMedicaoAmbientesSection";
 
 interface TecnicoTabProps {
   contratoId: string;
