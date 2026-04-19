@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Pencil, Plus, Eye, Send, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { ClienteFormDialog } from "@/components/clientes/ClienteFormDialog";
-import { ImportXmlPromobDialog } from "@/components/comercial/ImportXmlPromobDialog";
+import { NovoOrcamentoClienteDialog } from "@/components/clientes/NovoOrcamentoClienteDialog";
 
 type Cliente = {
   id: string;
@@ -169,7 +169,7 @@ export default function ClienteDetail() {
           <Button variant="outline" onClick={() => setEditOpen(true)}>
             <Pencil className="mr-2 h-4 w-4" /> Editar
           </Button>
-          <Button onClick={() => navigate("/comercial")}>
+          <Button onClick={() => setImportOpen(true)}>
             <Plus className="mr-2 h-4 w-4" /> Novo orçamento
           </Button>
         </div>
@@ -346,7 +346,14 @@ export default function ClienteDetail() {
         }}
       />
 
-      <ImportXmlPromobDialog open={importOpen} onOpenChange={setImportOpen} />
+      <NovoOrcamentoClienteDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        clienteId={cliente.id}
+        clienteNome={cliente.nome}
+        lojaId={cliente.loja_id}
+        onSaved={fetchAll}
+      />
     </div>
   );
 }
