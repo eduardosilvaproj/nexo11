@@ -1,15 +1,6 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { Search } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { PrazoCell } from "@/components/producao/PrazoBadge";
 import { TerceirizadaTab } from "@/components/producao/TerceirizadaTab";
-import type { Database } from "@/integrations/supabase/types";
+import { InternaKanban } from "@/components/producao/InternaKanban";
 
 type OpStatus = Database["public"]["Enums"]["op_status"];
 
