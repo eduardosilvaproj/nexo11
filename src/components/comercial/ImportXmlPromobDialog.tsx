@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Upload, FileCode2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { parsePromobXml, type PromobParsed } from "@/lib/promob-xml";
 
 interface Props {
@@ -9,7 +10,23 @@ interface Props {
 }
 
 const formatBRL = (n: number) =>
-  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  (Number.isFinite(n) ? n : 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+const FRETE_KEYS = ["frete", "transporte", "entrega"];
+const MONTAGEM_KEYS = ["montagem", "instalacao", "instalação"];
+
+function findAcrescimoValue(parsed: PromobParsed, keys: string[]): number {
+  const found = parsed.acrescimos.find((a) =>
+    keys.some((k) => (a.description || "").toLowerCase().includes(k))
+  );
+  return found?.value ?? 0;
+}
+
+function categoriaDescontoInicial(tabela: number, total: number): number {
+  if (tabela <= 0) return 0;
+  const pct = (1 - total / tabela) * 100;
+  return Math.max(0, Math.min(60, Math.round(pct * 10) / 10));
+}
 
 export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
   const [file, setFile] = useState<File | null>(null);
@@ -18,11 +35,19 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [parsing, setParsing] = useState(false);
 
+  // Negociação
+  const [descontos, setDescontos] = useState<Record<string, number>>({});
+  const [frete, setFrete] = useState(0);
+  const [montagem, setMontagem] = useState(0);
+
   const reset = () => {
     setFile(null);
     setParsed(null);
     setError(null);
     setParsing(false);
+    setDescontos({});
+    setFrete(0);
+    setMontagem(0);
   };
 
   const handleClose = (o: boolean) => {
@@ -47,6 +72,17 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
       const text = await f.text();
       const data = parsePromobXml(text);
       setParsed(data);
+
+      const initialDesc: Record<string, number> = {};
+      data.categorias.forEach((c) => {
+        const tabela = c.itens.reduce((s, x) => s + x.price * x.quantity, 0) || c.total;
+        initialDesc[c.id] = c.desconto_pct > 0
+          ? Math.min(60, c.desconto_pct)
+          : categoriaDescontoInicial(tabela, c.total);
+      });
+      setDescontos(initialDesc);
+      setFrete(findAcrescimoValue(data, FRETE_KEYS));
+      setMontagem(findAcrescimoValue(data, MONTAGEM_KEYS));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Falha ao ler XML");
       setParsed(null);
@@ -55,66 +91,79 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
     }
   };
 
+  const calc = useMemo(() => {
+    if (!parsed) return null;
+    const linhas = parsed.categorias.map((c) => {
+      const tabela = c.itens.reduce((s, x) => s + x.price * x.quantity, 0) || c.total;
+      const desc = descontos[c.id] ?? 0;
+      const valor = tabela * (1 - desc / 100);
+      return { id: c.id, descricao: c.description, tabela, desc, valor };
+    });
+    const subtotal = linhas.reduce((s, l) => s + l.valor, 0);
+    const valorVenda = subtotal + frete + montagem;
+    const custoProduto = parsed.total_tabela;
+    const margem = valorVenda > 0 ? ((valorVenda - custoProduto) / valorVenda) * 100 : 0;
+    return { linhas, subtotal, valorVenda, custoProduto, margem };
+  }, [parsed, descontos, frete, montagem]);
+
+  const margemColor = (m: number) =>
+    m >= 30 ? "#12B76A" : m >= 15 ? "#F59E0B" : "#E53935";
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[760px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Importar XML Promob</DialogTitle>
           <DialogDescription>
-            Passo 1 — Faça upload do XML para gerar um orçamento.
+            {parsed ? "Passo 2 — Revisar descontos e calcular valor de venda." : "Passo 1 — Faça upload do XML para gerar um orçamento."}
           </DialogDescription>
         </DialogHeader>
 
-        <label
-          onDragOver={(e) => {
-            e.preventDefault();
-            setDragOver(true);
-          }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragOver(false);
-            handleFile(e.dataTransfer.files?.[0] ?? null);
-          }}
-          className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed py-10 transition-colors hover:border-[#1E6FBF]"
-          style={{
-            borderColor: dragOver ? "#1E6FBF" : "#E8ECF2",
-            background: dragOver ? "#F0F7FF" : "#FAFBFC",
-          }}
-        >
-          <input
-            type="file"
-            accept=".xml,text/xml,application/xml"
-            className="hidden"
-            onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
-          />
-          {file && !error ? (
-            <>
-              <FileCode2 className="h-8 w-8" style={{ color: "#1E6FBF" }} />
-              <p className="mt-2 text-sm font-medium" style={{ color: "#0D1117" }}>
-                {file.name}
-              </p>
-              <p className="mt-0.5 text-xs" style={{ color: "#6B7A90" }}>
-                {(file.size / 1024).toFixed(1)} KB · clique para trocar
-              </p>
-            </>
-          ) : (
-            <>
-              <Upload className="h-8 w-8" style={{ color: "#6B7A90" }} />
-              <p className="mt-2 text-sm font-medium" style={{ color: "#0D1117" }}>
-                Arraste o XML gerado pelo Promob
-              </p>
-              <p className="mt-0.5 text-xs" style={{ color: "#6B7A90" }}>
-                Promob → Relatórios → Orçamento → Exportar XML
-              </p>
-            </>
-          )}
-        </label>
+        {!parsed && (
+          <label
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(false);
+              handleFile(e.dataTransfer.files?.[0] ?? null);
+            }}
+            className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed py-10 transition-colors hover:border-[#1E6FBF]"
+            style={{
+              borderColor: dragOver ? "#1E6FBF" : "#E8ECF2",
+              background: dragOver ? "#F0F7FF" : "#FAFBFC",
+            }}
+          >
+            <input
+              type="file"
+              accept=".xml,text/xml,application/xml"
+              className="hidden"
+              onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
+            />
+            {file && !error ? (
+              <>
+                <FileCode2 className="h-8 w-8" style={{ color: "#1E6FBF" }} />
+                <p className="mt-2 text-sm font-medium" style={{ color: "#0D1117" }}>{file.name}</p>
+                <p className="mt-0.5 text-xs" style={{ color: "#6B7A90" }}>
+                  {(file.size / 1024).toFixed(1)} KB · clique para trocar
+                </p>
+              </>
+            ) : (
+              <>
+                <Upload className="h-8 w-8" style={{ color: "#6B7A90" }} />
+                <p className="mt-2 text-sm font-medium" style={{ color: "#0D1117" }}>
+                  Arraste o XML gerado pelo Promob
+                </p>
+                <p className="mt-0.5 text-xs" style={{ color: "#6B7A90" }}>
+                  Promob → Relatórios → Orçamento → Exportar XML
+                </p>
+              </>
+            )}
+          </label>
+        )}
 
         {parsing && (
-          <p className="text-center text-sm" style={{ color: "#6B7A90" }}>
-            Lendo XML...
-          </p>
+          <p className="text-center text-sm" style={{ color: "#6B7A90" }}>Lendo XML...</p>
         )}
 
         {error && (
@@ -127,75 +176,173 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
           </div>
         )}
 
-        {parsed && !error && (
-          <div className="space-y-3">
-            <div
-              className="flex items-center gap-2 rounded-md p-3"
-              style={{ background: "#ECFDF3", border: "1px solid #B7E4C7" }}
-            >
-              <CheckCircle2 className="h-4 w-4" style={{ color: "#12B76A" }} />
-              <p className="text-sm" style={{ color: "#0D1117" }}>
-                XML lido com sucesso
+        {parsed && !error && calc && (
+          <div className="space-y-4">
+            {/* Header pós-parse */}
+            <div className="flex items-start justify-between gap-3 rounded-md p-3" style={{ background: "#FAFBFC", border: "1px solid #E8ECF2" }}>
+              <div className="min-w-0">
+                <p className="text-xs" style={{ color: "#6B7A90" }}>Cliente</p>
+                <p className="text-sm font-semibold truncate" style={{ color: "#0D1117" }}>
+                  {parsed.cliente_nome || "—"}
+                </p>
+                <p className="mt-1 text-xs" style={{ color: "#6B7A90" }}>
+                  Ordem: <span style={{ color: "#0D1117" }}>{parsed.ordem_compra || "—"}</span>
+                </p>
+              </div>
+              <div
+                className="flex items-center gap-1.5 rounded-full px-2.5 py-1 shrink-0"
+                style={{ background: "#ECFDF3", border: "1px solid #B7E4C7" }}
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" style={{ color: "#12B76A" }} />
+                <span className="text-xs font-medium" style={{ color: "#12B76A" }}>XML carregado</span>
+              </div>
+            </div>
+
+            {/* Seção 1 — Resumo do fabricante */}
+            <section className="rounded-md p-3" style={{ background: "#F5F7FA", border: "1px solid #E8ECF2" }}>
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#6B7A90" }}>
+                Resumo do fabricante
               </p>
-            </div>
+              <div className="mt-2 grid grid-cols-3 gap-3">
+                <ResumoItem label="Preço de tabela" value={parsed.total_tabela} />
+                <ResumoItem label="Valor do pedido" value={parsed.total_pedido} />
+                <ResumoItem label="Valor orçamento" value={parsed.total_orcamento} />
+              </div>
+              <p className="mt-2 text-xs" style={{ color: "#B0BAC9" }}>
+                Valores conforme tabela do fabricante
+              </p>
+            </section>
 
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Cliente" value={parsed.cliente_nome || "—"} />
-              <Field label="Ordem de compra" value={parsed.ordem_compra || "—"} />
-            </div>
+            {/* Seção 2 — Categorias */}
+            <section className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#6B7A90" }}>
+                Categorias — desconto do vendedor
+              </p>
+              {calc.linhas.map((l) => (
+                <div
+                  key={l.id}
+                  className="rounded-md p-3"
+                  style={{ background: "#FFFFFF", border: "1px solid #E8ECF2" }}
+                >
+                  <p className="text-sm font-medium truncate" style={{ color: "#0D1117" }}>
+                    {l.descricao || "Categoria"}
+                  </p>
+                  <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                    <div>
+                      <p className="text-xs" style={{ color: "#6B7A90" }}>Tabela</p>
+                      <p className="text-sm font-medium" style={{ color: "#0D1117" }}>
+                        {formatBRL(l.tabela)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs" style={{ color: "#6B7A90" }}>Desc.</span>
+                      <Input
+                        type="number"
+                        step={0.5}
+                        min={0}
+                        max={60}
+                        value={l.desc}
+                        onChange={(e) => {
+                          const v = Math.max(0, Math.min(60, parseFloat(e.target.value) || 0));
+                          setDescontos((prev) => ({ ...prev, [l.id]: v }));
+                        }}
+                        className="h-8 w-20 text-right"
+                      />
+                      <span className="text-xs" style={{ color: "#6B7A90" }}>%</span>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs" style={{ color: "#6B7A90" }}>Valor</p>
+                      <p className="text-sm font-semibold" style={{ color: "#1E6FBF" }}>
+                        {formatBRL(l.valor)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
 
-            <div className="grid grid-cols-3 gap-3">
-              <Money label="Total tabela" value={parsed.total_tabela} />
-              <Money label="Total pedido" value={parsed.total_pedido} />
-              <Money label="Total orçamento" value={parsed.total_orcamento} highlight />
-            </div>
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <AcrescimoInput label="Frete" value={frete} onChange={setFrete} />
+                <AcrescimoInput label="Montagem" value={montagem} onChange={setMontagem} />
+              </div>
+            </section>
 
-            <div className="grid grid-cols-3 gap-3 text-xs" style={{ color: "#6B7A90" }}>
-              <span>{parsed.categorias.length} categorias</span>
-              <span>{parsed.itens.length} itens</span>
-              <span>{parsed.acrescimos.length} acréscimos</span>
-            </div>
+            {/* Seção 3 — Valor de venda calculado */}
+            <section className="rounded-lg p-4" style={{ background: "#0D1117" }}>
+              <div className="space-y-1.5 text-sm" style={{ color: "#B0BAC9" }}>
+                <Row label="Subtotal categorias" value={formatBRL(calc.subtotal)} />
+                <Row label="+ Frete" value={formatBRL(frete)} />
+                <Row label="+ Montagem" value={formatBRL(montagem)} />
+              </div>
+              <div className="my-3 h-px" style={{ background: "#1F2A3A" }} />
+              <div className="flex items-baseline justify-between">
+                <span className="text-xs uppercase tracking-wide" style={{ color: "#6B7A90" }}>
+                  Valor de venda
+                </span>
+                <span style={{ color: "#FFFFFF", fontSize: 32, fontWeight: 500, lineHeight: 1 }}>
+                  {formatBRL(calc.valorVenda)}
+                </span>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <p style={{ color: "#6B7A90" }}>Custo do produto (tabela)</p>
+                  <p className="mt-0.5 text-sm font-medium" style={{ color: "#FFFFFF" }}>
+                    {formatBRL(calc.custoProduto)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p style={{ color: "#6B7A90" }}>Margem prevista</p>
+                  <p className="mt-0.5 text-sm font-semibold" style={{ color: margemColor(calc.margem) }}>
+                    {calc.margem.toFixed(1)}%
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <p className="text-xs" style={{ color: "#B0BAC9" }}>
+              Próximo passo: salvar orçamento e converter em contrato.
+            </p>
           </div>
         )}
-
-        <p className="text-xs" style={{ color: "#B0BAC9" }}>
-          Próximo passo: revisar itens e salvar o orçamento.
-        </p>
       </DialogContent>
     </Dialog>
   );
 }
 
-function Field({ label, value }: { label: string; value: string }) {
+function ResumoItem({ label, value }: { label: string; value: number }) {
   return (
-    <div
-      className="rounded-md p-3"
-      style={{ background: "#F5F7FA", border: "1px solid #E8ECF2" }}
-    >
+    <div>
       <p className="text-xs" style={{ color: "#6B7A90" }}>{label}</p>
-      <p className="mt-0.5 text-sm font-medium truncate" style={{ color: "#0D1117" }}>
-        {value}
+      <p className="mt-0.5 text-sm font-semibold" style={{ color: "#0D1117" }}>
+        {formatBRL(value)}
       </p>
     </div>
   );
 }
 
-function Money({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
+function AcrescimoInput({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
   return (
-    <div
-      className="rounded-md p-3"
-      style={{
-        background: highlight ? "#E6F3FF" : "#F5F7FA",
-        border: `1px solid ${highlight ? "#1E6FBF" : "#E8ECF2"}`,
-      }}
-    >
+    <div className="rounded-md p-3" style={{ background: "#FFFFFF", border: "1px solid #E8ECF2" }}>
       <p className="text-xs" style={{ color: "#6B7A90" }}>{label}</p>
-      <p
-        className="mt-0.5 text-sm font-semibold"
-        style={{ color: highlight ? "#1E6FBF" : "#0D1117" }}
-      >
-        {formatBRL(value)}
-      </p>
+      <div className="mt-1 flex items-center gap-2">
+        <span className="text-xs" style={{ color: "#6B7A90" }}>R$</span>
+        <Input
+          type="number"
+          step={1}
+          min={0}
+          value={value}
+          onChange={(e) => onChange(Math.max(0, parseFloat(e.target.value) || 0))}
+          className="h-8 text-right"
+        />
+      </div>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span>{label}</span>
+      <span style={{ color: "#FFFFFF" }}>{value}</span>
     </div>
   );
 }
