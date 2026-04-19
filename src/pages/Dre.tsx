@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, FileText, BarChart3 } from "lucide-react";
+import { Eye, FileText, BarChart3, Factory, Wrench, Ruler, CheckCircle2, Truck, Sparkles } from "lucide-react";
 import {
   ComposedChart,
   Area,
@@ -21,6 +21,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 
 type Row = {
   id: string;
@@ -32,6 +44,34 @@ type Row = {
   margem_prevista: number | null;
   margem_realizada: number | null;
   desvio_total: number | null;
+  custo_produto_real: number | null;
+  custo_montagem_real: number | null;
+  custo_frete_real: number | null;
+  custo_comissao_real: number | null;
+  outros_custos_reais: number | null;
+  custo_produto_previsto: number | null;
+  custo_montagem_previsto: number | null;
+  custo_frete_previsto: number | null;
+  custo_comissao_previsto: number | null;
+  outros_custos_previstos: number | null;
+};
+
+type DrillData = {
+  contratoId: string;
+  cliente: string;
+  receita: number;
+  prevTotal: number;
+  realTotal: number;
+  pendTotal: number;
+  margemPrev: number;
+  margemReal: number;
+  margemPotencial: number;
+  fabrica: number;
+  frete: number;
+  outros: number;
+  montagem: { pago: number; pendente: number; ambPagos: number; ambTotal: number };
+  medicao: { pago: number; pendente: number; ambPagos: number; ambTotal: number };
+  conferencia: { pago: number; pendente: number; ambPagos: number; ambTotal: number };
 };
 
 const MESES = [
@@ -82,7 +122,7 @@ export default function Dre() {
       let q = supabase
         .from("vw_contratos_dre")
         .select(
-          "id, cliente_nome, status, vendedor_id, data_criacao, valor_venda, margem_prevista, margem_realizada, desvio_total"
+          "id, cliente_nome, status, vendedor_id, data_criacao, valor_venda, margem_prevista, margem_realizada, desvio_total, custo_produto_real, custo_montagem_real, custo_frete_real, custo_comissao_real, outros_custos_reais, custo_produto_previsto, custo_montagem_previsto, custo_frete_previsto, custo_comissao_previsto, outros_custos_previstos"
         )
         .gte("data_criacao", inicio)
         .lt("data_criacao", fim)
@@ -183,6 +223,100 @@ export default function Dre() {
     return "#E53935";
   };
   const fmtPct = (m: number | null) => (m === null ? "—" : `${m.toFixed(1)}%`);
+
+  // Soma os custos REAIS de um contrato (já vindos da view)
+  const custoRealTotal = (r: Row) =>
+    (r.custo_produto_real ?? 0) +
+    (r.custo_montagem_real ?? 0) +
+    (r.custo_frete_real ?? 0) +
+    (r.custo_comissao_real ?? 0) +
+    (r.outros_custos_reais ?? 0);
+
+  // Drill-down lateral
+  const [drillOpen, setDrillOpen] = useState(false);
+  const [drill, setDrill] = useState<DrillData | null>(null);
+  const [drillLoading, setDrillLoading] = useState(false);
+
+  const abrirDrill = async (r: Row) => {
+    setDrillOpen(true);
+    setDrillLoading(true);
+    setDrill(null);
+
+    const { data: amb } = await supabase
+      .from("contrato_ambientes")
+      .select(
+        "valor_montador, status_montagem, valor_medidor, status_medicao, valor_conferente, status_conferencia"
+      )
+      .eq("contrato_id", r.id);
+
+    const acc = {
+      mPago: 0, mPend: 0, mAmbP: 0, mAmbT: 0,
+      medPago: 0, medPend: 0, medAmbP: 0, medAmbT: 0,
+      cPago: 0, cPend: 0, cAmbP: 0, cAmbT: 0,
+    };
+    (amb ?? []).forEach((a: any) => {
+      const vm = Number(a.valor_montador || 0);
+      const vmed = Number(a.valor_medidor || 0);
+      const vc = Number(a.valor_conferente || 0);
+      if (vm > 0 || a.status_montagem) {
+        acc.mAmbT += 1;
+        if (a.status_montagem === "pago") { acc.mPago += vm; acc.mAmbP += 1; }
+        else acc.mPend += vm;
+      }
+      if (vmed > 0 || a.status_medicao) {
+        acc.medAmbT += 1;
+        if (a.status_medicao === "pago") { acc.medPago += vmed; acc.medAmbP += 1; }
+        else acc.medPend += vmed;
+      }
+      if (vc > 0 || a.status_conferencia) {
+        acc.cAmbT += 1;
+        if (a.status_conferencia === "pago") { acc.cPago += vc; acc.cAmbP += 1; }
+        else acc.cPend += vc;
+      }
+    });
+
+    const receita = r.valor_venda ?? 0;
+    const fabrica = r.custo_produto_real ?? 0;
+    const frete = r.custo_frete_real ?? 0;
+    // outros = somente extras manuais (retrabalhos/chamados), removendo medição/conferência que já contabilizamos
+    const outros = Math.max(
+      (r.outros_custos_reais ?? 0) - acc.medPago - acc.cPago,
+      0
+    );
+
+    const realTotal =
+      fabrica + acc.mPago + acc.medPago + acc.cPago + frete +
+      (r.custo_comissao_real ?? 0) + outros;
+    const pendTotal = acc.mPend + acc.medPend + acc.cPend;
+    const prevTotal =
+      (r.custo_produto_previsto ?? 0) +
+      (r.custo_montagem_previsto ?? 0) +
+      (r.custo_frete_previsto ?? 0) +
+      (r.custo_comissao_previsto ?? 0) +
+      (r.outros_custos_previstos ?? 0);
+
+    const margemPotencial =
+      receita > 0 ? ((receita - (realTotal + pendTotal)) / receita) * 100 : 0;
+
+    setDrill({
+      contratoId: r.id,
+      cliente: r.cliente_nome ?? "—",
+      receita,
+      prevTotal,
+      realTotal,
+      pendTotal,
+      margemPrev: r.margem_prevista ?? 0,
+      margemReal: r.margem_realizada ?? 0,
+      margemPotencial: +margemPotencial.toFixed(2),
+      fabrica,
+      frete,
+      outros,
+      montagem: { pago: acc.mPago, pendente: acc.mPend, ambPagos: acc.mAmbP, ambTotal: acc.mAmbT },
+      medicao: { pago: acc.medPago, pendente: acc.medPend, ambPagos: acc.medAmbP, ambTotal: acc.medAmbT },
+      conferencia: { pago: acc.cPago, pendente: acc.cPend, ambPagos: acc.cAmbP, ambTotal: acc.cAmbT },
+    });
+    setDrillLoading(false);
+  };
 
   // Comissão base estimada (não há tabela de regras configurada)
   const COMISSAO_BASE = 0.03;
@@ -332,6 +466,7 @@ export default function Dre() {
               <th className="px-4 py-3 font-medium">Cliente</th>
               <th className="px-4 py-3 font-medium">Vendedor</th>
               <th className="px-4 py-3 text-right font-medium">Valor</th>
+              <th className="px-4 py-3 text-right font-medium">Custo real</th>
               <th className="px-4 py-3 text-right font-medium">Margem prevista</th>
               <th className="px-4 py-3 text-right font-medium">Margem realizada</th>
               <th className="px-4 py-3 text-right font-medium">Desvio</th>
@@ -342,13 +477,13 @@ export default function Dre() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-[#6B7A90]">
+                <td colSpan={10} className="px-4 py-8 text-center text-[#6B7A90]">
                   Carregando...
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-12 text-center">
+                <td colSpan={10} className="px-4 py-12 text-center">
                   <BarChart3 className="mx-auto mb-3 h-10 w-10 text-[#B0BAC9]" />
                   <p className="font-medium text-[#0B1220]">Nenhum contrato no período</p>
                   <p className="mt-1 text-sm text-[#6B7A90]">
@@ -382,6 +517,30 @@ export default function Dre() {
                       <td className="px-4 py-3 text-[#0B1220]">{r.cliente_nome}</td>
                       <td className="px-4 py-3 text-[#6B7A90]">{vendedorNome}</td>
                       <td className="px-4 py-3 text-right">{fmt(r.valor_venda)}</td>
+                      <td className="px-4 py-3 text-right">
+                        <HoverCard openDelay={120}>
+                          <HoverCardTrigger asChild>
+                            <span className="cursor-help font-medium text-[#0B1220] underline decoration-dotted decoration-[#B0BAC9] underline-offset-4">
+                              {fmt(custoRealTotal(r))}
+                            </span>
+                          </HoverCardTrigger>
+                          <HoverCardContent className="w-72 text-sm">
+                            <p className="mb-2 text-xs font-medium uppercase text-[#6B7A90]">
+                              Breakdown — custos pagos
+                            </p>
+                            <div className="space-y-1">
+                              <div className="flex justify-between"><span>🏭 Fábrica</span><span>{fmt(r.custo_produto_real)}</span></div>
+                              <div className="flex justify-between"><span>🔧 Montagem</span><span>{fmt(r.custo_montagem_real)}</span></div>
+                              <div className="flex justify-between"><span>🚚 Frete</span><span>{fmt(r.custo_frete_real)}</span></div>
+                              <div className="flex justify-between"><span>💰 Comissão</span><span>{fmt(r.custo_comissao_real)}</span></div>
+                              <div className="flex justify-between"><span>📐 Técnico + outros</span><span>{fmt(r.outros_custos_reais)}</span></div>
+                              <div className="mt-2 flex justify-between border-t border-[#E8ECF2] pt-2 font-medium">
+                                <span>Total</span><span>{fmt(custoRealTotal(r))}</span>
+                              </div>
+                            </div>
+                          </HoverCardContent>
+                        </HoverCard>
+                      </td>
                       <td
                         className="px-4 py-3 text-right font-medium"
                         style={{ color: margemColor(prev) }}
@@ -421,16 +580,16 @@ export default function Dre() {
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-1">
                           <button
-                            onClick={() => navigate(`/contratos/${r.id}?tab=dre`)}
+                            onClick={() => abrirDrill(r)}
                             className="rounded p-1.5 text-[#6B7A90] hover:bg-[#F5F7FA] hover:text-[#1E6FBF]"
-                            title="Ver contrato"
+                            title="Ver detalhes do contrato"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
                           <button
-                            onClick={() => window.open(`/contratos/${r.id}?tab=dre&print=1`, "_blank")}
+                            onClick={() => navigate(`/contratos/${r.id}?tab=dre`)}
                             className="rounded p-1.5 text-[#6B7A90] hover:bg-[#F5F7FA] hover:text-[#1E6FBF]"
-                            title="Exportar PDF"
+                            title="Abrir contrato"
                           >
                             <FileText className="h-4 w-4" />
                           </button>
@@ -445,6 +604,9 @@ export default function Dre() {
                   <td className="px-4 py-3 text-[#B0BAC9]">—</td>
                   <td className="px-4 py-3 text-right text-[#0B1220]">
                     {fmt(metrics.faturamento)}
+                  </td>
+                  <td className="px-4 py-3 text-right text-[#0B1220]">
+                    {fmt(rows.reduce((s, r) => s + custoRealTotal(r), 0))}
                   </td>
                   <td
                     className="px-4 py-3 text-right"
@@ -683,6 +845,129 @@ export default function Dre() {
         </p>
       </div>
       )}
+
+      <Sheet open={drillOpen} onOpenChange={setDrillOpen}>
+        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>Detalhes do contrato</SheetTitle>
+            <SheetDescription>
+              {drill ? `${drill.cliente} · #${drill.contratoId.slice(0, 4).toUpperCase()}` : "—"}
+            </SheetDescription>
+          </SheetHeader>
+
+          {drillLoading || !drill ? (
+            <p className="mt-8 text-center text-sm text-[#6B7A90]">Carregando...</p>
+          ) : (
+            <div className="mt-6 space-y-6 text-sm">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg border border-[#E8ECF2] bg-[#F8FAFC] p-3">
+                  <p className="text-[11px] uppercase tracking-wide text-[#6B7A90]">Receita</p>
+                  <p className="mt-1 text-lg font-semibold text-[#0B1220]">{fmt(drill.receita)}</p>
+                </div>
+                <div className="rounded-lg border border-[#E8ECF2] bg-[#F8FAFC] p-3">
+                  <p className="text-[11px] uppercase tracking-wide text-[#6B7A90]">Custos previstos</p>
+                  <p className="mt-1 text-lg font-semibold text-[#0B1220]">{fmt(drill.prevTotal)}</p>
+                </div>
+                <div className="rounded-lg border border-[#E8ECF2] bg-[#F0FDF9] p-3">
+                  <p className="text-[11px] uppercase tracking-wide text-[#6B7A90]">Custos realizados</p>
+                  <p className="mt-1 text-lg font-semibold text-[#05873C]">{fmt(drill.realTotal)}</p>
+                </div>
+                <div className="rounded-lg border border-[#E8ECF2] bg-[#FFFBEB] p-3">
+                  <p className="text-[11px] uppercase tracking-wide text-[#6B7A90]">Custos pendentes</p>
+                  <p className="mt-1 text-lg font-semibold text-[#B45309]">{fmt(drill.pendTotal)}</p>
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#6B7A90]">
+                  Breakdown por categoria
+                </p>
+                <div className="space-y-2 rounded-lg border border-[#E8ECF2] bg-white p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2"><Factory className="h-4 w-4 text-[#6B7A90]" />Fábrica</span>
+                    <span className="font-medium">{fmt(drill.fabrica)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2"><Wrench className="h-4 w-4 text-[#1E6FBF]" />Montagem</span>
+                    <span className="font-medium">
+                      {fmt(drill.montagem.pago)}
+                      <span className="ml-1 text-xs text-[#6B7A90]">
+                        ({drill.montagem.ambPagos}/{drill.montagem.ambTotal} amb.)
+                      </span>
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2"><Ruler className="h-4 w-4 text-[#E8A020]" />Medição</span>
+                    <span className="font-medium">
+                      {fmt(drill.medicao.pago)}
+                      <span className="ml-1 text-xs text-[#6B7A90]">
+                        ({drill.medicao.ambPagos}/{drill.medicao.ambTotal})
+                      </span>
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#12B76A]" />Conferência</span>
+                    <span className="font-medium">
+                      {fmt(drill.conferencia.pago)}
+                      <span className="ml-1 text-xs text-[#6B7A90]">
+                        ({drill.conferencia.ambPagos}/{drill.conferencia.ambTotal})
+                      </span>
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2"><Truck className="h-4 w-4 text-[#6B7A90]" />Frete</span>
+                    <span className="font-medium">{fmt(drill.frete)}</span>
+                  </div>
+                  {drill.outros > 0 && (
+                    <div className="flex items-center justify-between text-[#6B7A90]">
+                      <span>Outros (retrabalhos / chamados)</span>
+                      <span>{fmt(drill.outros)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#6B7A90]">
+                  Margem
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-lg border border-[#E8ECF2] p-3 text-center">
+                    <p className="text-[11px] text-[#6B7A90]">Prevista</p>
+                    <p className="mt-1 text-lg font-semibold" style={{ color: margemColor(drill.margemPrev) }}>
+                      {drill.margemPrev.toFixed(1)}%
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-[#E8ECF2] p-3 text-center">
+                    <p className="text-[11px] text-[#6B7A90]">Realizada</p>
+                    <p className="mt-1 text-lg font-semibold" style={{ color: margemColor(drill.margemReal) }}>
+                      {drill.margemReal.toFixed(1)}%
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-[#E8ECF2] p-3 text-center">
+                    <p className="flex items-center justify-center gap-1 text-[11px] text-[#6B7A90]">
+                      <Sparkles className="h-3 w-3" />Potencial
+                    </p>
+                    <p className="mt-1 text-lg font-semibold" style={{ color: margemColor(drill.margemPotencial) }}>
+                      {drill.margemPotencial.toFixed(1)}%
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-2 text-[11px] text-[#B0BAC9]">
+                  Potencial = considerando todos os custos pendentes como pagos.
+                </p>
+              </div>
+
+              <button
+                onClick={() => navigate(`/contratos/${drill.contratoId}?tab=dre`)}
+                className="w-full rounded-md bg-[#1E6FBF] px-4 py-2 text-sm font-medium text-white hover:bg-[#185A9B]"
+              >
+                Abrir contrato
+              </button>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
