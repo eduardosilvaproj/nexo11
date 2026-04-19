@@ -122,7 +122,7 @@ export default function Dre() {
       let q = supabase
         .from("vw_contratos_dre")
         .select(
-          "id, cliente_nome, status, vendedor_id, data_criacao, valor_venda, margem_prevista, margem_realizada, desvio_total"
+          "id, cliente_nome, status, vendedor_id, data_criacao, valor_venda, margem_prevista, margem_realizada, desvio_total, custo_produto_real, custo_montagem_real, custo_frete_real, custo_comissao_real, outros_custos_reais, custo_produto_previsto, custo_montagem_previsto, custo_frete_previsto, custo_comissao_previsto, outros_custos_previstos"
         )
         .gte("data_criacao", inicio)
         .lt("data_criacao", fim)
