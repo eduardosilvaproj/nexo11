@@ -1392,40 +1392,49 @@ export type Database = {
           contrato_id: string | null
           created_at: string
           data_prevista: string | null
+          fornecedor_id: string | null
           id: string
           importado_em: string
           loja_id: string
           numero_pedido: string
           oc: string | null
           status: Database["public"]["Enums"]["producao_terceirizada_status"]
+          tipo_entrada: string
           transportadora: string | null
           updated_at: string
+          vinculo_status: string
         }
         Insert: {
           contrato_id?: string | null
           created_at?: string
           data_prevista?: string | null
+          fornecedor_id?: string | null
           id?: string
           importado_em?: string
           loja_id: string
           numero_pedido: string
           oc?: string | null
           status?: Database["public"]["Enums"]["producao_terceirizada_status"]
+          tipo_entrada?: string
           transportadora?: string | null
           updated_at?: string
+          vinculo_status?: string
         }
         Update: {
           contrato_id?: string | null
           created_at?: string
           data_prevista?: string | null
+          fornecedor_id?: string | null
           id?: string
           importado_em?: string
           loja_id?: string
           numero_pedido?: string
           oc?: string | null
           status?: Database["public"]["Enums"]["producao_terceirizada_status"]
+          tipo_entrada?: string
           transportadora?: string | null
           updated_at?: string
+          vinculo_status?: string
         }
         Relationships: [
           {
@@ -1440,6 +1449,13 @@ export type Database = {
             columns: ["contrato_id"]
             isOneToOne: false
             referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "producao_terceirizada_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
             referencedColumns: ["id"]
           },
           {
