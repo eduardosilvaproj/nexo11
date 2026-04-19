@@ -160,7 +160,6 @@ export function NovoOrcamentoClienteDialog({
         tabela: l.tabela,
         desconto_pct: l.desc,
         valor: l.negociado,
-        margem: l.margem,
       }));
 
       const { error: insErr } = await supabase.from("orcamentos").insert({
@@ -173,13 +172,17 @@ export function NovoOrcamentoClienteDialog({
         total_tabela: parsed.total_tabela,
         total_pedido: parsed.total_pedido,
         valor_negociado: calc.valorVenda,
+        desconto_global: calc.descGlobalSafe,
         frete_fabrica: parsed.frete,
         montagem_fabrica: parsed.montagem,
         frete_loja: freteLoja,
         montagem_loja: montagemLoja,
         categorias: categoriasJson as unknown as never,
         itens: parsed.itens as unknown as never,
-        acrescimos: parsed.acrescimos as unknown as never,
+        acrescimos: [
+          ...parsed.acrescimos,
+          { id: "_total_orcamento_budget", description: "BUDGET (sugestão de venda Promob)", value: parsed.total_orcamento, percentual: 0 },
+        ] as unknown as never,
         status,
       });
       if (insErr) throw insErr;
