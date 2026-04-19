@@ -30,6 +30,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { checkAgendamentoConflict, diffHoras as diffH } from "@/lib/agendamento-conflict";
 import { useAuth } from "@/contexts/AuthContext";
+import { AmbientesMontagemList } from "@/components/montagem/AmbientesMontagemList";
 
 const STATUS_BADGE: Record<string, { bg: string; fg: string; label: string }> = {
   agendado: { bg: "#E6F3FF", fg: "#1E6FBF", label: "Agendado" },
@@ -103,11 +104,16 @@ export default function Montagem() {
         </p>
       </div>
 
-      <Tabs defaultValue="agenda">
+      <Tabs defaultValue="ambientes">
         <TabsList>
+          <TabsTrigger value="ambientes">Ambientes</TabsTrigger>
           <TabsTrigger value="agenda">Agenda</TabsTrigger>
           <TabsTrigger value="capacidade">Capacidade</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="ambientes" className="mt-4">
+          <AmbientesMontagemList />
+        </TabsContent>
 
         {/* AGENDA */}
         <TabsContent value="agenda" className="mt-4">
