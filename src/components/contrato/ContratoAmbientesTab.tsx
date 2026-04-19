@@ -5,7 +5,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 
 type StatusMontagem = "pendente" | "agendado" | "concluido" | "pago";
@@ -24,6 +26,7 @@ interface Ambiente {
   status_montagem: StatusMontagem;
   data_montagem: string | null;
   observacoes: string | null;
+  orcamento_id?: string | null;
 }
 
 interface MontadorOpt {
@@ -31,6 +34,14 @@ interface MontadorOpt {
   nome: string;
   percentual_padrao: number;
   ativo: boolean;
+}
+
+interface OrcamentoOpt {
+  id: string;
+  nome: string;
+  total_pedido: number | null;
+  valor_negociado: number | null;
+  status: string | null;
 }
 
 const STATUS_STYLE: Record<StatusMontagem, { bg: string; color: string; label: string }> = {
@@ -43,10 +54,10 @@ const STATUS_STYLE: Record<StatusMontagem, { bg: string; color: string; label: s
 const fmtBRL = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v || 0);
 
-// Helper typed any-cast for tables not yet in generated types
-const sb = supabase as unknown as {
-  from: (t: string) => any;
-};
+const sb = supabase as unknown as { from: (t: string) => any };
+
+const getOrcamentoValor = (o: { total_pedido?: number | null; valor_negociado?: number | null }) =>
+  Number(o.valor_negociado ?? o.total_pedido ?? 0);
 
 interface Props {
   contratoId: string;
@@ -58,6 +69,7 @@ export function ContratoAmbientesTab({ contratoId, contratoLojaId }: Props) {
   const { perfil } = useAuth();
   const lojaId = contratoLojaId || perfil?.loja_id || null;
   const [importing, setImporting] = useState(false);
+  const [openNew, setOpenNew] = useState(false);
 
   const { data: ambientes, isLoading } = useQuery<Ambiente[]>({
     queryKey: ["contrato_ambientes", contratoId],
@@ -88,62 +100,43 @@ export function ContratoAmbientesTab({ contratoId, contratoLojaId }: Props) {
     },
   });
 
-  // Auto-import dos ambientes a partir do orçamento (categorias)
+  const { data: orcamentos } = useQuery<OrcamentoOpt[]>({
+    queryKey: ["orcamentos-do-contrato", contratoId],
+    enabled: !!contratoId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orcamentos")
+        .select("id, nome, total_pedido, valor_negociado, status")
+        .eq("contrato_id", contratoId)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as OrcamentoOpt[];
+    },
+  });
+
+  // Auto-import: 1 orçamento = 1 ambiente
   useEffect(() => {
     const tryImport = async () => {
       if (!contratoId || !lojaId || isLoading) return;
       if ((ambientes?.length ?? 0) > 0) return;
+      if (!orcamentos || orcamentos.length === 0) return;
       if (importing) return;
       setImporting(true);
       try {
-        // Buscar orçamento convertido vinculado ao contrato; fallback para qualquer orçamento
-        let { data: orc, error } = await supabase
-          .from("orcamentos")
-          .select("categorias")
-          .eq("contrato_id", contratoId)
-          .eq("status", "convertido")
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (error) throw error;
-        if (!orc) {
-          const fb = await supabase
-            .from("orcamentos")
-            .select("categorias")
-            .eq("contrato_id", contratoId)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          if (fb.error) throw fb.error;
-          orc = fb.data;
-        }
-        const catsRaw = (orc?.categorias as Array<Record<string, unknown>> | null) ?? [];
-        // Filtrar apenas TABLEs (ambientes) — outros tipos (categorias agregadoras) são ignorados
-        const cats = catsRaw.filter((c) => {
-          const t = String((c as any).type ?? (c as any).tipo ?? "").toUpperCase();
-          return !t || t === "TABLE";
-        });
-        if (!cats.length) return;
-        const rows = cats.map((c) => {
-          const tabela = Number(
-            (c as any).tabela ?? (c as any).valor_bruto ?? (c as any).valor ?? (c as any).total ?? 0
-          );
-          return {
-            contrato_id: contratoId,
-            loja_id: lojaId,
-            nome: String((c as any).description ?? (c as any).nome ?? (c as any).name ?? "Ambiente"),
-            valor_bruto: tabela,
-            desconto_percentual: 0,
-            percentual_montador: 0,
-            status_montagem: "pendente" as const,
-          };
-        });
+        const rows = orcamentos.map((o) => ({
+          contrato_id: contratoId,
+          loja_id: lojaId,
+          nome: o.nome || "Ambiente",
+          valor_bruto: getOrcamentoValor(o),
+          desconto_percentual: 0,
+          percentual_montador: 0,
+          status_montagem: "pendente" as const,
+        }));
         const { error: insErr } = await sb.from("contrato_ambientes").insert(rows);
         if (insErr) throw insErr;
         qc.invalidateQueries({ queryKey: ["contrato_ambientes", contratoId] });
         toast.success(`${rows.length} ambiente${rows.length === 1 ? "" : "s"} importado${rows.length === 1 ? "" : "s"} do orçamento`);
       } catch (e) {
-        // Silencioso — usuário pode adicionar manualmente
         console.warn("Import ambientes:", e);
       } finally {
         setImporting(false);
@@ -151,7 +144,7 @@ export function ContratoAmbientesTab({ contratoId, contratoLojaId }: Props) {
     };
     tryImport();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contratoId, lojaId, ambientes?.length, isLoading]);
+  }, [contratoId, lojaId, ambientes?.length, isLoading, orcamentos?.length]);
 
   const updateAmbiente = async (id: string, patch: Partial<Ambiente>) => {
     const { error } = await sb.from("contrato_ambientes").update(patch).eq("id", id);
@@ -166,21 +159,6 @@ export function ContratoAmbientesTab({ contratoId, contratoLojaId }: Props) {
       montador_id: realId,
       percentual_montador: m ? Number(m.percentual_padrao) : a.percentual_montador,
     });
-  };
-
-  const handleAddAmbiente = async () => {
-    if (!lojaId) return;
-    const { error } = await sb.from("contrato_ambientes").insert({
-      contrato_id: contratoId,
-      loja_id: lojaId,
-      nome: "Novo ambiente",
-      valor_bruto: 0,
-      desconto_percentual: 0,
-      percentual_montador: 0,
-      status_montagem: "pendente",
-    });
-    if (error) return toast.error(error.message);
-    qc.invalidateQueries({ queryKey: ["contrato_ambientes", contratoId] });
   };
 
   const handleDelete = async (id: string) => {
@@ -204,10 +182,10 @@ export function ContratoAmbientesTab({ contratoId, contratoLojaId }: Props) {
         <div>
           <h2 style={{ fontSize: 16, fontWeight: 600, color: "#0D1117" }}>Ambientes</h2>
           <p style={{ fontSize: 12, color: "#6B7A90" }}>
-            {importing ? "Importando ambientes do orçamento..." : "Gestão de ambientes, descontos e comissão por montador"}
+            {importing ? "Importando ambientes do orçamento..." : "1 orçamento = 1 ambiente. Edite nome e valores se necessário."}
           </p>
         </div>
-        <Button onClick={handleAddAmbiente} style={{ backgroundColor: "#1E6FBF", color: "#fff" }}>
+        <Button onClick={() => setOpenNew(true)} style={{ backgroundColor: "#1E6FBF", color: "#fff" }}>
           <Plus className="mr-2 h-4 w-4" /> Novo Ambiente
         </Button>
       </div>
@@ -229,7 +207,7 @@ export function ContratoAmbientesTab({ contratoId, contratoLojaId }: Props) {
             )}
             {!isLoading && (ambientes?.length ?? 0) === 0 && (
               <tr><td colSpan={9} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                Nenhum ambiente cadastrado. Clique em "Novo Ambiente" ou importe um orçamento.
+                Nenhum ambiente cadastrado. Clique em "Novo Ambiente" ou vincule um orçamento ao contrato.
               </td></tr>
             )}
             {ambientes?.map((a) => {
@@ -358,6 +336,123 @@ export function ContratoAmbientesTab({ contratoId, contratoLojaId }: Props) {
           </div>
         )}
       </div>
+
+      <NovoAmbienteDialog
+        open={openNew}
+        onOpenChange={setOpenNew}
+        contratoId={contratoId}
+        lojaId={lojaId}
+        orcamentos={orcamentos ?? []}
+        onCreated={() => qc.invalidateQueries({ queryKey: ["contrato_ambientes", contratoId] })}
+      />
     </div>
+  );
+}
+
+interface NovoAmbienteDialogProps {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  contratoId: string;
+  lojaId: string | null;
+  orcamentos: OrcamentoOpt[];
+  onCreated: () => void;
+}
+
+function NovoAmbienteDialog({ open, onOpenChange, contratoId, lojaId, orcamentos, onCreated }: NovoAmbienteDialogProps) {
+  const [nome, setNome] = useState("");
+  const [orcamentoId, setOrcamentoId] = useState<string>("__manual__");
+  const [valorManual, setValorManual] = useState<string>("0");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setNome("");
+      setOrcamentoId("__manual__");
+      setValorManual("0");
+    }
+  }, [open]);
+
+  const orcSelecionado = orcamentos.find((o) => o.id === orcamentoId);
+
+  const handleSave = async () => {
+    if (!lojaId) return toast.error("Loja não identificada");
+    if (!nome.trim()) return toast.error("Informe o nome do ambiente");
+    const valor = orcSelecionado ? getOrcamentoValor(orcSelecionado) : parseFloat(valorManual) || 0;
+    setSaving(true);
+    try {
+      const { error } = await sb.from("contrato_ambientes").insert({
+        contrato_id: contratoId,
+        loja_id: lojaId,
+        nome: nome.trim(),
+        valor_bruto: valor,
+        desconto_percentual: 0,
+        percentual_montador: 0,
+        status_montagem: "pendente",
+      });
+      if (error) throw error;
+      toast.success("Ambiente adicionado");
+      onCreated();
+      onOpenChange(false);
+    } catch (e: any) {
+      toast.error(e.message ?? "Erro ao salvar");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Novo Ambiente</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-4 py-2">
+          <div className="flex flex-col gap-2">
+            <Label>Nome do ambiente</Label>
+            <Input
+              placeholder="Ex.: Cozinha, Suíte Principal"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label>Vincular a orçamento</Label>
+            <Select value={orcamentoId} onValueChange={setOrcamentoId}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__manual__">— Valor manual —</SelectItem>
+                {orcamentos.map((o) => (
+                  <SelectItem key={o.id} value={o.id}>
+                    {o.nome} · {fmtBRL(getOrcamentoValor(o))}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {orcSelecionado ? (
+            <div className="flex flex-col gap-1">
+              <Label>Valor bruto (do orçamento)</Label>
+              <div style={{ fontSize: 16, fontWeight: 600 }}>{fmtBRL(getOrcamentoValor(orcSelecionado))}</div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <Label>Valor bruto (manual)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={valorManual}
+                onChange={(e) => setValorManual(e.target.value)}
+              />
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={handleSave} disabled={saving} style={{ backgroundColor: "#1E6FBF", color: "#fff" }}>
+            {saving ? "Salvando..." : "Adicionar"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
