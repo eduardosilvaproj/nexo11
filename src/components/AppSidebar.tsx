@@ -17,6 +17,7 @@ import {
   Users2,
   BarChart3,
   Plug,
+  Settings,
   LogOut,
 } from "lucide-react";
 import {
@@ -53,6 +54,7 @@ const gestao = [
   { title: "Compras", url: "/compras", icon: ShoppingCart },
   { title: "Equipe", url: "/equipe", icon: UserCog },
   { title: "Lojas", url: "/lojas", icon: Building2, roles: ["admin", "franqueador"] },
+  { title: "Configurações", url: "/configuracoes/pagamento", icon: Settings, roles: ["admin", "gerente"] },
 ];
 
 const inteligencia = [

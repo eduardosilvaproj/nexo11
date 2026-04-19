@@ -365,6 +365,47 @@ export type Database = {
           },
         ]
       }
+      condicoes_pagamento: {
+        Row: {
+          ativo: boolean
+          created_at: string | null
+          id: string
+          loja_id: string
+          nome: string
+          ordem: number | null
+          parcelas: number
+          taxa: number
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string | null
+          id?: string
+          loja_id: string
+          nome: string
+          ordem?: number | null
+          parcelas?: number
+          taxa?: number
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string | null
+          id?: string
+          loja_id?: string
+          nome?: string
+          ordem?: number | null
+          parcelas?: number
+          taxa?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "condicoes_pagamento_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contrato_logs: {
         Row: {
           acao: string
@@ -987,6 +1028,7 @@ export type Database = {
           arquivo_nome: string | null
           categorias: Json | null
           cliente_id: string
+          condicao_pagamento_id: string | null
           contrato_id: string | null
           created_at: string | null
           desconto_global: number | null
@@ -998,12 +1040,20 @@ export type Database = {
           montagem_fabrica: number | null
           montagem_loja: number | null
           nome: string
+          ocultar_parceiro: boolean | null
           ordem_compra: string | null
+          parcelas: number | null
+          parcelas_datas: Json | null
+          percentual_parceiro: number | null
           status: string | null
+          taxa_financeira: number | null
+          tipo_venda: string | null
           total_pedido: number | null
           total_tabela: number | null
           updated_at: string | null
+          valor_com_taxa: number | null
           valor_negociado: number | null
+          valor_parcela: number | null
           vendedor_id: string | null
           xml_raw: string | null
         }
@@ -1012,6 +1062,7 @@ export type Database = {
           arquivo_nome?: string | null
           categorias?: Json | null
           cliente_id: string
+          condicao_pagamento_id?: string | null
           contrato_id?: string | null
           created_at?: string | null
           desconto_global?: number | null
@@ -1023,12 +1074,20 @@ export type Database = {
           montagem_fabrica?: number | null
           montagem_loja?: number | null
           nome: string
+          ocultar_parceiro?: boolean | null
           ordem_compra?: string | null
+          parcelas?: number | null
+          parcelas_datas?: Json | null
+          percentual_parceiro?: number | null
           status?: string | null
+          taxa_financeira?: number | null
+          tipo_venda?: string | null
           total_pedido?: number | null
           total_tabela?: number | null
           updated_at?: string | null
+          valor_com_taxa?: number | null
           valor_negociado?: number | null
+          valor_parcela?: number | null
           vendedor_id?: string | null
           xml_raw?: string | null
         }
@@ -1037,6 +1096,7 @@ export type Database = {
           arquivo_nome?: string | null
           categorias?: Json | null
           cliente_id?: string
+          condicao_pagamento_id?: string | null
           contrato_id?: string | null
           created_at?: string | null
           desconto_global?: number | null
@@ -1048,12 +1108,20 @@ export type Database = {
           montagem_fabrica?: number | null
           montagem_loja?: number | null
           nome?: string
+          ocultar_parceiro?: boolean | null
           ordem_compra?: string | null
+          parcelas?: number | null
+          parcelas_datas?: Json | null
+          percentual_parceiro?: number | null
           status?: string | null
+          taxa_financeira?: number | null
+          tipo_venda?: string | null
           total_pedido?: number | null
           total_tabela?: number | null
           updated_at?: string | null
+          valor_com_taxa?: number | null
           valor_negociado?: number | null
+          valor_parcela?: number | null
           vendedor_id?: string | null
           xml_raw?: string | null
         }
@@ -1063,6 +1131,13 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_condicao_pagamento_id_fkey"
+            columns: ["condicao_pagamento_id"]
+            isOneToOne: false
+            referencedRelation: "condicoes_pagamento"
             referencedColumns: ["id"]
           },
           {
