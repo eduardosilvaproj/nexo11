@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Upload, FileCode2, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Upload, FileCode2, AlertCircle, CheckCircle2, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { parsePromobXml, type PromobParsed } from "@/lib/promob-xml";
