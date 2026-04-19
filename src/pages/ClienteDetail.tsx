@@ -238,8 +238,19 @@ export default function ClienteDetail() {
     return { totalOrcado, totalAprovado };
   }, [orcamentos]);
 
-  if (loading || !cliente) {
+  if (loading) {
     return <div className="p-8 text-muted-foreground">Carregando...</div>;
+  }
+
+  if (!cliente) {
+    return (
+      <div className="p-8 space-y-4">
+        <p className="text-base font-medium">Cliente não encontrado</p>
+        <Button variant="outline" onClick={() => navigate("/clientes")}>
+          <ArrowLeft className="mr-2 h-4 w-4" /> Voltar para Clientes
+        </Button>
+      </div>
+    );
   }
 
   const Field = ({ label, value }: { label: string; value?: string | null }) => (
