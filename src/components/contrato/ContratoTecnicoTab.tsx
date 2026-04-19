@@ -402,6 +402,15 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
         contratoId={contratoId}
         lojaId={contrato?.loja_id}
         canEdit={canEdit}
+        funcao="medidor"
+      />
+
+      {/* Seção — Conferência por ambiente */}
+      <ContratoMedicaoAmbientesSection
+        contratoId={contratoId}
+        lojaId={contrato?.loja_id}
+        canEdit={canEdit}
+        funcao="conferente"
       />
 
       {/* CARD 1 — Medição fina */}
