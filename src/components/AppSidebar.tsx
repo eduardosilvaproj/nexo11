@@ -54,7 +54,8 @@ const gestao = [
   { title: "Compras", url: "/compras", icon: ShoppingCart },
   { title: "Equipe", url: "/equipe", icon: UserCog },
   { title: "Lojas", url: "/lojas", icon: Building2, roles: ["admin", "franqueador"] },
-  { title: "Configurações", url: "/configuracoes/pagamento", icon: Settings, roles: ["admin", "gerente"] },
+  { title: "Cond. Pagamento", url: "/configuracoes/pagamento", icon: Settings, roles: ["admin", "gerente"] },
+  { title: "Fornecedores", url: "/configuracoes/fornecedores", icon: Factory, roles: ["admin", "gerente"] },
 ];
 
 const inteligencia = [
