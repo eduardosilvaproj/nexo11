@@ -5,6 +5,7 @@ import { MembrosTab } from "@/components/equipe/MembrosTab";
 import { NovoMembroDialog } from "@/components/equipe/NovoMembroDialog";
 import { PontoTab } from "@/components/equipe/PontoTab";
 import { DesempenhoTab } from "@/components/equipe/DesempenhoTab";
+import { MontadoresTab } from "@/components/equipe/MontadoresTab";
 
 type Metric = {
   label: string;
@@ -85,6 +86,7 @@ export default function Equipe() {
         >
           {[
             { value: "membros", label: "Membros" },
+            { value: "montadores", label: "Montadores" },
             { value: "ponto", label: "Ponto" },
             { value: "desempenho", label: "Desempenho" },
           ].map((t) => (
@@ -101,6 +103,9 @@ export default function Equipe() {
 
         <TabsContent value="membros" className="mt-6">
           <MembrosTab onAddMember={() => setNovoOpen(true)} />
+        </TabsContent>
+        <TabsContent value="montadores" className="mt-6">
+          <MontadoresTab />
         </TabsContent>
         <TabsContent value="ponto" className="mt-6">
           <PontoTab />
