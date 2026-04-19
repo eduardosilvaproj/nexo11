@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Pencil, Plus } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Eye, Send, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { ClienteFormDialog } from "@/components/clientes/ClienteFormDialog";
+import { ImportXmlPromobDialog } from "@/components/comercial/ImportXmlPromobDialog";
 
 type Cliente = {
   id: string;
@@ -26,11 +27,16 @@ type Cliente = {
 
 type Orcamento = {
   id: string;
+  nome: string;
   status: string | null;
   valor_negociado: number | null;
   total_pedido: number | null;
+  total_tabela: number | null;
   contrato_id: string | null;
   vendedor_id: string | null;
+  ordem_compra: string | null;
+  categorias: unknown;
+  created_at: string | null;
 };
 
 const formatBRL = (n: number) =>
