@@ -538,6 +538,77 @@ export default function PortalCliente() {
           })()}
         </section>
 
+        {/* 5.5 Pagamentos / parcelas */}
+        {parcelas.length > 0 && (() => {
+          const today = new Date(); today.setHours(0,0,0,0);
+          const totalPago = parcelas
+            .filter((p) => p.status === "pago")
+            .reduce((s, p) => s + Number(p.valor || 0), 0);
+          const totalAberto = parcelas
+            .filter((p) => p.status !== "pago" && p.status !== "cancelado")
+            .reduce((s, p) => s + Number(p.valor || 0), 0);
+          const fmtBRL = (n: number) =>
+            n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+          return (
+            <section
+              className="portal-card bg-white rounded-xl mx-auto w-full"
+              style={{ maxWidth: 680, border: "0.5px solid #E8ECF2", padding: 24 }}
+            >
+              <h2 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117", marginBottom: 16 }}>
+                Pagamentos
+              </h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid #E8ECF2" }}>
+                      <th className="text-left py-2" style={{ fontSize: 12, color: "#6B7A90", fontWeight: 500 }}>Nº</th>
+                      <th className="text-left py-2" style={{ fontSize: 12, color: "#6B7A90", fontWeight: 500 }}>Vencimento</th>
+                      <th className="text-right py-2" style={{ fontSize: 12, color: "#6B7A90", fontWeight: 500 }}>Valor</th>
+                      <th className="text-right py-2" style={{ fontSize: 12, color: "#6B7A90", fontWeight: 500 }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parcelas.map((p, i) => {
+                      const venc = p.data_vencimento ? new Date(p.data_vencimento) : null;
+                      const isPago = p.status === "pago";
+                      const isAtrasado = !isPago && venc && venc < today;
+                      const label = isPago ? "Pago ✅" : isAtrasado ? "Atrasado 🔴" : "Pendente ⏳";
+                      const color = isPago ? "#05873C" : isAtrasado ? "#E53935" : "#E8A020";
+                      return (
+                        <tr key={p.id} style={{ borderBottom: "1px solid #F1F4F8" }}>
+                          <td className="py-3" style={{ fontSize: 13, color: "#0D1117" }}>{i + 1}</td>
+                          <td className="py-3" style={{ fontSize: 13, color: "#0D1117" }}>
+                            {venc ? venc.toLocaleDateString("pt-BR") : "—"}
+                          </td>
+                          <td className="py-3 text-right tabular-nums" style={{ fontSize: 13, color: "#0D1117", fontWeight: 500 }}>
+                            {fmtBRL(Number(p.valor || 0))}
+                          </td>
+                          <td className="py-3 text-right" style={{ fontSize: 13, color, fontWeight: 500 }}>
+                            {label}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div
+                className="flex items-center justify-between mt-4 pt-4"
+                style={{ borderTop: "1px solid #E8ECF2", flexWrap: "wrap", gap: 12 }}
+              >
+                <div>
+                  <div style={{ fontSize: 12, color: "#6B7A90" }}>Total pago</div>
+                  <div style={{ fontSize: 16, fontWeight: 500, color: "#05873C" }}>{fmtBRL(totalPago)}</div>
+                </div>
+                <div className="text-right">
+                  <div style={{ fontSize: 12, color: "#6B7A90" }}>Total em aberto</div>
+                  <div style={{ fontSize: 16, fontWeight: 500, color: "#E8A020" }}>{fmtBRL(totalAberto)}</div>
+                </div>
+              </div>
+            </section>
+          );
+        })()}
+
         {/* 6. NPS — coleta pública (somente pos_venda ou finalizado) */}
         {(contrato.status === "pos_venda" || contrato.status === "finalizado") && (
           npsRespondido ? (
