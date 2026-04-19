@@ -81,10 +81,17 @@ export default function CondicaoPagamentoDialog({
       return;
     }
     setSaving(true);
-    const payload = { ...parsed.data, loja_id: lojaId };
+    const payload = {
+      nome: parsed.data.nome,
+      parcelas: parsed.data.parcelas,
+      taxa: parsed.data.taxa,
+      ordem: parsed.data.ordem,
+      ativo: parsed.data.ativo,
+      loja_id: lojaId,
+    };
     const { error } = condicao
       ? await supabase.from("condicoes_pagamento").update(payload).eq("id", condicao.id)
-      : await supabase.from("condicoes_pagamento").insert([payload]);
+      : await supabase.from("condicoes_pagamento").insert(payload);
     setSaving(false);
     if (error) {
       toast.error("Erro ao salvar: " + error.message);
