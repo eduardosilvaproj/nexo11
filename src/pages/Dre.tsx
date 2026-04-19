@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, FileText, BarChart3 } from "lucide-react";
+import { Eye, FileText, BarChart3, Factory, Wrench, Ruler, CheckCircle2, Truck, Sparkles } from "lucide-react";
 import {
   ComposedChart,
   Area,
@@ -21,6 +21,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 
 type Row = {
   id: string;
@@ -32,6 +44,34 @@ type Row = {
   margem_prevista: number | null;
   margem_realizada: number | null;
   desvio_total: number | null;
+  custo_produto_real: number | null;
+  custo_montagem_real: number | null;
+  custo_frete_real: number | null;
+  custo_comissao_real: number | null;
+  outros_custos_reais: number | null;
+  custo_produto_previsto: number | null;
+  custo_montagem_previsto: number | null;
+  custo_frete_previsto: number | null;
+  custo_comissao_previsto: number | null;
+  outros_custos_previstos: number | null;
+};
+
+type DrillData = {
+  contratoId: string;
+  cliente: string;
+  receita: number;
+  prevTotal: number;
+  realTotal: number;
+  pendTotal: number;
+  margemPrev: number;
+  margemReal: number;
+  margemPotencial: number;
+  fabrica: number;
+  frete: number;
+  outros: number;
+  montagem: { pago: number; pendente: number; ambPagos: number; ambTotal: number };
+  medicao: { pago: number; pendente: number; ambPagos: number; ambTotal: number };
+  conferencia: { pago: number; pendente: number; ambPagos: number; ambTotal: number };
 };
 
 const MESES = [
