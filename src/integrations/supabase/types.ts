@@ -1402,6 +1402,80 @@ export type Database = {
           },
         ]
       }
+      producao_interna: {
+        Row: {
+          cliente_nome: string
+          contrato_id: string | null
+          created_at: string
+          data_prevista: string | null
+          descricao: string | null
+          fornecedor_id: string | null
+          id: string
+          loja_id: string
+          observacoes: string | null
+          prioridade: Database["public"]["Enums"]["producao_interna_prioridade"]
+          status: Database["public"]["Enums"]["producao_interna_status"]
+          updated_at: string
+        }
+        Insert: {
+          cliente_nome: string
+          contrato_id?: string | null
+          created_at?: string
+          data_prevista?: string | null
+          descricao?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          loja_id: string
+          observacoes?: string | null
+          prioridade?: Database["public"]["Enums"]["producao_interna_prioridade"]
+          status?: Database["public"]["Enums"]["producao_interna_status"]
+          updated_at?: string
+        }
+        Update: {
+          cliente_nome?: string
+          contrato_id?: string | null
+          created_at?: string
+          data_prevista?: string | null
+          descricao?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          loja_id?: string
+          observacoes?: string | null
+          prioridade?: Database["public"]["Enums"]["producao_interna_prioridade"]
+          status?: Database["public"]["Enums"]["producao_interna_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "producao_interna_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "producao_interna_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "producao_interna_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "producao_interna_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       producao_terceirizada: {
         Row: {
           contrato_id: string | null
@@ -1972,6 +2046,12 @@ export type Database = {
         | "perdido"
       op_status: "aguardando" | "em_corte" | "em_montagem" | "concluido"
       ponto_tipo: "entrada" | "saida"
+      producao_interna_prioridade: "normal" | "urgente"
+      producao_interna_status:
+        | "a_fazer"
+        | "em_andamento"
+        | "aguardando_material"
+        | "concluido"
       producao_terceirizada_status:
         | "aguardando_fabricacao"
         | "em_producao"
@@ -2147,6 +2227,13 @@ export const Constants = {
       ],
       op_status: ["aguardando", "em_corte", "em_montagem", "concluido"],
       ponto_tipo: ["entrada", "saida"],
+      producao_interna_prioridade: ["normal", "urgente"],
+      producao_interna_status: [
+        "a_fazer",
+        "em_andamento",
+        "aguardando_material",
+        "concluido",
+      ],
       producao_terceirizada_status: [
         "aguardando_fabricacao",
         "em_producao",
