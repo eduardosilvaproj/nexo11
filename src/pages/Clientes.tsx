@@ -23,17 +23,7 @@ type Cliente = {
   cep: string | null;
   observacoes: string | null;
   orcamentos_count: number;
-  contrato_status: string | null;
-};
-
-const statusColor: Record<string, string> = {
-  comercial: "bg-blue-100 text-blue-700",
-  tecnico: "bg-purple-100 text-purple-700",
-  producao: "bg-amber-100 text-amber-700",
-  logistica: "bg-cyan-100 text-cyan-700",
-  montagem: "bg-orange-100 text-orange-700",
-  pos_venda: "bg-pink-100 text-pink-700",
-  finalizado: "bg-green-100 text-green-700",
+  contratos_ativos: number;
 };
 
 export default function Clientes() {
@@ -59,10 +49,9 @@ export default function Clientes() {
 
     const list = cliData ?? [];
 
-    // Buscar orçamentos e contratos vinculados
     const ids = list.map((c) => c.id);
     const orcCounts: Record<string, number> = {};
-    const contratoStatus: Record<string, string> = {};
+    const contratosAtivos: Record<string, number> = {};
 
     if (ids.length > 0) {
       const { data: orcs } = await supabase
@@ -80,11 +69,16 @@ export default function Clientes() {
           .from("contratos")
           .select("id,status")
           .in("id", contratoIds);
-        const statusMap: Record<string, string> = {};
-        (contratos ?? []).forEach((c) => (statusMap[c.id] = c.status));
+        const ativosSet = new Set(
+          (contratos ?? []).filter((c) => c.status !== "finalizado").map((c) => c.id),
+        );
         (orcs ?? []).forEach((o) => {
-          if (o.cliente_id && o.contrato_id && statusMap[o.contrato_id]) {
-            contratoStatus[o.cliente_id] = statusMap[o.contrato_id];
+          if (o.cliente_id && o.contrato_id && ativosSet.has(o.contrato_id)) {
+            const key = `${o.cliente_id}::${o.contrato_id}`;
+            if (!(key in contratosAtivos)) {
+              contratosAtivos[o.cliente_id] = (contratosAtivos[o.cliente_id] ?? 0) + 1;
+              (contratosAtivos as any)[key] = 1;
+            }
           }
         });
       }
@@ -94,7 +88,7 @@ export default function Clientes() {
       list.map((c) => ({
         ...c,
         orcamentos_count: orcCounts[c.id] ?? 0,
-        contrato_status: contratoStatus[c.id] ?? null,
+        contratos_ativos: contratosAtivos[c.id] ?? 0,
       })),
     );
     setLoading(false);
@@ -169,9 +163,9 @@ export default function Clientes() {
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>Telefone</TableHead>
-                <TableHead>Email</TableHead>
+                <TableHead>Cidade</TableHead>
                 <TableHead>Orçamentos</TableHead>
-                <TableHead>Contrato</TableHead>
+                <TableHead>Contratos ativos</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -180,20 +174,22 @@ export default function Clientes() {
                 <TableRow key={c.id}>
                   <TableCell className="font-medium">{c.nome}</TableCell>
                   <TableCell>{c.telefone || c.celular || "—"}</TableCell>
-                  <TableCell>{c.email || "—"}</TableCell>
+                  <TableCell>
+                    {c.cidade ? `${c.cidade}${c.estado ? ` / ${c.estado}` : ""}` : "—"}
+                  </TableCell>
                   <TableCell>
                     {c.orcamentos_count > 0 ? (
                       <Badge style={{ backgroundColor: "#E6F3FF", color: "#1E6FBF" }} className="hover:opacity-90">
-                        {c.orcamentos_count} {c.orcamentos_count === 1 ? "orçamento" : "orçamentos"}
+                        {c.orcamentos_count}
                       </Badge>
                     ) : (
                       "—"
                     )}
                   </TableCell>
                   <TableCell>
-                    {c.contrato_status ? (
-                      <Badge variant="outline" className={statusColor[c.contrato_status] ?? ""}>
-                        {c.contrato_status}
+                    {c.contratos_ativos > 0 ? (
+                      <Badge style={{ backgroundColor: "#DCFCE7", color: "#15803D" }} className="hover:opacity-90">
+                        {c.contratos_ativos}
                       </Badge>
                     ) : (
                       "—"
