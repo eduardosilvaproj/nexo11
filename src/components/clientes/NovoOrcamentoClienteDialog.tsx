@@ -78,6 +78,8 @@ export function NovoOrcamentoClienteDialog({
     setDescontos({});
     setFreteLoja(0);
     setMontagemLoja(0);
+    setValorSugerido(0);
+    setDescontoGlobal(0);
   };
 
   const handleClose = (o: boolean) => {
