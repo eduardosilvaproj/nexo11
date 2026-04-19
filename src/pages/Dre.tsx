@@ -477,13 +477,13 @@ export default function Dre() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-[#6B7A90]">
+                <td colSpan={10} className="px-4 py-8 text-center text-[#6B7A90]">
                   Carregando...
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-12 text-center">
+                <td colSpan={10} className="px-4 py-12 text-center">
                   <BarChart3 className="mx-auto mb-3 h-10 w-10 text-[#B0BAC9]" />
                   <p className="font-medium text-[#0B1220]">Nenhum contrato no período</p>
                   <p className="mt-1 text-sm text-[#6B7A90]">
