@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Pencil, Plus, Eye, ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Eye, ArrowRight, CheckCircle2, FileText, FileSignature, Activity } from "lucide-react";
 import { toast } from "sonner";
 import { ClienteFormDialog } from "@/components/clientes/ClienteFormDialog";
 import { NovoOrcamentoClienteDialog } from "@/components/clientes/NovoOrcamentoClienteDialog";
