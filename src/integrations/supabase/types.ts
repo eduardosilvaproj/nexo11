@@ -406,6 +406,89 @@ export type Database = {
           },
         ]
       }
+      contrato_ambientes: {
+        Row: {
+          contrato_id: string
+          created_at: string
+          data_montagem: string | null
+          desconto_percentual: number
+          id: string
+          loja_id: string
+          montador_id: string | null
+          nome: string
+          observacoes: string | null
+          percentual_montador: number
+          status_montagem: Database["public"]["Enums"]["ambiente_status_montagem"]
+          updated_at: string
+          valor_bruto: number
+          valor_liquido: number
+          valor_montador: number
+        }
+        Insert: {
+          contrato_id: string
+          created_at?: string
+          data_montagem?: string | null
+          desconto_percentual?: number
+          id?: string
+          loja_id: string
+          montador_id?: string | null
+          nome: string
+          observacoes?: string | null
+          percentual_montador?: number
+          status_montagem?: Database["public"]["Enums"]["ambiente_status_montagem"]
+          updated_at?: string
+          valor_bruto?: number
+          valor_liquido?: number
+          valor_montador?: number
+        }
+        Update: {
+          contrato_id?: string
+          created_at?: string
+          data_montagem?: string | null
+          desconto_percentual?: number
+          id?: string
+          loja_id?: string
+          montador_id?: string | null
+          nome?: string
+          observacoes?: string | null
+          percentual_montador?: number
+          status_montagem?: Database["public"]["Enums"]["ambiente_status_montagem"]
+          updated_at?: string
+          valor_bruto?: number
+          valor_liquido?: number
+          valor_montador?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrato_ambientes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrato_ambientes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrato_ambientes_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrato_ambientes_montador_id_fkey"
+            columns: ["montador_id"]
+            isOneToOne: false
+            referencedRelation: "montadores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contrato_logs: {
         Row: {
           acao: string
@@ -2120,6 +2203,7 @@ export type Database = {
     }
     Enums: {
       agendamento_status: "agendado" | "em_execucao" | "concluido" | "cancelado"
+      ambiente_status_montagem: "pendente" | "agendado" | "concluido" | "pago"
       app_role:
         | "admin"
         | "vendedor"
@@ -2297,6 +2381,7 @@ export const Constants = {
   public: {
     Enums: {
       agendamento_status: ["agendado", "em_execucao", "concluido", "cancelado"],
+      ambiente_status_montagem: ["pendente", "agendado", "concluido", "pago"],
       app_role: [
         "admin",
         "vendedor",
