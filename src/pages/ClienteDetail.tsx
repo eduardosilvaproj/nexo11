@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
-import ClienteFormDialog from "@/components/clientes/ClienteFormDialog";
+import { ClienteFormDialog } from "@/components/clientes/ClienteFormDialog";
 
 type Cliente = {
   id: string;
