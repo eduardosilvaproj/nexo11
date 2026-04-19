@@ -1490,6 +1490,50 @@ export type Database = {
           },
         ]
       }
+      papeis_comissao: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          loja_id: string
+          nome: string
+          percentual_padrao: number
+          regra_pagamento: Database["public"]["Enums"]["papel_comissao_regra"]
+          tipo: Database["public"]["Enums"]["papel_comissao_tipo"]
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          loja_id: string
+          nome: string
+          percentual_padrao?: number
+          regra_pagamento?: Database["public"]["Enums"]["papel_comissao_regra"]
+          tipo: Database["public"]["Enums"]["papel_comissao_tipo"]
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          loja_id?: string
+          nome?: string
+          percentual_padrao?: number
+          regra_pagamento?: Database["public"]["Enums"]["papel_comissao_regra"]
+          tipo?: Database["public"]["Enums"]["papel_comissao_tipo"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "papeis_comissao_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portal_acessos: {
         Row: {
           cliente_id: string
@@ -2286,6 +2330,17 @@ export type Database = {
         | "convertido"
         | "perdido"
       op_status: "aguardando" | "em_corte" | "em_montagem" | "concluido"
+      papel_comissao_regra:
+        | "contrato_assinado"
+        | "por_ambiente_tecnico"
+        | "por_ambiente_montagem"
+      papel_comissao_tipo:
+        | "vendedor"
+        | "projetista"
+        | "vendedor_projetista"
+        | "gerente_comercial"
+        | "gerente_operacional"
+        | "gerente_montagem"
       ponto_tipo: "entrada" | "saida"
       producao_interna_prioridade: "normal" | "urgente"
       producao_interna_status:
@@ -2468,6 +2523,19 @@ export const Constants = {
         "perdido",
       ],
       op_status: ["aguardando", "em_corte", "em_montagem", "concluido"],
+      papel_comissao_regra: [
+        "contrato_assinado",
+        "por_ambiente_tecnico",
+        "por_ambiente_montagem",
+      ],
+      papel_comissao_tipo: [
+        "vendedor",
+        "projetista",
+        "vendedor_projetista",
+        "gerente_comercial",
+        "gerente_operacional",
+        "gerente_montagem",
+      ],
       ponto_tipo: ["entrada", "saida"],
       producao_interna_prioridade: ["normal", "urgente"],
       producao_interna_status: [
