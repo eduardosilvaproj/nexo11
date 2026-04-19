@@ -27,9 +27,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { checkAgendamentoConflict } from "@/lib/agendamento-conflict";
+import { ContratoMedicaoAmbientesSection } from "./ContratoMedicaoAmbientesSection";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface MontagemTabProps {
   contratoId: string;
+  lojaId?: string | null;
 }
 
 const STATUS_BADGE: Record<string, { bg: string; fg: string; label: string }> = {
@@ -67,8 +70,10 @@ const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
 const formatBRL = (n: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
 
-export function ContratoMontagemTab({ contratoId }: MontagemTabProps) {
+export function ContratoMontagemTab({ contratoId, lojaId }: MontagemTabProps) {
   const qc = useQueryClient();
+  const { hasRole } = useAuth();
+  const canEditAmbientes = hasRole("admin") || hasRole("gerente") || hasRole("montador");
 
   // ============ AGENDAMENTO ============
   const { data: agendamento } = useQuery({
@@ -235,6 +240,14 @@ export function ContratoMontagemTab({ contratoId }: MontagemTabProps) {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* MONTAGEM POR AMBIENTE */}
+      <ContratoMedicaoAmbientesSection
+        contratoId={contratoId}
+        lojaId={lojaId}
+        canEdit={canEditAmbientes}
+        funcao="montador"
+      />
+
       {/* AGENDAMENTO */}
       <Card
         title="Agendamento"
