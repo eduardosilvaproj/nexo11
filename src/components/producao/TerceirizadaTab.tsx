@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Upload, AlertTriangle } from "lucide-react";
+import { Plus, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ImportPromobXlsDialog } from "@/components/logistica/ImportPromobXlsDialog";
+import { NovoPedidoTerceirizadoDialog } from "@/components/producao/NovoPedidoTerceirizadoDialog";
 import { useAuth } from "@/contexts/AuthContext";
 
 type StatusT = "aguardando_fabricacao" | "em_producao" | "pronto_retirada" | "atrasado";
@@ -55,8 +55,8 @@ export function TerceirizadaTab() {
   const qc = useQueryClient();
   const { perfil, hasRole } = useAuth();
   const lojaId = perfil?.loja_id ?? null;
-  const podeImportar = hasRole("admin") || hasRole("gerente") || hasRole("tecnico");
-  const [importOpen, setImportOpen] = useState(false);
+  const podeCriar = hasRole("admin") || hasRole("gerente") || hasRole("tecnico");
+  const [novoOpen, setNovoOpen] = useState(false);
 
   const { data: pedidos, isLoading } = useQuery({
     queryKey: ["producao-terceirizada"],
@@ -121,9 +121,9 @@ export function TerceirizadaTab() {
     <>
       <div className="mb-6 flex items-center justify-between">
         <h2 style={{ fontSize: 16, fontWeight: 600, color: "#0D1117" }}>Pedidos no fabricante</h2>
-        {podeImportar && (
-          <Button variant="outline" onClick={() => setImportOpen(true)} style={{ borderColor: "#1E6FBF", color: "#1E6FBF" }}>
-            <Upload className="mr-2 h-4 w-4" /> Importar XLS Promob
+        {podeCriar && (
+          <Button onClick={() => setNovoOpen(true)} style={{ backgroundColor: "#1E6FBF", color: "#fff" }}>
+            <Plus className="mr-2 h-4 w-4" /> Novo Pedido
           </Button>
         )}
       </div>
@@ -151,7 +151,7 @@ export function TerceirizadaTab() {
             )}
             {!isLoading && (!pedidos || pedidos.length === 0) && (
               <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                Nenhum pedido importado. Use "Importar XLS Promob" para começar.
+                Nenhum pedido cadastrado. Use "+ Novo Pedido" para começar.
               </td></tr>
             )}
             {pedidos?.map((p) => {
@@ -193,7 +193,7 @@ export function TerceirizadaTab() {
         </table>
       </div>
 
-      <ImportPromobXlsDialog open={importOpen} onOpenChange={setImportOpen} lojaId={lojaId} />
+      <NovoPedidoTerceirizadoDialog open={novoOpen} onOpenChange={setNovoOpen} lojaId={lojaId} />
     </>
   );
 }
