@@ -278,17 +278,17 @@ export default function ClienteDetail() {
 
       {/* 2 colunas */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card>
+        <Card className="bg-white" style={{ border: "1px solid #E8ECF2" }}>
           <CardHeader>
-            <CardTitle className="text-base">Dados do cliente</CardTitle>
+            <CardTitle className="text-base">Dados cadastrais</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <Field label="Nome" value={cliente.nome} />
-              <Field label="CPF / CNPJ" value={cliente.cpf_cnpj} />
+              <Field label="E-mail" value={cliente.email} />
               <Field label="Telefone" value={cliente.telefone} />
               <Field label="Celular" value={cliente.celular} />
-              <Field label="E-mail" value={cliente.email} />
+              <Field label="CPF / CNPJ" value={cliente.cpf_cnpj} />
               <Field label="CEP" value={cliente.cep} />
               <Field label="Endereço" value={cliente.endereco} />
               <Field label="Cidade" value={cliente.cidade} />
@@ -300,32 +300,47 @@ export default function ClienteDetail() {
                 <p className="text-sm whitespace-pre-wrap">{cliente.observacoes}</p>
               </div>
             )}
-            <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>
-              <Pencil className="mr-2 h-4 w-4" /> Editar dados
-            </Button>
+            <div className="pt-2 border-t" style={{ borderColor: "#E8ECF2" }}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditOpen(true)}
+                style={{ borderColor: "#1E6FBF", color: "#1E6FBF" }}
+              >
+                <Pencil className="mr-2 h-4 w-4" /> Editar
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white" style={{ border: "1px solid #E8ECF2" }}>
           <CardHeader>
-            <CardTitle className="text-base">Resumo</CardTitle>
+            <CardTitle className="text-base">Resumo financeiro</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Total orçado</span>
-              <span className="text-base font-medium">{formatBRL(totals.totalOrcado)}</span>
+              <span className="text-[18px] font-medium tabular-nums" style={{ color: "#0D1117" }}>
+                {formatBRL(totals.totalOrcado)}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Total em contratos</span>
-              <span className="text-base font-medium">{formatBRL(contratosResumo.total)}</span>
+              <span className="text-[18px] font-medium tabular-nums" style={{ color: "#0D1117" }}>
+                {formatBRL(contratosResumo.total)}
+              </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Nº de orçamentos</span>
-              <Badge variant="secondary">{orcamentos.length}</Badge>
+              <span className="text-sm text-muted-foreground">Orçamentos</span>
+              <span className="text-[18px] font-medium tabular-nums" style={{ color: "#0D1117" }}>
+                {orcamentos.length}
+              </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Nº de contratos</span>
-              <Badge variant="secondary">{contratosResumo.count}</Badge>
+              <span className="text-sm text-muted-foreground">Contratos</span>
+              <span className="text-[18px] font-medium tabular-nums" style={{ color: "#0D1117" }}>
+                {contratosResumo.count}
+              </span>
             </div>
           </CardContent>
         </Card>
