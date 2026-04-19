@@ -653,11 +653,16 @@ export type Database = {
           custo_frete: number
           data_confirmacao: string | null
           data_prevista: string | null
+          endereco: string | null
           foto_confirmacao_path: string | null
           id: string
+          observacoes: string | null
+          responsavel: string | null
           rota: string | null
           status: Database["public"]["Enums"]["entrega_status"]
+          status_visual: Database["public"]["Enums"]["entrega_status_visual"]
           transportadora: string | null
+          turno: Database["public"]["Enums"]["entrega_turno"]
           updated_at: string
         }
         Insert: {
@@ -667,11 +672,16 @@ export type Database = {
           custo_frete?: number
           data_confirmacao?: string | null
           data_prevista?: string | null
+          endereco?: string | null
           foto_confirmacao_path?: string | null
           id?: string
+          observacoes?: string | null
+          responsavel?: string | null
           rota?: string | null
           status?: Database["public"]["Enums"]["entrega_status"]
+          status_visual?: Database["public"]["Enums"]["entrega_status_visual"]
           transportadora?: string | null
+          turno?: Database["public"]["Enums"]["entrega_turno"]
           updated_at?: string
         }
         Update: {
@@ -681,11 +691,16 @@ export type Database = {
           custo_frete?: number
           data_confirmacao?: string | null
           data_prevista?: string | null
+          endereco?: string | null
           foto_confirmacao_path?: string | null
           id?: string
+          observacoes?: string | null
+          responsavel?: string | null
           rota?: string | null
           status?: Database["public"]["Enums"]["entrega_status"]
+          status_visual?: Database["public"]["Enums"]["entrega_status_visual"]
           transportadora?: string | null
+          turno?: Database["public"]["Enums"]["entrega_turno"]
           updated_at?: string
         }
         Relationships: [
@@ -1941,6 +1956,13 @@ export type Database = {
         | "pos_venda"
         | "finalizado"
       entrega_status: "pendente" | "confirmada"
+      entrega_status_visual:
+        | "a_agendar"
+        | "agendado"
+        | "em_rota"
+        | "entregue"
+        | "reagendado"
+      entrega_turno: "manha" | "tarde" | "dia_todo"
       lead_status:
         | "novo"
         | "atendimento"
@@ -2107,6 +2129,14 @@ export const Constants = {
         "finalizado",
       ],
       entrega_status: ["pendente", "confirmada"],
+      entrega_status_visual: [
+        "a_agendar",
+        "agendado",
+        "em_rota",
+        "entregue",
+        "reagendado",
+      ],
+      entrega_turno: ["manha", "tarde", "dia_todo"],
       lead_status: [
         "novo",
         "atendimento",
