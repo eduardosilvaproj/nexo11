@@ -58,6 +58,7 @@ export default function ClienteDetail() {
   const [contratoStatus, setContratoStatus] = useState<string | null>(null);
   const [vendedorNome, setVendedorNome] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const fetchAll = async () => {
@@ -77,8 +78,11 @@ export default function ClienteDetail() {
 
     const { data: orcs } = await supabase
       .from("orcamentos")
-      .select("id,status,valor_negociado,total_pedido,contrato_id,vendedor_id")
-      .eq("cliente_id", id);
+      .select(
+        "id,nome,status,valor_negociado,total_pedido,total_tabela,contrato_id,vendedor_id,ordem_compra,categorias,created_at",
+      )
+      .eq("cliente_id", id)
+      .order("created_at", { ascending: false });
     const list = (orcs ?? []) as Orcamento[];
     setOrcamentos(list);
 
@@ -234,6 +238,104 @@ export default function ClienteDetail() {
         </Card>
       </div>
 
+      {/* Lista de orçamentos */}
+      <div className="space-y-3">
+        <h2 className="text-lg font-medium">Orçamentos</h2>
+
+        {orcamentos.length === 0 ? (
+          <Card>
+            <CardContent className="py-8 text-center text-sm text-muted-foreground">
+              Nenhum orçamento cadastrado
+            </CardContent>
+          </Card>
+        ) : (
+          orcamentos.map((o) => {
+            const tabela = Number(o.total_tabela || 0);
+            const negociado = Number(o.valor_negociado || o.total_pedido || 0);
+            const margem = negociado > 0 ? ((negociado - tabela) / negociado) * 100 : 0;
+            const margemColor =
+              margem >= 30
+                ? "text-emerald-600"
+                : margem >= 15
+                ? "text-amber-600"
+                : "text-destructive";
+            const cats = Array.isArray(o.categorias)
+              ? (o.categorias as Array<{ descricao?: string }>)
+                  .map((c) => c?.descricao)
+                  .filter(Boolean)
+                  .join(" · ")
+              : "";
+
+            return (
+              <Card key={o.id}>
+                <CardHeader className="flex-row items-start justify-between space-y-0 pb-3">
+                  <div>
+                    <p className="font-medium">{o.nome || "Orçamento"}</p>
+                    <p className="text-[12px] text-muted-foreground mt-0.5">
+                      {o.created_at
+                        ? new Date(o.created_at).toLocaleDateString("pt-BR")
+                        : ""}
+                    </p>
+                  </div>
+                  <StatusBadge status={o.status} hasContrato={!!o.contrato_id} />
+                </CardHeader>
+                <CardContent className="space-y-2 pt-0">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="text-muted-foreground">Ordem Promob:</div>
+                    <div>{o.ordem_compra || "—"}</div>
+                    <div className="text-muted-foreground">Tabela:</div>
+                    <div>{formatBRL(tabela)}</div>
+                    <div className="text-muted-foreground">Negociado:</div>
+                    <div className="font-medium">{formatBRL(negociado)}</div>
+                    <div className="text-muted-foreground">Margem:</div>
+                    <div className={margemColor}>{margem.toFixed(1)}%</div>
+                    {cats && (
+                      <>
+                        <div className="text-muted-foreground">Categorias:</div>
+                        <div className="truncate">{cats}</div>
+                      </>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <Button size="sm" variant="outline">
+                      <Eye className="mr-1.5 h-3.5 w-3.5" /> Ver detalhes
+                    </Button>
+                    <Button size="sm" variant="outline">
+                      <Pencil className="mr-1.5 h-3.5 w-3.5" /> Editar
+                    </Button>
+                    <Button size="sm" variant="outline">
+                      <Send className="mr-1.5 h-3.5 w-3.5" /> Enviar para cliente
+                    </Button>
+                    {o.status === "aprovado" && !o.contrato_id && (
+                      <Button size="sm">
+                        Gerar contrato <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                    {o.contrato_id && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigate(`/contratos/${o.contrato_id}`)}
+                      >
+                        Ver contrato <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
+
+        <Button
+          variant="outline"
+          className="border-primary text-primary"
+          onClick={() => setImportOpen(true)}
+        >
+          <Plus className="mr-2 h-4 w-4" /> Importar XML Promob
+        </Button>
+      </div>
+
       <ClienteFormDialog
         open={editOpen}
         onOpenChange={setEditOpen}
@@ -243,6 +345,35 @@ export default function ClienteDetail() {
           fetchAll();
         }}
       />
+
+      <ImportXmlPromobDialog open={importOpen} onOpenChange={setImportOpen} />
     </div>
   );
+}
+
+function StatusBadge({
+  status,
+  hasContrato,
+}: {
+  status: string | null;
+  hasContrato: boolean;
+}) {
+  if (hasContrato || status === "convertido") {
+    return (
+      <Badge className="bg-emerald-700 hover:bg-emerald-700 text-white">
+        Virou contrato
+      </Badge>
+    );
+  }
+  const map: Record<string, { label: string; cls: string }> = {
+    rascunho: { label: "Rascunho", cls: "bg-muted text-muted-foreground hover:bg-muted" },
+    enviado: { label: "Enviado", cls: "bg-primary text-primary-foreground hover:bg-primary" },
+    aprovado: { label: "Aprovado", cls: "bg-emerald-500 hover:bg-emerald-500 text-white" },
+    recusado: {
+      label: "Recusado",
+      cls: "bg-destructive text-destructive-foreground hover:bg-destructive",
+    },
+  };
+  const s = map[status || "rascunho"] ?? map.rascunho;
+  return <Badge className={s.cls}>{s.label}</Badge>;
 }
