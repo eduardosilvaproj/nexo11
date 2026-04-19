@@ -845,6 +845,129 @@ export default function Dre() {
         </p>
       </div>
       )}
+
+      <Sheet open={drillOpen} onOpenChange={setDrillOpen}>
+        <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>Detalhes do contrato</SheetTitle>
+            <SheetDescription>
+              {drill ? `${drill.cliente} · #${drill.contratoId.slice(0, 4).toUpperCase()}` : "—"}
+            </SheetDescription>
+          </SheetHeader>
+
+          {drillLoading || !drill ? (
+            <p className="mt-8 text-center text-sm text-[#6B7A90]">Carregando...</p>
+          ) : (
+            <div className="mt-6 space-y-6 text-sm">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg border border-[#E8ECF2] bg-[#F8FAFC] p-3">
+                  <p className="text-[11px] uppercase tracking-wide text-[#6B7A90]">Receita</p>
+                  <p className="mt-1 text-lg font-semibold text-[#0B1220]">{fmt(drill.receita)}</p>
+                </div>
+                <div className="rounded-lg border border-[#E8ECF2] bg-[#F8FAFC] p-3">
+                  <p className="text-[11px] uppercase tracking-wide text-[#6B7A90]">Custos previstos</p>
+                  <p className="mt-1 text-lg font-semibold text-[#0B1220]">{fmt(drill.prevTotal)}</p>
+                </div>
+                <div className="rounded-lg border border-[#E8ECF2] bg-[#F0FDF9] p-3">
+                  <p className="text-[11px] uppercase tracking-wide text-[#6B7A90]">Custos realizados</p>
+                  <p className="mt-1 text-lg font-semibold text-[#05873C]">{fmt(drill.realTotal)}</p>
+                </div>
+                <div className="rounded-lg border border-[#E8ECF2] bg-[#FFFBEB] p-3">
+                  <p className="text-[11px] uppercase tracking-wide text-[#6B7A90]">Custos pendentes</p>
+                  <p className="mt-1 text-lg font-semibold text-[#B45309]">{fmt(drill.pendTotal)}</p>
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#6B7A90]">
+                  Breakdown por categoria
+                </p>
+                <div className="space-y-2 rounded-lg border border-[#E8ECF2] bg-white p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2"><Factory className="h-4 w-4 text-[#6B7A90]" />Fábrica</span>
+                    <span className="font-medium">{fmt(drill.fabrica)}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2"><Wrench className="h-4 w-4 text-[#1E6FBF]" />Montagem</span>
+                    <span className="font-medium">
+                      {fmt(drill.montagem.pago)}
+                      <span className="ml-1 text-xs text-[#6B7A90]">
+                        ({drill.montagem.ambPagos}/{drill.montagem.ambTotal} amb.)
+                      </span>
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2"><Ruler className="h-4 w-4 text-[#E8A020]" />Medição</span>
+                    <span className="font-medium">
+                      {fmt(drill.medicao.pago)}
+                      <span className="ml-1 text-xs text-[#6B7A90]">
+                        ({drill.medicao.ambPagos}/{drill.medicao.ambTotal})
+                      </span>
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-[#12B76A]" />Conferência</span>
+                    <span className="font-medium">
+                      {fmt(drill.conferencia.pago)}
+                      <span className="ml-1 text-xs text-[#6B7A90]">
+                        ({drill.conferencia.ambPagos}/{drill.conferencia.ambTotal})
+                      </span>
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2"><Truck className="h-4 w-4 text-[#6B7A90]" />Frete</span>
+                    <span className="font-medium">{fmt(drill.frete)}</span>
+                  </div>
+                  {drill.outros > 0 && (
+                    <div className="flex items-center justify-between text-[#6B7A90]">
+                      <span>Outros (retrabalhos / chamados)</span>
+                      <span>{fmt(drill.outros)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#6B7A90]">
+                  Margem
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-lg border border-[#E8ECF2] p-3 text-center">
+                    <p className="text-[11px] text-[#6B7A90]">Prevista</p>
+                    <p className="mt-1 text-lg font-semibold" style={{ color: margemColor(drill.margemPrev) }}>
+                      {drill.margemPrev.toFixed(1)}%
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-[#E8ECF2] p-3 text-center">
+                    <p className="text-[11px] text-[#6B7A90]">Realizada</p>
+                    <p className="mt-1 text-lg font-semibold" style={{ color: margemColor(drill.margemReal) }}>
+                      {drill.margemReal.toFixed(1)}%
+                    </p>
+                  </div>
+                  <div className="rounded-lg border border-[#E8ECF2] p-3 text-center">
+                    <p className="flex items-center justify-center gap-1 text-[11px] text-[#6B7A90]">
+                      <Sparkles className="h-3 w-3" />Potencial
+                    </p>
+                    <p className="mt-1 text-lg font-semibold" style={{ color: margemColor(drill.margemPotencial) }}>
+                      {drill.margemPotencial.toFixed(1)}%
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-2 text-[11px] text-[#B0BAC9]">
+                  Potencial = considerando todos os custos pendentes como pagos.
+                </p>
+              </div>
+
+              <button
+                onClick={() => navigate(`/contratos/${drill.contratoId}?tab=dre`)}
+                className="w-full rounded-md bg-[#1E6FBF] px-4 py-2 text-sm font-medium text-white hover:bg-[#185A9B]"
+              >
+                Abrir contrato
+              </button>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
