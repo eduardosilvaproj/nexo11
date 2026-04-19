@@ -28,6 +28,7 @@ import Lojas from "./pages/Lojas";
 import LojaDetail from "./pages/LojaDetail";
 import NotFound from "./pages/NotFound.tsx";
 import PortalCliente from "./pages/PortalCliente";
+import PortalEntrada from "./pages/PortalEntrada";
 import Integracoes from "./pages/Integracoes";
 import ConfigPagamento from "./pages/ConfigPagamento";
 import OrcamentoNegociacao from "./pages/OrcamentoNegociacao";
@@ -44,6 +45,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/portal" element={<PortalEntrada />} />
             <Route path="/portal/:token" element={<PortalCliente />} />
 
             <Route
