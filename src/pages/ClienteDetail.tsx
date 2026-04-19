@@ -122,23 +122,25 @@ export default function ClienteDetail() {
       .maybeSingle();
     if (error) {
       toast.error(`Erro ao carregar cliente: ${error.message}`);
+      setCliente(null);
       setLoading(false);
       return;
     }
     if (!cli) {
-      toast.error("Cliente não encontrado ou sem permissão de acesso");
-      navigate("/clientes");
+      setCliente(null);
+      setLoading(false);
       return;
     }
     setCliente(cli as Cliente);
 
-    const { data: orcs } = await supabase
+    const orcRes = await supabase
       .from("orcamentos")
       .select(
         "id,nome,status,valor_negociado,total_pedido,total_tabela,contrato_id,vendedor_id,ordem_compra,categorias,created_at",
       )
       .eq("cliente_id", id)
       .order("created_at", { ascending: false });
+    const orcs = orcRes.error ? [] : orcRes.data;
     const list = (orcs ?? []) as Orcamento[];
     setOrcamentos(list);
 
