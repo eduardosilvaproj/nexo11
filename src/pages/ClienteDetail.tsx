@@ -144,15 +144,30 @@ export default function ClienteDetail() {
     const list = (orcs ?? []) as Orcamento[];
     setOrcamentos(list);
 
+    const { data: contratosByCliente } = await supabase
+      .from("contratos")
+      .select("id, cliente_nome, status, valor_venda, data_criacao, dre_contrato(margem_prevista, margem_realizada)")
+      .eq("cliente_id", id)
+      .order("data_criacao", { ascending: false });
+    const cs = (contratosByCliente ?? []).map((c) => {
+      const dre = Array.isArray(c.dre_contrato) ? c.dre_contrato[0] : c.dre_contrato;
+      return {
+        id: c.id,
+        cliente_nome: c.cliente_nome,
+        status: c.status,
+        valor_venda: c.valor_venda,
+        data_criacao: c.data_criacao,
+        margem_prevista: (dre?.margem_prevista ?? null) as number | null,
+        margem_realizada: (dre?.margem_realizada ?? null) as number | null,
+      };
+    });
     const contratoIds = Array.from(
-      new Set(list.map((o) => o.contrato_id).filter(Boolean) as string[]),
+      new Set([
+        ...cs.map((c) => c.id as string).filter(Boolean),
+        ...(list.map((o) => o.contrato_id).filter(Boolean) as string[]),
+      ]),
     );
     if (contratoIds.length > 0) {
-      const { data: cs } = await supabase
-        .from("vw_contratos_dre")
-        .select("id,cliente_nome,status,valor_venda,data_criacao,margem_prevista,margem_realizada")
-        .in("id", contratoIds)
-        .order("data_criacao", { ascending: false });
       const orcsByContrato = new Map<string, string[]>();
       list.forEach((o) => {
         if (o.contrato_id) {
