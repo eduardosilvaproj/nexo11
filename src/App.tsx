@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Placeholder from "./pages/Placeholder";
 import Comercial from "./pages/Comercial";
 import Clientes from "./pages/Clientes";
+import ClienteDetail from "./pages/ClienteDetail";
 import Tecnico from "./pages/Tecnico";
 import Producao from "./pages/Producao";
 import Logistica from "./pages/Logistica";
@@ -54,6 +55,7 @@ const App = () => (
               {/* Operação */}
               <Route path="/comercial" element={<Comercial />} />
               <Route path="/clientes" element={<Clientes />} />
+              <Route path="/clientes/:id" element={<ClienteDetail />} />
               <Route path="/contratos/:id" element={<ContratoDetail />} />
               <Route path="/tecnico" element={
                 <ProtectedRoute roles={["admin","gerente","tecnico","franqueador"]}>
