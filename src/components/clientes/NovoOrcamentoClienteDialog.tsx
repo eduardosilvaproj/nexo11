@@ -50,6 +50,8 @@ export function NovoOrcamentoClienteDialog({
   const [descontos, setDescontos] = useState<Record<string, number>>({});
   const [freteLoja, setFreteLoja] = useState(0);
   const [montagemLoja, setMontagemLoja] = useState(0);
+  const [valorSugerido, setValorSugerido] = useState(0); // BUDGET (editável)
+  const [descontoGlobal, setDescontoGlobal] = useState(0); // % sobre BUDGET
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
