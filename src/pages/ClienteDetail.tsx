@@ -9,6 +9,7 @@ import { ArrowLeft, Pencil, Plus, Eye, Send, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { ClienteFormDialog } from "@/components/clientes/ClienteFormDialog";
 import { NovoOrcamentoClienteDialog } from "@/components/clientes/NovoOrcamentoClienteDialog";
+import { GerarContratoDialog } from "@/components/clientes/GerarContratoDialog";
 
 type Cliente = {
   id: string;
@@ -59,6 +60,8 @@ export default function ClienteDetail() {
   const [vendedorNome, setVendedorNome] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [gerarOpen, setGerarOpen] = useState(false);
+  const [gerarPreselect, setGerarPreselect] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
   const fetchAll = async () => {
@@ -307,7 +310,13 @@ export default function ClienteDetail() {
                       <Send className="mr-1.5 h-3.5 w-3.5" /> Enviar para cliente
                     </Button>
                     {o.status === "aprovado" && !o.contrato_id && (
-                      <Button size="sm">
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setGerarPreselect(o.id);
+                          setGerarOpen(true);
+                        }}
+                      >
                         Gerar contrato <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
                       </Button>
                     )}
@@ -353,6 +362,19 @@ export default function ClienteDetail() {
         clienteNome={cliente.nome}
         lojaId={cliente.loja_id}
         onSaved={fetchAll}
+      />
+
+      <GerarContratoDialog
+        open={gerarOpen}
+        onOpenChange={(v) => {
+          setGerarOpen(v);
+          if (!v) setGerarPreselect(undefined);
+        }}
+        clienteId={cliente.id}
+        clienteNome={cliente.nome}
+        lojaId={cliente.loja_id}
+        preselectedOrcamentoId={gerarPreselect}
+        onCreated={fetchAll}
       />
     </div>
   );
