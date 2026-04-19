@@ -30,6 +30,7 @@ import NotFound from "./pages/NotFound.tsx";
 import PortalCliente from "./pages/PortalCliente";
 import Integracoes from "./pages/Integracoes";
 import ConfigPagamento from "./pages/ConfigPagamento";
+import OrcamentoNegociacao from "./pages/OrcamentoNegociacao";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,11 @@ const App = () => (
               <Route path="/comercial" element={<Comercial />} />
               <Route path="/clientes" element={<Clientes />} />
               <Route path="/clientes/:id" element={<ClienteDetail />} />
+              <Route path="/orcamentos/:id/negociacao" element={
+                <ProtectedRoute roles={["admin","gerente","vendedor"]}>
+                  <OrcamentoNegociacao />
+                </ProtectedRoute>
+              } />
               <Route path="/contratos/:id" element={<ContratoDetail />} />
               <Route path="/tecnico" element={
                 <ProtectedRoute roles={["admin","gerente","tecnico","franqueador"]}>
