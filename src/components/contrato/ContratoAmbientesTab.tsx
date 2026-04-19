@@ -92,9 +92,10 @@ export function ContratoAmbientesTab({ contratoId, contratoLojaId }: Props) {
     enabled: !!lojaId,
     queryFn: async () => {
       const { data, error } = await sb
-        .from("montadores")
-        .select("id, nome, percentual_padrao, ativo")
+        .from("tecnicos_montadores")
+        .select("id, nome, percentual_padrao, ativo, funcoes")
         .eq("loja_id", lojaId)
+        .contains("funcoes", ["montador"])
         .eq("ativo", true)
         .order("nome", { ascending: true });
       if (error) throw error;
