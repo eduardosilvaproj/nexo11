@@ -224,6 +224,100 @@ export default function Dre() {
   };
   const fmtPct = (m: number | null) => (m === null ? "—" : `${m.toFixed(1)}%`);
 
+  // Soma os custos REAIS de um contrato (já vindos da view)
+  const custoRealTotal = (r: Row) =>
+    (r.custo_produto_real ?? 0) +
+    (r.custo_montagem_real ?? 0) +
+    (r.custo_frete_real ?? 0) +
+    (r.custo_comissao_real ?? 0) +
+    (r.outros_custos_reais ?? 0);
+
+  // Drill-down lateral
+  const [drillOpen, setDrillOpen] = useState(false);
+  const [drill, setDrill] = useState<DrillData | null>(null);
+  const [drillLoading, setDrillLoading] = useState(false);
+
+  const abrirDrill = async (r: Row) => {
+    setDrillOpen(true);
+    setDrillLoading(true);
+    setDrill(null);
+
+    const { data: amb } = await supabase
+      .from("contrato_ambientes")
+      .select(
+        "valor_montador, status_montagem, valor_medidor, status_medicao, valor_conferente, status_conferencia"
+      )
+      .eq("contrato_id", r.id);
+
+    const acc = {
+      mPago: 0, mPend: 0, mAmbP: 0, mAmbT: 0,
+      medPago: 0, medPend: 0, medAmbP: 0, medAmbT: 0,
+      cPago: 0, cPend: 0, cAmbP: 0, cAmbT: 0,
+    };
+    (amb ?? []).forEach((a: any) => {
+      const vm = Number(a.valor_montador || 0);
+      const vmed = Number(a.valor_medidor || 0);
+      const vc = Number(a.valor_conferente || 0);
+      if (vm > 0 || a.status_montagem) {
+        acc.mAmbT += 1;
+        if (a.status_montagem === "pago") { acc.mPago += vm; acc.mAmbP += 1; }
+        else acc.mPend += vm;
+      }
+      if (vmed > 0 || a.status_medicao) {
+        acc.medAmbT += 1;
+        if (a.status_medicao === "pago") { acc.medPago += vmed; acc.medAmbP += 1; }
+        else acc.medPend += vmed;
+      }
+      if (vc > 0 || a.status_conferencia) {
+        acc.cAmbT += 1;
+        if (a.status_conferencia === "pago") { acc.cPago += vc; acc.cAmbP += 1; }
+        else acc.cPend += vc;
+      }
+    });
+
+    const receita = r.valor_venda ?? 0;
+    const fabrica = r.custo_produto_real ?? 0;
+    const frete = r.custo_frete_real ?? 0;
+    // outros = somente extras manuais (retrabalhos/chamados), removendo medição/conferência que já contabilizamos
+    const outros = Math.max(
+      (r.outros_custos_reais ?? 0) - acc.medPago - acc.cPago,
+      0
+    );
+
+    const realTotal =
+      fabrica + acc.mPago + acc.medPago + acc.cPago + frete +
+      (r.custo_comissao_real ?? 0) + outros;
+    const pendTotal = acc.mPend + acc.medPend + acc.cPend;
+    const prevTotal =
+      (r.custo_produto_previsto ?? 0) +
+      (r.custo_montagem_previsto ?? 0) +
+      (r.custo_frete_previsto ?? 0) +
+      (r.custo_comissao_previsto ?? 0) +
+      (r.outros_custos_previstos ?? 0);
+
+    const margemPotencial =
+      receita > 0 ? ((receita - (realTotal + pendTotal)) / receita) * 100 : 0;
+
+    setDrill({
+      contratoId: r.id,
+      cliente: r.cliente_nome ?? "—",
+      receita,
+      prevTotal,
+      realTotal,
+      pendTotal,
+      margemPrev: r.margem_prevista ?? 0,
+      margemReal: r.margem_realizada ?? 0,
+      margemPotencial: +margemPotencial.toFixed(2),
+      fabrica,
+      frete,
+      outros,
+      montagem: { pago: acc.mPago, pendente: acc.mPend, ambPagos: acc.mAmbP, ambTotal: acc.mAmbT },
+      medicao: { pago: acc.medPago, pendente: acc.medPend, ambPagos: acc.medAmbP, ambTotal: acc.medAmbT },
+      conferencia: { pago: acc.cPago, pendente: acc.cPend, ambPagos: acc.cAmbP, ambTotal: acc.cAmbT },
+    });
+    setDrillLoading(false);
+  };
+
   // Comissão base estimada (não há tabela de regras configurada)
   const COMISSAO_BASE = 0.03;
 
