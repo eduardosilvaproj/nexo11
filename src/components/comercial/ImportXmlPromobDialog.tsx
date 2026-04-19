@@ -33,6 +33,7 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
   const [descontos, setDescontos] = useState<Record<string, number>>({});
   const [frete, setFrete] = useState(0);
   const [montagem, setMontagem] = useState(0);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   const reset = () => {
     setFile(null);
@@ -42,6 +43,7 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
     setDescontos({});
     setFrete(0);
     setMontagem(0);
+    setExpanded({});
   };
 
   const handleClose = (o: boolean) => {
