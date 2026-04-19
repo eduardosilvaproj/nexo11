@@ -56,8 +56,10 @@ export default function ClienteDetail() {
   const navigate = useNavigate();
   const [cliente, setCliente] = useState<Cliente | null>(null);
   const [orcamentos, setOrcamentos] = useState<Orcamento[]>([]);
-  const [contratoStatus, setContratoStatus] = useState<string | null>(null);
-  const [vendedorNome, setVendedorNome] = useState<string | null>(null);
+  const [contratosResumo, setContratosResumo] = useState<{ count: number; total: number }>({
+    count: 0,
+    total: 0,
+  });
   const [editOpen, setEditOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [gerarOpen, setGerarOpen] = useState(false);
@@ -89,32 +91,21 @@ export default function ClienteDetail() {
     const list = (orcs ?? []) as Orcamento[];
     setOrcamentos(list);
 
-    const contratoId = list.find((o) => o.contrato_id)?.contrato_id;
-    if (contratoId) {
-      const { data: c } = await supabase
+    const contratoIds = Array.from(
+      new Set(list.map((o) => o.contrato_id).filter(Boolean) as string[]),
+    );
+    if (contratoIds.length > 0) {
+      const { data: cs } = await supabase
         .from("contratos")
-        .select("status,vendedor_id")
-        .eq("id", contratoId)
-        .maybeSingle();
-      setContratoStatus(c?.status ?? null);
-      if (c?.vendedor_id) {
-        const { data: u } = await supabase
-          .from("usuarios_publico")
-          .select("nome")
-          .eq("id", c.vendedor_id)
-          .maybeSingle();
-        setVendedorNome(u?.nome ?? null);
-      }
+        .select("id,status,valor_venda")
+        .in("id", contratoIds);
+      const ativos = (cs ?? []).filter((c) => c.status !== "finalizado");
+      setContratosResumo({
+        count: ativos.length,
+        total: ativos.reduce((s, c) => s + Number(c.valor_venda || 0), 0),
+      });
     } else {
-      const vendedorId = list.find((o) => o.vendedor_id)?.vendedor_id;
-      if (vendedorId) {
-        const { data: u } = await supabase
-          .from("usuarios_publico")
-          .select("nome")
-          .eq("id", vendedorId)
-          .maybeSingle();
-        setVendedorNome(u?.nome ?? null);
-      }
+      setContratosResumo({ count: 0, total: 0 });
     }
     setLoading(false);
   };
@@ -222,24 +213,16 @@ export default function ClienteDetail() {
               <span className="text-base font-medium">{formatBRL(totals.totalOrcado)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Total aprovado</span>
-              <span className="text-base font-medium">{formatBRL(totals.totalAprovado)}</span>
+              <span className="text-sm text-muted-foreground">Total em contratos</span>
+              <span className="text-base font-medium">{formatBRL(contratosResumo.total)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Orçamentos</span>
+              <span className="text-sm text-muted-foreground">Nº de orçamentos</span>
               <Badge variant="secondary">{orcamentos.length}</Badge>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Contrato ativo</span>
-              {contratoStatus ? (
-                <Badge>{contratoStatus}</Badge>
-              ) : (
-                <span className="text-sm">—</span>
-              )}
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Vendedor</span>
-              <span className="text-sm">{vendedorNome || "—"}</span>
+              <span className="text-sm text-muted-foreground">Nº de contratos</span>
+              <Badge variant="secondary">{contratosResumo.count}</Badge>
             </div>
           </CardContent>
         </Card>
