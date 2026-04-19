@@ -465,37 +465,80 @@ export default function ClienteDetail() {
         <TabsContent value="contratos" className="space-y-3">
           {contratos.length === 0 ? (
             <Card>
-              <CardContent className="py-8 text-center text-sm text-muted-foreground">
-                Nenhum contrato gerado
+              <CardContent className="py-12 text-center space-y-2">
+                <p className="text-base font-medium">Nenhum contrato ainda</p>
+                <p className="text-sm text-muted-foreground">
+                  Aprove um orçamento para gerar o primeiro contrato
+                </p>
               </CardContent>
             </Card>
           ) : (
-            contratos.map((c) => (
-              <Card key={c.id}>
-                <CardHeader className="flex-row items-start justify-between space-y-0 pb-3">
-                  <div>
-                    <p className="font-medium">{c.cliente_nome}</p>
-                    <p className="text-[12px] text-muted-foreground mt-0.5">
-                      {new Date(c.data_criacao).toLocaleDateString("pt-BR")}
-                    </p>
-                  </div>
-                  <Badge variant="secondary">{c.status}</Badge>
-                </CardHeader>
-                <CardContent className="flex items-center justify-between pt-0">
-                  <span className="text-sm text-muted-foreground">Valor</span>
-                  <div className="flex items-center gap-3">
-                    <span className="font-medium">{formatBRL(Number(c.valor_venda || 0))}</span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => navigate(`/contratos/${c.id}`)}
-                    >
-                      Abrir <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+            <Card>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nº contrato</TableHead>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Valor</TableHead>
+                    <TableHead className="text-right">Margem</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {contratos.map((c) => {
+                    const margem = c.margem_realizada ?? c.margem_prevista ?? 0;
+                    const margemColor =
+                      Number(margem) >= 30
+                        ? "text-emerald-600"
+                        : Number(margem) >= 15
+                        ? "text-amber-600"
+                        : "text-destructive";
+                    return (
+                      <TableRow
+                        key={c.id}
+                        className="cursor-pointer"
+                        onClick={() => navigate(`/contratos/${c.id}`)}
+                      >
+                        <TableCell className="font-mono text-xs">
+                          #{c.id.slice(0, 8)}
+                        </TableCell>
+                        <TableCell className="max-w-[260px] truncate">
+                          {c.descricao || "—"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="capitalize">
+                            {c.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right font-medium tabular-nums">
+                          {formatBRL(Number(c.valor_venda || 0))}
+                        </TableCell>
+                        <TableCell className={`text-right tabular-nums ${margemColor}`}>
+                          {Number(margem).toFixed(1)}%
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {new Date(c.data_criacao).toLocaleDateString("pt-BR")}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/contratos/${c.id}`);
+                            }}
+                          >
+                            Ver <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </Card>
           )}
         </TabsContent>
 
