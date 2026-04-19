@@ -310,7 +310,13 @@ export default function ClienteDetail() {
                       <Send className="mr-1.5 h-3.5 w-3.5" /> Enviar para cliente
                     </Button>
                     {o.status === "aprovado" && !o.contrato_id && (
-                      <Button size="sm">
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setGerarPreselect(o.id);
+                          setGerarOpen(true);
+                        }}
+                      >
                         Gerar contrato <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
                       </Button>
                     )}
