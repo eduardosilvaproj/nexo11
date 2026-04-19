@@ -252,13 +252,8 @@ export default function Dre() {
   };
   const fmtPct = (m: number | null) => (m === null ? "—" : `${m.toFixed(1)}%`);
 
-  // Soma os custos REAIS de um contrato (já vindos da view)
-  const custoRealTotal = (r: Row) =>
-    (r.custo_produto_real ?? 0) +
-    (r.custo_montagem_real ?? 0) +
-    (r.custo_frete_real ?? 0) +
-    (r.custo_comissao_real ?? 0) +
-    (r.outros_custos_reais ?? 0);
+  // Alias para uso na tabela
+  const custoRealTotal = custoRealRow;
 
   // Drill-down lateral
   const [drillOpen, setDrillOpen] = useState(false);
