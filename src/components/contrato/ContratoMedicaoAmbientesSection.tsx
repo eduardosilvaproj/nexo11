@@ -163,26 +163,12 @@ export function ContratoMedicaoAmbientesSection({
         console.warn("log inserir falhou", e?.message);
       }
 
-      // 2) DRE — montador vai em custo_montagem_real; medidor/conferente em outros_custos_reais
-      const dreCol = funcao === "montador" ? "custo_montagem_real" : "outros_custos_reais";
-      try {
-        const { data: dre, error: dreErr } = await sb
-          .from("dre_contrato")
-          .select(dreCol)
-          .eq("contrato_id", contratoId)
-          .maybeSingle();
-        if (!dreErr && dre) {
-          const novoTotal = Number(dre[dreCol] || 0) + valor;
-          await sb
-            .from("dre_contrato")
-            .update({ [dreCol]: novoTotal })
-            .eq("contrato_id", contratoId);
-          qc.invalidateQueries({ queryKey: ["dre", contratoId] });
-          qc.invalidateQueries({ queryKey: ["contrato_dre_view", contratoId] });
-        }
-      } catch (e: any) {
-        console.warn("DRE update falhou", e?.message);
-      }
+      // 2) DRE — agora a vw_contratos_dre soma automaticamente os ambientes pagos
+      // (montador → custo_montagem_real; medidor/conferente → outros_custos_reais).
+      // Apenas invalida caches para refletir o novo cálculo.
+      qc.invalidateQueries({ queryKey: ["dre", contratoId] });
+      qc.invalidateQueries({ queryKey: ["dre-tab", contratoId] });
+      qc.invalidateQueries({ queryKey: ["contrato_dre_view", contratoId] });
 
       toast.success(`${lblPessoa} marcado como pago e lançado no DRE`);
     }
