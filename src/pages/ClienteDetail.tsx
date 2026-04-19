@@ -363,6 +363,19 @@ export default function ClienteDetail() {
         lojaId={cliente.loja_id}
         onSaved={fetchAll}
       />
+
+      <GerarContratoDialog
+        open={gerarOpen}
+        onOpenChange={(v) => {
+          setGerarOpen(v);
+          if (!v) setGerarPreselect(undefined);
+        }}
+        clienteId={cliente.id}
+        clienteNome={cliente.nome}
+        lojaId={cliente.loja_id}
+        preselectedOrcamentoId={gerarPreselect}
+        onCreated={fetchAll}
+      />
     </div>
   );
 }
