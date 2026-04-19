@@ -50,6 +50,8 @@ export function NovoOrcamentoClienteDialog({
   const [descontos, setDescontos] = useState<Record<string, number>>({});
   const [freteLoja, setFreteLoja] = useState(0);
   const [montagemLoja, setMontagemLoja] = useState(0);
+  const [valorSugerido, setValorSugerido] = useState(0); // BUDGET (editável)
+  const [descontoGlobal, setDescontoGlobal] = useState(0); // % sobre BUDGET
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -76,6 +78,8 @@ export function NovoOrcamentoClienteDialog({
     setDescontos({});
     setFreteLoja(0);
     setMontagemLoja(0);
+    setValorSugerido(0);
+    setDescontoGlobal(0);
   };
 
   const handleClose = (o: boolean) => {
@@ -105,6 +109,8 @@ export function NovoOrcamentoClienteDialog({
       setDescontos(initial);
       setFreteLoja(data.frete);
       setMontagemLoja(data.montagem);
+      setValorSugerido(data.total_orcamento || data.total_pedido || 0);
+      setDescontoGlobal(0);
       // Default: preencher nome com ordem_compra do XML, se ainda vazio
       if (!nome.trim() && data.ordem_compra) {
         setNome(data.ordem_compra);
@@ -121,18 +127,17 @@ export function NovoOrcamentoClienteDialog({
     if (!parsed) return null;
     const linhas = parsed.categorias.map((c) => {
       const tabela = c.tabela || c.itens.reduce((s, x) => s + x.price * x.quantity, 0) || c.total;
-      const custoLinha = c.pedido || tabela; // ORDER por categoria (custo real)
       const desc = descontos[c.id] ?? 0;
       const negociado = tabela * (1 - desc / 100);
-      const margemReal = negociado > 0 ? ((negociado - custoLinha) / negociado) * 100 : 0;
-      return { id: c.id, descricao: c.description, tabela, desc, negociado, margem: margemReal };
+      return { id: c.id, descricao: c.description, tabela, desc, negociado };
     });
     const subtotal = linhas.reduce((s, l) => s + l.negociado, 0);
-    const valorVenda = subtotal + freteLoja + montagemLoja;
+    const descGlobalSafe = Math.max(0, Math.min(60, descontoGlobal || 0));
+    const valorVenda = Math.max(0, (valorSugerido || 0) * (1 - descGlobalSafe / 100));
     const custoProduto = parsed.total_pedido || parsed.total_tabela; // ORDER = custo real
     const margemPrev = valorVenda > 0 ? ((valorVenda - custoProduto) / valorVenda) * 100 : 0;
-    return { linhas, subtotal, valorVenda, custoProduto, margemPrev };
-  }, [parsed, descontos, freteLoja, montagemLoja]);
+    return { linhas, subtotal, valorVenda, custoProduto, margemPrev, descGlobalSafe };
+  }, [parsed, descontos, valorSugerido, descontoGlobal]);
 
   const margemColor = (m: number) =>
     m >= 30 ? "text-emerald-600" : m >= 15 ? "text-amber-600" : "text-destructive";
@@ -155,7 +160,6 @@ export function NovoOrcamentoClienteDialog({
         tabela: l.tabela,
         desconto_pct: l.desc,
         valor: l.negociado,
-        margem: l.margem,
       }));
 
       const { error: insErr } = await supabase.from("orcamentos").insert({
@@ -168,13 +172,17 @@ export function NovoOrcamentoClienteDialog({
         total_tabela: parsed.total_tabela,
         total_pedido: parsed.total_pedido,
         valor_negociado: calc.valorVenda,
+        desconto_global: calc.descGlobalSafe,
         frete_fabrica: parsed.frete,
         montagem_fabrica: parsed.montagem,
         frete_loja: freteLoja,
         montagem_loja: montagemLoja,
         categorias: categoriasJson as unknown as never,
         itens: parsed.itens as unknown as never,
-        acrescimos: parsed.acrescimos as unknown as never,
+        acrescimos: [
+          ...parsed.acrescimos,
+          { id: "_total_orcamento_budget", description: "BUDGET (sugestão de venda Promob)", value: parsed.total_orcamento, percentual: 0 },
+        ] as unknown as never,
         status,
       });
       if (insErr) throw insErr;
@@ -341,32 +349,40 @@ export function NovoOrcamentoClienteDialog({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Frete loja</Label>
+                <Label>Valor de venda sugerido (Promob)</Label>
                 <Input
                   type="number"
                   step={0.01}
                   min={0}
-                  value={freteLoja}
-                  onChange={(e) => setFreteLoja(Math.max(0, parseFloat(e.target.value) || 0))}
+                  value={valorSugerido}
+                  onChange={(e) => setValorSugerido(Math.max(0, parseFloat(e.target.value) || 0))}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Montagem loja</Label>
+                <Label>Desconto sobre valor sugerido (%)</Label>
                 <Input
                   type="number"
-                  step={0.01}
+                  step={0.5}
                   min={0}
-                  value={montagemLoja}
-                  onChange={(e) => setMontagemLoja(Math.max(0, parseFloat(e.target.value) || 0))}
+                  max={60}
+                  value={descontoGlobal}
+                  onChange={(e) =>
+                    setDescontoGlobal(Math.max(0, Math.min(60, parseFloat(e.target.value) || 0)))
+                  }
                 />
               </div>
             </div>
 
             <div className="rounded-lg p-4" style={{ background: "#0D1117" }}>
-              <div className="space-y-1.5 text-sm text-slate-400">
-                <Row label="Subtotal categorias" value={formatBRL(calc.subtotal)} />
-                <Row label="+ Frete" value={formatBRL(freteLoja)} />
-                <Row label="+ Montagem" value={formatBRL(montagemLoja)} />
+              <div className="space-y-1.5 text-sm">
+                <div className="flex items-center justify-between">
+                  <span style={{ color: "#6B7A90" }}>Valor sugerido Promob</span>
+                  <span style={{ color: "#6B7A90" }}>{formatBRL(valorSugerido)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span style={{ color: "#6B7A90" }}>Desconto negociado</span>
+                  <span style={{ color: "#6B7A90" }}>{calc.descGlobalSafe.toFixed(1)}%</span>
+                </div>
               </div>
               <div className="my-3 h-px bg-slate-800" />
               <div className="flex items-baseline justify-between">
