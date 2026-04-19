@@ -60,6 +60,8 @@ export default function ClienteDetail() {
   const [vendedorNome, setVendedorNome] = useState<string | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [gerarOpen, setGerarOpen] = useState(false);
+  const [gerarPreselect, setGerarPreselect] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
   const fetchAll = async () => {
