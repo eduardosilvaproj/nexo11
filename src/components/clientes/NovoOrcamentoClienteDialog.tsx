@@ -121,16 +121,15 @@ export function NovoOrcamentoClienteDialog({
     if (!parsed) return null;
     const linhas = parsed.categorias.map((c) => {
       const tabela = c.tabela || c.itens.reduce((s, x) => s + x.price * x.quantity, 0) || c.total;
+      const custoLinha = c.pedido || tabela; // ORDER por categoria (custo real)
       const desc = descontos[c.id] ?? 0;
       const negociado = tabela * (1 - desc / 100);
-      const margem = negociado > 0 ? ((negociado - tabela * (1 - 0)) / negociado) * 100 : 0;
-      // margem por linha = (negociado - custo_tabela) / negociado * 100 → mas custo = tabela
-      const margemReal = negociado > 0 ? ((negociado - tabela) / negociado) * 100 : 0;
+      const margemReal = negociado > 0 ? ((negociado - custoLinha) / negociado) * 100 : 0;
       return { id: c.id, descricao: c.description, tabela, desc, negociado, margem: margemReal };
     });
     const subtotal = linhas.reduce((s, l) => s + l.negociado, 0);
     const valorVenda = subtotal + freteLoja + montagemLoja;
-    const custoProduto = parsed.total_tabela;
+    const custoProduto = parsed.total_pedido || parsed.total_tabela; // ORDER = custo real
     const margemPrev = valorVenda > 0 ? ((valorVenda - custoProduto) / valorVenda) * 100 : 0;
     return { linhas, subtotal, valorVenda, custoProduto, margemPrev };
   }, [parsed, descontos, freteLoja, montagemLoja]);
