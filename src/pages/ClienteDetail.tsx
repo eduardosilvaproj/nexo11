@@ -47,6 +47,9 @@ type ContratoRow = {
   status: string;
   valor_venda: number;
   data_criacao: string;
+  margem_prevista?: number | null;
+  margem_realizada?: number | null;
+  descricao?: string | null;
 };
 
 type HistoricoItem = {
