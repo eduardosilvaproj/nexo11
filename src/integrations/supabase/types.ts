@@ -242,6 +242,65 @@ export type Database = {
           },
         ]
       }
+      clientes: {
+        Row: {
+          celular: string | null
+          cep: string | null
+          cidade: string | null
+          cpf_cnpj: string | null
+          created_at: string | null
+          email: string | null
+          endereco: string | null
+          estado: string | null
+          id: string
+          loja_id: string
+          nome: string
+          observacoes: string | null
+          telefone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          celular?: string | null
+          cep?: string | null
+          cidade?: string | null
+          cpf_cnpj?: string | null
+          created_at?: string | null
+          email?: string | null
+          endereco?: string | null
+          estado?: string | null
+          id?: string
+          loja_id: string
+          nome: string
+          observacoes?: string | null
+          telefone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          celular?: string | null
+          cep?: string | null
+          cidade?: string | null
+          cpf_cnpj?: string | null
+          created_at?: string | null
+          email?: string | null
+          endereco?: string | null
+          estado?: string | null
+          id?: string
+          loja_id?: string
+          nome?: string
+          observacoes?: string | null
+          telefone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clientes_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comissoes: {
         Row: {
           contrato_id: string
@@ -921,6 +980,127 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      orcamentos: {
+        Row: {
+          acrescimos: Json | null
+          arquivo_nome: string | null
+          categorias: Json | null
+          cliente_id: string
+          contrato_id: string | null
+          created_at: string | null
+          desconto_global: number | null
+          frete_fabrica: number | null
+          frete_loja: number | null
+          id: string
+          itens: Json | null
+          loja_id: string
+          montagem_fabrica: number | null
+          montagem_loja: number | null
+          nome: string
+          ordem_compra: string | null
+          status: string | null
+          total_pedido: number | null
+          total_tabela: number | null
+          updated_at: string | null
+          valor_negociado: number | null
+          vendedor_id: string | null
+          xml_raw: string | null
+        }
+        Insert: {
+          acrescimos?: Json | null
+          arquivo_nome?: string | null
+          categorias?: Json | null
+          cliente_id: string
+          contrato_id?: string | null
+          created_at?: string | null
+          desconto_global?: number | null
+          frete_fabrica?: number | null
+          frete_loja?: number | null
+          id?: string
+          itens?: Json | null
+          loja_id: string
+          montagem_fabrica?: number | null
+          montagem_loja?: number | null
+          nome: string
+          ordem_compra?: string | null
+          status?: string | null
+          total_pedido?: number | null
+          total_tabela?: number | null
+          updated_at?: string | null
+          valor_negociado?: number | null
+          vendedor_id?: string | null
+          xml_raw?: string | null
+        }
+        Update: {
+          acrescimos?: Json | null
+          arquivo_nome?: string | null
+          categorias?: Json | null
+          cliente_id?: string
+          contrato_id?: string | null
+          created_at?: string | null
+          desconto_global?: number | null
+          frete_fabrica?: number | null
+          frete_loja?: number | null
+          id?: string
+          itens?: Json | null
+          loja_id?: string
+          montagem_fabrica?: number | null
+          montagem_loja?: number | null
+          nome?: string
+          ordem_compra?: string | null
+          status?: string | null
+          total_pedido?: number | null
+          total_tabela?: number | null
+          updated_at?: string | null
+          valor_negociado?: number | null
+          vendedor_id?: string | null
+          xml_raw?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orcamentos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios_publico"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       orcamentos_promob: {
         Row: {
