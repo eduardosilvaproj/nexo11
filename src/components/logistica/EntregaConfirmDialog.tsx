@@ -35,6 +35,7 @@ export function EntregaConfirmDialog({ open, onOpenChange, entregaId, contratoId
         .from("entregas")
         .update({
           status: "confirmada",
+          status_visual: "entregue",
           data_confirmacao: new Date(dataReal).toISOString(),
           foto_confirmacao_path: path,
         })
