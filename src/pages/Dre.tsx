@@ -450,13 +450,25 @@ export default function Dre() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {[
           {
             label: "Faturamento total",
             value: fmt(metrics.faturamento),
             border: "#1E6FBF",
             valueColor: "#0B1220",
+          },
+          {
+            label: "Custo total realizado",
+            value: fmt(metrics.custoRealTotalSum),
+            border: "#0B1220",
+            valueColor: "#0B1220",
+          },
+          {
+            label: "Custos pendentes",
+            value: fmt(metrics.custoPendTotalSum),
+            border: "#E8A020",
+            valueColor: metrics.custoPendTotalSum > 0 ? "#E8A020" : "#6B7A90",
           },
           {
             label: "Margem média",
