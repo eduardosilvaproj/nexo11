@@ -517,6 +517,30 @@ export default function Dre() {
                       <td className="px-4 py-3 text-[#0B1220]">{r.cliente_nome}</td>
                       <td className="px-4 py-3 text-[#6B7A90]">{vendedorNome}</td>
                       <td className="px-4 py-3 text-right">{fmt(r.valor_venda)}</td>
+                      <td className="px-4 py-3 text-right">
+                        <HoverCard openDelay={120}>
+                          <HoverCardTrigger asChild>
+                            <span className="cursor-help font-medium text-[#0B1220] underline decoration-dotted decoration-[#B0BAC9] underline-offset-4">
+                              {fmt(custoRealTotal(r))}
+                            </span>
+                          </HoverCardTrigger>
+                          <HoverCardContent className="w-72 text-sm">
+                            <p className="mb-2 text-xs font-medium uppercase text-[#6B7A90]">
+                              Breakdown — custos pagos
+                            </p>
+                            <div className="space-y-1">
+                              <div className="flex justify-between"><span>🏭 Fábrica</span><span>{fmt(r.custo_produto_real)}</span></div>
+                              <div className="flex justify-between"><span>🔧 Montagem</span><span>{fmt(r.custo_montagem_real)}</span></div>
+                              <div className="flex justify-between"><span>🚚 Frete</span><span>{fmt(r.custo_frete_real)}</span></div>
+                              <div className="flex justify-between"><span>💰 Comissão</span><span>{fmt(r.custo_comissao_real)}</span></div>
+                              <div className="flex justify-between"><span>📐 Técnico + outros</span><span>{fmt(r.outros_custos_reais)}</span></div>
+                              <div className="mt-2 flex justify-between border-t border-[#E8ECF2] pt-2 font-medium">
+                                <span>Total</span><span>{fmt(custoRealTotal(r))}</span>
+                              </div>
+                            </div>
+                          </HoverCardContent>
+                        </HoverCard>
+                      </td>
                       <td
                         className="px-4 py-3 text-right font-medium"
                         style={{ color: margemColor(prev) }}
