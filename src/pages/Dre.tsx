@@ -580,16 +580,16 @@ export default function Dre() {
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-1">
                           <button
-                            onClick={() => navigate(`/contratos/${r.id}?tab=dre`)}
+                            onClick={() => abrirDrill(r)}
                             className="rounded p-1.5 text-[#6B7A90] hover:bg-[#F5F7FA] hover:text-[#1E6FBF]"
-                            title="Ver contrato"
+                            title="Ver detalhes do contrato"
                           >
                             <Eye className="h-4 w-4" />
                           </button>
                           <button
-                            onClick={() => window.open(`/contratos/${r.id}?tab=dre&print=1`, "_blank")}
+                            onClick={() => navigate(`/contratos/${r.id}?tab=dre`)}
                             className="rounded p-1.5 text-[#6B7A90] hover:bg-[#F5F7FA] hover:text-[#1E6FBF]"
-                            title="Exportar PDF"
+                            title="Abrir contrato"
                           >
                             <FileText className="h-4 w-4" />
                           </button>
@@ -604,6 +604,9 @@ export default function Dre() {
                   <td className="px-4 py-3 text-[#B0BAC9]">—</td>
                   <td className="px-4 py-3 text-right text-[#0B1220]">
                     {fmt(metrics.faturamento)}
+                  </td>
+                  <td className="px-4 py-3 text-right text-[#0B1220]">
+                    {fmt(rows.reduce((s, r) => s + custoRealTotal(r), 0))}
                   </td>
                   <td
                     className="px-4 py-3 text-right"
