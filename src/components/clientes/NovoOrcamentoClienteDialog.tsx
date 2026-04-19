@@ -109,6 +109,8 @@ export function NovoOrcamentoClienteDialog({
       setDescontos(initial);
       setFreteLoja(data.frete);
       setMontagemLoja(data.montagem);
+      setValorSugerido(data.total_orcamento || data.total_pedido || 0);
+      setDescontoGlobal(0);
       // Default: preencher nome com ordem_compra do XML, se ainda vazio
       if (!nome.trim() && data.ordem_compra) {
         setNome(data.ordem_compra);
