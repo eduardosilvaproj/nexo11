@@ -88,6 +88,7 @@ export default function Dre() {
   const [ano, setAno] = useState<number>(today.getFullYear());
   const [vendedor, setVendedor] = useState<string>("all");
   const [statusFiltro, setStatusFiltro] = useState<string>("all");
+  const [custoFiltro, setCustoFiltro] = useState<string>("all");
   const [rankBy, setRankBy] = useState<"margem" | "faturamento">("margem");
   const [rows, setRows] = useState<Row[]>([]);
   const [vendedores, setVendedores] = useState<{ id: string; nome: string }[]>([]);
@@ -186,18 +187,43 @@ export default function Dre() {
   const fmt = (n: number | null) =>
     (n ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+  // Soma os custos REAIS de um contrato (já vindos da view)
+  const custoRealRow = (r: Row) =>
+    (r.custo_produto_real ?? 0) +
+    (r.custo_montagem_real ?? 0) +
+    (r.custo_frete_real ?? 0) +
+    (r.custo_comissao_real ?? 0) +
+    (r.outros_custos_reais ?? 0);
+
+  const custoPrevRow = (r: Row) =>
+    (r.custo_produto_previsto ?? 0) +
+    (r.custo_montagem_previsto ?? 0) +
+    (r.custo_frete_previsto ?? 0) +
+    (r.custo_comissao_previsto ?? 0) +
+    (r.outros_custos_previstos ?? 0);
+
+  const custoPendRow = (r: Row) => Math.max(custoPrevRow(r) - custoRealRow(r), 0);
+
+  const filteredRows = useMemo(() => {
+    if (custoFiltro === "all") return rows;
+    if (custoFiltro === "pendentes") return rows.filter((r) => custoPendRow(r) > 0.01);
+    if (custoFiltro === "pagos") return rows.filter((r) => custoPendRow(r) <= 0.01);
+    return rows;
+  }, [rows, custoFiltro]);
+
   const metrics = useMemo(() => {
-    const faturamento = rows.reduce((s, r) => s + (r.valor_venda ?? 0), 0);
-    const margens = rows
+    const faturamento = filteredRows.reduce((s, r) => s + (r.valor_venda ?? 0), 0);
+    const custoRealTotalSum = filteredRows.reduce((s, r) => s + custoRealRow(r), 0);
+    const custoPendTotalSum = filteredRows.reduce((s, r) => s + custoPendRow(r), 0);
+    const margens = filteredRows
       .map((r) => r.margem_realizada)
       .filter((m): m is number => m !== null && m !== undefined);
     const melhor = margens.length ? Math.max(...margens) : null;
     const pior = margens.length ? Math.min(...margens) : null;
-    // Médias ponderadas pelo valor de venda
     const weighted = (key: "margem_prevista" | "margem_realizada") => {
       let totalW = 0;
       let acc = 0;
-      for (const r of rows) {
+      for (const r of filteredRows) {
         const v = r.valor_venda ?? 0;
         const m = r[key];
         if (v > 0 && m !== null && m !== undefined) {
@@ -209,12 +235,14 @@ export default function Dre() {
     };
     return {
       faturamento,
+      custoRealTotalSum,
+      custoPendTotalSum,
       media: weighted("margem_realizada"),
       mediaPrev: weighted("margem_prevista"),
       melhor,
       pior,
     };
-  }, [rows]);
+  }, [filteredRows]);
 
   const margemColor = (m: number | null) => {
     if (m === null) return "#6B7A90";
@@ -224,13 +252,8 @@ export default function Dre() {
   };
   const fmtPct = (m: number | null) => (m === null ? "—" : `${m.toFixed(1)}%`);
 
-  // Soma os custos REAIS de um contrato (já vindos da view)
-  const custoRealTotal = (r: Row) =>
-    (r.custo_produto_real ?? 0) +
-    (r.custo_montagem_real ?? 0) +
-    (r.custo_frete_real ?? 0) +
-    (r.custo_comissao_real ?? 0) +
-    (r.outros_custos_reais ?? 0);
+  // Alias para uso na tabela
+  const custoRealTotal = custoRealRow;
 
   // Drill-down lateral
   const [drillOpen, setDrillOpen] = useState(false);
@@ -413,16 +436,39 @@ export default function Dre() {
               <SelectItem value="finalizado">Finalizado</SelectItem>
             </SelectContent>
           </Select>
+
+          <Select value={custoFiltro} onValueChange={setCustoFiltro}>
+            <SelectTrigger className="w-[210px]">
+              <SelectValue placeholder="Status de custo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os custos</SelectItem>
+              <SelectItem value="pendentes">Com custos pendentes</SelectItem>
+              <SelectItem value="pagos">Custos 100% pagos</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {[
           {
             label: "Faturamento total",
             value: fmt(metrics.faturamento),
             border: "#1E6FBF",
             valueColor: "#0B1220",
+          },
+          {
+            label: "Custo total realizado",
+            value: fmt(metrics.custoRealTotalSum),
+            border: "#0B1220",
+            valueColor: "#0B1220",
+          },
+          {
+            label: "Custos pendentes",
+            value: fmt(metrics.custoPendTotalSum),
+            border: "#E8A020",
+            valueColor: metrics.custoPendTotalSum > 0 ? "#E8A020" : "#6B7A90",
           },
           {
             label: "Margem média",
@@ -481,7 +527,7 @@ export default function Dre() {
                   Carregando...
                 </td>
               </tr>
-            ) : rows.length === 0 ? (
+            ) : filteredRows.length === 0 ? (
               <tr>
                 <td colSpan={10} className="px-4 py-12 text-center">
                   <BarChart3 className="mx-auto mb-3 h-10 w-10 text-[#B0BAC9]" />
@@ -493,7 +539,7 @@ export default function Dre() {
               </tr>
             ) : (
               <>
-                {rows.map((r) => {
+                {filteredRows.map((r) => {
                   const prev = r.margem_prevista ?? 0;
                   const real = r.margem_realizada ?? 0;
                   const desvio = real - prev;
@@ -606,7 +652,7 @@ export default function Dre() {
                     {fmt(metrics.faturamento)}
                   </td>
                   <td className="px-4 py-3 text-right text-[#0B1220]">
-                    {fmt(rows.reduce((s, r) => s + custoRealTotal(r), 0))}
+                    {fmt(metrics.custoRealTotalSum)}
                   </td>
                   <td
                     className="px-4 py-3 text-right"
