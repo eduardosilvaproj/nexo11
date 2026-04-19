@@ -61,6 +61,8 @@ export default function PortalCliente() {
   const [error, setError] = useState<string | null>(null);
   const [contrato, setContrato] = useState<any>(null);
   const [logs, setLogs] = useState<any[]>([]);
+  const [orcamentos, setOrcamentos] = useState<any[]>([]);
+  const [parcelas, setParcelas] = useState<any[]>([]);
   const [vendedorNome, setVendedorNome] = useState<string | null>(null);
   const [entregaPrevista, setEntregaPrevista] = useState<string | null>(null);
   const [npsRespondido, setNpsRespondido] = useState(false);
@@ -83,7 +85,7 @@ export default function PortalCliente() {
     setLoading(true);
     setError(null);
     try {
-      const [{ data: c, error: cErr }, { data: l }, { data: chs }, { data: ents }] =
+      const [{ data: c, error: cErr }, { data: l }, { data: chs }, { data: ents }, { data: orcs }, { data: trs }] =
         await Promise.all([
           portalClient
             .from("contratos")
@@ -105,6 +107,15 @@ export default function PortalCliente() {
             .not("data_prevista", "is", null)
             .order("data_prevista", { ascending: true })
             .limit(1),
+          portalClient
+            .from("orcamentos")
+            .select("id, nome, status, valor_negociado, total_pedido, created_at")
+            .order("created_at", { ascending: false }),
+          portalClient
+            .from("transacoes")
+            .select("id, descricao, valor, data_vencimento, data_pagamento, status, tipo")
+            .eq("tipo", "receita")
+            .order("data_vencimento", { ascending: true }),
         ]);
 
       if (cErr || !c) {
@@ -114,12 +125,28 @@ export default function PortalCliente() {
 
       setContrato(c);
       setLogs(l ?? []);
+      setOrcamentos(orcs ?? []);
+      setParcelas(trs ?? []);
       setNpsRespondido((chs ?? []).length > 0);
       setEntregaPrevista((ents?.[0] as any)?.data_prevista ?? null);
     } catch (e: any) {
       setError(e.message ?? "Erro ao carregar");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleOrcamentoStatus(orcId: string, novoStatus: "aprovado" | "recusado") {
+    try {
+      const { error } = await portalClient
+        .from("orcamentos")
+        .update({ status: novoStatus })
+        .eq("id", orcId);
+      if (error) throw error;
+      toast.success(novoStatus === "aprovado" ? "Orçamento aprovado!" : "Orçamento recusado");
+      load();
+    } catch (e: any) {
+      toast.error(e.message ?? "Não foi possível atualizar");
     }
   }
 
@@ -372,6 +399,91 @@ export default function PortalCliente() {
           </dl>
         </section>
 
+        {/* 4.5 Orçamentos do cliente */}
+        {orcamentos.length > 0 && (
+          <section
+            className="portal-card bg-white rounded-xl mx-auto w-full"
+            style={{ maxWidth: 680, border: "0.5px solid #E8ECF2", padding: 24 }}
+          >
+            <h2 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117", marginBottom: 16 }}>
+              Orçamentos
+            </h2>
+            <div className="space-y-3">
+              {orcamentos.map((o) => {
+                const valor = Number(o.valor_negociado || o.total_pedido || 0);
+                const status = (o.status as string) || "rascunho";
+                const sMap: Record<string, { label: string; bg: string; fg: string }> = {
+                  rascunho: { label: "Rascunho", bg: "#E8ECF2", fg: "#6B7A90" },
+                  enviado: { label: "Enviado", bg: "#E6F3FF", fg: "#1E6FBF" },
+                  aprovado: { label: "Aprovado", bg: "#D1FAE5", fg: "#05873C" },
+                  recusado: { label: "Recusado", bg: "#FDECEA", fg: "#E53935" },
+                };
+                const s = sMap[status] ?? sMap.rascunho;
+                const podeAcao = status === "enviado";
+                return (
+                  <div
+                    key={o.id}
+                    className="rounded-lg flex items-center justify-between gap-3 flex-wrap"
+                    style={{ border: "1px solid #E8ECF2", padding: 16 }}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div style={{ fontSize: 14, fontWeight: 500, color: "#0D1117" }}>
+                        {o.nome || "Orçamento"}
+                      </div>
+                      <div style={{ fontSize: 13, color: "#6B7A90", marginTop: 2 }}>
+                        {valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                      </div>
+                    </div>
+                    <span
+                      className="rounded-full"
+                      style={{
+                        padding: "4px 12px",
+                        fontSize: 12,
+                        fontWeight: 500,
+                        backgroundColor: s.bg,
+                        color: s.fg,
+                      }}
+                    >
+                      {s.label}
+                    </span>
+                    {podeAcao && (
+                      <div className="flex gap-2 w-full sm:w-auto">
+                        <button
+                          onClick={() => handleOrcamentoStatus(o.id, "aprovado")}
+                          className="rounded-md flex-1 sm:flex-none"
+                          style={{
+                            backgroundColor: "#12B76A",
+                            color: "#fff",
+                            fontSize: 13,
+                            fontWeight: 500,
+                            padding: "8px 14px",
+                          }}
+                        >
+                          ✅ Aprovar
+                        </button>
+                        <button
+                          onClick={() => handleOrcamentoStatus(o.id, "recusado")}
+                          className="rounded-md flex-1 sm:flex-none"
+                          style={{
+                            backgroundColor: "#fff",
+                            color: "#E53935",
+                            border: "1px solid #E53935",
+                            fontSize: 13,
+                            fontWeight: 500,
+                            padding: "8px 14px",
+                          }}
+                        >
+                          ❌ Recusar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         {/* 5. Timeline de atividades — eventos públicos */}
         <section
           className="portal-card bg-white rounded-xl mx-auto w-full"
@@ -425,6 +537,77 @@ export default function PortalCliente() {
             );
           })()}
         </section>
+
+        {/* 5.5 Pagamentos / parcelas */}
+        {parcelas.length > 0 && (() => {
+          const today = new Date(); today.setHours(0,0,0,0);
+          const totalPago = parcelas
+            .filter((p) => p.status === "pago")
+            .reduce((s, p) => s + Number(p.valor || 0), 0);
+          const totalAberto = parcelas
+            .filter((p) => p.status !== "pago" && p.status !== "cancelado")
+            .reduce((s, p) => s + Number(p.valor || 0), 0);
+          const fmtBRL = (n: number) =>
+            n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+          return (
+            <section
+              className="portal-card bg-white rounded-xl mx-auto w-full"
+              style={{ maxWidth: 680, border: "0.5px solid #E8ECF2", padding: 24 }}
+            >
+              <h2 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117", marginBottom: 16 }}>
+                Pagamentos
+              </h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid #E8ECF2" }}>
+                      <th className="text-left py-2" style={{ fontSize: 12, color: "#6B7A90", fontWeight: 500 }}>Nº</th>
+                      <th className="text-left py-2" style={{ fontSize: 12, color: "#6B7A90", fontWeight: 500 }}>Vencimento</th>
+                      <th className="text-right py-2" style={{ fontSize: 12, color: "#6B7A90", fontWeight: 500 }}>Valor</th>
+                      <th className="text-right py-2" style={{ fontSize: 12, color: "#6B7A90", fontWeight: 500 }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parcelas.map((p, i) => {
+                      const venc = p.data_vencimento ? new Date(p.data_vencimento) : null;
+                      const isPago = p.status === "pago";
+                      const isAtrasado = !isPago && venc && venc < today;
+                      const label = isPago ? "Pago ✅" : isAtrasado ? "Atrasado 🔴" : "Pendente ⏳";
+                      const color = isPago ? "#05873C" : isAtrasado ? "#E53935" : "#E8A020";
+                      return (
+                        <tr key={p.id} style={{ borderBottom: "1px solid #F1F4F8" }}>
+                          <td className="py-3" style={{ fontSize: 13, color: "#0D1117" }}>{i + 1}</td>
+                          <td className="py-3" style={{ fontSize: 13, color: "#0D1117" }}>
+                            {venc ? venc.toLocaleDateString("pt-BR") : "—"}
+                          </td>
+                          <td className="py-3 text-right tabular-nums" style={{ fontSize: 13, color: "#0D1117", fontWeight: 500 }}>
+                            {fmtBRL(Number(p.valor || 0))}
+                          </td>
+                          <td className="py-3 text-right" style={{ fontSize: 13, color, fontWeight: 500 }}>
+                            {label}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              <div
+                className="flex items-center justify-between mt-4 pt-4"
+                style={{ borderTop: "1px solid #E8ECF2", flexWrap: "wrap", gap: 12 }}
+              >
+                <div>
+                  <div style={{ fontSize: 12, color: "#6B7A90" }}>Total pago</div>
+                  <div style={{ fontSize: 16, fontWeight: 500, color: "#05873C" }}>{fmtBRL(totalPago)}</div>
+                </div>
+                <div className="text-right">
+                  <div style={{ fontSize: 12, color: "#6B7A90" }}>Total em aberto</div>
+                  <div style={{ fontSize: 16, fontWeight: 500, color: "#E8A020" }}>{fmtBRL(totalAberto)}</div>
+                </div>
+              </div>
+            </section>
+          );
+        })()}
 
         {/* 6. NPS — coleta pública (somente pos_venda ou finalizado) */}
         {(contrato.status === "pos_venda" || contrato.status === "finalizado") && (

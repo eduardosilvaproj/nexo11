@@ -1363,6 +1363,71 @@ export type Database = {
           },
         ]
       }
+      portal_acessos: {
+        Row: {
+          cliente_id: string
+          codigo: string
+          contrato_id: string | null
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          loja_id: string
+          token: string
+        }
+        Insert: {
+          cliente_id: string
+          codigo: string
+          contrato_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          loja_id: string
+          token?: string
+        }
+        Update: {
+          cliente_id?: string
+          codigo?: string
+          contrato_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          loja_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portal_acessos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_acessos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_acessos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portal_acessos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portal_tokens: {
         Row: {
           contrato_id: string
@@ -1999,6 +2064,7 @@ export type Database = {
         Returns: Json
       }
       portal_token_contrato_id: { Args: never; Returns: string }
+      portal_validar_codigo: { Args: { _codigo: string }; Returns: Json }
       realtime_canal_contrato_permitido: {
         Args: { _topic: string }
         Returns: boolean
