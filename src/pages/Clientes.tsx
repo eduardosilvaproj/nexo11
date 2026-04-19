@@ -54,34 +54,23 @@ export default function Clientes() {
     const contratosAtivos: Record<string, number> = {};
 
     if (ids.length > 0) {
-      const { data: orcs } = await supabase
-        .from("orcamentos")
-        .select("cliente_id,contrato_id")
-        .in("cliente_id", ids);
+      const [{ data: orcs }, { data: contratos }] = await Promise.all([
+        supabase.from("orcamentos").select("cliente_id").in("cliente_id", ids),
+        supabase
+          .from("contratos")
+          .select("cliente_id,status")
+          .in("cliente_id", ids)
+          .neq("status", "finalizado"),
+      ]);
 
       (orcs ?? []).forEach((o) => {
         if (o.cliente_id) orcCounts[o.cliente_id] = (orcCounts[o.cliente_id] ?? 0) + 1;
       });
 
-      const contratoIds = Array.from(new Set((orcs ?? []).map((o) => o.contrato_id).filter(Boolean) as string[]));
-      if (contratoIds.length > 0) {
-        const { data: contratos } = await supabase
-          .from("contratos")
-          .select("id,status")
-          .in("id", contratoIds);
-        const ativosSet = new Set(
-          (contratos ?? []).filter((c) => c.status !== "finalizado").map((c) => c.id),
-        );
-        (orcs ?? []).forEach((o) => {
-          if (o.cliente_id && o.contrato_id && ativosSet.has(o.contrato_id)) {
-            const key = `${o.cliente_id}::${o.contrato_id}`;
-            if (!(key in contratosAtivos)) {
-              contratosAtivos[o.cliente_id] = (contratosAtivos[o.cliente_id] ?? 0) + 1;
-              (contratosAtivos as any)[key] = 1;
-            }
-          }
-        });
-      }
+      (contratos ?? []).forEach((c) => {
+        if (c.cliente_id)
+          contratosAtivos[c.cliente_id] = (contratosAtivos[c.cliente_id] ?? 0) + 1;
+      });
     }
 
     setClientes(
