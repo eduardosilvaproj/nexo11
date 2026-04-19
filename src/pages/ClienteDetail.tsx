@@ -282,9 +282,6 @@ export default function ClienteDetail() {
           >
             <Pencil className="mr-2 h-4 w-4" /> Editar cliente
           </Button>
-          <Button onClick={() => setImportOpen(true)} style={{ backgroundColor: "#1E6FBF" }}>
-            <Plus className="mr-2 h-4 w-4" /> Novo orçamento
-          </Button>
         </div>
       </div>
 
