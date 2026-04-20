@@ -12,6 +12,8 @@ const BodySchema = z.object({
   email: z.string().trim().email().max(255),
   role: z.enum(["vendedor", "tecnico", "montador", "gerente", "admin"]),
   equipe_id: z.string().uuid().optional().nullable(),
+  papel_comissao_id: z.string().uuid().optional().nullable(),
+  comissao_percentual: z.number().min(0).max(100).optional().nullable(),
 });
 
 app.post("/equipe-invite-member", async (c) => {
@@ -64,7 +66,7 @@ app.post("/equipe-invite-member", async (c) => {
       },
     );
   }
-  const { nome, email, role, equipe_id } = parsed.data;
+  const { nome, email, role, equipe_id, papel_comissao_id, comissao_percentual } = parsed.data;
 
   // Authorization: caller must be admin or gerente
   const [{ data: isAdmin }, { data: isGerente }] = await Promise.all([
@@ -149,12 +151,25 @@ app.post("/equipe-invite-member", async (c) => {
     );
   }
 
+  // Validate papel_comissao belongs to caller's loja (defensive)
+  let safePapelId: string | null = null;
+  if (papel_comissao_id) {
+    const { data: papel } = await admin
+      .from("papeis_comissao")
+      .select("id, loja_id")
+      .eq("id", papel_comissao_id)
+      .maybeSingle();
+    if (papel && papel.loja_id === lojaId) safePapelId = papel.id;
+  }
+
   // Upsert usuarios row scoped to caller's loja
   const { error: upsertErr } = await admin.from("usuarios").upsert({
     id: userId,
     nome,
     email,
     loja_id: lojaId,
+    papel_comissao_id: safePapelId,
+    comissao_percentual: comissao_percentual ?? null,
   }, { onConflict: "id" });
   if (upsertErr) {
     return new Response(JSON.stringify({ error: upsertErr.message }), {
