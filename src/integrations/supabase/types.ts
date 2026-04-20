@@ -2152,27 +2152,33 @@ export type Database = {
       }
       usuarios: {
         Row: {
+          comissao_percentual: number | null
           created_at: string
           email: string | null
           id: string
           loja_id: string | null
           nome: string
+          papel_comissao_id: string | null
           updated_at: string
         }
         Insert: {
+          comissao_percentual?: number | null
           created_at?: string
           email?: string | null
           id: string
           loja_id?: string | null
           nome: string
+          papel_comissao_id?: string | null
           updated_at?: string
         }
         Update: {
+          comissao_percentual?: number | null
           created_at?: string
           email?: string | null
           id?: string
           loja_id?: string | null
           nome?: string
+          papel_comissao_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -2181,6 +2187,13 @@ export type Database = {
             columns: ["loja_id"]
             isOneToOne: false
             referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuarios_papel_comissao_id_fkey"
+            columns: ["papel_comissao_id"]
+            isOneToOne: false
+            referencedRelation: "papeis_comissao"
             referencedColumns: ["id"]
           },
         ]
