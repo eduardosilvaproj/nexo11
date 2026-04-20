@@ -9,8 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ComissoesRelatorioTab, REGRA_PADRAO, type RegraComissao } from "@/components/comissoes/ComissoesRelatorioTab";
-import { ComissoesRegrasTab } from "@/components/comissoes/ComissoesRegrasTab";
-import { RegraEditDialog } from "@/components/comissoes/RegraEditDialog";
+import { PapeisTab } from "@/components/comissoes/PapeisTab";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
