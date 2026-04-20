@@ -30,6 +30,7 @@ interface Pedido {
   tipo?: string | null;
   situacao?: string | null;
   vinculo_status?: string;
+  cliente_nome?: string | null;
   contratos?: { cliente_nome?: string } | null;
   fornecedores?: { nome?: string } | null;
 }
@@ -134,7 +135,7 @@ export function TerceirizadaTab() {
       };
       const { data, error } = await sb
         .from("producao_terceirizada")
-        .select("id, numero_pedido, oc, contrato_id, fornecedor_id, data_prevista, transportadora, status, importado_em, tipo_entrada, tipo, situacao, vinculo_status, contratos:contrato_id(cliente_nome), fornecedores:fornecedor_id(nome)")
+        .select("id, numero_pedido, oc, contrato_id, fornecedor_id, data_prevista, transportadora, status, importado_em, tipo_entrada, tipo, situacao, vinculo_status, cliente_nome, contratos:contrato_id(cliente_nome), fornecedores:fornecedor_id(nome)")
         .order("data_prevista", { ascending: true });
       if (error) throw error;
       return data ?? [];
@@ -222,7 +223,7 @@ export function TerceirizadaTab() {
         <table className="w-full">
           <thead style={{ backgroundColor: "#F7F9FC" }}>
             <tr>
-              {["Nº pedido", "OC / Cliente", "Tipo", "Situação", "Data prevista", "Dias restantes", "Vínculo", "Status", "Ações"].map((h) => (
+              {["Nº pedido", "OC / Cliente", "Cliente", "Tipo", "Situação", "Data prevista", "Dias restantes", "Vínculo", "Status", "Ações"].map((h) => (
                 <th key={h} className="px-4 py-3 text-left" style={{ fontSize: 11, color: "#6B7A90", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   {h}
                 </th>
@@ -231,10 +232,10 @@ export function TerceirizadaTab() {
           </thead>
           <tbody>
             {isLoading && (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-sm text-muted-foreground">Carregando...</td></tr>
+              <tr><td colSpan={10} className="px-4 py-8 text-center text-sm text-muted-foreground">Carregando...</td></tr>
             )}
             {!isLoading && filtered.length === 0 && (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-sm text-muted-foreground">
+              <tr><td colSpan={10} className="px-4 py-8 text-center text-sm text-muted-foreground">
                 Nenhum pedido cadastrado. Use "+ Novo Pedido" para começar.
               </td></tr>
             )}
@@ -247,7 +248,8 @@ export function TerceirizadaTab() {
               return (
                 <tr key={p.id} style={{ borderTop: "0.5px solid #E8ECF2", backgroundColor: isPendente ? "#FFFBEB" : undefined }}>
                   <td className="px-4 py-3 text-sm font-medium">#{p.numero_pedido}</td>
-                  <td className="px-4 py-3 text-sm">{p.contratos?.cliente_nome ?? p.oc ?? "—"}</td>
+                  <td className="px-4 py-3 text-sm">{p.oc ?? "—"}</td>
+                  <td className="px-4 py-3 text-sm">{p.cliente_nome ?? p.contratos?.cliente_nome ?? "—"}</td>
                   <td className="px-4 py-3">
                     {tipoUp === "V" ? (
                       <span className="inline-flex items-center rounded-full px-2 py-0.5" style={{ backgroundColor: "#E6F3FF", color: "#1E6FBF", fontSize: 11, fontWeight: 500 }}>Venda</span>
