@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ContratoMedicaoAmbientesSection } from "./ContratoMedicaoAmbientesSection";
+import { ConferenciaAmbientesSection } from "./ConferenciaAmbientesSection";
 
 interface TecnicoTabProps {
   contratoId: string;
@@ -412,6 +413,9 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
         canEdit={canEdit}
         funcao="conferente"
       />
+
+      {/* Seção — Conferência via XML (variação, itens extras, liberar produção) */}
+      <ConferenciaAmbientesSection contratoId={contratoId} />
 
       {/* CARD 1 — Medição fina */}
       <Card
