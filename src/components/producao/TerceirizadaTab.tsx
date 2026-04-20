@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, AlertTriangle, Link2 } from "lucide-react";
+import { Plus, AlertTriangle, Link2, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { NovoPedidoTerceirizadoDialog } from "@/components/producao/NovoPedidoTerceirizadoDialog";
 import { VincularPedidoDialog } from "@/components/producao/VincularPedidoDialog";
+import { ImportFabricanteXlsDialog } from "@/components/producao/ImportFabricanteXlsDialog";
 import { useAuth } from "@/contexts/AuthContext";
 
 type StatusT = "aguardando_fabricacao" | "em_producao" | "pronto_retirada" | "atrasado";
@@ -64,6 +65,7 @@ export function TerceirizadaTab() {
   const lojaId = perfil?.loja_id ?? null;
   const podeCriar = hasRole("admin") || hasRole("gerente") || hasRole("tecnico");
   const [novoOpen, setNovoOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [vincularId, setVincularId] = useState<string | null>(null);
   const [filtroFornecedor, setFiltroFornecedor] = useState<string>(ALL);
 
@@ -143,9 +145,14 @@ export function TerceirizadaTab() {
       <div className="mb-6 flex items-center justify-between">
         <h2 style={{ fontSize: 16, fontWeight: 600, color: "#0D1117" }}>Pedidos no fabricante</h2>
         {podeCriar && (
-          <Button onClick={() => setNovoOpen(true)} style={{ backgroundColor: "#1E6FBF", color: "#fff" }}>
-            <Plus className="mr-2 h-4 w-4" /> Novo Pedido
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setImportOpen(true)}>
+              <FileSpreadsheet className="mr-2 h-4 w-4" /> Importar XLSX do Fabricante
+            </Button>
+            <Button onClick={() => setNovoOpen(true)} style={{ backgroundColor: "#1E6FBF", color: "#fff" }}>
+              <Plus className="mr-2 h-4 w-4" /> Novo Pedido
+            </Button>
+          </div>
         )}
       </div>
 
