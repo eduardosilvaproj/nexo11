@@ -366,6 +366,56 @@ export default function Comissoes() {
           <PapeisTab lojaId={lojaId} podeEditar={podeEditarRegra} />
         </TabsContent>
       </Tabs>
+
+      <Dialog open={debugAberto} onOpenChange={setDebugAberto}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Detalhes do recálculo</DialogTitle>
+          </DialogHeader>
+          {debugData && (
+            <div className="space-y-4">
+              <p className="text-sm">
+                <span className="font-medium">{debugData.totalComissoes}</span> comissões criadas para{" "}
+                <span className="font-medium">{debugData.totalMembros}</span> membros em{" "}
+                <span className="font-medium">{debugData.totalContratos}</span> contratos.
+              </p>
+              {debugData.porMembro.length > 0 ? (
+                <div className="overflow-hidden rounded-md border" style={{ borderColor: "#E8ECF2" }}>
+                  <table className="w-full text-sm">
+                    <thead style={{ background: "#F5F7FA", color: "#6B7A90" }}>
+                      <tr>
+                        <th className="px-3 py-2 text-left font-medium">Membro</th>
+                        <th className="px-3 py-2 text-left font-medium">Papel</th>
+                        <th className="px-3 py-2 text-right font-medium">Contratos</th>
+                        <th className="px-3 py-2 text-right font-medium">Valor total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y" style={{ borderColor: "#E8ECF2" }}>
+                      {debugData.porMembro.map((m, i) => (
+                        <tr key={i}>
+                          <td className="px-3 py-2">{m.nome}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{m.papel}</td>
+                          <td className="px-3 py-2 text-right tabular-nums">{m.contratos}</td>
+                          <td className="px-3 py-2 text-right tabular-nums font-medium">
+                            {fmtBRL(m.valorTotal)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Nenhuma comissão nova foi gerada — todos os contratos elegíveis já têm comissões para os membros configurados.
+                </p>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setDebugAberto(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
