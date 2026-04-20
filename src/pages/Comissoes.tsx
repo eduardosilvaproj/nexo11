@@ -70,7 +70,7 @@ export default function Comissoes() {
   const mesLabel = opcoes.find((o) => o.value === mes)?.label ?? mes;
   const [regra, setRegra] = useState<RegraComissao>(REGRA_PADRAO);
   const [lojaId, setLojaId] = useState<string | null>(null);
-  const [metricas, setMetricas] = useState({ totalMes: 0, pagas: 0, bonus: 0 });
+  const [metricas, setMetricas] = useState({ totalMes: 0, pagas: 0, pendentes: 0 });
   const [recalculando, setRecalculando] = useState(false);
   const [debugAberto, setDebugAberto] = useState(false);
   const [debugData, setDebugData] = useState<{
@@ -275,19 +275,20 @@ export default function Comissoes() {
       const fimStr = `${fim.getFullYear()}-${String(fim.getMonth() + 1).padStart(2, "0")}-${String(fim.getDate()).padStart(2, "0")}`;
       const { data } = await supabase
         .from("comissoes")
-        .select("valor, status, gatilho, data_gatilho")
+        .select("valor, status, data_gatilho")
         .eq("loja_id", lojaId)
         .gte("data_gatilho", `${mes}T00:00:00`)
-        .lte("data_gatilho", `${fimStr}T23:59:59`);
+        .lte("data_gatilho", `${fimStr}T23:59:59`)
+        .in("status", ["pendente", "liberada", "paga"]);
       const rows = data ?? [];
       const totalMes = rows.reduce((s, r) => s + Number(r.valor ?? 0), 0);
       const pagas = rows
         .filter((r) => r.status === "paga")
         .reduce((s, r) => s + Number(r.valor ?? 0), 0);
-      const bonus = rows
-        .filter((r) => (r.gatilho ?? "").includes("bonus"))
+      const pendentes = rows
+        .filter((r) => r.status === "pendente")
         .reduce((s, r) => s + Number(r.valor ?? 0), 0);
-      setMetricas({ totalMes, pagas, bonus });
+      setMetricas({ totalMes, pagas, pendentes });
     })();
   }, [mes, lojaId]);
 
@@ -330,7 +331,7 @@ export default function Comissoes() {
       <div className="grid gap-4 md:grid-cols-3">
         <MetricCard label="Total a pagar (mês)" valor={metricas.totalMes - metricas.pagas} cor="#1E6FBF" />
         <MetricCard label="Comissões pagas" valor={metricas.pagas} cor="#12B76A" />
-        <MetricCard label="Bônus por margem" valor={metricas.bonus} cor="#E8A020" />
+        <MetricCard label="Comissões pendentes" valor={metricas.pendentes} cor="#E8A020" />
       </div>
 
       <Tabs defaultValue="relatorio">
