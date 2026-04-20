@@ -16,6 +16,7 @@ interface Props {
 
 interface ParsedRow {
   cliente: string;
+  clienteBase: string; // nome antes do primeiro "-"
   numeroPedido: string;
   oc: string;
   dataPrevista: string;
@@ -24,6 +25,24 @@ interface ParsedRow {
   clienteMatch?: boolean;
   contratoMatch?: boolean;
 }
+
+interface GroupedPedido {
+  clienteBase: string;
+  clienteOriginal: string;
+  ocs: string[]; // ambientes
+  numeroPedido: string;
+  dataPrevista: string; // menor data
+  status: string;
+  contratoId?: string | null;
+  clienteMatch: boolean;
+  contratoMatch: boolean;
+}
+
+const extractClienteBase = (raw: string): string => {
+  const s = (raw || "").toString().trim();
+  const idx = s.indexOf("-");
+  return (idx > 0 ? s.slice(0, idx) : s).trim();
+};
 
 const MAX_SIZE = 10 * 1024 * 1024;
 
