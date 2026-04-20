@@ -1,10 +1,14 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, AlertTriangle, Link2, FileSpreadsheet } from "lucide-react";
+import { Plus, AlertTriangle, Link2, FileSpreadsheet, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { NovoPedidoTerceirizadoDialog } from "@/components/producao/NovoPedidoTerceirizadoDialog";
 import { VincularPedidoDialog } from "@/components/producao/VincularPedidoDialog";
 import { ImportFabricanteXlsDialog } from "@/components/producao/ImportFabricanteXlsDialog";
@@ -57,6 +61,46 @@ function diasRestantes(data: string | null) {
   if (diff < 3) return { texto: `${diff}d`, color: "#E53935", warn: true };
   if (diff <= 7) return { texto: `${diff}d`, color: "#E8A020", warn: false };
   return { texto: `${diff}d`, color: "#12B76A", warn: false };
+}
+
+function DataPrevistaCell({ pedido, onSaved }: { pedido: Pedido; onSaved: () => void }) {
+  const [open, setOpen] = useState(false);
+  const value = pedido.data_prevista ? new Date(pedido.data_prevista + "T00:00:00") : undefined;
+
+  const handleSelect = async (date: Date | undefined) => {
+    if (!date) return;
+    const iso = format(date, "yyyy-MM-dd");
+    const sb = supabase as unknown as {
+      from: (t: string) => { update: (u: unknown) => { eq: (c: string, v: string) => Promise<{ error: Error | null }> } };
+    };
+    const { error } = await sb.from("producao_terceirizada").update({ data_prevista: iso }).eq("id", pedido.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Data atualizada");
+    setOpen(false);
+    onSaved();
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className="text-sm hover:underline focus:outline-none"
+          style={{ color: pedido.data_prevista ? "#0D1117" : "#6B7A90" }}
+        >
+          {pedido.data_prevista ? new Date(pedido.data_prevista + "T00:00:00").toLocaleDateString("pt-BR") : "Definir data"}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={value}
+          onSelect={handleSelect}
+          initialFocus
+          className={cn("p-3 pointer-events-auto")}
+        />
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 export function TerceirizadaTab() {
@@ -176,7 +220,7 @@ export function TerceirizadaTab() {
         <table className="w-full">
           <thead style={{ backgroundColor: "#F7F9FC" }}>
             <tr>
-              {["Nº pedido", "OC / Cliente", "Fornecedor", "Contrato", "Data prevista", "Dias restantes", "Vínculo", "Status", "Ações"].map((h) => (
+              {["Nº pedido", "OC / Cliente", "Data prevista", "Dias restantes", "Vínculo", "Status", "Ações"].map((h) => (
                 <th key={h} className="px-4 py-3 text-left" style={{ fontSize: 11, color: "#6B7A90", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   {h}
                 </th>
@@ -185,10 +229,10 @@ export function TerceirizadaTab() {
           </thead>
           <tbody>
             {isLoading && (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-sm text-muted-foreground">Carregando...</td></tr>
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">Carregando...</td></tr>
             )}
             {!isLoading && filtered.length === 0 && (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-sm text-muted-foreground">
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">
                 Nenhum pedido cadastrado. Use "+ Novo Pedido" para começar.
               </td></tr>
             )}
@@ -200,9 +244,9 @@ export function TerceirizadaTab() {
                 <tr key={p.id} style={{ borderTop: "0.5px solid #E8ECF2", backgroundColor: isPendente ? "#FFFBEB" : undefined }}>
                   <td className="px-4 py-3 text-sm font-medium">#{p.numero_pedido}</td>
                   <td className="px-4 py-3 text-sm">{p.contratos?.cliente_nome ?? p.oc ?? "—"}</td>
-                  <td className="px-4 py-3 text-sm">{p.fornecedores?.nome ?? "—"}</td>
-                  <td className="px-4 py-3 text-sm">{p.contrato_id ? `#${p.contrato_id.slice(0, 4)}` : "—"}</td>
-                  <td className="px-4 py-3 text-sm">{p.data_prevista ? new Date(p.data_prevista).toLocaleDateString("pt-BR") : "—"}</td>
+                  <td className="px-4 py-3">
+                    <DataPrevistaCell pedido={p} onSaved={() => qc.invalidateQueries({ queryKey: ["producao-terceirizada"] })} />
+                  </td>
                   <td className="px-4 py-3">
                     {dr ? (
                       <span className="inline-flex items-center gap-1" style={{ fontSize: 12, fontWeight: 500, color: dr.color }}>
