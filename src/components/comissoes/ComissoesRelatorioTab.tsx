@@ -132,15 +132,17 @@ export function ComissoesRelatorioTab({
       if (contratoIds.length) {
         const { data: comExistentes } = await supabase
           .from("comissoes")
-          .select("vendedor_id, pago")
+          .select("usuario_id, status, gatilho")
           .in("contrato_id", contratoIds);
         const porVend: Record<string, { total: number; pagos: number }> = {};
-        (comExistentes ?? []).forEach((c) => {
-          const v = c.vendedor_id as string;
-          if (!porVend[v]) porVend[v] = { total: 0, pagos: 0 };
-          porVend[v].total++;
-          if (c.pago) porVend[v].pagos++;
-        });
+        (comExistentes ?? [])
+          .filter((c) => (c.gatilho ?? "") === "vendedor_legado")
+          .forEach((c) => {
+            const v = c.usuario_id as string;
+            if (!porVend[v]) porVend[v] = { total: 0, pagos: 0 };
+            porVend[v].total++;
+            if (c.status === "paga") porVend[v].pagos++;
+          });
         Object.entries(porVend).forEach(([v, s]) => {
           if (s.total > 0 && s.pagos === s.total) pagosVend.add(v);
         });
@@ -239,27 +241,79 @@ export function ComissoesRelatorioTab({
         .select("id, valor_venda, margem_realizada")
         .in("id", alvo.contrato_ids);
 
-      const linhasUpsert = (contratosAlvo ?? []).map((c) => {
+      // Garantir um papel "vendedor" para a loja (legado)
+      let papelId: string | null = null;
+      const { data: papel } = await supabase
+        .from("papeis_comissao")
+        .select("id")
+        .eq("loja_id", lojaId!)
+        .eq("tipo", "vendedor")
+        .eq("ativo", true)
+        .maybeSingle();
+      papelId = papel?.id ?? null;
+      if (!papelId) {
+        const { data: novo } = await supabase
+          .from("papeis_comissao")
+          .insert({
+            loja_id: lojaId!,
+            nome: "Vendedor",
+            tipo: "vendedor",
+            percentual_padrao: regra.percentual_base * 100,
+            regra_pagamento: "contrato_assinado",
+          })
+          .select("id")
+          .single();
+        papelId = novo?.id ?? null;
+      }
+      if (!papelId) throw new Error("Não foi possível resolver papel de comissão");
+
+      const linhasInsert = (contratosAlvo ?? []).flatMap((c) => {
         const valor = Number(c.valor_venda ?? 0);
         const margem = Number(c.margem_realizada ?? 0);
         const base = valor * fatorBase;
         const bonus = margem >= margemMin ? valor * fatorBonus : 0;
-        return {
-          contrato_id: c.id as string,
-          loja_id: lojaId!,
-          vendedor_id: alvo.vendedor_id,
-          valor_base: base,
-          valor_bonus: bonus,
-          margem_realizada_pct: margem,
-          pago: true,
-          data_pagamento: dataPagamento,
-        };
+        const linhas = [
+          {
+            contrato_id: c.id as string,
+            loja_id: lojaId!,
+            usuario_id: alvo.vendedor_id,
+            papel_id: papelId!,
+            base_calculo: valor,
+            percentual: fatorBase * 100,
+            valor: base,
+            status: "paga",
+            gatilho: "vendedor_legado",
+            data_gatilho: new Date().toISOString(),
+            data_pagamento: dataPagamento,
+          },
+        ];
+        if (bonus > 0) {
+          linhas.push({
+            contrato_id: c.id as string,
+            loja_id: lojaId!,
+            usuario_id: alvo.vendedor_id,
+            papel_id: papelId!,
+            base_calculo: valor,
+            percentual: fatorBonus * 100,
+            valor: bonus,
+            status: "paga",
+            gatilho: "vendedor_legado_bonus",
+            data_gatilho: new Date().toISOString(),
+            data_pagamento: dataPagamento,
+          });
+        }
+        return linhas;
       });
 
-      if (linhasUpsert.length) {
-        const { error } = await supabase
+      if (linhasInsert.length) {
+        // remove existentes legados para o vendedor nesses contratos
+        await supabase
           .from("comissoes")
-          .upsert(linhasUpsert, { onConflict: "contrato_id" });
+          .delete()
+          .in("contrato_id", alvo.contrato_ids)
+          .eq("usuario_id", alvo.vendedor_id)
+          .in("gatilho", ["vendedor_legado", "vendedor_legado_bonus"]);
+        const { error } = await supabase.from("comissoes").insert(linhasInsert);
         if (error) throw error;
       }
 
