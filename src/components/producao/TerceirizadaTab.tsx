@@ -134,7 +134,7 @@ export function TerceirizadaTab() {
       };
       const { data, error } = await sb
         .from("producao_terceirizada")
-        .select("id, numero_pedido, oc, contrato_id, fornecedor_id, data_prevista, transportadora, status, importado_em, tipo_entrada, vinculo_status, contratos:contrato_id(cliente_nome), fornecedores:fornecedor_id(nome)")
+        .select("id, numero_pedido, oc, contrato_id, fornecedor_id, data_prevista, transportadora, status, importado_em, tipo_entrada, tipo, situacao, vinculo_status, contratos:contrato_id(cliente_nome), fornecedores:fornecedor_id(nome)")
         .order("data_prevista", { ascending: true });
       if (error) throw error;
       return data ?? [];
