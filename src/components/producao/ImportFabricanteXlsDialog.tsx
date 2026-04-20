@@ -81,19 +81,20 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
   const qc = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [rows, setRows] = useState<ParsedRow[]>([]);
+  const [grouped, setGrouped] = useState<GroupedPedido[]>([]);
   const [parsing, setParsing] = useState(false);
   const [importing, setImporting] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [result, setResult] = useState<{ vinculados: number; pendentes: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const reset = () => { setFile(null); setRows([]); setResult(null); setDragOver(false); };
+  const reset = () => { setFile(null); setRows([]); setGrouped([]); setResult(null); setDragOver(false); };
   useEffect(() => { if (!open) reset(); }, [open]);
 
   const handleFile = async (f: File) => {
     if (f.size > MAX_SIZE) return toast.error("Arquivo maior que 10MB");
     if (!/\.(xlsx?|XLSX?)$/.test(f.name)) return toast.error("Use .xls ou .xlsx");
-    setFile(f); setParsing(true); setResult(null);
+    setFile(f); setParsing(true); setResult(null); setGrouped([]);
     try {
       const buf = await f.arrayBuffer();
       const wb = XLSX.read(buf, { type: "array", cellDates: false });
@@ -109,23 +110,24 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
         }
       }
       const headers = (json[headerIdx] as unknown[]).map((c) => String(c));
-      const iCliente = findCol(headers, ["cliente", "razao", "nome"]);
+      const iCliente = findCol(headers, ["nome cliente", "cliente", "razao", "nome"]);
       const iPedido = findCol(headers, ["pedido", "numero pedido", "nº pedido"]);
       const iOC = findCol(headers, ["oc", "ordem compra"]);
-      const iData = findCol(headers, ["previsao", "previsão", "data prevista", "entrega"]);
+      const iData = findCol(headers, ["data prog", "previsao", "previsão", "data prevista", "entrega"]);
       const iStatus = findCol(headers, ["status", "situacao", "situação"]);
 
-      if (iCliente < 0 && iOC < 0) throw new Error("Não encontrei colunas de Cliente ou OC");
+      if (iCliente < 0) throw new Error("Não encontrei a coluna NOME CLIENTE");
 
       const parsed: ParsedRow[] = [];
       for (let i = headerIdx + 1; i < json.length; i++) {
         const r = json[i] as unknown[];
-        const cliente = iCliente >= 0 ? String(r[iCliente] ?? "").trim() : "";
+        const cliente = String(r[iCliente] ?? "").trim();
         const oc = iOC >= 0 ? String(r[iOC] ?? "").trim() : "";
         const dataPrev = iData >= 0 ? excelDateToISO(r[iData]) : "";
         if (!cliente && !oc) continue;
         parsed.push({
           cliente,
+          clienteBase: extractClienteBase(cliente),
           numeroPedido: iPedido >= 0 ? String(r[iPedido] ?? "").trim() : "",
           oc,
           dataPrevista: dataPrev,
@@ -133,7 +135,7 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
         });
       }
 
-      // Cross-match against clientes (by name) and contratos (by OC + cliente)
+      // Cross-match by clienteBase (nome antes do primeiro "-")
       if (lojaId && parsed.length) {
         const [{ data: clientes }, { data: contratos }] = await Promise.all([
           supabase.from("clientes").select("id, nome").eq("loja_id", lojaId),
@@ -141,7 +143,8 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
         ]);
 
         for (const p of parsed) {
-          const cN = normalize(p.cliente);
+          const cN = normalize(p.clienteBase);
+          if (!cN) continue;
           const cli = clientes?.find((c) => {
             const n = normalize(c.nome);
             return n === cN || (cN.length >= 4 && n.includes(cN)) || (n.length >= 4 && cN.includes(n));
@@ -150,37 +153,65 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
 
           const ct = contratos?.find((c) => {
             const n = normalize(c.cliente_nome);
-            return n === cN || (cN.length >= 4 && n.includes(cN));
+            return n === cN || (cN.length >= 4 && n.includes(cN)) || (n.length >= 4 && cN.includes(n));
           });
           if (ct) { p.contratoId = ct.id; p.contratoMatch = true; }
         }
       }
 
+      // Agrupar por clienteBase — todas as OCs do mesmo cliente = 1 pedido com múltiplos ambientes
+      const map = new Map<string, GroupedPedido>();
+      for (const p of parsed) {
+        const key = normalize(p.clienteBase) || `__${p.oc}_${p.numeroPedido}`;
+        const ex = map.get(key);
+        if (ex) {
+          if (p.oc && !ex.ocs.includes(p.oc)) ex.ocs.push(p.oc);
+          if (p.dataPrevista && (!ex.dataPrevista || p.dataPrevista < ex.dataPrevista)) ex.dataPrevista = p.dataPrevista;
+          if (!ex.numeroPedido && p.numeroPedido) ex.numeroPedido = p.numeroPedido;
+          if (!ex.contratoId && p.contratoId) { ex.contratoId = p.contratoId; ex.contratoMatch = true; }
+          if (!ex.clienteMatch && p.clienteMatch) ex.clienteMatch = true;
+        } else {
+          map.set(key, {
+            clienteBase: p.clienteBase,
+            clienteOriginal: p.cliente,
+            ocs: p.oc ? [p.oc] : [],
+            numeroPedido: p.numeroPedido,
+            dataPrevista: p.dataPrevista,
+            status: p.status,
+            contratoId: p.contratoId ?? null,
+            clienteMatch: !!p.clienteMatch,
+            contratoMatch: !!p.contratoMatch,
+          });
+        }
+      }
+
       setRows(parsed);
-      if (!parsed.length) toast.warning("Nenhuma linha válida");
+      setGrouped(Array.from(map.values()));
+      if (!map.size) toast.warning("Nenhuma linha válida");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao ler XLS");
-      setRows([]);
+      setRows([]); setGrouped([]);
     } finally { setParsing(false); }
   };
 
   const handleImport = async () => {
-    if (!lojaId || !rows.length) return;
+    if (!lojaId || !grouped.length) return;
     setImporting(true);
     try {
       let vinculados = 0, pendentes = 0;
       const sb = supabase as unknown as {
         from: (t: string) => { insert: (v: unknown) => Promise<{ error: Error | null }> };
       };
-      for (const p of rows) {
-        const isVinculado = !!p.contratoId;
+      for (const g of grouped) {
+        const isVinculado = !!g.contratoId;
+        const ocsConcat = g.ocs.join(", ");
         const { error } = await sb.from("producao_terceirizada").insert({
           loja_id: lojaId,
           fornecedor_id: fornecedorId,
-          contrato_id: p.contratoId ?? null,
-          numero_pedido: p.numeroPedido || `s/n-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-          oc: p.oc || p.cliente || null,
-          data_prevista: p.dataPrevista || null,
+          contrato_id: g.contratoId ?? null,
+          numero_pedido: g.numeroPedido || `s/n-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          oc: ocsConcat || g.clienteBase || null,
+          data_prevista: g.dataPrevista || null,
           status: "aguardando_fabricacao",
           tipo_entrada: "xml",
           vinculo_status: isVinculado ? "vinculado" : "pendente",
@@ -196,7 +227,7 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
     } finally { setImporting(false); }
   };
 
-  const matchedCount = rows.filter((r) => r.contratoMatch).length;
+  const matchedCount = grouped.filter((r) => r.contratoMatch).length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
