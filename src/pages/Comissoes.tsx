@@ -60,9 +60,7 @@ export default function Comissoes() {
   const [mes, setMes] = useState<string>(opcoes[0].value);
   const mesLabel = opcoes.find((o) => o.value === mes)?.label ?? mes;
   const [regra, setRegra] = useState<RegraComissao>(REGRA_PADRAO);
-  const [regraId, setRegraId] = useState<string | null>(null);
   const [lojaId, setLojaId] = useState<string | null>(null);
-  const [editOpen, setEditOpen] = useState(false);
   const [metricas, setMetricas] = useState({ totalMes: 0, pagas: 0, bonus: 0 });
   const { hasRole } = useAuth();
   const podeEditarRegra = hasRole("admin") || hasRole("franqueador");
@@ -70,7 +68,7 @@ export default function Comissoes() {
   const podeVerRelatorioCompleto =
     hasRole("admin") || hasRole("franqueador") || hasRole("gerente");
 
-  // Carrega loja do usuário e regra ativa
+  // Carrega loja do usuário e regra ativa (legado, usado apenas no relatório)
   useEffect(() => {
     (async () => {
       const { data: userData } = await supabase.auth.getUser();
@@ -86,12 +84,11 @@ export default function Comissoes() {
       if (!lid) return;
       const { data: r } = await supabase
         .from("regras_comissao")
-        .select("id, percentual_base, margem_min_bonus, percentual_bonus, bonus_ativo")
+        .select("percentual_base, margem_min_bonus, percentual_bonus, bonus_ativo")
         .eq("loja_id", lid)
         .eq("ativo", true)
         .maybeSingle();
       if (r) {
-        setRegraId(r.id);
         setRegra({
           percentual_base: Number(r.percentual_base) / 100,
           margem_min_bonus: Number(r.margem_min_bonus),
@@ -125,26 +122,6 @@ export default function Comissoes() {
       setMetricas({ totalMes, pagas, bonus });
     })();
   }, [mes, lojaId]);
-
-  async function handleSaveRegra(nova: RegraComissao) {
-    setRegra(nova);
-    if (!lojaId) return;
-    const payload = {
-      loja_id: lojaId,
-      percentual_base: nova.percentual_base * 100,
-      margem_min_bonus: nova.margem_min_bonus,
-      percentual_bonus: nova.percentual_bonus * 100,
-      bonus_ativo: nova.percentual_bonus > 0,
-      ativo: true,
-    };
-    const { error } = regraId
-      ? await supabase.from("regras_comissao").update(payload).eq("id", regraId)
-      : await supabase.from("regras_comissao").insert(payload).select("id").single().then((r) => {
-          if (r.data) setRegraId(r.data.id);
-          return r;
-        });
-    if (error) toast.error(error.message);
-  }
 
   return (
     <div className="space-y-6 p-6">
