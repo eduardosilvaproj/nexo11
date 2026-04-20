@@ -255,6 +255,8 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
           const { error } = await sb.from("producao_terceirizada").update({
             data_prevista: g.dataPrevista || null,
             oc: ocsConcat || g.clienteBase || null,
+            tipo: g.tipo || null,
+            situacao: g.situacao || null,
           }).eq("id", existenteId);
           if (error) { console.error(error); ignorados++; continue; }
           atualizados++;
@@ -268,6 +270,8 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
             data_prevista: g.dataPrevista || null,
             status: "aguardando_fabricacao",
             tipo_entrada: "xml",
+            tipo: g.tipo || null,
+            situacao: g.situacao || null,
             vinculo_status: g.contratoId ? "vinculado" : "pendente",
           });
           if (error) { console.error(error); ignorados++; continue; }
