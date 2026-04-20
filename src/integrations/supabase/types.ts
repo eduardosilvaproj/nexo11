@@ -84,6 +84,59 @@ export type Database = {
           },
         ]
       }
+      ambiente_itens_extras: {
+        Row: {
+          ambiente_id: string
+          contrato_id: string
+          created_at: string
+          descricao: string
+          id: string
+          loja_id: string
+          observacoes: string | null
+          origem: string
+          quantidade: number
+          status_compra: string
+          unidade: string | null
+          updated_at: string
+        }
+        Insert: {
+          ambiente_id: string
+          contrato_id: string
+          created_at?: string
+          descricao: string
+          id?: string
+          loja_id: string
+          observacoes?: string | null
+          origem?: string
+          quantidade?: number
+          status_compra?: string
+          unidade?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ambiente_id?: string
+          contrato_id?: string
+          created_at?: string
+          descricao?: string
+          id?: string
+          loja_id?: string
+          observacoes?: string | null
+          origem?: string
+          quantidade?: number
+          status_compra?: string
+          unidade?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ambiente_itens_extras_ambiente_id_fkey"
+            columns: ["ambiente_id"]
+            isOneToOne: false
+            referencedRelation: "contrato_ambientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chamados_pos_venda: {
         Row: {
           contrato_id: string
@@ -437,14 +490,24 @@ export type Database = {
       }
       contrato_ambientes: {
         Row: {
+          aprovacao_solicitada_em: string | null
+          aprovacao_solicitada_por: string | null
+          conferencia_aprovada_em: string | null
+          conferencia_aprovada_por: string | null
+          conferencia_status: string
+          conferencia_xml_raw: string | null
           conferente_id: string | null
           contrato_id: string
           created_at: string
+          custo_conferencia: number | null
+          custo_original: number | null
           data_conferencia: string | null
           data_medicao: string | null
           data_montagem: string | null
           desconto_percentual: number
           id: string
+          itens_conferencia_json: Json
+          itens_original_json: Json
           loja_id: string
           medidor_id: string | null
           montador_id: string | null
@@ -462,16 +525,27 @@ export type Database = {
           valor_liquido: number
           valor_medidor: number
           valor_montador: number
+          variacao_pct: number | null
         }
         Insert: {
+          aprovacao_solicitada_em?: string | null
+          aprovacao_solicitada_por?: string | null
+          conferencia_aprovada_em?: string | null
+          conferencia_aprovada_por?: string | null
+          conferencia_status?: string
+          conferencia_xml_raw?: string | null
           conferente_id?: string | null
           contrato_id: string
           created_at?: string
+          custo_conferencia?: number | null
+          custo_original?: number | null
           data_conferencia?: string | null
           data_medicao?: string | null
           data_montagem?: string | null
           desconto_percentual?: number
           id?: string
+          itens_conferencia_json?: Json
+          itens_original_json?: Json
           loja_id: string
           medidor_id?: string | null
           montador_id?: string | null
@@ -489,16 +563,27 @@ export type Database = {
           valor_liquido?: number
           valor_medidor?: number
           valor_montador?: number
+          variacao_pct?: number | null
         }
         Update: {
+          aprovacao_solicitada_em?: string | null
+          aprovacao_solicitada_por?: string | null
+          conferencia_aprovada_em?: string | null
+          conferencia_aprovada_por?: string | null
+          conferencia_status?: string
+          conferencia_xml_raw?: string | null
           conferente_id?: string | null
           contrato_id?: string
           created_at?: string
+          custo_conferencia?: number | null
+          custo_original?: number | null
           data_conferencia?: string | null
           data_medicao?: string | null
           data_montagem?: string | null
           desconto_percentual?: number
           id?: string
+          itens_conferencia_json?: Json
+          itens_original_json?: Json
           loja_id?: string
           medidor_id?: string | null
           montador_id?: string | null
@@ -516,6 +601,7 @@ export type Database = {
           valor_liquido?: number
           valor_medidor?: number
           valor_montador?: number
+          variacao_pct?: number | null
         }
         Relationships: [
           {
@@ -1956,6 +2042,53 @@ export type Database = {
           },
         ]
       }
+      requisicoes_compra: {
+        Row: {
+          ambiente_id: string | null
+          contrato_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          itens_json: Json
+          loja_id: string
+          observacoes: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          ambiente_id?: string | null
+          contrato_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          itens_json?: Json
+          loja_id: string
+          observacoes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          ambiente_id?: string | null
+          contrato_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          itens_json?: Json
+          loja_id?: string
+          observacoes?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requisicoes_compra_ambiente_id_fkey"
+            columns: ["ambiente_id"]
+            isOneToOne: false
+            referencedRelation: "contrato_ambientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       retrabalhos: {
         Row: {
           contrato_id: string
@@ -2297,6 +2430,10 @@ export type Database = {
       }
     }
     Functions: {
+      aprovar_conferencia_ambiente: {
+        Args: { _ambiente_id: string }
+        Returns: Json
+      }
       avancar_contrato: {
         Args: { p_contrato_id: string; p_usuario_id?: string }
         Returns: Json
