@@ -8,6 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 import { ComissoesRelatorioTab, REGRA_PADRAO, type RegraComissao } from "@/components/comissoes/ComissoesRelatorioTab";
 import { PapeisTab } from "@/components/comissoes/PapeisTab";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,11 +64,127 @@ export default function Comissoes() {
   const [regra, setRegra] = useState<RegraComissao>(REGRA_PADRAO);
   const [lojaId, setLojaId] = useState<string | null>(null);
   const [metricas, setMetricas] = useState({ totalMes: 0, pagas: 0, bonus: 0 });
+  const [recalculando, setRecalculando] = useState(false);
   const { hasRole } = useAuth();
   const podeEditarRegra = hasRole("admin") || hasRole("franqueador");
   const podePagar = podeEditarRegra;
+  const podeRecalcular = hasRole("admin") || hasRole("franqueador") || hasRole("gerente");
   const podeVerRelatorioCompleto =
     hasRole("admin") || hasRole("franqueador") || hasRole("gerente");
+
+  async function recalcularComissoes() {
+    if (!lojaId || recalculando) return;
+    setRecalculando(true);
+    try {
+      // 1. Papéis ativos com regra contrato_assinado
+      const { data: papeis, error: errPapeis } = await supabase
+        .from("papeis_comissao")
+        .select("id, percentual_padrao")
+        .eq("loja_id", lojaId)
+        .eq("ativo", true)
+        .eq("regra_pagamento", "contrato_assinado");
+      if (errPapeis) throw errPapeis;
+      const papelIds = (papeis ?? []).map((p) => p.id);
+      if (!papelIds.length) {
+        toast.info("Nenhum papel com regra 'contrato assinado' configurado");
+        return;
+      }
+
+      // 2. Membros da equipe com esses papéis
+      const { data: membros, error: errMembros } = await supabase
+        .from("usuarios")
+        .select("id, papel_comissao_id, comissao_percentual")
+        .eq("loja_id", lojaId)
+        .in("papel_comissao_id", papelIds);
+      if (errMembros) throw errMembros;
+      const membrosValidos = (membros ?? []).filter((m) => m.papel_comissao_id);
+      if (!membrosValidos.length) {
+        toast.info("Nenhum membro com papel de comissão configurado");
+        return;
+      }
+
+      // 3. Contratos da loja com status != cancelado
+      const { data: contratos, error: errContr } = await supabase
+        .from("contratos")
+        .select("id, valor_venda, created_at, status")
+        .eq("loja_id", lojaId);
+      if (errContr) throw errContr;
+      const contratosLista = contratos ?? [];
+      if (!contratosLista.length) {
+        toast.info("Nenhum contrato elegível para comissão");
+        return;
+      }
+
+      // 4. Buscar comissões existentes para evitar duplicação
+      const contratoIds = contratosLista.map((c) => c.id);
+      const { data: existentes, error: errExist } = await supabase
+        .from("comissoes")
+        .select("contrato_id, usuario_id")
+        .in("contrato_id", contratoIds);
+      if (errExist) throw errExist;
+      const chavesExistentes = new Set(
+        (existentes ?? []).map((e) => `${e.contrato_id}|${e.usuario_id}`)
+      );
+
+      // 5. Montar inserts
+      const inserts: Array<{
+        contrato_id: string;
+        loja_id: string;
+        usuario_id: string;
+        papel_id: string;
+        base_calculo: number;
+        percentual: number;
+        valor: number;
+        status: string;
+        gatilho: string;
+        data_gatilho: string;
+      }> = [];
+      const contratosAfetados = new Set<string>();
+
+      for (const contrato of contratosLista) {
+        const valor = Number(contrato.valor_venda ?? 0);
+        if (valor <= 0) continue;
+        for (const m of membrosValidos) {
+          const chave = `${contrato.id}|${m.id}`;
+          if (chavesExistentes.has(chave)) continue;
+          const papel = papeis!.find((p) => p.id === m.papel_comissao_id);
+          if (!papel) continue;
+          const pct = Number(m.comissao_percentual ?? papel.percentual_padrao ?? 0);
+          if (pct <= 0) continue;
+          inserts.push({
+            contrato_id: contrato.id,
+            loja_id: lojaId,
+            usuario_id: m.id,
+            papel_id: m.papel_comissao_id!,
+            base_calculo: valor,
+            percentual: pct,
+            valor: Number(((valor * pct) / 100).toFixed(2)),
+            status: "liberada",
+            gatilho: "contrato_assinado",
+            data_gatilho: contrato.created_at,
+          });
+          contratosAfetados.add(contrato.id);
+        }
+      }
+
+      if (!inserts.length) {
+        toast.info("Nenhuma comissão nova para gerar");
+        return;
+      }
+
+      const { error: errIns } = await supabase.from("comissoes").insert(inserts);
+      if (errIns) throw errIns;
+
+      toast.success(
+        `${inserts.length} comissões geradas para ${contratosAfetados.size} contratos`
+      );
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Erro ao recalcular comissões";
+      toast.error(msg);
+    } finally {
+      setRecalculando(false);
+    }
+  }
 
   // Carrega loja do usuário e regra ativa (legado, usado apenas no relatório)
   useEffect(() => {
@@ -132,18 +250,31 @@ export default function Comissoes() {
             Qualidade de venda, não só volume
           </p>
         </div>
-        <Select value={mes} onValueChange={setMes}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {opcoes.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          {podeRecalcular && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={recalcularComissoes}
+              disabled={recalculando || !lojaId}
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${recalculando ? "animate-spin" : ""}`} />
+              {recalculando ? "Recalculando..." : "Recalcular"}
+            </Button>
+          )}
+          <Select value={mes} onValueChange={setMes}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {opcoes.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </header>
 
       <div className="grid gap-4 md:grid-cols-3">
