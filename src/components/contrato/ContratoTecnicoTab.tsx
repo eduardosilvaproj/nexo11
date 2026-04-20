@@ -1,76 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  Check,
-  Download,
-  Lock,
-  Upload,
-  Trash2,
-  FileText,
-} from "lucide-react";
+import { Download, Upload, Trash2, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ContratoMedicaoAmbientesSection } from "./ContratoMedicaoAmbientesSection";
 import { ConferenciaAmbientesSection } from "./ConferenciaAmbientesSection";
 
 interface TecnicoTabProps {
   contratoId: string;
-}
-
-const Card = ({
-  title,
-  right,
-  children,
-  badge,
-  bg = "white",
-}: {
-  title: string;
-  right?: React.ReactNode;
-  children: React.ReactNode;
-  badge?: React.ReactNode;
-  bg?: string;
-}) => (
-  <div
-    className="rounded-xl transition-colors"
-    style={{ border: "0.5px solid #E8ECF2", padding: 20, backgroundColor: bg }}
-  >
-    <div className="mb-4 flex items-center justify-between gap-3">
-      <div className="flex items-center gap-2">
-        <h3 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117" }}>{title}</h3>
-        {badge}
-      </div>
-      {right}
-    </div>
-    {children}
-  </div>
-);
-
-function StatusBadge({
-  label,
-  bg,
-  fg,
-}: {
-  label: string;
-  bg: string;
-  fg: string;
-}) {
-  return (
-    <span
-      className="inline-flex items-center rounded px-2 py-0.5"
-      style={{ fontSize: 11, fontWeight: 500, backgroundColor: bg, color: fg }}
-    >
-      {label}
-    </span>
-  );
 }
 
 export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
@@ -82,15 +21,12 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
   const { hasRole } = useAuth();
   const canEdit = hasRole("admin") || hasRole("gerente") || hasRole("tecnico");
 
-  // Contrato (campos das travas / sub_etapa / responsáveis)
   const { data: contrato } = useQuery({
     queryKey: ["contrato-tecnico", contratoId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contratos")
-        .select(
-          "id, loja_id, sub_etapa_tecnico, trava_medicao_ok, trava_tecnico_ok, medicao_responsavel_id, conferencia_responsavel_id"
-        )
+        .select("id, loja_id, sub_etapa_tecnico, trava_medicao_ok, trava_tecnico_ok")
         .eq("id", contratoId)
         .maybeSingle();
       if (error) throw error;
@@ -98,7 +34,6 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
     },
   });
 
-  // Realtime: quando triggers do banco atualizarem sub_etapa/travas, refazemos as queries
   useEffect(() => {
     const channel = supabase
       .channel(`tecnico-contrato-${contratoId}`)
@@ -108,184 +43,13 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
         () => {
           qc.invalidateQueries({ queryKey: ["contrato-tecnico", contratoId] });
           qc.invalidateQueries({ queryKey: ["contrato_dre_view", contratoId] });
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "checklists_tecnicos", filter: `contrato_id=eq.${contratoId}` },
-        () => {
-          qc.invalidateQueries({ queryKey: ["checklist", contratoId] });
-        }
+        },
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
   }, [contratoId, qc]);
-
-  const { data: itens = [] } = useQuery({
-    queryKey: ["checklist", contratoId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("checklists_tecnicos")
-        .select("*")
-        .eq("contrato_id", contratoId)
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: usuarios = [] } = useQuery({
-    queryKey: ["usuarios-min"],
-    queryFn: async () => {
-      const { data } = await supabase.from("usuarios").select("id, nome");
-      return data ?? [];
-    },
-  });
-  const userMap = new Map(usuarios.map((u) => [u.id, u.nome]));
-
-  // Medidores da loja do contrato
-  const { data: medidores = [] } = useQuery({
-    queryKey: ["medidores", contrato?.loja_id],
-    enabled: !!contrato?.loja_id,
-    queryFn: async () => {
-      const { data: roles, error } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "medidor")
-        .eq("loja_id", contrato!.loja_id);
-      if (error) throw error;
-      const ids = (roles ?? []).map((r) => r.user_id);
-      if (ids.length === 0) return [];
-      const { data: us } = await supabase
-        .from("usuarios")
-        .select("id, nome")
-        .in("id", ids);
-      return us ?? [];
-    },
-  });
-
-  // Conferentes da loja do contrato
-  const { data: conferentes = [] } = useQuery({
-    queryKey: ["conferentes", contrato?.loja_id],
-    enabled: !!contrato?.loja_id,
-    queryFn: async () => {
-      const { data: roles, error } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "conferente")
-        .eq("loja_id", contrato!.loja_id);
-      if (error) throw error;
-      const ids = (roles ?? []).map((r) => r.user_id);
-      if (ids.length === 0) return [];
-      const { data: us } = await supabase
-        .from("usuarios")
-        .select("id, nome")
-        .in("id", ids);
-      return us ?? [];
-    },
-  });
-
-  const itensMedicao = itens.filter((i) => i.sub_etapa === "medicao");
-  const itensConferencia = itens.filter((i) => i.sub_etapa !== "medicao");
-
-  const medOk = itensMedicao.filter((i) => i.concluido).length;
-  const medTotal = itensMedicao.length;
-  const algumMedConcluido = medOk > 0;
-
-  const total = itens.length;
-  const concluidos = itens.filter((i) => i.concluido).length;
-  const pendentes = total - concluidos;
-  const pct = total > 0 ? Math.round((concluidos / total) * 100) : 0;
-
-  const toggleMutation = useMutation({
-    mutationFn: async (item: {
-      id: string;
-      concluido: boolean;
-      sub_etapa: string;
-    }) => {
-      const { error } = await supabase
-        .from("checklists_tecnicos")
-        .update({
-          concluido: !item.concluido,
-          data: !item.concluido ? new Date().toISOString() : null,
-        })
-        .eq("id", item.id);
-      if (error) throw error;
-      return item;
-    },
-    onSuccess: (item) => {
-      if (item.sub_etapa === "medicao" && !item.concluido) {
-        const restantes = itensMedicao.filter(
-          (i) => i.id !== item.id && !i.concluido,
-        ).length;
-        if (restantes === 0 && itensMedicao.length > 0) {
-          toast.success("Medição fina concluída! Conferência técnica liberada ✓");
-        }
-      }
-      if (item.sub_etapa === "conferencia" && !item.concluido) {
-        const restantes = itensConferencia.filter(
-          (i) => i.id !== item.id && !i.concluido,
-        ).length;
-        if (restantes === 0 && itensConferencia.length > 0) {
-          toast.success("Conferência concluída! Contrato liberado para produção ✓");
-        }
-      }
-      qc.invalidateQueries({ queryKey: ["checklist", contratoId] });
-      qc.invalidateQueries({ queryKey: ["contrato-tecnico", contratoId] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const atribuirMedidor = useMutation({
-    mutationFn: async (userId: string) => {
-      const { error } = await supabase
-        .from("contratos")
-        .update({ medicao_responsavel_id: userId })
-        .eq("id", contratoId);
-      if (error) throw error;
-
-      const nome = medidores.find((m) => m.id === userId)?.nome ?? "—";
-      const { data: auth } = await supabase.auth.getUser();
-      await supabase.from("contrato_logs").insert({
-        contrato_id: contratoId,
-        acao: "medidor_atribuido",
-        titulo: "Medidor atribuído",
-        descricao: nome,
-        autor_id: auth.user?.id ?? null,
-      });
-    },
-    onSuccess: () => {
-      toast.success("Medidor atribuído");
-      qc.invalidateQueries({ queryKey: ["contrato-tecnico", contratoId] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const atribuirConferente = useMutation({
-    mutationFn: async (userId: string) => {
-      const { error } = await supabase
-        .from("contratos")
-        .update({ conferencia_responsavel_id: userId })
-        .eq("id", contratoId);
-      if (error) throw error;
-      const nome = conferentes.find((c) => c.id === userId)?.nome ?? "—";
-      const { data: auth } = await supabase.auth.getUser();
-      await supabase.from("contrato_logs").insert({
-        contrato_id: contratoId,
-        acao: "conferente_atribuido",
-        titulo: "Conferente atribuído",
-        descricao: nome,
-        autor_id: auth.user?.id ?? null,
-      });
-    },
-    onSuccess: () => {
-      toast.success("Conferente atribuído");
-      qc.invalidateQueries({ queryKey: ["contrato-tecnico", contratoId] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
 
   const avancarMutation = useMutation({
     mutationFn: async () => {
@@ -307,27 +71,6 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  // Status do card de medição
-  let medStatus: { label: string; bg: string; fg: string };
-  if (contrato?.trava_medicao_ok) {
-    medStatus = { label: "Concluída ✓", bg: "#D1FAE5", fg: "#05873C" };
-  } else if (contrato?.sub_etapa_tecnico === "medicao" && algumMedConcluido) {
-    medStatus = { label: "Em andamento", bg: "#E6F3FF", fg: "#1E6FBF" };
-  } else {
-    medStatus = { label: "Aguardando", bg: "#E8ECF2", fg: "#6B7A90" };
-  }
-
-  // Status do card de conferência
-  const algumConfConcluido = itensConferencia.some((i) => i.concluido);
-  let confStatus: { label: string; bg: string; fg: string };
-  if (contrato?.trava_tecnico_ok) {
-    confStatus = { label: "Liberado ✓", bg: "#D1FAE5", fg: "#05873C" };
-  } else if (algumConfConcluido) {
-    confStatus = { label: "Em andamento", bg: "#E6F3FF", fg: "#1E6FBF" };
-  } else {
-    confStatus = { label: "Aguardando", bg: "#E8ECF2", fg: "#6B7A90" };
-  }
-
   // Arquivos
   const { data: arquivos = [], refetch: refetchArquivos } = useQuery({
     queryKey: ["arquivos", contratoId],
@@ -343,9 +86,7 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
   const handleUpload = async (file: File) => {
     setUploading(true);
     const path = `${contratoId}/${Date.now()}-${file.name}`;
-    const { error } = await supabase.storage
-      .from("contrato-arquivos")
-      .upload(path, file);
+    const { error } = await supabase.storage.from("contrato-arquivos").upload(path, file);
     setUploading(false);
     if (error) {
       toast.error(error.message);
@@ -396,445 +137,106 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <style>{`@keyframes checkPop { 0% { transform: scale(1.2); } 100% { transform: scale(1); } }`}</style>
-
-      {/* Seção — Medição por ambiente */}
+      {/* Seção 1 — Medição */}
       <ContratoMedicaoAmbientesSection
         contratoId={contratoId}
         lojaId={contrato?.loja_id}
         canEdit={canEdit}
         funcao="medidor"
+        titulo="Medição"
       />
 
-      {/* Seção — Conferência por ambiente */}
-      <ContratoMedicaoAmbientesSection
-        contratoId={contratoId}
-        lojaId={contrato?.loja_id}
-        canEdit={canEdit}
-        funcao="conferente"
-      />
+      {/* Seção 2 — Conferência (com fluxo XML) */}
+      <ConferenciaAmbientesSection contratoId={contratoId} lojaId={contrato?.loja_id} />
 
-      {/* Seção — Conferência via XML (variação, itens extras, liberar produção) */}
-      <ConferenciaAmbientesSection contratoId={contratoId} />
-
-      {/* CARD 1 — Medição fina */}
-      <Card
-        title="Medição fina"
-        badge={<StatusBadge {...medStatus} />}
-        bg={contrato?.trava_medicao_ok ? "#F0FDF9" : "white"}
-        right={
-          <div className="flex items-center gap-3">
-            <span style={{ fontSize: 12, color: "#6B7A90" }}>Responsável</span>
-            <div style={{ minWidth: 220 }}>
-              <Select
-                value={contrato?.medicao_responsavel_id ?? undefined}
-                onValueChange={(v) => atribuirMedidor.mutate(v)}
-                disabled={!canEdit || !!contrato?.trava_medicao_ok}
-              >
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Atribuir medidor →" />
-                </SelectTrigger>
-                <SelectContent>
-                  {medidores.length === 0 && (
-                    <div
-                      className="px-3 py-2"
-                      style={{ fontSize: 12, color: "#6B7A90" }}
-                    >
-                      Nenhum medidor cadastrado
-                    </div>
-                  )}
-                  {medidores.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>
-                      {m.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        }
+      {/* Arquivos do projeto */}
+      <div
+        className="rounded-xl bg-white"
+        style={{ border: "0.5px solid #E8ECF2", padding: 20 }}
       >
-        {/* Progresso medição */}
-        <div className="mb-2 flex items-center justify-between">
-          <span style={{ fontSize: 13, color: "#6B7A90" }}>
-            {medOk} de {medTotal} itens concluídos
-          </span>
-        </div>
-        <div
-          className="mb-4 w-full overflow-hidden"
-          style={{ backgroundColor: "#E8ECF2", height: 6, borderRadius: 3 }}
-        >
-          <div
-            style={{
-              width: `${medTotal > 0 ? Math.round((medOk / medTotal) * 100) : 0}%`,
-              backgroundColor:
-                medTotal > 0 && medOk === medTotal ? "#12B76A" : "#1E6FBF",
-              height: "100%",
-              borderRadius: 3,
-              transition: "width 400ms ease-out, background-color 300ms ease-out",
-            }}
-          />
-        </div>
-
-        <ul className="flex flex-col">
-          {itensMedicao.length === 0 && (
-            <li style={{ fontSize: 13, color: "#6B7A90" }}>
-              Nenhum item de medição cadastrado.
-            </li>
-          )}
-          {itensMedicao.map((item) => {
-            const medCompleto = !!contrato?.trava_medicao_ok;
-            const itemEditavel = canEdit && !medCompleto;
-            return (
-              <li
-                key={item.id}
-                className="flex items-center gap-3 px-2 py-2 -mx-2 rounded transition-colors hover:bg-[#F5F7FA]"
-                style={{ borderTop: "0.5px solid #E8ECF2" }}
-              >
-                <button
-                  onClick={() =>
-                    itemEditavel &&
-                    toggleMutation.mutate({
-                      id: item.id,
-                      concluido: item.concluido,
-                      sub_etapa: item.sub_etapa,
-                    })
-                  }
-                  disabled={!itemEditavel}
-                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded transition-colors disabled:cursor-not-allowed"
-                  style={{
-                    backgroundColor: item.concluido ? "#12B76A" : "transparent",
-                    border: item.concluido
-                      ? "1px solid #12B76A"
-                      : "1.5px solid #B0BAC9",
-                    opacity: itemEditavel ? 1 : 0.7,
-                  }}
-                  aria-label="Toggle item"
-                >
-                  {item.concluido && (
-                    <Check
-                      className="h-3 w-3 text-white"
-                      style={{
-                        animation: "checkPop 150ms ease-out",
-                      }}
-                    />
-                  )}
-                </button>
-                <span
-                  className="flex-1"
-                  style={{
-                    fontSize: 13,
-                    color: item.concluido ? "#6B7A90" : "#0D1117",
-                    textDecoration: item.concluido ? "line-through" : "none",
-                  }}
-                >
-                  {item.item}
-                </span>
-                <span style={{ fontSize: 12, color: "#6B7A90", minWidth: 110 }}>
-                  {item.responsavel ? userMap.get(item.responsavel) ?? "—" : "—"}
-                </span>
-                <span style={{ fontSize: 11, color: "#B0BAC9", minWidth: 80, textAlign: "right" }}>
-                  {item.concluido && item.data
-                    ? new Date(item.data).toLocaleDateString("pt-BR")
-                    : ""}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-
-        {contrato?.trava_medicao_ok && (
-          <div
-            className="mt-4 -mx-5 -mb-5 rounded-b-xl"
-            style={{
-              backgroundColor: "#F0FDF9",
-              borderTop: "0.5px solid #12B76A",
-              padding: "10px 16px",
-              fontSize: 13,
-              color: "#05873C",
-            }}
-          >
-            Medição concluída
-            {(() => {
-              const data = itensMedicao
-                .filter((i) => i.concluido && i.data)
-                .map((i) => new Date(i.data!).getTime())
-                .sort((a, b) => b - a)[0];
-              return data
-                ? ` em ${new Date(data).toLocaleDateString("pt-BR")} ✓`
-                : " ✓";
-            })()}
-          </div>
-        )}
-      </Card>
-
-      {/* Checklist conferência (mantido) */}
-      {!contrato?.trava_medicao_ok ? (
-        <div
-          className="rounded-xl flex flex-col items-center justify-center text-center"
-          style={{
-            border: "0.5px dashed #B0BAC9",
-            backgroundColor: "#F5F7FA",
-            padding: "40px 20px",
+        <h3 className="mb-3" style={{ fontSize: 15, fontWeight: 500, color: "#0D1117" }}>
+          Arquivos do projeto
+        </h3>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.png,.dwg,application/pdf,image/png"
+          className="hidden"
+          onChange={(e) => {
+            handleFiles(e.target.files);
+            e.target.value = "";
           }}
-        >
-          <Lock style={{ width: 20, height: 20, color: "#B0BAC9" }} />
-          <p className="mt-3" style={{ fontSize: 14, color: "#6B7A90" }}>
-            Disponível após conclusão da medição fina
-          </p>
-          <p className="mt-1" style={{ fontSize: 12, color: "#B0BAC9" }}>
-            Complete o checklist de medição para liberar
-          </p>
-        </div>
-      ) : (
-      <Card
-        title="Conferência técnica"
-        badge={<StatusBadge {...confStatus} />}
-        bg={contrato?.trava_tecnico_ok ? "#F0FDF9" : "white"}
-        right={
-          <div className="flex items-center gap-3">
-            <span style={{ fontSize: 12, color: "#6B7A90" }}>Responsável</span>
-            <div style={{ minWidth: 220 }}>
-              <Select
-                value={contrato?.conferencia_responsavel_id ?? undefined}
-                onValueChange={(v) => atribuirConferente.mutate(v)}
-                disabled={!canEdit || !!contrato?.trava_tecnico_ok}
-              >
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Atribuir conferente →" />
-                </SelectTrigger>
-                <SelectContent>
-                  {conferentes.length === 0 && (
-                    <div
-                      className="px-3 py-2"
-                      style={{ fontSize: 12, color: "#6B7A90" }}
-                    >
-                      Nenhum conferente cadastrado
-                    </div>
-                  )}
-                  {conferentes.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        }
-      >
-        {/* Progresso conferência */}
-        <div className="mb-2 flex items-center justify-between">
-          <span style={{ fontSize: 13, color: "#6B7A90" }}>
-            {itensConferencia.filter((i) => i.concluido).length} de{" "}
-            {itensConferencia.length} itens concluídos
-          </span>
-        </div>
-        <div
-          className="mb-4 w-full overflow-hidden"
-          style={{ backgroundColor: "#E8ECF2", height: 6, borderRadius: 3 }}
-        >
+        />
+        {canEdit && !contrato?.trava_tecnico_ok && (
           <div
-            style={{
-              width: `${
-                itensConferencia.length > 0
-                  ? Math.round(
-                      (itensConferencia.filter((i) => i.concluido).length /
-                        itensConferencia.length) *
-                        100,
-                    )
-                  : 0
-              }%`,
-              backgroundColor:
-                itensConferencia.length > 0 &&
-                itensConferencia.every((i) => i.concluido)
-                  ? "#12B76A"
-                  : "#1E6FBF",
-              height: "100%",
-              borderRadius: 3,
-              transition: "width 400ms ease-out, background-color 300ms ease-out",
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
             }}
-          />
-        </div>
-
-        <ul className="flex flex-col">
-          {itensConferencia.length === 0 && (
-            <li style={{ fontSize: 13, color: "#6B7A90" }}>
-              Nenhum item de checklist cadastrado.
-            </li>
-          )}
-          {itensConferencia.map((item) => {
-            const confCompleto = !!contrato?.trava_tecnico_ok;
-            const itemEditavel = canEdit && !confCompleto;
-            return (
-              <li
-                key={item.id}
-                className="flex items-center gap-3 px-2 py-2 -mx-2 rounded transition-colors hover:bg-[#F5F7FA]"
-                style={{ borderTop: "0.5px solid #E8ECF2" }}
-              >
-                <button
-                  onClick={() =>
-                    itemEditavel &&
-                    toggleMutation.mutate({
-                      id: item.id,
-                      concluido: item.concluido,
-                      sub_etapa: item.sub_etapa,
-                    })
-                  }
-                  disabled={!itemEditavel}
-                  className="flex h-5 w-5 shrink-0 items-center justify-center rounded transition-colors disabled:cursor-not-allowed"
-                  style={{
-                    backgroundColor: item.concluido ? "#12B76A" : "transparent",
-                    border: item.concluido
-                      ? "1px solid #12B76A"
-                      : "1.5px solid #B0BAC9",
-                    opacity: itemEditavel ? 1 : 0.7,
-                  }}
-                  aria-label="Toggle item"
-                >
-                  {item.concluido && (
-                    <Check
-                      className="h-3 w-3 text-white"
-                      style={{ animation: "checkPop 150ms ease-out" }}
-                    />
-                  )}
-                </button>
-                <span
-                  className="flex-1"
-                  style={{
-                    fontSize: 13,
-                    color: item.concluido ? "#6B7A90" : "#0D1117",
-                    textDecoration: item.concluido ? "line-through" : "none",
-                  }}
-                >
-                  {item.item}
-                </span>
-                <span style={{ fontSize: 12, color: "#6B7A90", minWidth: 110 }}>
-                  {item.responsavel ? userMap.get(item.responsavel) ?? "—" : "—"}
-                </span>
-                <span style={{ fontSize: 11, color: "#B0BAC9", minWidth: 80, textAlign: "right" }}>
-                  {item.concluido && item.data
-                    ? new Date(item.data).toLocaleDateString("pt-BR")
-                    : ""}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-
-        {/* Arquivos do projeto */}
-        <div className="mt-6">
-          <h4 className="mb-3" style={{ fontSize: 13, fontWeight: 500, color: "#0D1117" }}>
-            Arquivos do projeto
-          </h4>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.png,.dwg,application/pdf,image/png"
-            className="hidden"
-            onChange={(e) => {
-              handleFiles(e.target.files);
-              e.target.value = "";
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(false);
+              handleFiles(e.dataTransfer.files);
             }}
-          />
-          {canEdit && !contrato?.trava_tecnico_ok && (
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragOver(true);
-              }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDragOver(false);
-                handleFiles(e.dataTransfer.files);
-              }}
-              className="cursor-pointer rounded-lg flex flex-col items-center justify-center text-center transition-colors"
-              style={{
-                border: `2px dashed ${dragOver ? "#1E6FBF" : "#B0BAC9"}`,
-                backgroundColor: dragOver ? "#EFF6FF" : "transparent",
-                padding: "24px 16px",
-              }}
-            >
-              <Upload style={{ width: 20, height: 20, color: dragOver ? "#1E6FBF" : "#6B7A90" }} />
-              <p className="mt-2" style={{ fontSize: 13, color: "#6B7A90" }}>
-                {uploading ? "Enviando..." : "Arraste o projeto aqui ou clique para selecionar"}
-              </p>
-              <p className="mt-1" style={{ fontSize: 11, color: "#B0BAC9" }}>
-                PDF, PNG, DWG — máx 50MB
-              </p>
-            </div>
-          )}
-
-          <ul className="mt-3 flex flex-col">
-            {arquivos.length === 0 && (
-              <li style={{ fontSize: 13, color: "#6B7A90" }}>
-                Nenhum arquivo enviado ainda.
-              </li>
-            )}
-            {arquivos.map((arq) => (
-              <li
-                key={arq.id ?? arq.name}
-                className="flex items-center gap-3 py-2"
-                style={{ borderTop: "0.5px solid #E8ECF2" }}
-              >
-                <FileText className="h-4 w-4 shrink-0" style={{ color: "#6B7A90" }} />
-                <span className="flex-1 truncate" style={{ fontSize: 13, color: "#0D1117", fontWeight: 500 }}>
-                  {arq.name.replace(/^\d+-/, "")}
-                </span>
-                <span style={{ fontSize: 11, color: "#6B7A90", minWidth: 70, textAlign: "right" }}>
-                  {arq.metadata?.size ? formatBytes(arq.metadata.size as number) : "—"}
-                </span>
-                <span style={{ fontSize: 11, color: "#B0BAC9", minWidth: 80, textAlign: "right" }}>
-                  {arq.created_at ? new Date(arq.created_at).toLocaleDateString("pt-BR") : ""}
-                </span>
-                <button
-                  onClick={() => handleDownload(arq.name)}
-                  className="rounded p-1.5 hover:bg-muted"
-                  aria-label="Baixar"
-                >
-                  <Download className="h-4 w-4" style={{ color: "#1E6FBF" }} />
-                </button>
-                {canEdit && !contrato?.trava_tecnico_ok && (
-                  <button
-                    onClick={() => handleDelete(arq.name)}
-                    className="rounded p-1.5 hover:bg-muted"
-                    aria-label="Remover"
-                  >
-                    <Trash2 className="h-4 w-4" style={{ color: "#B42318" }} />
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {contrato?.trava_tecnico_ok && (
-          <div
-            className="mt-4 -mx-5 -mb-5 rounded-b-xl"
+            className="cursor-pointer rounded-lg flex flex-col items-center justify-center text-center transition-colors"
             style={{
-              backgroundColor: "#F0FDF9",
-              borderTop: "0.5px solid #12B76A",
-              padding: "10px 16px",
-              fontSize: 13,
-              color: "#05873C",
+              border: `2px dashed ${dragOver ? "#1E6FBF" : "#B0BAC9"}`,
+              backgroundColor: dragOver ? "#EFF6FF" : "transparent",
+              padding: "24px 16px",
             }}
           >
-            Conferência concluída
-            {(() => {
-              const data = itensConferencia
-                .filter((i) => i.concluido && i.data)
-                .map((i) => new Date(i.data!).getTime())
-                .sort((a, b) => b - a)[0];
-              return data
-                ? ` em ${new Date(data).toLocaleDateString("pt-BR")} ✓`
-                : " ✓";
-            })()}
+            <Upload style={{ width: 20, height: 20, color: dragOver ? "#1E6FBF" : "#6B7A90" }} />
+            <p className="mt-2" style={{ fontSize: 13, color: "#6B7A90" }}>
+              {uploading ? "Enviando..." : "Arraste o projeto aqui ou clique para selecionar"}
+            </p>
+            <p className="mt-1" style={{ fontSize: 11, color: "#B0BAC9" }}>
+              PDF, PNG, DWG — máx 50MB
+            </p>
           </div>
         )}
-      </Card>
-      )}
+
+        <ul className="mt-3 flex flex-col">
+          {arquivos.length === 0 && (
+            <li style={{ fontSize: 13, color: "#6B7A90" }}>Nenhum arquivo enviado ainda.</li>
+          )}
+          {arquivos.map((arq) => (
+            <li
+              key={arq.id ?? arq.name}
+              className="flex items-center gap-3 py-2"
+              style={{ borderTop: "0.5px solid #E8ECF2" }}
+            >
+              <FileText className="h-4 w-4 shrink-0" style={{ color: "#6B7A90" }} />
+              <span className="flex-1 truncate" style={{ fontSize: 13, color: "#0D1117", fontWeight: 500 }}>
+                {arq.name.replace(/^\d+-/, "")}
+              </span>
+              <span style={{ fontSize: 11, color: "#6B7A90", minWidth: 70, textAlign: "right" }}>
+                {arq.metadata?.size ? formatBytes(arq.metadata.size as number) : "—"}
+              </span>
+              <span style={{ fontSize: 11, color: "#B0BAC9", minWidth: 80, textAlign: "right" }}>
+                {arq.created_at ? new Date(arq.created_at).toLocaleDateString("pt-BR") : ""}
+              </span>
+              <button
+                onClick={() => handleDownload(arq.name)}
+                className="rounded p-1.5 hover:bg-muted"
+                aria-label="Baixar"
+              >
+                <Download className="h-4 w-4" style={{ color: "#1E6FBF" }} />
+              </button>
+              {canEdit && !contrato?.trava_tecnico_ok && (
+                <button
+                  onClick={() => handleDelete(arq.name)}
+                  className="rounded p-1.5 hover:bg-muted"
+                  aria-label="Remover"
+                >
+                  <Trash2 className="h-4 w-4" style={{ color: "#B42318" }} />
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
 
       {/* Validação final */}
       {contrato?.trava_tecnico_ok && (
@@ -846,9 +248,7 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
             padding: 16,
           }}
         >
-          <h4 style={{ fontSize: 14, fontWeight: 500, color: "#05873C" }}>
-            Pronto para produção
-          </h4>
+          <h4 style={{ fontSize: 14, fontWeight: 500, color: "#05873C" }}>Pronto para produção</h4>
           <div className="mt-3">
             <label style={{ fontSize: 12, color: "#05873C" }}>Observações finais</label>
             <Textarea
