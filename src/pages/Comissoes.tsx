@@ -182,7 +182,7 @@ export default function Comissoes() {
         >
           {[
             { v: "relatorio", l: "Relatório" },
-            { v: "regras", l: "Regras" },
+            { v: "papeis", l: "Papéis" },
           ].map((t) => (
             <TabsTrigger
               key={t.v}
@@ -204,22 +204,10 @@ export default function Comissoes() {
           />
         </TabsContent>
 
-        <TabsContent value="regras" className="mt-4">
-          <ComissoesRegrasTab
-            regra={regra}
-            onEdit={podeEditarRegra ? () => setEditOpen(true) : undefined}
-          />
+        <TabsContent value="papeis" className="mt-4">
+          <PapeisTab lojaId={lojaId} podeEditar={podeEditarRegra} />
         </TabsContent>
       </Tabs>
-
-      {podeEditarRegra && (
-        <RegraEditDialog
-          open={editOpen}
-          onOpenChange={setEditOpen}
-          regra={regra}
-          onSave={handleSaveRegra}
-        />
-      )}
     </div>
   );
 }
