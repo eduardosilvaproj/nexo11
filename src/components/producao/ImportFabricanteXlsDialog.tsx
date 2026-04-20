@@ -122,7 +122,9 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
       const iPedido = findCol(headers, ["pedido", "numero pedido", "nº pedido"]);
       const iOC = findCol(headers, ["oc", "ordem compra"]);
       const iData = findCol(headers, ["data prog", "previsao", "previsão", "data prevista", "entrega"]);
-      const iStatus = findCol(headers, ["status", "situacao", "situação"]);
+      const iStatus = findCol(headers, ["status"]);
+      const iTipo = findCol(headers, ["tipo"]);
+      const iSituacao = findCol(headers, ["situacao", "situação"]);
 
       if (iCliente < 0) throw new Error("Não encontrei a coluna NOME CLIENTE");
 
@@ -132,6 +134,17 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
         const cliente = String(r[iCliente] ?? "").trim();
         const oc = iOC >= 0 ? String(r[iOC] ?? "").trim() : "";
         const dataPrev = iData >= 0 ? excelDateToISO(r[iData]) : "";
+        const tipoRaw = iTipo >= 0 ? String(r[iTipo] ?? "").trim().toUpperCase() : "";
+        const situacaoRaw = iSituacao >= 0 ? String(r[iSituacao] ?? "").trim().toUpperCase() : "";
+
+        // Filtrar: apenas Tipo = V ou A. Ignorar B e "A e B"
+        if (iTipo >= 0) {
+          if (!tipoRaw) continue;
+          if (tipoRaw === "B") continue;
+          if (tipoRaw.includes("B")) continue; // "A e B", "A B", etc
+          if (tipoRaw !== "V" && tipoRaw !== "A") continue;
+        }
+
         if (!cliente && !oc) continue;
         parsed.push({
           cliente,
@@ -140,6 +153,8 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
           oc,
           dataPrevista: dataPrev,
           status: iStatus >= 0 ? String(r[iStatus] ?? "").trim() : "",
+          tipo: tipoRaw,
+          situacao: situacaoRaw,
         });
       }
 
