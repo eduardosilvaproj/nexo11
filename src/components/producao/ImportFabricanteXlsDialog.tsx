@@ -202,30 +202,56 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
     if (!lojaId || !grouped.length) return;
     setImporting(true);
     try {
-      let vinculados = 0, pendentes = 0;
+      let atualizados = 0, novos = 0, ignorados = 0;
       const sb = supabase as unknown as {
-        from: (t: string) => { insert: (v: unknown) => Promise<{ error: Error | null }> };
+        from: (t: string) => {
+          insert: (v: unknown) => Promise<{ error: Error | null }>;
+          update: (v: unknown) => { eq: (c: string, v: string) => Promise<{ error: Error | null }> };
+          select: (s: string) => { eq: (c: string, v: unknown) => { eq: (c: string, v: unknown) => Promise<{ data: { id: string }[] | null; error: Error | null }> } };
+        };
       };
+
       for (const g of grouped) {
-        const isVinculado = !!g.contratoId;
+        const numero = g.numeroPedido?.trim();
         const ocsConcat = g.ocs.join(", ");
-        const { error } = await sb.from("producao_terceirizada").insert({
-          loja_id: lojaId,
-          fornecedor_id: fornecedorId,
-          contrato_id: g.contratoId ?? null,
-          numero_pedido: g.numeroPedido || `s/n-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-          oc: ocsConcat || g.clienteBase || null,
-          data_prevista: g.dataPrevista || null,
-          status: "aguardando_fabricacao",
-          tipo_entrada: "xml",
-          vinculo_status: isVinculado ? "vinculado" : "pendente",
-        });
-        if (error) { console.error(error); continue; }
-        if (isVinculado) vinculados++; else pendentes++;
+
+        // Verifica duplicata por numero_pedido + loja
+        let existenteId: string | null = null;
+        if (numero) {
+          const { data: existente } = await sb
+            .from("producao_terceirizada")
+            .select("id")
+            .eq("loja_id", lojaId)
+            .eq("numero_pedido", numero);
+          if (existente && existente.length > 0) existenteId = existente[0].id;
+        }
+
+        if (existenteId) {
+          const { error } = await sb.from("producao_terceirizada").update({
+            data_prevista: g.dataPrevista || null,
+            oc: ocsConcat || g.clienteBase || null,
+          }).eq("id", existenteId);
+          if (error) { console.error(error); ignorados++; continue; }
+          atualizados++;
+        } else {
+          const { error } = await sb.from("producao_terceirizada").insert({
+            loja_id: lojaId,
+            fornecedor_id: fornecedorId,
+            contrato_id: g.contratoId ?? null,
+            numero_pedido: numero || `s/n-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+            oc: ocsConcat || g.clienteBase || null,
+            data_prevista: g.dataPrevista || null,
+            status: "aguardando_fabricacao",
+            tipo_entrada: "xml",
+            vinculo_status: g.contratoId ? "vinculado" : "pendente",
+          });
+          if (error) { console.error(error); ignorados++; continue; }
+          novos++;
+        }
       }
-      setResult({ vinculados, pendentes });
+      setResult({ atualizados, novos, ignorados });
       qc.invalidateQueries({ queryKey: ["producao-terceirizada"] });
-      toast.success(`${vinculados} vinculados · ${pendentes} aguardando vínculo manual`);
+      toast.success(`${atualizados} atualizados · ${novos} novos · ${ignorados} ignorados`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro na importação");
     } finally { setImporting(false); }
