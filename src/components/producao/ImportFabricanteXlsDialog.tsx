@@ -16,6 +16,7 @@ interface Props {
 
 interface ParsedRow {
   cliente: string;
+  clienteBase: string; // nome antes do primeiro "-"
   numeroPedido: string;
   oc: string;
   dataPrevista: string;
@@ -24,6 +25,24 @@ interface ParsedRow {
   clienteMatch?: boolean;
   contratoMatch?: boolean;
 }
+
+interface GroupedPedido {
+  clienteBase: string;
+  clienteOriginal: string;
+  ocs: string[]; // ambientes
+  numeroPedido: string;
+  dataPrevista: string; // menor data
+  status: string;
+  contratoId?: string | null;
+  clienteMatch: boolean;
+  contratoMatch: boolean;
+}
+
+const extractClienteBase = (raw: string): string => {
+  const s = (raw || "").toString().trim();
+  const idx = s.indexOf("-");
+  return (idx > 0 ? s.slice(0, idx) : s).trim();
+};
 
 const MAX_SIZE = 10 * 1024 * 1024;
 
@@ -62,19 +81,20 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
   const qc = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
   const [rows, setRows] = useState<ParsedRow[]>([]);
+  const [grouped, setGrouped] = useState<GroupedPedido[]>([]);
   const [parsing, setParsing] = useState(false);
   const [importing, setImporting] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [result, setResult] = useState<{ vinculados: number; pendentes: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const reset = () => { setFile(null); setRows([]); setResult(null); setDragOver(false); };
+  const reset = () => { setFile(null); setRows([]); setGrouped([]); setResult(null); setDragOver(false); };
   useEffect(() => { if (!open) reset(); }, [open]);
 
   const handleFile = async (f: File) => {
     if (f.size > MAX_SIZE) return toast.error("Arquivo maior que 10MB");
     if (!/\.(xlsx?|XLSX?)$/.test(f.name)) return toast.error("Use .xls ou .xlsx");
-    setFile(f); setParsing(true); setResult(null);
+    setFile(f); setParsing(true); setResult(null); setGrouped([]);
     try {
       const buf = await f.arrayBuffer();
       const wb = XLSX.read(buf, { type: "array", cellDates: false });
@@ -90,23 +110,24 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
         }
       }
       const headers = (json[headerIdx] as unknown[]).map((c) => String(c));
-      const iCliente = findCol(headers, ["cliente", "razao", "nome"]);
+      const iCliente = findCol(headers, ["nome cliente", "cliente", "razao", "nome"]);
       const iPedido = findCol(headers, ["pedido", "numero pedido", "nº pedido"]);
       const iOC = findCol(headers, ["oc", "ordem compra"]);
-      const iData = findCol(headers, ["previsao", "previsão", "data prevista", "entrega"]);
+      const iData = findCol(headers, ["data prog", "previsao", "previsão", "data prevista", "entrega"]);
       const iStatus = findCol(headers, ["status", "situacao", "situação"]);
 
-      if (iCliente < 0 && iOC < 0) throw new Error("Não encontrei colunas de Cliente ou OC");
+      if (iCliente < 0) throw new Error("Não encontrei a coluna NOME CLIENTE");
 
       const parsed: ParsedRow[] = [];
       for (let i = headerIdx + 1; i < json.length; i++) {
         const r = json[i] as unknown[];
-        const cliente = iCliente >= 0 ? String(r[iCliente] ?? "").trim() : "";
+        const cliente = String(r[iCliente] ?? "").trim();
         const oc = iOC >= 0 ? String(r[iOC] ?? "").trim() : "";
         const dataPrev = iData >= 0 ? excelDateToISO(r[iData]) : "";
         if (!cliente && !oc) continue;
         parsed.push({
           cliente,
+          clienteBase: extractClienteBase(cliente),
           numeroPedido: iPedido >= 0 ? String(r[iPedido] ?? "").trim() : "",
           oc,
           dataPrevista: dataPrev,
@@ -114,7 +135,7 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
         });
       }
 
-      // Cross-match against clientes (by name) and contratos (by OC + cliente)
+      // Cross-match by clienteBase (nome antes do primeiro "-")
       if (lojaId && parsed.length) {
         const [{ data: clientes }, { data: contratos }] = await Promise.all([
           supabase.from("clientes").select("id, nome").eq("loja_id", lojaId),
@@ -122,7 +143,8 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
         ]);
 
         for (const p of parsed) {
-          const cN = normalize(p.cliente);
+          const cN = normalize(p.clienteBase);
+          if (!cN) continue;
           const cli = clientes?.find((c) => {
             const n = normalize(c.nome);
             return n === cN || (cN.length >= 4 && n.includes(cN)) || (n.length >= 4 && cN.includes(n));
@@ -131,37 +153,65 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
 
           const ct = contratos?.find((c) => {
             const n = normalize(c.cliente_nome);
-            return n === cN || (cN.length >= 4 && n.includes(cN));
+            return n === cN || (cN.length >= 4 && n.includes(cN)) || (n.length >= 4 && cN.includes(n));
           });
           if (ct) { p.contratoId = ct.id; p.contratoMatch = true; }
         }
       }
 
+      // Agrupar por clienteBase — todas as OCs do mesmo cliente = 1 pedido com múltiplos ambientes
+      const map = new Map<string, GroupedPedido>();
+      for (const p of parsed) {
+        const key = normalize(p.clienteBase) || `__${p.oc}_${p.numeroPedido}`;
+        const ex = map.get(key);
+        if (ex) {
+          if (p.oc && !ex.ocs.includes(p.oc)) ex.ocs.push(p.oc);
+          if (p.dataPrevista && (!ex.dataPrevista || p.dataPrevista < ex.dataPrevista)) ex.dataPrevista = p.dataPrevista;
+          if (!ex.numeroPedido && p.numeroPedido) ex.numeroPedido = p.numeroPedido;
+          if (!ex.contratoId && p.contratoId) { ex.contratoId = p.contratoId; ex.contratoMatch = true; }
+          if (!ex.clienteMatch && p.clienteMatch) ex.clienteMatch = true;
+        } else {
+          map.set(key, {
+            clienteBase: p.clienteBase,
+            clienteOriginal: p.cliente,
+            ocs: p.oc ? [p.oc] : [],
+            numeroPedido: p.numeroPedido,
+            dataPrevista: p.dataPrevista,
+            status: p.status,
+            contratoId: p.contratoId ?? null,
+            clienteMatch: !!p.clienteMatch,
+            contratoMatch: !!p.contratoMatch,
+          });
+        }
+      }
+
       setRows(parsed);
-      if (!parsed.length) toast.warning("Nenhuma linha válida");
+      setGrouped(Array.from(map.values()));
+      if (!map.size) toast.warning("Nenhuma linha válida");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erro ao ler XLS");
-      setRows([]);
+      setRows([]); setGrouped([]);
     } finally { setParsing(false); }
   };
 
   const handleImport = async () => {
-    if (!lojaId || !rows.length) return;
+    if (!lojaId || !grouped.length) return;
     setImporting(true);
     try {
       let vinculados = 0, pendentes = 0;
       const sb = supabase as unknown as {
         from: (t: string) => { insert: (v: unknown) => Promise<{ error: Error | null }> };
       };
-      for (const p of rows) {
-        const isVinculado = !!p.contratoId;
+      for (const g of grouped) {
+        const isVinculado = !!g.contratoId;
+        const ocsConcat = g.ocs.join(", ");
         const { error } = await sb.from("producao_terceirizada").insert({
           loja_id: lojaId,
           fornecedor_id: fornecedorId,
-          contrato_id: p.contratoId ?? null,
-          numero_pedido: p.numeroPedido || `s/n-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-          oc: p.oc || p.cliente || null,
-          data_prevista: p.dataPrevista || null,
+          contrato_id: g.contratoId ?? null,
+          numero_pedido: g.numeroPedido || `s/n-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          oc: ocsConcat || g.clienteBase || null,
+          data_prevista: g.dataPrevista || null,
           status: "aguardando_fabricacao",
           tipo_entrada: "xml",
           vinculo_status: isVinculado ? "vinculado" : "pendente",
@@ -177,7 +227,7 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
     } finally { setImporting(false); }
   };
 
-  const matchedCount = rows.filter((r) => r.contratoMatch).length;
+  const matchedCount = grouped.filter((r) => r.contratoMatch).length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -216,30 +266,30 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
 
             {parsing && <p className="text-center text-sm text-muted-foreground py-4">Lendo planilha...</p>}
 
-            {!parsing && rows.length > 0 && !result && (
+            {!parsing && grouped.length > 0 && !result && (
               <div className="space-y-2">
                 <div style={{ fontSize: 12, color: "#48556B" }}>
-                  {rows.length} linhas · <strong style={{ color: "#05873C" }}>{matchedCount} cruzaram com contratos</strong> · {rows.length - matchedCount} ficarão pendentes
+                  {rows.length} linhas → <strong>{grouped.length} pedidos agrupados por cliente</strong> · <strong style={{ color: "#05873C" }}>{matchedCount} cruzaram com contratos</strong> · {grouped.length - matchedCount} pendentes
                 </div>
-                <div className="overflow-hidden rounded-lg" style={{ border: "0.5px solid #E8ECF2", maxHeight: 200, overflowY: "auto" }}>
+                <div className="overflow-hidden rounded-lg" style={{ border: "0.5px solid #E8ECF2", maxHeight: 240, overflowY: "auto" }}>
                   <table className="w-full" style={{ fontSize: 11 }}>
                     <thead style={{ backgroundColor: "#F7F9FC" }}>
                       <tr style={{ color: "#6B7A90" }}>
                         <th className="px-2 py-1.5 text-left w-6"></th>
                         <th className="px-2 py-1.5 text-left">Cliente</th>
                         <th className="px-2 py-1.5 text-left">Pedido</th>
-                        <th className="px-2 py-1.5 text-left">OC</th>
+                        <th className="px-2 py-1.5 text-left">Ambientes</th>
                         <th className="px-2 py-1.5 text-left">Previsão</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {rows.map((r, i) => (
+                      {grouped.map((g, i) => (
                         <tr key={i} style={{ borderTop: "0.5px solid #E8ECF2" }}>
-                          <td className="px-2 py-1.5">{r.contratoMatch ? <span style={{ color: "#05873C" }}>✓</span> : <span style={{ color: "#E8A020" }}>⚠</span>}</td>
-                          <td className="px-2 py-1.5 truncate max-w-[140px]">{r.cliente || "—"}</td>
-                          <td className="px-2 py-1.5">{r.numeroPedido || "—"}</td>
-                          <td className="px-2 py-1.5 truncate max-w-[100px]">{r.oc || "—"}</td>
-                          <td className="px-2 py-1.5">{r.dataPrevista || "—"}</td>
+                          <td className="px-2 py-1.5">{g.contratoMatch ? <span style={{ color: "#05873C" }}>✓</span> : <span style={{ color: "#E8A020" }}>⚠</span>}</td>
+                          <td className="px-2 py-1.5 truncate max-w-[160px]" title={g.clienteOriginal}>{g.clienteBase || "—"}</td>
+                          <td className="px-2 py-1.5">{g.numeroPedido || "—"}</td>
+                          <td className="px-2 py-1.5 truncate max-w-[140px]" title={g.ocs.join(", ")}>{g.ocs.length} {g.ocs.length === 1 ? "ambiente" : "ambientes"}</td>
+                          <td className="px-2 py-1.5">{g.dataPrevista || "—"}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -248,7 +298,7 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
               </div>
             )}
 
-            {!parsing && rows.length === 0 && !result && (
+            {!parsing && grouped.length === 0 && rows.length === 0 && !result && (
               <div className="flex items-center gap-2 rounded-lg p-3" style={{ backgroundColor: "#FEF3F2" }}>
                 <AlertCircle className="h-4 w-4" style={{ color: "#D92D20" }} />
                 <span className="text-sm" style={{ color: "#D92D20" }}>Nenhuma linha válida encontrada</span>
@@ -271,7 +321,7 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>{result ? "Fechar" : "Cancelar"}</Button>
           {!result && (
-            <Button onClick={handleImport} disabled={!file || !rows.length || importing || parsing || !lojaId} style={{ backgroundColor: "#1E6FBF", color: "#fff" }}>
+            <Button onClick={handleImport} disabled={!file || !grouped.length || importing || parsing || !lojaId} style={{ backgroundColor: "#1E6FBF", color: "#fff" }}>
               {importing ? "Importando..." : "Importar"}
               {!importing && <ArrowRight className="h-4 w-4 ml-1" />}
             </Button>
