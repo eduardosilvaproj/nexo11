@@ -250,18 +250,31 @@ export default function Comissoes() {
             Qualidade de venda, não só volume
           </p>
         </div>
-        <Select value={mes} onValueChange={setMes}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {opcoes.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          {podeRecalcular && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={recalcularComissoes}
+              disabled={recalculando || !lojaId}
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${recalculando ? "animate-spin" : ""}`} />
+              {recalculando ? "Recalculando..." : "Recalcular"}
+            </Button>
+          )}
+          <Select value={mes} onValueChange={setMes}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {opcoes.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </header>
 
       <div className="grid gap-4 md:grid-cols-3">
