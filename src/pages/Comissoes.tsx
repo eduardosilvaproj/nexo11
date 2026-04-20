@@ -275,10 +275,10 @@ export default function Comissoes() {
       const fimStr = `${fim.getFullYear()}-${String(fim.getMonth() + 1).padStart(2, "0")}-${String(fim.getDate()).padStart(2, "0")}`;
       const { data } = await supabase
         .from("comissoes")
-        .select("valor, status, gatilho, created_at")
+        .select("valor, status, gatilho, data_gatilho")
         .eq("loja_id", lojaId)
-        .gte("created_at", `${mes}T00:00:00`)
-        .lte("created_at", `${fimStr}T23:59:59`);
+        .gte("data_gatilho", `${mes}T00:00:00`)
+        .lte("data_gatilho", `${fimStr}T23:59:59`);
       const rows = data ?? [];
       const totalMes = rows.reduce((s, r) => s + Number(r.valor ?? 0), 0);
       const pagas = rows
