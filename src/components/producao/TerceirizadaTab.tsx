@@ -247,6 +247,7 @@ export function TerceirizadaTab() {
       </div>
 
       <NovoPedidoTerceirizadoDialog open={novoOpen} onOpenChange={setNovoOpen} lojaId={lojaId} />
+      <ImportFabricanteXlsDialog open={importOpen} onOpenChange={setImportOpen} lojaId={lojaId} fornecedorId={null} />
       <VincularPedidoDialog open={!!vincularId} onOpenChange={(o) => !o && setVincularId(null)} pedidoId={vincularId} lojaId={lojaId} />
     </>
   );
