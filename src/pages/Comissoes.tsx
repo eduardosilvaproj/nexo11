@@ -65,6 +65,13 @@ export default function Comissoes() {
   const [lojaId, setLojaId] = useState<string | null>(null);
   const [metricas, setMetricas] = useState({ totalMes: 0, pagas: 0, bonus: 0 });
   const [recalculando, setRecalculando] = useState(false);
+  const [debugAberto, setDebugAberto] = useState(false);
+  const [debugData, setDebugData] = useState<{
+    totalComissoes: number;
+    totalMembros: number;
+    totalContratos: number;
+    porMembro: Array<{ nome: string; papel: string; contratos: number; valorTotal: number }>;
+  } | null>(null);
   const { hasRole } = useAuth();
   const podeEditarRegra = hasRole("admin") || hasRole("franqueador");
   const podePagar = podeEditarRegra;
