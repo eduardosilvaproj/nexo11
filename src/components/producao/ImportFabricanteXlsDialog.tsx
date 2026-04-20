@@ -193,6 +193,10 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
           if (!ex.numeroPedido && p.numeroPedido) ex.numeroPedido = p.numeroPedido;
           if (!ex.contratoId && p.contratoId) { ex.contratoId = p.contratoId; ex.contratoMatch = true; }
           if (!ex.clienteMatch && p.clienteMatch) ex.clienteMatch = true;
+          if (!ex.tipo && p.tipo) ex.tipo = p.tipo;
+          // Situação: priorizar T (em transporte) sobre L (em fabricação)
+          if (p.situacao === "T") ex.situacao = "T";
+          else if (!ex.situacao && p.situacao) ex.situacao = p.situacao;
         } else {
           map.set(key, {
             clienteBase: p.clienteBase,
@@ -201,6 +205,8 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
             numeroPedido: p.numeroPedido,
             dataPrevista: p.dataPrevista,
             status: p.status,
+            tipo: p.tipo,
+            situacao: p.situacao,
             contratoId: p.contratoId ?? null,
             clienteMatch: !!p.clienteMatch,
             contratoMatch: !!p.contratoMatch,
