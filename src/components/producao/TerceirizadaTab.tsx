@@ -222,7 +222,7 @@ export function TerceirizadaTab() {
         <table className="w-full">
           <thead style={{ backgroundColor: "#F7F9FC" }}>
             <tr>
-              {["Nº pedido", "OC / Cliente", "Data prevista", "Dias restantes", "Vínculo", "Status", "Ações"].map((h) => (
+              {["Nº pedido", "OC / Cliente", "Tipo", "Situação", "Data prevista", "Dias restantes", "Vínculo", "Status", "Ações"].map((h) => (
                 <th key={h} className="px-4 py-3 text-left" style={{ fontSize: 11, color: "#6B7A90", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   {h}
                 </th>
@@ -231,10 +231,10 @@ export function TerceirizadaTab() {
           </thead>
           <tbody>
             {isLoading && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">Carregando...</td></tr>
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-sm text-muted-foreground">Carregando...</td></tr>
             )}
             {!isLoading && filtered.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-sm text-muted-foreground">
                 Nenhum pedido cadastrado. Use "+ Novo Pedido" para começar.
               </td></tr>
             )}
@@ -242,10 +242,26 @@ export function TerceirizadaTab() {
               const dr = diasRestantes(p.data_prevista);
               const info = statusInfo(p.status);
               const isPendente = p.vinculo_status === "pendente";
+              const tipoUp = (p.tipo || "").toUpperCase();
+              const sitUp = (p.situacao || "").toUpperCase();
               return (
                 <tr key={p.id} style={{ borderTop: "0.5px solid #E8ECF2", backgroundColor: isPendente ? "#FFFBEB" : undefined }}>
                   <td className="px-4 py-3 text-sm font-medium">#{p.numero_pedido}</td>
                   <td className="px-4 py-3 text-sm">{p.contratos?.cliente_nome ?? p.oc ?? "—"}</td>
+                  <td className="px-4 py-3">
+                    {tipoUp === "V" ? (
+                      <span className="inline-flex items-center rounded-full px-2 py-0.5" style={{ backgroundColor: "#E6F3FF", color: "#1E6FBF", fontSize: 11, fontWeight: 500 }}>Venda</span>
+                    ) : tipoUp === "A" ? (
+                      <span className="inline-flex items-center rounded-full px-2 py-0.5" style={{ backgroundColor: "#FEF3C7", color: "#E8A020", fontSize: 11, fontWeight: 500 }}>Assistência</span>
+                    ) : <span className="text-sm text-muted-foreground">—</span>}
+                  </td>
+                  <td className="px-4 py-3">
+                    {sitUp === "L" ? (
+                      <span className="inline-flex items-center rounded-full px-2 py-0.5" style={{ backgroundColor: "#FEF3C7", color: "#B45309", fontSize: 11, fontWeight: 500 }}>Em Fabricação</span>
+                    ) : sitUp === "T" ? (
+                      <span className="inline-flex items-center rounded-full px-2 py-0.5" style={{ backgroundColor: "#D1FAE5", color: "#05873C", fontSize: 11, fontWeight: 500 }}>Em Transporte</span>
+                    ) : <span className="text-sm text-muted-foreground">—</span>}
+                  </td>
                   <td className="px-4 py-3">
                     <DataPrevistaCell pedido={p} onSaved={() => qc.invalidateQueries({ queryKey: ["producao-terceirizada"] })} />
                   </td>
