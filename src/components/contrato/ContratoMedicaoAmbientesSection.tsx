@@ -186,7 +186,14 @@ export function ContratoMedicaoAmbientesSection({
       style={{ border: "0.5px solid #E8ECF2", overflow: "hidden" }}
     >
       <div className="flex items-center justify-between px-5 py-4">
-        <h3 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117" }}>{tituloSec}</h3>
+        <div>
+          <h3 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117" }}>{tituloSec}</h3>
+          {funcao === "medidor" && (
+            <p style={{ fontSize: 12, color: "#6B7A90", marginTop: 2 }}>
+              Medição e visita técnica por ambiente
+            </p>
+          )}
+        </div>
         <span style={{ fontSize: 12, color: "#6B7A90" }}>
           {ambientes?.length ?? 0} ambiente{(ambientes?.length ?? 0) === 1 ? "" : "s"}
         </span>
