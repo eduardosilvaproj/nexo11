@@ -107,8 +107,7 @@ export default function Comissoes() {
       const { data: contratos, error: errContr } = await supabase
         .from("contratos")
         .select("id, valor_venda, created_at, status")
-        .eq("loja_id", lojaId)
-        .neq("status", "cancelado");
+        .eq("loja_id", lojaId);
       if (errContr) throw errContr;
       const contratosLista = contratos ?? [];
       if (!contratosLista.length) {
