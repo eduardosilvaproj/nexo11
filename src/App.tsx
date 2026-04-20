@@ -33,6 +33,7 @@ import Integracoes from "./pages/Integracoes";
 import ConfigPagamento from "./pages/ConfigPagamento";
 import OrcamentoNegociacao from "./pages/OrcamentoNegociacao";
 import ConfigFornecedores from "./pages/ConfigFornecedores";
+import Compras from "./pages/Compras";
 
 const queryClient = new QueryClient();
 
@@ -106,8 +107,8 @@ const App = () => (
                 </ProtectedRoute>
               } />
               <Route path="/compras" element={
-                <ProtectedRoute roles={["admin","gerente"]}>
-                  <Placeholder title="NEXO Compras" />
+                <ProtectedRoute roles={["admin","gerente","tecnico"]}>
+                  <Compras />
                 </ProtectedRoute>
               } />
               <Route path="/equipe" element={
