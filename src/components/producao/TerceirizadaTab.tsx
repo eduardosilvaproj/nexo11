@@ -27,6 +27,8 @@ interface Pedido {
   status: StatusT;
   importado_em: string;
   tipo_entrada?: string;
+  tipo?: string | null;
+  situacao?: string | null;
   vinculo_status?: string;
   contratos?: { cliente_nome?: string } | null;
   fornecedores?: { nome?: string } | null;
