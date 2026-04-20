@@ -340,7 +340,7 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4" style={{ color: "#05873C" }} />
                   <span className="text-sm font-medium" style={{ color: "#05873C" }}>
-                    {result.vinculados} vinculados automaticamente · {result.pendentes} aguardando vínculo manual
+                    {result.atualizados} atualizados · {result.novos} novos · {result.ignorados} ignorados
                   </span>
                 </div>
               </div>
