@@ -1743,6 +1743,7 @@ export type Database = {
       }
       producao_terceirizada: {
         Row: {
+          cliente_nome: string | null
           contrato_id: string | null
           created_at: string
           data_prevista: string | null
@@ -1761,6 +1762,7 @@ export type Database = {
           vinculo_status: string
         }
         Insert: {
+          cliente_nome?: string | null
           contrato_id?: string | null
           created_at?: string
           data_prevista?: string | null
@@ -1779,6 +1781,7 @@ export type Database = {
           vinculo_status?: string
         }
         Update: {
+          cliente_nome?: string | null
           contrato_id?: string | null
           created_at?: string
           data_prevista?: string | null
