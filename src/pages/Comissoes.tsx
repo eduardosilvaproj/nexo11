@@ -111,16 +111,18 @@ export default function Comissoes() {
       const fimStr = `${fim.getFullYear()}-${String(fim.getMonth() + 1).padStart(2, "0")}-${String(fim.getDate()).padStart(2, "0")}`;
       const { data } = await supabase
         .from("comissoes")
-        .select("valor_base, valor_bonus, pago, created_at")
+        .select("valor, status, gatilho, created_at")
         .eq("loja_id", lojaId)
         .gte("created_at", `${mes}T00:00:00`)
         .lte("created_at", `${fimStr}T23:59:59`);
       const rows = data ?? [];
-      const totalMes = rows.reduce((s, r) => s + Number(r.valor_base) + Number(r.valor_bonus), 0);
+      const totalMes = rows.reduce((s, r) => s + Number(r.valor ?? 0), 0);
       const pagas = rows
-        .filter((r) => r.pago)
-        .reduce((s, r) => s + Number(r.valor_base) + Number(r.valor_bonus), 0);
-      const bonus = rows.reduce((s, r) => s + Number(r.valor_bonus), 0);
+        .filter((r) => r.status === "paga")
+        .reduce((s, r) => s + Number(r.valor ?? 0), 0);
+      const bonus = rows
+        .filter((r) => (r.gatilho ?? "").includes("bonus"))
+        .reduce((s, r) => s + Number(r.valor ?? 0), 0);
       setMetricas({ totalMes, pagas, bonus });
     })();
   }, [mes, lojaId]);
