@@ -89,7 +89,7 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
   const [parsing, setParsing] = useState(false);
   const [importing, setImporting] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const [result, setResult] = useState<{ vinculados: number; pendentes: number } | null>(null);
+  const [result, setResult] = useState<{ atualizados: number; novos: number; ignorados: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const reset = () => { setFile(null); setRows([]); setGrouped([]); setResult(null); setDragOver(false); };
