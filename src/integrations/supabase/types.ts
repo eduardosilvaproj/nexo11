@@ -1752,7 +1752,9 @@ export type Database = {
           loja_id: string
           numero_pedido: string
           oc: string | null
+          situacao: string | null
           status: Database["public"]["Enums"]["producao_terceirizada_status"]
+          tipo: string | null
           tipo_entrada: string
           transportadora: string | null
           updated_at: string
@@ -1768,7 +1770,9 @@ export type Database = {
           loja_id: string
           numero_pedido: string
           oc?: string | null
+          situacao?: string | null
           status?: Database["public"]["Enums"]["producao_terceirizada_status"]
+          tipo?: string | null
           tipo_entrada?: string
           transportadora?: string | null
           updated_at?: string
@@ -1784,7 +1788,9 @@ export type Database = {
           loja_id?: string
           numero_pedido?: string
           oc?: string | null
+          situacao?: string | null
           status?: Database["public"]["Enums"]["producao_terceirizada_status"]
+          tipo?: string | null
           tipo_entrada?: string
           transportadora?: string | null
           updated_at?: string
