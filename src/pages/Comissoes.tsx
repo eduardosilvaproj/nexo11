@@ -9,6 +9,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { RefreshCw } from "lucide-react";
 import { ComissoesRelatorioTab, REGRA_PADRAO, type RegraComissao } from "@/components/comissoes/ComissoesRelatorioTab";
 import { PapeisTab } from "@/components/comissoes/PapeisTab";
@@ -65,6 +72,13 @@ export default function Comissoes() {
   const [lojaId, setLojaId] = useState<string | null>(null);
   const [metricas, setMetricas] = useState({ totalMes: 0, pagas: 0, bonus: 0 });
   const [recalculando, setRecalculando] = useState(false);
+  const [debugAberto, setDebugAberto] = useState(false);
+  const [debugData, setDebugData] = useState<{
+    totalComissoes: number;
+    totalMembros: number;
+    totalContratos: number;
+    porMembro: Array<{ nome: string; papel: string; contratos: number; valorTotal: number }>;
+  } | null>(null);
   const { hasRole } = useAuth();
   const podeEditarRegra = hasRole("admin") || hasRole("franqueador");
   const podePagar = podeEditarRegra;
@@ -79,7 +93,7 @@ export default function Comissoes() {
       // 1. Papéis ativos com regra contrato_assinado
       const { data: papeis, error: errPapeis } = await supabase
         .from("papeis_comissao")
-        .select("id, percentual_padrao")
+        .select("id, nome, percentual_padrao")
         .eq("loja_id", lojaId)
         .eq("ativo", true)
         .eq("regra_pagamento", "contrato_assinado");
@@ -90,10 +104,10 @@ export default function Comissoes() {
         return;
       }
 
-      // 2. Membros da equipe com esses papéis
+      // 2. TODOS os membros da loja com papel configurado (inclui admins)
       const { data: membros, error: errMembros } = await supabase
         .from("usuarios")
-        .select("id, papel_comissao_id, comissao_percentual")
+        .select("id, nome, papel_comissao_id, comissao_percentual")
         .eq("loja_id", lojaId)
         .in("papel_comissao_id", papelIds);
       if (errMembros) throw errMembros;
@@ -126,7 +140,8 @@ export default function Comissoes() {
         (existentes ?? []).map((e) => `${e.contrato_id}|${e.usuario_id}`)
       );
 
-      // 5. Montar inserts
+      // 5. Montar inserts — data_gatilho = agora (data do recálculo)
+      const agora = new Date().toISOString();
       const inserts: Array<{
         contrato_id: string;
         loja_id: string;
@@ -140,6 +155,10 @@ export default function Comissoes() {
         data_gatilho: string;
       }> = [];
       const contratosAfetados = new Set<string>();
+      const porMembroMap: Record<
+        string,
+        { nome: string; papel: string; contratos: Set<string>; valorTotal: number }
+      > = {};
 
       for (const contrato of contratosLista) {
         const valor = Number(contrato.valor_venda ?? 0);
@@ -151,6 +170,7 @@ export default function Comissoes() {
           if (!papel) continue;
           const pct = Number(m.comissao_percentual ?? papel.percentual_padrao ?? 0);
           if (pct <= 0) continue;
+          const valorComissao = Number(((valor * pct) / 100).toFixed(2));
           inserts.push({
             contrato_id: contrato.id,
             loja_id: lojaId,
@@ -158,23 +178,53 @@ export default function Comissoes() {
             papel_id: m.papel_comissao_id!,
             base_calculo: valor,
             percentual: pct,
-            valor: Number(((valor * pct) / 100).toFixed(2)),
+            valor: valorComissao,
             status: "liberada",
             gatilho: "contrato_assinado",
-            data_gatilho: contrato.created_at,
+            data_gatilho: agora,
           });
           contratosAfetados.add(contrato.id);
+          if (!porMembroMap[m.id]) {
+            porMembroMap[m.id] = {
+              nome: m.nome ?? "—",
+              papel: papel.nome ?? "—",
+              contratos: new Set(),
+              valorTotal: 0,
+            };
+          }
+          porMembroMap[m.id].contratos.add(contrato.id);
+          porMembroMap[m.id].valorTotal += valorComissao;
         }
       }
 
       if (!inserts.length) {
         toast.info("Nenhuma comissão nova para gerar");
+        setDebugData({
+          totalComissoes: 0,
+          totalMembros: membrosValidos.length,
+          totalContratos: contratosLista.length,
+          porMembro: [],
+        });
+        setDebugAberto(true);
         return;
       }
 
       const { error: errIns } = await supabase.from("comissoes").insert(inserts);
       if (errIns) throw errIns;
 
+      const porMembro = Object.values(porMembroMap).map((v) => ({
+        nome: v.nome,
+        papel: v.papel,
+        contratos: v.contratos.size,
+        valorTotal: v.valorTotal,
+      }));
+      setDebugData({
+        totalComissoes: inserts.length,
+        totalMembros: porMembro.length,
+        totalContratos: contratosAfetados.size,
+        porMembro,
+      });
+      setDebugAberto(true);
       toast.success(
         `${inserts.length} comissões geradas para ${contratosAfetados.size} contratos`
       );
@@ -225,10 +275,10 @@ export default function Comissoes() {
       const fimStr = `${fim.getFullYear()}-${String(fim.getMonth() + 1).padStart(2, "0")}-${String(fim.getDate()).padStart(2, "0")}`;
       const { data } = await supabase
         .from("comissoes")
-        .select("valor, status, gatilho, created_at")
+        .select("valor, status, gatilho, data_gatilho")
         .eq("loja_id", lojaId)
-        .gte("created_at", `${mes}T00:00:00`)
-        .lte("created_at", `${fimStr}T23:59:59`);
+        .gte("data_gatilho", `${mes}T00:00:00`)
+        .lte("data_gatilho", `${fimStr}T23:59:59`);
       const rows = data ?? [];
       const totalMes = rows.reduce((s, r) => s + Number(r.valor ?? 0), 0);
       const pagas = rows
@@ -316,6 +366,56 @@ export default function Comissoes() {
           <PapeisTab lojaId={lojaId} podeEditar={podeEditarRegra} />
         </TabsContent>
       </Tabs>
+
+      <Dialog open={debugAberto} onOpenChange={setDebugAberto}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Detalhes do recálculo</DialogTitle>
+          </DialogHeader>
+          {debugData && (
+            <div className="space-y-4">
+              <p className="text-sm">
+                <span className="font-medium">{debugData.totalComissoes}</span> comissões criadas para{" "}
+                <span className="font-medium">{debugData.totalMembros}</span> membros em{" "}
+                <span className="font-medium">{debugData.totalContratos}</span> contratos.
+              </p>
+              {debugData.porMembro.length > 0 ? (
+                <div className="overflow-hidden rounded-md border" style={{ borderColor: "#E8ECF2" }}>
+                  <table className="w-full text-sm">
+                    <thead style={{ background: "#F5F7FA", color: "#6B7A90" }}>
+                      <tr>
+                        <th className="px-3 py-2 text-left font-medium">Membro</th>
+                        <th className="px-3 py-2 text-left font-medium">Papel</th>
+                        <th className="px-3 py-2 text-right font-medium">Contratos</th>
+                        <th className="px-3 py-2 text-right font-medium">Valor total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y" style={{ borderColor: "#E8ECF2" }}>
+                      {debugData.porMembro.map((m, i) => (
+                        <tr key={i}>
+                          <td className="px-3 py-2">{m.nome}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{m.papel}</td>
+                          <td className="px-3 py-2 text-right tabular-nums">{m.contratos}</td>
+                          <td className="px-3 py-2 text-right tabular-nums font-medium">
+                            {fmtBRL(m.valorTotal)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Nenhuma comissão nova foi gerada — todos os contratos elegíveis já têm comissões para os membros configurados.
+                </p>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setDebugAberto(false)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
