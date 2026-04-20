@@ -321,7 +321,7 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>{result ? "Fechar" : "Cancelar"}</Button>
           {!result && (
-            <Button onClick={handleImport} disabled={!file || !rows.length || importing || parsing || !lojaId} style={{ backgroundColor: "#1E6FBF", color: "#fff" }}>
+            <Button onClick={handleImport} disabled={!file || !grouped.length || importing || parsing || !lojaId} style={{ backgroundColor: "#1E6FBF", color: "#fff" }}>
               {importing ? "Importando..." : "Importar"}
               {!importing && <ArrowRight className="h-4 w-4 ml-1" />}
             </Button>
