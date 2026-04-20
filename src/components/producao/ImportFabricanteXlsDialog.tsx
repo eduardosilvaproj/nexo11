@@ -21,6 +21,8 @@ interface ParsedRow {
   oc: string;
   dataPrevista: string;
   status: string;
+  tipo: string; // V, A, B, A e B
+  situacao: string; // L, T
   contratoId?: string | null;
   clienteMatch?: boolean;
   contratoMatch?: boolean;
@@ -33,6 +35,8 @@ interface GroupedPedido {
   numeroPedido: string;
   dataPrevista: string; // menor data
   status: string;
+  tipo: string;
+  situacao: string;
   contratoId?: string | null;
   clienteMatch: boolean;
   contratoMatch: boolean;
@@ -118,7 +122,9 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
       const iPedido = findCol(headers, ["pedido", "numero pedido", "nº pedido"]);
       const iOC = findCol(headers, ["oc", "ordem compra"]);
       const iData = findCol(headers, ["data prog", "previsao", "previsão", "data prevista", "entrega"]);
-      const iStatus = findCol(headers, ["status", "situacao", "situação"]);
+      const iStatus = findCol(headers, ["status"]);
+      const iTipo = findCol(headers, ["tipo"]);
+      const iSituacao = findCol(headers, ["situacao", "situação"]);
 
       if (iCliente < 0) throw new Error("Não encontrei a coluna NOME CLIENTE");
 
@@ -128,6 +134,17 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
         const cliente = String(r[iCliente] ?? "").trim();
         const oc = iOC >= 0 ? String(r[iOC] ?? "").trim() : "";
         const dataPrev = iData >= 0 ? excelDateToISO(r[iData]) : "";
+        const tipoRaw = iTipo >= 0 ? String(r[iTipo] ?? "").trim().toUpperCase() : "";
+        const situacaoRaw = iSituacao >= 0 ? String(r[iSituacao] ?? "").trim().toUpperCase() : "";
+
+        // Filtrar: apenas Tipo = V ou A. Ignorar B e "A e B"
+        if (iTipo >= 0) {
+          if (!tipoRaw) continue;
+          if (tipoRaw === "B") continue;
+          if (tipoRaw.includes("B")) continue; // "A e B", "A B", etc
+          if (tipoRaw !== "V" && tipoRaw !== "A") continue;
+        }
+
         if (!cliente && !oc) continue;
         parsed.push({
           cliente,
@@ -136,6 +153,8 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
           oc,
           dataPrevista: dataPrev,
           status: iStatus >= 0 ? String(r[iStatus] ?? "").trim() : "",
+          tipo: tipoRaw,
+          situacao: situacaoRaw,
         });
       }
 
@@ -174,6 +193,10 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
           if (!ex.numeroPedido && p.numeroPedido) ex.numeroPedido = p.numeroPedido;
           if (!ex.contratoId && p.contratoId) { ex.contratoId = p.contratoId; ex.contratoMatch = true; }
           if (!ex.clienteMatch && p.clienteMatch) ex.clienteMatch = true;
+          if (!ex.tipo && p.tipo) ex.tipo = p.tipo;
+          // Situação: priorizar T (em transporte) sobre L (em fabricação)
+          if (p.situacao === "T") ex.situacao = "T";
+          else if (!ex.situacao && p.situacao) ex.situacao = p.situacao;
         } else {
           map.set(key, {
             clienteBase: p.clienteBase,
@@ -182,6 +205,8 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
             numeroPedido: p.numeroPedido,
             dataPrevista: p.dataPrevista,
             status: p.status,
+            tipo: p.tipo,
+            situacao: p.situacao,
             contratoId: p.contratoId ?? null,
             clienteMatch: !!p.clienteMatch,
             contratoMatch: !!p.contratoMatch,
@@ -230,6 +255,8 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
           const { error } = await sb.from("producao_terceirizada").update({
             data_prevista: g.dataPrevista || null,
             oc: ocsConcat || g.clienteBase || null,
+            tipo: g.tipo || null,
+            situacao: g.situacao || null,
           }).eq("id", existenteId);
           if (error) { console.error(error); ignorados++; continue; }
           atualizados++;
@@ -243,6 +270,8 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
             data_prevista: g.dataPrevista || null,
             status: "aguardando_fabricacao",
             tipo_entrada: "xml",
+            tipo: g.tipo || null,
+            situacao: g.situacao || null,
             vinculo_status: g.contratoId ? "vinculado" : "pendente",
           });
           if (error) { console.error(error); ignorados++; continue; }
