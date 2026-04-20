@@ -2303,6 +2303,10 @@ export type Database = {
         Returns: undefined
       }
       current_loja_id: { Args: never; Returns: string }
+      gerar_comissoes_ambiente: {
+        Args: { _ambiente_id: string; _gatilho: string; _tipos_papel: string[] }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _loja_id?: string
