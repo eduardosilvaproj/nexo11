@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { useAuth } from "@/contexts/AuthContext";
+import { EditarComissaoDialog } from "./EditarComissaoDialog";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 
@@ -11,6 +14,8 @@ type Membro = {
   nome: string;
   email: string | null;
   role: AppRole;
+  papel_nome: string | null;
+  comissao_percentual: number | null;
 };
 
 const ROLE_COLORS: Record<AppRole, { bg: string; fg: string; avatar: string; label: string }> = {
@@ -34,68 +39,79 @@ function getInitials(nome: string) {
 async function fetchMembros(): Promise<Membro[]> {
   const { data: usuarios, error: uErr } = await supabase
     .from("usuarios")
-    .select("id, nome, email")
+    .select("id, nome, email, papel_comissao_id, comissao_percentual")
     .order("nome");
   if (uErr) throw uErr;
   if (!usuarios?.length) return [];
 
   const ids = usuarios.map((u) => u.id);
-  const { data: roles, error: rErr } = await supabase
-    .from("user_roles")
-    .select("user_id, role")
-    .in("user_id", ids);
-  if (rErr) throw rErr;
+  const papelIds = Array.from(
+    new Set(usuarios.map((u) => u.papel_comissao_id).filter(Boolean) as string[])
+  );
+
+  const [rolesRes, papeisRes] = await Promise.all([
+    supabase.from("user_roles").select("user_id, role").in("user_id", ids),
+    papelIds.length
+      ? supabase.from("papeis_comissao").select("id, nome").in("id", papelIds)
+      : Promise.resolve({ data: [] as { id: string; nome: string }[], error: null }),
+  ]);
+  if (rolesRes.error) throw rolesRes.error;
 
   const roleByUser = new Map<string, AppRole>();
-  roles?.forEach((r) => {
+  rolesRes.data?.forEach((r) => {
     if (!roleByUser.has(r.user_id)) roleByUser.set(r.user_id, r.role);
   });
+  const papelById = new Map<string, string>(
+    (papeisRes.data ?? []).map((p) => [p.id, p.nome])
+  );
 
   return usuarios.map((u) => ({
     id: u.id,
     nome: u.nome,
     email: u.email,
     role: roleByUser.get(u.id) ?? "vendedor",
+    papel_nome: u.papel_comissao_id ? papelById.get(u.papel_comissao_id) ?? null : null,
+    comissao_percentual: u.comissao_percentual != null ? Number(u.comissao_percentual) : null,
   }));
 }
 
-function MembroCard({ membro }: { membro: Membro }) {
+function MembroCard({
+  membro,
+  podeEditar,
+  onEditar,
+}: {
+  membro: Membro;
+  podeEditar: boolean;
+  onEditar: () => void;
+}) {
   const role = ROLE_COLORS[membro.role];
   return (
-    <div
-      className="rounded-xl bg-white p-4"
-      style={{ border: "0.5px solid #E8ECF2" }}
-    >
+    <div className="rounded-xl bg-white p-4" style={{ border: "0.5px solid #E8ECF2" }}>
       <div className="flex items-start gap-3">
         <div
           className="flex shrink-0 items-center justify-center rounded-full text-white"
-          style={{
-            width: 44,
-            height: 44,
-            backgroundColor: role.avatar,
-            fontSize: 14,
-            fontWeight: 600,
-          }}
+          style={{ width: 44, height: 44, backgroundColor: role.avatar, fontSize: 14, fontWeight: 600 }}
         >
           {getInitials(membro.nome)}
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
-            <p
-              className="truncate"
-              style={{ fontSize: 14, fontWeight: 500, color: "#0D1117" }}
-            >
+            <p className="truncate" style={{ fontSize: 14, fontWeight: 500, color: "#0D1117" }}>
               {membro.nome}
             </p>
+            {podeEditar && (
+              <button
+                onClick={onEditar}
+                className="shrink-0 rounded p-1 hover:bg-[#F5F7FA]"
+                title="Editar comissão"
+              >
+                <Pencil className="h-3.5 w-3.5" style={{ color: "#6B7A90" }} />
+              </button>
+            )}
           </div>
           <span
             className="mt-1 inline-flex items-center rounded-full px-2 py-0.5"
-            style={{
-              backgroundColor: role.bg,
-              color: role.fg,
-              fontSize: 11,
-              fontWeight: 500,
-            }}
+            style={{ backgroundColor: role.bg, color: role.fg, fontSize: 11, fontWeight: 500 }}
           >
             {role.label}
           </span>
@@ -106,7 +122,11 @@ function MembroCard({ membro }: { membro: Membro }) {
         <p className="truncate" style={{ fontSize: 12, color: "#6B7A90" }}>
           {membro.email ?? "—"}
         </p>
-        <p style={{ fontSize: 12, color: "#B0BAC9" }}>Sem registro</p>
+        <p style={{ fontSize: 12, color: membro.papel_nome ? "#0D1117" : "#B0BAC9" }}>
+          {membro.papel_nome
+            ? `${membro.papel_nome} · ${(membro.comissao_percentual ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 2 })}%`
+            : "Sem comissão configurada"}
+        </p>
       </div>
 
       <div
@@ -126,15 +146,17 @@ function MembroCard({ membro }: { membro: Membro }) {
 }
 
 export function MembrosTab({ onAddMember }: { onAddMember?: () => void } = {}) {
+  const { hasRole } = useAuth();
+  const podeEditar = hasRole("admin") || hasRole("gerente") || hasRole("franqueador");
+  const [editAlvo, setEditAlvo] = useState<Membro | null>(null);
+
   const { data: membros, isLoading } = useQuery({
     queryKey: ["equipe-membros"],
     queryFn: fetchMembros,
   });
 
   if (isLoading) {
-    return (
-      <p style={{ fontSize: 13, color: "#6B7A90" }}>Carregando membros…</p>
-    );
+    return <p style={{ fontSize: 13, color: "#6B7A90" }}>Carregando membros…</p>;
   }
 
   if (!membros?.length) {
@@ -143,14 +165,10 @@ export function MembrosTab({ onAddMember }: { onAddMember?: () => void } = {}) {
         className="flex flex-col items-center justify-center rounded-xl bg-white py-16"
         style={{ border: "0.5px dashed #E8ECF2" }}
       >
-        <p style={{ fontSize: 14, color: "#6B7A90" }}>
-          Nenhum membro cadastrado
-        </p>
+        <p style={{ fontSize: 14, color: "#6B7A90" }}>Nenhum membro cadastrado</p>
         <button
           onClick={() =>
-            onAddMember
-              ? onAddMember()
-              : toast.info("Em breve: cadastro de novo membro")
+            onAddMember ? onAddMember() : toast.info("Em breve: cadastro de novo membro")
           }
           className="mt-4 inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-white"
           style={{ backgroundColor: "#1E6FBF", fontSize: 13 }}
@@ -162,10 +180,23 @@ export function MembrosTab({ onAddMember }: { onAddMember?: () => void } = {}) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {membros.map((m) => (
-        <MembroCard key={m.id} membro={m} />
-      ))}
-    </div>
+    <>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {membros.map((m) => (
+          <MembroCard
+            key={m.id}
+            membro={m}
+            podeEditar={podeEditar}
+            onEditar={() => setEditAlvo(m)}
+          />
+        ))}
+      </div>
+      <EditarComissaoDialog
+        open={!!editAlvo}
+        onOpenChange={(o) => { if (!o) setEditAlvo(null); }}
+        userId={editAlvo?.id ?? null}
+        nome={editAlvo?.nome ?? ""}
+      />
+    </>
   );
 }
