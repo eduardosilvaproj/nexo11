@@ -86,7 +86,7 @@ export default function Comissoes() {
       // 1. Papéis ativos com regra contrato_assinado
       const { data: papeis, error: errPapeis } = await supabase
         .from("papeis_comissao")
-        .select("id, percentual_padrao")
+        .select("id, nome, percentual_padrao")
         .eq("loja_id", lojaId)
         .eq("ativo", true)
         .eq("regra_pagamento", "contrato_assinado");
@@ -97,10 +97,10 @@ export default function Comissoes() {
         return;
       }
 
-      // 2. Membros da equipe com esses papéis
+      // 2. TODOS os membros da loja com papel configurado (inclui admins)
       const { data: membros, error: errMembros } = await supabase
         .from("usuarios")
-        .select("id, papel_comissao_id, comissao_percentual")
+        .select("id, nome, papel_comissao_id, comissao_percentual")
         .eq("loja_id", lojaId)
         .in("papel_comissao_id", papelIds);
       if (errMembros) throw errMembros;
@@ -133,7 +133,8 @@ export default function Comissoes() {
         (existentes ?? []).map((e) => `${e.contrato_id}|${e.usuario_id}`)
       );
 
-      // 5. Montar inserts
+      // 5. Montar inserts — data_gatilho = agora (data do recálculo)
+      const agora = new Date().toISOString();
       const inserts: Array<{
         contrato_id: string;
         loja_id: string;
@@ -147,6 +148,10 @@ export default function Comissoes() {
         data_gatilho: string;
       }> = [];
       const contratosAfetados = new Set<string>();
+      const porMembroMap: Record<
+        string,
+        { nome: string; papel: string; contratos: Set<string>; valorTotal: number }
+      > = {};
 
       for (const contrato of contratosLista) {
         const valor = Number(contrato.valor_venda ?? 0);
@@ -158,6 +163,7 @@ export default function Comissoes() {
           if (!papel) continue;
           const pct = Number(m.comissao_percentual ?? papel.percentual_padrao ?? 0);
           if (pct <= 0) continue;
+          const valorComissao = Number(((valor * pct) / 100).toFixed(2));
           inserts.push({
             contrato_id: contrato.id,
             loja_id: lojaId,
@@ -165,23 +171,53 @@ export default function Comissoes() {
             papel_id: m.papel_comissao_id!,
             base_calculo: valor,
             percentual: pct,
-            valor: Number(((valor * pct) / 100).toFixed(2)),
+            valor: valorComissao,
             status: "liberada",
             gatilho: "contrato_assinado",
-            data_gatilho: contrato.created_at,
+            data_gatilho: agora,
           });
           contratosAfetados.add(contrato.id);
+          if (!porMembroMap[m.id]) {
+            porMembroMap[m.id] = {
+              nome: m.nome ?? "—",
+              papel: papel.nome ?? "—",
+              contratos: new Set(),
+              valorTotal: 0,
+            };
+          }
+          porMembroMap[m.id].contratos.add(contrato.id);
+          porMembroMap[m.id].valorTotal += valorComissao;
         }
       }
 
       if (!inserts.length) {
         toast.info("Nenhuma comissão nova para gerar");
+        setDebugData({
+          totalComissoes: 0,
+          totalMembros: membrosValidos.length,
+          totalContratos: contratosLista.length,
+          porMembro: [],
+        });
+        setDebugAberto(true);
         return;
       }
 
       const { error: errIns } = await supabase.from("comissoes").insert(inserts);
       if (errIns) throw errIns;
 
+      const porMembro = Object.values(porMembroMap).map((v) => ({
+        nome: v.nome,
+        papel: v.papel,
+        contratos: v.contratos.size,
+        valorTotal: v.valorTotal,
+      }));
+      setDebugData({
+        totalComissoes: inserts.length,
+        totalMembros: porMembro.length,
+        totalContratos: contratosAfetados.size,
+        porMembro,
+      });
+      setDebugAberto(true);
       toast.success(
         `${inserts.length} comissões geradas para ${contratosAfetados.size} contratos`
       );
