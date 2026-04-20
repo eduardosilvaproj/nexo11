@@ -40,6 +40,10 @@ interface GroupedPedido {
 
 const extractClienteBase = (raw: string): string => {
   const s = (raw || "").toString().trim();
+  // Split por " - " (com espaços) conforme padrão "NOME - 285004 - CONFERÊNCIA"
+  const parts = s.split(/\s+-\s+/);
+  if (parts.length > 1) return parts[0].trim();
+  // Fallback: hífen sem espaços
   const idx = s.indexOf("-");
   return (idx > 0 ? s.slice(0, idx) : s).trim();
 };
