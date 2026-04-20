@@ -488,6 +488,72 @@ export type Database = {
           },
         ]
       }
+      conferencia_ambientes: {
+        Row: {
+          ambiente_id: string | null
+          aprovado_por: string | null
+          contrato_id: string | null
+          created_at: string | null
+          custo_conferencia: number | null
+          custo_original: number | null
+          data_aprovacao: string | null
+          id: string
+          itens_extras: Json | null
+          loja_id: string | null
+          status: string | null
+          updated_at: string | null
+          variacao_percentual: number | null
+          xml_conferencia_raw: string | null
+        }
+        Insert: {
+          ambiente_id?: string | null
+          aprovado_por?: string | null
+          contrato_id?: string | null
+          created_at?: string | null
+          custo_conferencia?: number | null
+          custo_original?: number | null
+          data_aprovacao?: string | null
+          id?: string
+          itens_extras?: Json | null
+          loja_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          variacao_percentual?: number | null
+          xml_conferencia_raw?: string | null
+        }
+        Update: {
+          ambiente_id?: string | null
+          aprovado_por?: string | null
+          contrato_id?: string | null
+          created_at?: string | null
+          custo_conferencia?: number | null
+          custo_original?: number | null
+          data_aprovacao?: string | null
+          id?: string
+          itens_extras?: Json | null
+          loja_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          variacao_percentual?: number | null
+          xml_conferencia_raw?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conferencia_ambientes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conferencia_ambientes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contrato_ambientes: {
         Row: {
           aprovacao_solicitada_em: string | null
