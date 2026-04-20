@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -11,61 +11,47 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+// Mantido para compatibilidade com Comissoes.tsx (legado)
 export type RegraComissao = {
-  percentual_base: number; // ex: 0.05
-  margem_min_bonus: number; // ex: 25 (em %)
-  percentual_bonus: number; // ex: 0.01
+  percentual_base: number;
+  margem_min_bonus: number;
+  percentual_bonus: number;
 };
-
 export const REGRA_PADRAO: RegraComissao = {
   percentual_base: 0.05,
   margem_min_bonus: 25,
   percentual_bonus: 0.01,
 };
 
-type ContratoDre = {
+type Linha = {
   id: string;
-  vendedor_id: string | null;
-  valor_venda: number | null;
-  margem_realizada: number | null;
-  data_finalizacao: string | null;
-};
-
-type LinhaVendedor = {
-  vendedor_id: string;
-  nome: string;
-  contratos: number;
-  faturamento: number;
-  margemMedia: number;
-  base: number;
-  bonus: number;
-  total: number;
-  contrato_ids: string[];
+  usuario_id: string;
+  pessoa: string;
+  papel: string;
+  contrato_id: string;
+  contrato_cliente: string;
+  base_calculo: number;
+  percentual: number;
+  valor: number;
+  status: string;
+  data_gatilho: string | null;
+  data_pagamento: string | null;
 };
 
 function fmtBRL(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
-function Row({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
-  return (
-    <div className="flex items-baseline justify-between">
-      <span className="text-xs text-[#6B7A90]">{label}</span>
-      <span className="text-sm font-medium tabular-nums" style={valueColor ? { color: valueColor } : undefined}>
-        {value}
-      </span>
-    </div>
-  );
+function fmtData(s: string | null) {
+  if (!s) return "—";
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("pt-BR");
 }
 function iniciais(nome: string) {
-  const parts = nome.trim().split(/\s+/);
+  const parts = (nome ?? "").trim().split(/\s+/);
   const a = parts[0]?.[0] ?? "";
   const b = parts.length > 1 ? parts[parts.length - 1][0] : "";
-  return (a + b).toUpperCase();
-}
-function corMargem(m: number) {
-  if (m >= 30) return "#12B76A";
-  if (m >= 15) return "#E8A020";
-  return "#E53935";
+  return ((a + b) || "—").toUpperCase();
 }
 
 interface Props {
@@ -76,21 +62,27 @@ interface Props {
   apenasProprio?: boolean;
 }
 
+const STATUS_STYLE: Record<string, { bg: string; fg: string; label: string }> = {
+  pendente: { bg: "#FEF3C7", fg: "#9A6700", label: "Pendente" },
+  liberada: { bg: "#DBE9FF", fg: "#1E6FBF", label: "Liberada" },
+  paga: { bg: "#D1FAE5", fg: "#05873C", label: "Paga" },
+  cancelada: { bg: "#FEE2E2", fg: "#B42318", label: "Cancelada" },
+};
+
 export function ComissoesRelatorioTab({
   mes,
   mesLabel,
-  regra = REGRA_PADRAO,
   podePagar = true,
   apenasProprio = false,
 }: Props) {
-  const [linhas, setLinhas] = useState<LinhaVendedor[]>([]);
-  const [pagos, setPagos] = useState<Set<string>>(new Set());
+  const [linhas, setLinhas] = useState<Linha[]>([]);
   const [loading, setLoading] = useState(false);
-  const [alvo, setAlvo] = useState<LinhaVendedor | null>(null);
+  const [alvoPagar, setAlvoPagar] = useState<Linha | null>(null);
+  const [alvoCancelar, setAlvoCancelar] = useState<Linha | null>(null);
   const [dataPagamento, setDataPagamento] = useState<string>(
     () => new Date().toISOString().slice(0, 10)
   );
-  const [confirmando, setConfirmando] = useState(false);
+  const [processando, setProcessando] = useState(false);
 
   const inicio = mes;
   const fim = useMemo(() => {
@@ -99,270 +91,155 @@ export function ComissoesRelatorioTab({
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }, [mes]);
 
-  useEffect(() => {
-    setPagos(new Set());
-  }, [mes]);
-
-  useEffect(() => {
-    let cancel = false;
-    async function carregar() {
-      setLoading(true);
+  async function carregar() {
+    setLoading(true);
+    try {
       let query = supabase
-        .from("vw_contratos_dre")
-        .select("id, vendedor_id, valor_venda, margem_realizada, data_finalizacao")
-        .gte("data_finalizacao", `${inicio}T00:00:00`)
-        .lte("data_finalizacao", `${fim}T23:59:59`)
-        .not("vendedor_id", "is", null);
+        .from("comissoes")
+        .select(
+          "id, usuario_id, papel_id, contrato_id, base_calculo, percentual, valor, status, data_gatilho, data_pagamento"
+        )
+        .gte("data_gatilho", `${inicio}T00:00:00`)
+        .lte("data_gatilho", `${fim}T23:59:59`)
+        .in("status", ["pendente", "liberada", "paga"])
+        .order("data_gatilho", { ascending: false });
+
       if (apenasProprio) {
         const { data: u } = await supabase.auth.getUser();
-        if (u.user?.id) query = query.eq("vendedor_id", u.user.id);
+        if (u.user?.id) query = query.eq("usuario_id", u.user.id);
       }
-      const { data: contratos, error } = await query;
 
-      if (error) {
-        toast.error(error.message);
-        setLoading(false);
+      const { data: comissoes, error } = await query;
+      if (error) throw error;
+      const rows = comissoes ?? [];
+      if (!rows.length) {
+        setLinhas([]);
         return;
       }
-      const lista = (contratos ?? []) as ContratoDre[];
 
-      // Carregar status de pagamento existente para o período
-      const contratoIds = lista.map((c) => c.id);
-      const pagosVend = new Set<string>();
-      if (contratoIds.length) {
-        const { data: comExistentes } = await supabase
-          .from("comissoes")
-          .select("usuario_id, status, gatilho")
-          .in("contrato_id", contratoIds);
-        const porVend: Record<string, { total: number; pagos: number }> = {};
-        (comExistentes ?? [])
-          .filter((c) => (c.gatilho ?? "") === "vendedor_legado")
-          .forEach((c) => {
-            const v = c.usuario_id as string;
-            if (!porVend[v]) porVend[v] = { total: 0, pagos: 0 };
-            porVend[v].total++;
-            if (c.status === "paga") porVend[v].pagos++;
-          });
-        Object.entries(porVend).forEach(([v, s]) => {
-          if (s.total > 0 && s.pagos === s.total) pagosVend.add(v);
-        });
-      }
-      if (!cancel) setPagos(pagosVend);
-      const ids = Array.from(new Set(lista.map((c) => c.vendedor_id!).filter(Boolean)));
-      const nomes: Record<string, string> = {};
-      if (ids.length) {
-        const { data: us } = await supabase
-          .from("usuarios_publico")
-          .select("id, nome")
-          .in("id", ids);
-        (us ?? []).forEach((u: { id: string | null; nome: string | null }) => {
-          if (u.id) nomes[u.id] = u.nome ?? "—";
-        });
-      }
+      const userIds = Array.from(new Set(rows.map((r) => r.usuario_id)));
+      const papelIds = Array.from(new Set(rows.map((r) => r.papel_id).filter(Boolean)));
+      const contratoIds = Array.from(new Set(rows.map((r) => r.contrato_id)));
 
-      const agg: Record<string, LinhaVendedor> = {};
-      for (const c of lista) {
-        const vid = c.vendedor_id!;
-        const valor = Number(c.valor_venda ?? 0);
-        const margem = Number(c.margem_realizada ?? 0);
-        if (!agg[vid]) {
-          agg[vid] = {
-            vendedor_id: vid,
-            nome: nomes[vid] ?? "—",
-            contratos: 0,
-            faturamento: 0,
-            margemMedia: 0,
-            base: 0,
-            bonus: 0,
-            total: 0,
-            contrato_ids: [],
-          };
-        }
-        const a = agg[vid];
-        a.contratos += 1;
-        a.faturamento += valor;
-        a.contrato_ids.push(c.id);
-        // média ponderada por faturamento
-        a.margemMedia =
-          a.faturamento > 0
-            ? (a.margemMedia * (a.faturamento - valor) + margem * valor) / a.faturamento
-            : 0;
-      }
-      Object.values(agg).forEach((a) => {
-        a.base = a.faturamento * regra.percentual_base;
-        a.bonus = a.margemMedia >= regra.margem_min_bonus ? a.faturamento * regra.percentual_bonus : 0;
-        a.total = a.base + a.bonus;
-      });
-      const arr = Object.values(agg).sort((x, y) => y.total - x.total);
-      if (!cancel) setLinhas(arr);
+      const [usrRes, papRes, ctrRes] = await Promise.all([
+        userIds.length
+          ? supabase.from("usuarios_publico").select("id, nome").in("id", userIds)
+          : Promise.resolve({ data: [] as Array<{ id: string; nome: string | null }> }),
+        papelIds.length
+          ? supabase.from("papeis_comissao").select("id, nome").in("id", papelIds)
+          : Promise.resolve({ data: [] as Array<{ id: string; nome: string | null }> }),
+        contratoIds.length
+          ? supabase
+              .from("contratos")
+              .select("id, cliente_nome")
+              .in("id", contratoIds)
+          : Promise.resolve({ data: [] as Array<{ id: string; cliente_nome: string | null }> }),
+      ]);
+
+      const nomes = new Map((usrRes.data ?? []).map((u) => [u.id, u.nome ?? "—"]));
+      const papeis = new Map((papRes.data ?? []).map((p) => [p.id, p.nome ?? "—"]));
+      const clientes = new Map(
+        (ctrRes.data ?? []).map((c) => [c.id, c.cliente_nome ?? "—"])
+      );
+
+      const linhasMap: Linha[] = rows.map((r) => ({
+        id: r.id,
+        usuario_id: r.usuario_id,
+        pessoa: nomes.get(r.usuario_id) ?? "—",
+        papel: papeis.get(r.papel_id) ?? "—",
+        contrato_id: r.contrato_id,
+        contrato_cliente: clientes.get(r.contrato_id) ?? "—",
+        base_calculo: Number(r.base_calculo ?? 0),
+        percentual: Number(r.percentual ?? 0),
+        valor: Number(r.valor ?? 0),
+        status: r.status ?? "pendente",
+        data_gatilho: r.data_gatilho,
+        data_pagamento: r.data_pagamento,
+      }));
+      setLinhas(linhasMap);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Erro ao carregar comissões";
+      toast.error(msg);
+    } finally {
       setLoading(false);
     }
-    carregar();
-    return () => {
-      cancel = true;
-    };
-  }, [inicio, fim, regra, apenasProprio]);
+  }
 
-  const totais = useMemo(() => {
-    const fat = linhas.reduce((s, l) => s + l.faturamento, 0);
-    const base = linhas.reduce((s, l) => s + l.base, 0);
-    const bonus = linhas.reduce((s, l) => s + l.bonus, 0);
-    const total = base + bonus;
-    const margemPond = fat > 0 ? linhas.reduce((s, l) => s + l.margemMedia * l.faturamento, 0) / fat : 0;
-    return { fat, base, bonus, total, margemPond };
-  }, [linhas]);
+  useEffect(() => {
+    carregar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inicio, fim, apenasProprio]);
 
   async function confirmarPago() {
-    if (!alvo || confirmando) return;
-    setConfirmando(true);
+    if (!alvoPagar || processando) return;
+    setProcessando(true);
     try {
-      // Buscar loja do usuário
+      const { error } = await supabase
+        .from("comissoes")
+        .update({ status: "paga", data_pagamento: dataPagamento })
+        .eq("id", alvoPagar.id);
+      if (error) throw error;
+
       const { data: userData } = await supabase.auth.getUser();
-      const uid = userData.user?.id;
-      let lojaId: string | null = null;
-      if (uid) {
-        const { data: u } = await supabase
-          .from("usuarios")
-          .select("loja_id")
-          .eq("id", uid)
-          .maybeSingle();
-        lojaId = u?.loja_id ?? null;
-      }
-      if (!lojaId) throw new Error("Loja do usuário não encontrada");
-
-      // Upsert linhas de comissão por contrato (uma por contrato)
-      const fatorBase = regra.percentual_base;
-      const fatorBonus = regra.percentual_bonus;
-      const margemMin = regra.margem_min_bonus;
-
-      // Recalcula por contrato com base na margem realizada de cada um
-      const { data: contratosAlvo } = await supabase
-        .from("vw_contratos_dre")
-        .select("id, valor_venda, margem_realizada")
-        .in("id", alvo.contrato_ids);
-
-      // Garantir um papel "vendedor" para a loja (legado)
-      let papelId: string | null = null;
-      const { data: papel } = await supabase
-        .from("papeis_comissao")
-        .select("id")
-        .eq("loja_id", lojaId!)
-        .eq("tipo", "vendedor")
-        .eq("ativo", true)
-        .maybeSingle();
-      papelId = papel?.id ?? null;
-      if (!papelId) {
-        const { data: novo } = await supabase
-          .from("papeis_comissao")
-          .insert({
-            loja_id: lojaId!,
-            nome: "Vendedor",
-            tipo: "vendedor",
-            percentual_padrao: regra.percentual_base * 100,
-            regra_pagamento: "contrato_assinado",
-          })
-          .select("id")
-          .single();
-        papelId = novo?.id ?? null;
-      }
-      if (!papelId) throw new Error("Não foi possível resolver papel de comissão");
-
-      const linhasInsert = (contratosAlvo ?? []).flatMap((c) => {
-        const valor = Number(c.valor_venda ?? 0);
-        const margem = Number(c.margem_realizada ?? 0);
-        const base = valor * fatorBase;
-        const bonus = margem >= margemMin ? valor * fatorBonus : 0;
-        const linhas = [
-          {
-            contrato_id: c.id as string,
-            loja_id: lojaId!,
-            usuario_id: alvo.vendedor_id,
-            papel_id: papelId!,
-            base_calculo: valor,
-            percentual: fatorBase * 100,
-            valor: base,
-            status: "paga",
-            gatilho: "vendedor_legado",
-            data_gatilho: new Date().toISOString(),
-            data_pagamento: dataPagamento,
-          },
-        ];
-        if (bonus > 0) {
-          linhas.push({
-            contrato_id: c.id as string,
-            loja_id: lojaId!,
-            usuario_id: alvo.vendedor_id,
-            papel_id: papelId!,
-            base_calculo: valor,
-            percentual: fatorBonus * 100,
-            valor: bonus,
-            status: "paga",
-            gatilho: "vendedor_legado_bonus",
-            data_gatilho: new Date().toISOString(),
-            data_pagamento: dataPagamento,
-          });
-        }
-        return linhas;
-      });
-
-      if (linhasInsert.length) {
-        // remove existentes legados para o vendedor nesses contratos
-        await supabase
-          .from("comissoes")
-          .delete()
-          .in("contrato_id", alvo.contrato_ids)
-          .eq("usuario_id", alvo.vendedor_id)
-          .in("gatilho", ["vendedor_legado", "vendedor_legado_bonus"]);
-        const { error } = await supabase.from("comissoes").insert(linhasInsert);
-        if (error) throw error;
-      }
-
-      // Logs por contrato
-      const periodo = mesLabel ?? mes;
-      const descricao = `Comissão ${periodo} — base ${fmtBRL(alvo.base)} + bônus ${fmtBRL(
-        alvo.bonus
-      )} = ${fmtBRL(alvo.total)}. Pago em ${dataPagamento}.`;
-      const linhasLog = alvo.contrato_ids.map((cid) => ({
-        contrato_id: cid,
+      await supabase.from("contrato_logs").insert({
+        contrato_id: alvoPagar.contrato_id,
         acao: "comissao_paga",
         titulo: "Comissão paga",
-        descricao,
-        autor_id: uid ?? null,
-      }));
-      if (linhasLog.length) {
-        await supabase.from("contrato_logs").insert(linhasLog);
-      }
-      setPagos((p) => new Set(p).add(alvo.vendedor_id));
-      toast.success(`Comissão de ${alvo.nome} marcada como paga`);
-      setAlvo(null);
+        descricao: `${alvoPagar.pessoa} (${alvoPagar.papel}) — ${fmtBRL(alvoPagar.valor)} pago em ${dataPagamento}.`,
+        autor_id: userData.user?.id ?? null,
+      });
+
+      toast.success("Comissão marcada como paga");
+      setAlvoPagar(null);
+      await carregar();
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erro ao registrar pagamento";
       toast.error(msg);
     } finally {
-      setConfirmando(false);
+      setProcessando(false);
     }
   }
 
-  const rankFat = useMemo(
-    () => [...linhas].sort((a, b) => b.faturamento - a.faturamento).slice(0, 5),
-    [linhas]
-  );
-  const rankMargem = useMemo(
-    () => [...linhas].sort((a, b) => b.margemMedia - a.margemMedia).slice(0, 5),
-    [linhas]
-  );
-  const topFat = rankFat[0];
-  const topMargem = rankMargem[0];
-  const mostrarAlerta =
-    !!(topFat && topMargem && topFat.vendedor_id !== topMargem.vendedor_id);
-  const diffPp = mostrarAlerta ? topMargem!.margemMedia - topFat!.margemMedia : 0;
+  async function confirmarCancelar() {
+    if (!alvoCancelar || processando) return;
+    setProcessando(true);
+    try {
+      const { error } = await supabase
+        .from("comissoes")
+        .update({ status: "cancelada" })
+        .eq("id", alvoCancelar.id);
+      if (error) throw error;
 
-  function fmtCompactBRL(v: number) {
-    if (v >= 1000) return `R$ ${(v / 1000).toFixed(0)}k`;
-    return fmtBRL(v);
+      const { data: userData } = await supabase.auth.getUser();
+      await supabase.from("contrato_logs").insert({
+        contrato_id: alvoCancelar.contrato_id,
+        acao: "comissao_cancelada",
+        titulo: "Comissão cancelada",
+        descricao: `${alvoCancelar.pessoa} (${alvoCancelar.papel}) — ${fmtBRL(alvoCancelar.valor)} cancelada.`,
+        autor_id: userData.user?.id ?? null,
+      });
+
+      toast.success("Comissão cancelada");
+      setAlvoCancelar(null);
+      await carregar();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Erro ao cancelar comissão";
+      toast.error(msg);
+    } finally {
+      setProcessando(false);
+    }
   }
 
-  if (!loading && linhas.length === 0) {
+  if (loading) {
+    return (
+      <div className="rounded-md px-4 py-12 text-center text-sm text-muted-foreground"
+        style={{ background: "#F5F7FA", border: "1px dashed #B0BAC9" }}>
+        Carregando comissões…
+      </div>
+    );
+  }
+
+  if (linhas.length === 0) {
     return (
       <div
         className="rounded-md px-4 py-12 text-center"
@@ -370,7 +247,7 @@ export function ComissoesRelatorioTab({
       >
         <p className="text-sm font-medium text-[#0D1117]">Nenhuma comissão no período</p>
         <p className="mt-1 text-xs text-[#6B7A90]">
-          As comissões são calculadas automaticamente ao finalizar contratos
+          Use o botão "Recalcular" no topo da tela para gerar comissões a partir dos contratos.
         </p>
       </div>
     );
@@ -378,86 +255,88 @@ export function ComissoesRelatorioTab({
 
   return (
     <>
-      <div className="overflow-hidden rounded-md border" style={{ borderColor: "#E8ECF2" }}>
+      <div className="overflow-x-auto rounded-md border" style={{ borderColor: "#E8ECF2" }}>
         <table className="w-full text-sm">
           <thead style={{ background: "#F5F7FA", color: "#6B7A90" }}>
             <tr>
-              <th className="px-3 py-2 text-left font-medium">Vendedor</th>
-              <th className="px-3 py-2 text-right font-medium">Contratos</th>
-              <th className="px-3 py-2 text-right font-medium">Faturamento</th>
-              <th className="px-3 py-2 text-right font-medium">Margem média</th>
-              <th className="px-3 py-2 text-right font-medium">Comissão base</th>
-              <th className="px-3 py-2 text-right font-medium">Bônus</th>
-              <th className="px-3 py-2 text-right font-medium">Total</th>
+              <th className="px-3 py-2 text-left font-medium">Pessoa</th>
+              <th className="px-3 py-2 text-left font-medium">Papel</th>
+              <th className="px-3 py-2 text-left font-medium">Contrato</th>
+              <th className="px-3 py-2 text-left font-medium">Cliente</th>
+              <th className="px-3 py-2 text-right font-medium">Valor base</th>
+              <th className="px-3 py-2 text-right font-medium">%</th>
+              <th className="px-3 py-2 text-right font-medium">Valor comissão</th>
               <th className="px-3 py-2 text-left font-medium">Status</th>
-              <th className="px-3 py-2 text-right font-medium">Ação</th>
+              <th className="px-3 py-2 text-left font-medium">Data</th>
+              <th className="px-3 py-2 text-right font-medium">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y" style={{ borderColor: "#E8ECF2" }}>
             {linhas.map((l) => {
-              const pago = pagos.has(l.vendedor_id);
-              const temBonus = l.bonus > 0;
+              const st = STATUS_STYLE[l.status] ?? STATUS_STYLE.pendente;
+              const podeAgir = l.status === "pendente" || l.status === "liberada";
               return (
-                <tr key={l.vendedor_id}>
+                <tr key={l.id}>
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-2">
                       <div
                         className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium text-white"
                         style={{ background: "#1E6FBF" }}
                       >
-                        {iniciais(l.nome)}
+                        {iniciais(l.pessoa)}
                       </div>
-                      <span>{l.nome}</span>
+                      <span>{l.pessoa}</span>
                     </div>
                   </td>
-                  <td className="px-3 py-2 text-right tabular-nums">{l.contratos}</td>
-                  <td className="px-3 py-2 text-right tabular-nums">{fmtBRL(l.faturamento)}</td>
-                  <td
-                    className="px-3 py-2 text-right tabular-nums font-medium"
-                    style={{ color: corMargem(l.margemMedia) }}
-                  >
-                    {l.margemMedia.toFixed(1)}%
+                  <td className="px-3 py-2 text-muted-foreground">{l.papel}</td>
+                  <td className="px-3 py-2 font-mono text-xs text-[#6B7A90]">
+                    {l.contrato_id.slice(0, 8)}
                   </td>
-                  <td className="px-3 py-2 text-right tabular-nums" style={{ color: "#0D1117" }}>
-                    {fmtBRL(l.base)}
-                  </td>
+                  <td className="px-3 py-2">{l.contrato_cliente}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{fmtBRL(l.base_calculo)}</td>
                   <td className="px-3 py-2 text-right tabular-nums">
-                    {temBonus ? (
-                      <span style={{ color: "#E8A020" }}>{fmtBRL(l.bonus)}</span>
-                    ) : (
-                      <span style={{ color: "#B0BAC9" }}>—</span>
-                    )}
+                    {Number(l.percentual).toFixed(2)}%
                   </td>
-                  <td
-                    className="px-3 py-2 text-right tabular-nums"
-                    style={{ fontWeight: 500, color: temBonus ? "#12B76A" : "#0D1117" }}
-                  >
-                    {fmtBRL(l.total)}
+                  <td className="px-3 py-2 text-right tabular-nums font-medium">
+                    {fmtBRL(l.valor)}
                   </td>
                   <td className="px-3 py-2">
                     <span
                       className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-                      style={
-                        pago
-                          ? { background: "#D1FAE5", color: "#05873C" }
-                          : { background: "#FEF3C7", color: "#E8A020" }
-                      }
+                      style={{ background: st.bg, color: st.fg }}
                     >
-                      {pago ? "Pago" : "Pendente"}
+                      {st.label}
                     </span>
                   </td>
+                  <td className="px-3 py-2 text-xs text-[#6B7A90]">
+                    {fmtData(l.data_gatilho)}
+                  </td>
                   <td className="px-3 py-2">
-                    <div className="flex justify-end">
-                      {!pago && podePagar && (
-                        <Button
-                          size="sm"
-                          className="h-7 px-2 text-white hover:opacity-90"
-                          style={{ background: "#05873C" }}
-                          onClick={() => setAlvo(l)}
-                        >
-                          <Check className="mr-1 h-3 w-3" />
-                          Marcar como pago
-                        </Button>
+                    <div className="flex justify-end gap-1">
+                      {podeAgir && podePagar && (
+                        <>
+                          <Button
+                            size="sm"
+                            className="h-7 px-2 text-white hover:opacity-90"
+                            style={{ background: "#05873C" }}
+                            onClick={() => {
+                              setDataPagamento(new Date().toISOString().slice(0, 10));
+                              setAlvoPagar(l);
+                            }}
+                          >
+                            <Check className="mr-1 h-3 w-3" />
+                            Pagar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2"
+                            onClick={() => setAlvoCancelar(l)}
+                          >
+                            <X className="mr-1 h-3 w-3" />
+                            Cancelar
+                          </Button>
+                        </>
                       )}
                     </div>
                   </td>
@@ -465,134 +344,31 @@ export function ComissoesRelatorioTab({
               );
             })}
           </tbody>
-          <tfoot>
-            <tr style={{ background: "#F5F7FA", fontWeight: 500 }}>
-              <td className="px-3 py-2 text-[#6B7A90]">—</td>
-              <td className="px-3 py-2 text-right text-[#6B7A90]">—</td>
-              <td className="px-3 py-2 text-right tabular-nums">{fmtBRL(totais.fat)}</td>
-              <td
-                className="px-3 py-2 text-right tabular-nums"
-                style={{ color: corMargem(totais.margemPond) }}
-              >
-                {totais.margemPond.toFixed(1)}%
-              </td>
-              <td className="px-3 py-2 text-right tabular-nums">{fmtBRL(totais.base)}</td>
-              <td className="px-3 py-2 text-right tabular-nums" style={{ color: "#E8A020" }}>
-                {fmtBRL(totais.bonus)}
-              </td>
-              <td className="px-3 py-2 text-right tabular-nums" style={{ color: "#12B76A" }}>
-                {fmtBRL(totais.total)}
-              </td>
-              <td className="px-3 py-2 text-[#6B7A90]">—</td>
-              <td className="px-3 py-2 text-right text-[#6B7A90]">—</td>
-            </tr>
-          </tfoot>
         </table>
       </div>
 
-      {linhas.length > 0 && (
-        <div
-          className="mt-6 rounded-md p-4"
-          style={{ border: "1px solid #E8ECF2", background: "#FFFFFF" }}
-        >
-          <h3 className="text-sm font-medium text-[#0D1117]">
-            Quem vende melhor — volume vs margem
-          </h3>
-          <p className="text-xs text-[#6B7A90]">
-            Os dois rankings podem ter nomes diferentes
-          </p>
-
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            {[
-              {
-                titulo: "RANKING POR FATURAMENTO",
-                sub: "(quem mais vendeu em R$)",
-                lista: rankFat,
-                valor: (l: LinhaVendedor) => fmtCompactBRL(l.faturamento),
-              },
-              {
-                titulo: "RANKING POR MARGEM REALIZADA",
-                sub: "(quem vendeu com mais qualidade)",
-                lista: rankMargem,
-                valor: (l: LinhaVendedor) => `${l.margemMedia.toFixed(1)}%`,
-              },
-            ].map((col) => (
-              <div key={col.titulo}>
-                <p className="text-xs font-medium text-[#6B7A90]">{col.titulo}</p>
-                <p className="text-[11px] text-[#B0BAC9]">{col.sub}</p>
-                <ul className="mt-2 space-y-1">
-                  {col.lista.map((l, i) => (
-                    <li
-                      key={l.vendedor_id}
-                      className="flex items-center gap-2 rounded px-2 py-1.5 text-sm"
-                      style={i === 0 ? { background: "#F0FDF9" } : undefined}
-                    >
-                      <span className="w-5 text-xs text-[#6B7A90]">{i + 1}.</span>
-                      <div
-                        className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-medium text-white"
-                        style={{ background: "#1E6FBF" }}
-                      >
-                        {iniciais(l.nome)}
-                      </div>
-                      <span className="flex-1 truncate">{l.nome}</span>
-                      <span className="tabular-nums font-medium">{col.valor(l)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          {mostrarAlerta && (
-            <div
-              className="mt-4 rounded-md px-3 py-2 text-xs"
-              style={{
-                background: "#FEF3C7",
-                border: "1px solid #E8A020",
-                color: "#633806",
-              }}
-            >
-              <span className="font-medium">{topFat!.nome}</span> lidera em faturamento mas{" "}
-              <span className="font-medium">{topMargem!.nome}</span> tem margem{" "}
-              {diffPp.toFixed(1)}pp maior. A regra de bônus recompensa quem vende com mais
-              qualidade.
-            </div>
-          )}
-        </div>
-      )}
-
-      <Dialog open={!!alvo} onOpenChange={(v) => !v && setAlvo(null)}>
+      <Dialog open={!!alvoPagar} onOpenChange={(v) => !v && setAlvoPagar(null)}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>Confirmar pagamento de comissão</DialogTitle>
+            <DialogTitle>Confirmar pagamento</DialogTitle>
           </DialogHeader>
-          {alvo && (
+          {alvoPagar && (
             <div className="space-y-3 text-sm">
               <div className="space-y-1.5 rounded-md p-3" style={{ background: "#F5F7FA" }}>
-                <Row label="Vendedor" value={alvo.nome} />
-                <Row label="Período" value={mesLabel ?? mes} />
-                <Row label="Contratos" value={`${alvo.contratos} finalizados`} />
-                <Row label="Comissão base" value={fmtBRL(alvo.base)} />
-                <Row
-                  label="Bônus"
-                  value={alvo.bonus > 0 ? fmtBRL(alvo.bonus) : "—"}
-                  valueColor={alvo.bonus > 0 ? "#E8A020" : "#B0BAC9"}
-                />
+                <div className="flex justify-between"><span className="text-xs text-[#6B7A90]">Pessoa</span><span>{alvoPagar.pessoa}</span></div>
+                <div className="flex justify-between"><span className="text-xs text-[#6B7A90]">Papel</span><span>{alvoPagar.papel}</span></div>
+                <div className="flex justify-between"><span className="text-xs text-[#6B7A90]">Cliente</span><span>{alvoPagar.contrato_cliente}</span></div>
                 <div className="mt-2 flex items-baseline justify-between border-t pt-2" style={{ borderColor: "#E8ECF2" }}>
-                  <span className="text-xs text-[#6B7A90]">Total</span>
+                  <span className="text-xs text-[#6B7A90]">Valor</span>
                   <span className="text-xl font-medium tabular-nums" style={{ color: "#12B76A" }}>
-                    {fmtBRL(alvo.total)}
+                    {fmtBRL(alvoPagar.valor)}
                   </span>
                 </div>
               </div>
-
               <div className="space-y-1">
-                <label className="text-xs font-medium text-[#0D1117]">
-                  Data de pagamento <span style={{ color: "#E53935" }}>*</span>
-                </label>
+                <label className="text-xs font-medium">Data de pagamento *</label>
                 <input
                   type="date"
-                  required
                   value={dataPagamento}
                   onChange={(e) => setDataPagamento(e.target.value)}
                   className="h-9 w-full rounded-md border bg-background px-3 text-sm"
@@ -602,17 +378,44 @@ export function ComissoesRelatorioTab({
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAlvo(null)} disabled={confirmando}>
-              Cancelar
+            <Button variant="outline" onClick={() => setAlvoPagar(null)} disabled={processando}>
+              Voltar
             </Button>
             <Button
               onClick={confirmarPago}
-              disabled={confirmando || !dataPagamento}
+              disabled={processando || !dataPagamento}
               className="text-white hover:opacity-90"
               style={{ background: "#12B76A" }}
             >
               <Check className="mr-1 h-4 w-4" />
-              {confirmando ? "Processando…" : "Confirmar pagamento"}
+              {processando ? "Processando…" : "Confirmar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!alvoCancelar} onOpenChange={(v) => !v && setAlvoCancelar(null)}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Cancelar comissão</DialogTitle>
+          </DialogHeader>
+          {alvoCancelar && (
+            <p className="text-sm">
+              Tem certeza que deseja cancelar a comissão de{" "}
+              <span className="font-medium">{alvoCancelar.pessoa}</span> no valor de{" "}
+              <span className="font-medium">{fmtBRL(alvoCancelar.valor)}</span>?
+            </p>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAlvoCancelar(null)} disabled={processando}>
+              Voltar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmarCancelar}
+              disabled={processando}
+            >
+              {processando ? "Processando…" : "Cancelar comissão"}
             </Button>
           </DialogFooter>
         </DialogContent>
