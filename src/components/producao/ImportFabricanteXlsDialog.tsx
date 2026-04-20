@@ -21,6 +21,8 @@ interface ParsedRow {
   oc: string;
   dataPrevista: string;
   status: string;
+  tipo: string; // V, A, B, A e B
+  situacao: string; // L, T
   contratoId?: string | null;
   clienteMatch?: boolean;
   contratoMatch?: boolean;
@@ -33,6 +35,8 @@ interface GroupedPedido {
   numeroPedido: string;
   dataPrevista: string; // menor data
   status: string;
+  tipo: string;
+  situacao: string;
   contratoId?: string | null;
   clienteMatch: boolean;
   contratoMatch: boolean;
