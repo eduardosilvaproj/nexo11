@@ -263,10 +263,17 @@ export function ConferenciaAmbientesSection({ contratoId, lojaId }: Props) {
     qc.invalidateQueries({ queryKey: ["conferencia-ambientes", contratoId] });
   };
 
+  const totalConferentes = ambientes.reduce((acc, a) => acc + (Number(a.valor_conferente) || 0), 0);
+
   return (
     <div className="rounded-xl bg-white" style={{ border: "0.5px solid #E8ECF2", overflow: "hidden" }}>
       <div className="flex items-center justify-between px-5 py-4">
-        <h3 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117" }}>Conferência</h3>
+        <div>
+          <h3 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117" }}>Conferência</h3>
+          <p style={{ fontSize: 12, color: "#6B7A90", marginTop: 2 }}>
+            Conferência técnica com importação de XML por ambiente
+          </p>
+        </div>
         <span style={{ fontSize: 12, color: "#6B7A90" }}>
           {ambientes.length} ambiente{ambientes.length === 1 ? "" : "s"}
         </span>
@@ -446,6 +453,16 @@ export function ConferenciaAmbientesSection({ contratoId, lojaId }: Props) {
             })}
           </tbody>
         </table>
+      </div>
+
+      <div
+        className="flex items-center justify-end gap-3 px-5 py-3"
+        style={{ borderTop: "0.5px solid #E8ECF2", backgroundColor: "#FAFBFD" }}
+      >
+        <span style={{ fontSize: 12, color: "#6B7A90" }}>Total a pagar conferentes:</span>
+        <span style={{ fontSize: 14, fontWeight: 600, color: "#0D1117" }}>
+          {fmtBRL(totalConferentes)}
+        </span>
       </div>
 
       <ItensExtrasDrawer
