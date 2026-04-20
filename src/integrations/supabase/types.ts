@@ -303,45 +303,67 @@ export type Database = {
       }
       comissoes: {
         Row: {
+          ambiente_id: string | null
+          base_calculo: number
           contrato_id: string
           created_at: string
+          data_gatilho: string | null
           data_pagamento: string | null
+          gatilho: string | null
           id: string
           loja_id: string
-          margem_realizada_pct: number
-          pago: boolean
+          observacoes: string | null
+          papel_id: string
+          percentual: number
+          status: string
           updated_at: string
-          valor_base: number
-          valor_bonus: number
-          vendedor_id: string
+          usuario_id: string
+          valor: number
         }
         Insert: {
+          ambiente_id?: string | null
+          base_calculo?: number
           contrato_id: string
           created_at?: string
+          data_gatilho?: string | null
           data_pagamento?: string | null
+          gatilho?: string | null
           id?: string
           loja_id: string
-          margem_realizada_pct?: number
-          pago?: boolean
+          observacoes?: string | null
+          papel_id: string
+          percentual?: number
+          status?: string
           updated_at?: string
-          valor_base?: number
-          valor_bonus?: number
-          vendedor_id: string
+          usuario_id: string
+          valor?: number
         }
         Update: {
+          ambiente_id?: string | null
+          base_calculo?: number
           contrato_id?: string
           created_at?: string
+          data_gatilho?: string | null
           data_pagamento?: string | null
+          gatilho?: string | null
           id?: string
           loja_id?: string
-          margem_realizada_pct?: number
-          pago?: boolean
+          observacoes?: string | null
+          papel_id?: string
+          percentual?: number
+          status?: string
           updated_at?: string
-          valor_base?: number
-          valor_bonus?: number
-          vendedor_id?: string
+          usuario_id?: string
+          valor?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "comissoes_ambiente_id_fkey"
+            columns: ["ambiente_id"]
+            isOneToOne: false
+            referencedRelation: "contrato_ambientes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "comissoes_contrato_id_fkey"
             columns: ["contrato_id"]
@@ -361,6 +383,13 @@ export type Database = {
             columns: ["loja_id"]
             isOneToOne: false
             referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comissoes_papel_id_fkey"
+            columns: ["papel_id"]
+            isOneToOne: false
+            referencedRelation: "papeis_comissao"
             referencedColumns: ["id"]
           },
         ]
