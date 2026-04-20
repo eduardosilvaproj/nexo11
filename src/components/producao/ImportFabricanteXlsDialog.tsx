@@ -266,30 +266,30 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
 
             {parsing && <p className="text-center text-sm text-muted-foreground py-4">Lendo planilha...</p>}
 
-            {!parsing && rows.length > 0 && !result && (
+            {!parsing && grouped.length > 0 && !result && (
               <div className="space-y-2">
                 <div style={{ fontSize: 12, color: "#48556B" }}>
-                  {rows.length} linhas · <strong style={{ color: "#05873C" }}>{matchedCount} cruzaram com contratos</strong> · {rows.length - matchedCount} ficarão pendentes
+                  {rows.length} linhas → <strong>{grouped.length} pedidos agrupados por cliente</strong> · <strong style={{ color: "#05873C" }}>{matchedCount} cruzaram com contratos</strong> · {grouped.length - matchedCount} pendentes
                 </div>
-                <div className="overflow-hidden rounded-lg" style={{ border: "0.5px solid #E8ECF2", maxHeight: 200, overflowY: "auto" }}>
+                <div className="overflow-hidden rounded-lg" style={{ border: "0.5px solid #E8ECF2", maxHeight: 240, overflowY: "auto" }}>
                   <table className="w-full" style={{ fontSize: 11 }}>
                     <thead style={{ backgroundColor: "#F7F9FC" }}>
                       <tr style={{ color: "#6B7A90" }}>
                         <th className="px-2 py-1.5 text-left w-6"></th>
                         <th className="px-2 py-1.5 text-left">Cliente</th>
                         <th className="px-2 py-1.5 text-left">Pedido</th>
-                        <th className="px-2 py-1.5 text-left">OC</th>
+                        <th className="px-2 py-1.5 text-left">Ambientes</th>
                         <th className="px-2 py-1.5 text-left">Previsão</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {rows.map((r, i) => (
+                      {grouped.map((g, i) => (
                         <tr key={i} style={{ borderTop: "0.5px solid #E8ECF2" }}>
-                          <td className="px-2 py-1.5">{r.contratoMatch ? <span style={{ color: "#05873C" }}>✓</span> : <span style={{ color: "#E8A020" }}>⚠</span>}</td>
-                          <td className="px-2 py-1.5 truncate max-w-[140px]">{r.cliente || "—"}</td>
-                          <td className="px-2 py-1.5">{r.numeroPedido || "—"}</td>
-                          <td className="px-2 py-1.5 truncate max-w-[100px]">{r.oc || "—"}</td>
-                          <td className="px-2 py-1.5">{r.dataPrevista || "—"}</td>
+                          <td className="px-2 py-1.5">{g.contratoMatch ? <span style={{ color: "#05873C" }}>✓</span> : <span style={{ color: "#E8A020" }}>⚠</span>}</td>
+                          <td className="px-2 py-1.5 truncate max-w-[160px]" title={g.clienteOriginal}>{g.clienteBase || "—"}</td>
+                          <td className="px-2 py-1.5">{g.numeroPedido || "—"}</td>
+                          <td className="px-2 py-1.5 truncate max-w-[140px]" title={g.ocs.join(", ")}>{g.ocs.length} {g.ocs.length === 1 ? "ambiente" : "ambientes"}</td>
+                          <td className="px-2 py-1.5">{g.dataPrevista || "—"}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -298,7 +298,7 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
               </div>
             )}
 
-            {!parsing && rows.length === 0 && !result && (
+            {!parsing && grouped.length === 0 && rows.length === 0 && !result && (
               <div className="flex items-center gap-2 rounded-lg p-3" style={{ backgroundColor: "#FEF3F2" }}>
                 <AlertCircle className="h-4 w-4" style={{ color: "#D92D20" }} />
                 <span className="text-sm" style={{ color: "#D92D20" }}>Nenhuma linha válida encontrada</span>
