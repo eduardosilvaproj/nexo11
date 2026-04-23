@@ -49,28 +49,32 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
     onOpenChange(o);
   };
 
-  const handleFile = async (f: File | null) => {
-    if (!f) return;
-    if (!/\.xml$/i.test(f.name)) {
-      toast.error("Apenas arquivos .xml são aceitos");
-      return;
-    }
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
     
     setParsing(true);
     setError(null);
+    
     try {
-      const text = await f.text();
-      const data = parsePromobXml(text);
-      
-      const novoAmbiente: Ambiente = {
-        id: Math.random().toString(36).substring(7),
-        nome: data.ordem_compra || f.name.replace(".xml", ""),
-        parsed: data,
-        desconto: 0,
-      };
+      for (const f of Array.from(files)) {
+        if (!/\.xml$/i.test(f.name)) {
+          toast.error(`Arquivo "${f.name}" não é .xml`);
+          continue;
+        }
+        
+        const text = await f.text();
+        const data = parsePromobXml(text);
+        
+        const novoAmbiente: Ambiente = {
+          id: Math.random().toString(36).substring(7),
+          nome: data.ordem_compra || f.name.replace(".xml", ""),
+          parsed: data,
+          desconto: 0,
+        };
 
-      setAmbientes((prev) => [...prev, novoAmbiente]);
-      toast.success(`Ambiente "${novoAmbiente.nome}" adicionado`);
+        setAmbientes((prev) => [...prev, novoAmbiente]);
+        toast.success(`Ambiente "${novoAmbiente.nome}" adicionado`);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Falha ao ler XML");
     } finally {
@@ -90,7 +94,7 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
 
   const totals = useMemo(() => {
     const list = ambientes.map((a) => {
-      const valorBase = a.parsed.total_pedido || a.parsed.total_orcamento || 0;
+      const valorBase = a.parsed.total_orcamento || a.parsed.total_pedido || 0;
       const valorFinal = valorBase * (1 - a.desconto / 100);
       return { ...a, valorBase, valorFinal };
     });
@@ -188,8 +192,9 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
           <input
             type="file"
             ref={fileInputRef}
-            onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
+            onChange={(e) => handleFiles(e.target.files)}
             accept=".xml"
+            multiple
             className="hidden"
           />
 
@@ -206,7 +211,7 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
               <Plus className="h-6 w-6 text-primary" />
             )}
             <span className="font-semibold text-primary">
-              {parsing ? "Lendo XML..." : "+ Adicionar ambiente (XML)"}
+              {parsing ? "Lendo XML..." : "+ Adicionar ambiente"}
             </span>
           </Button>
 
@@ -243,7 +248,7 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <p className="text-xs text-slate-500 uppercase font-medium">Valor de venda</p>
+                    <p className="text-xs text-slate-500 uppercase font-medium">Valor de Venda (Base)</p>
                     <p className="text-lg font-semibold text-slate-900">{formatBRL(amb.valorBase)}</p>
                   </div>
                   <div className="space-y-1">

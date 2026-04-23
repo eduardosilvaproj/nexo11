@@ -80,13 +80,28 @@ export function parsePromobXml(xmlText: string): PromobParsed {
   const cliente_nome = findData(doc, "nomecliente");
   const ordem_compra = findData(doc, "ordem_compra");
 
-  // Totais globais (LISTING > TOTALPRICES)
+  // Totais globais
   const listingTotal = doc.querySelector("LISTING > TOTALPRICES, listing > totalprices");
   const total_tabela = num(attr(listingTotal, "TABLE"));
+  
+  // O total_orcamento (Valor de Venda Base) deve ser a soma de todos os itens com TYPE="BUDGET"
+  const allItems = Array.from(doc.querySelectorAll("ITEM, item"));
+  let total_orcamento = 0;
+  allItems.forEach(item => {
+    if (attr(item, "TYPE") === "BUDGET") {
+      // Priorizar o atributo TOTAL se existir, senão PRICE
+      const val = num(attr(item, "TOTAL")) || num(attr(item, "PRICE"));
+      total_orcamento += val;
+    }
+  });
+
   const orderEl = listingTotal?.querySelector("MARGINS ORDER, margins order") ?? null;
   const budgetEl = listingTotal?.querySelector("MARGINS BUDGET, margins budget") ?? null;
   const total_pedido = num(attr(orderEl, "VALUE"));
-  const total_orcamento = num(attr(budgetEl, "VALUE"));
+  // Se não encontrou itens BUDGET, tenta o valor do global (fallback)
+  if (total_orcamento === 0) {
+    total_orcamento = num(attr(budgetEl, "VALUE"));
+  }
 
   // Acréscimos (BUDGET > MARGIN)
   const acrescimos: PromobAcrescimo[] = budgetEl
