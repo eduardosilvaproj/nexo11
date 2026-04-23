@@ -1,13 +1,21 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Upload, FileCode2, AlertCircle, CheckCircle2, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Upload, FileCode2, AlertCircle, CheckCircle2, Loader2, Trash2, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { parsePromobXml, type PromobParsed } from "@/lib/promob-xml";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+
+interface Ambiente {
+  id: string;
+  nome: string;
+  parsed: PromobParsed;
+  desconto: number;
+}
 
 interface Props {
   open: boolean;
@@ -19,32 +27,21 @@ interface Props {
 const formatBRL = (n: number) =>
   (Number.isFinite(n) ? n : 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-const clampDesc = (n: number) => Math.max(0, Math.min(60, Math.round(n * 10) / 10));
-
 export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNome }: Props) {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { perfil, user } = useAuth();
-  const [file, setFile] = useState<File | null>(null);
-  const [dragOver, setDragOver] = useState(false);
-  const [parsed, setParsed] = useState<PromobParsed | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [ambientes, setAmbientes] = useState<Ambiente[]>([]);
   const [parsing, setParsing] = useState(false);
   const [creating, setCreating] = useState(false);
-
-  // Negociação
-  const [globalDiscount, setGlobalDiscount] = useState(0);
-  const [frete, setFrete] = useState(0);
-  const [montagem, setMontagem] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   const reset = () => {
-    setFile(null);
-    setParsed(null);
+    setAmbientes([]);
     setError(null);
     setParsing(false);
-    setGlobalDiscount(0);
-    setFrete(0);
-    setMontagem(0);
   };
 
   const handleClose = (o: boolean) => {
@@ -55,86 +52,111 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
   const handleFile = async (f: File | null) => {
     if (!f) return;
     if (!/\.xml$/i.test(f.name)) {
-      setError("Apenas arquivos .xml são aceitos");
+      toast.error("Apenas arquivos .xml são aceitos");
       return;
     }
-    if (f.size > 10 * 1024 * 1024) {
-      setError("Arquivo muito grande (máx 10MB)");
-      return;
-    }
-    setError(null);
+    
     setParsing(true);
-    setFile(f);
+    setError(null);
     try {
       const text = await f.text();
       const data = parsePromobXml(text);
-      setParsed(data);
+      
+      const novoAmbiente: Ambiente = {
+        id: Math.random().toString(36).substring(7),
+        nome: data.ordem_compra || f.name.replace(".xml", ""),
+        parsed: data,
+        desconto: 0,
+      };
 
-      const initialDesc = data.categorias.length > 0 ? clampDesc(data.categorias[0].desconto_pct) : 0;
-      setGlobalDiscount(initialDesc);
-      setFrete(data.frete);
-      setMontagem(data.montagem);
+      setAmbientes((prev) => [...prev, novoAmbiente]);
+      toast.success(`Ambiente "${novoAmbiente.nome}" adicionado`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Falha ao ler XML");
-      setParsed(null);
     } finally {
       setParsing(false);
     }
   };
 
-  const calc = useMemo(() => {
-    if (!parsed) return null;
-    const linhas = parsed.categorias.map((c) => {
-      const budget = c.budget || c.total || 0;
-      const desc = globalDiscount;
-      const valor = budget * (1 - desc / 100);
-      return { id: c.id, descricao: c.description, budget, desc, valor };
-    });
-    const subtotal = linhas.reduce((s, l) => s + l.valor, 0);
-    const valorVenda = subtotal + frete + montagem;
-    return { linhas, subtotal, valorVenda };
-  }, [parsed, globalDiscount, frete, montagem]);
+  const removeAmbiente = (id: string) => {
+    setAmbientes((prev) => prev.filter((a) => a.id !== id));
+  };
 
-  const handleProsseguirNegociacao = async () => {
+  const updateDesconto = (id: string, desconto: number) => {
+    setAmbientes((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, desconto } : a))
+    );
+  };
+
+  const totals = useMemo(() => {
+    const list = ambientes.map((a) => {
+      const valorBase = a.parsed.total_pedido || a.parsed.total_orcamento || 0;
+      const valorFinal = valorBase * (1 - a.desconto / 100);
+      return { ...a, valorBase, valorFinal };
+    });
+    const totalGeral = list.reduce((sum, item) => sum + item.valorFinal, 0);
+    return { list, totalGeral };
+  }, [ambientes]);
+
+  const handleProsseguir = async () => {
     const finalClienteId = id || clienteId;
-    if (!parsed || !calc || !perfil?.loja_id || !finalClienteId) {
-      toast.error("Faltam dados para prosseguir");
+    if (ambientes.length === 0 || !perfil?.loja_id || !finalClienteId) {
+      toast.error("Adicione ao menos um ambiente para prosseguir");
       return;
     }
     
     setCreating(true);
     try {
-      const categoriasJson = calc.linhas.map((l) => ({
-        id: l.id,
-        descricao: l.descricao,
-        tabela: l.budget,
-        desconto_pct: l.desc,
-        valor: l.valor,
-      }));
+      // Agregar dados de todos os ambientes
+      const todasCategorias: any[] = [];
+      const todosItens: any[] = [];
+      let totalTabela = 0;
+      let totalPedido = 0;
+      let totalFrete = 0;
+      let totalMontagem = 0;
 
-      // 1) Criar Orçamento (sem contrato ainda)
+      ambientes.forEach((a) => {
+        const descAmbiente = a.desconto;
+        
+        // Categorias do ambiente com desconto aplicado
+        const cats = a.parsed.categorias.map((c) => ({
+          id: c.id,
+          descricao: `[${a.nome}] ${c.description}`,
+          tabela: c.budget,
+          desconto_pct: descAmbiente,
+          valor: c.budget * (1 - descAmbiente / 100),
+          ambiente: a.nome,
+        }));
+        todasCategorias.push(...cats);
+
+        // Itens do ambiente
+        const items = a.parsed.itens.map((it) => ({
+          ...it,
+          ambiente: a.nome,
+        }));
+        todosItens.push(...items);
+
+        totalTabela += a.parsed.total_tabela;
+        totalPedido += a.parsed.total_pedido;
+        totalFrete += a.parsed.frete;
+        totalMontagem += a.parsed.montagem;
+      });
+
       const { data: orcamento, error: orcErr } = await supabase
         .from("orcamentos")
         .insert({
           loja_id: perfil.loja_id,
           cliente_id: finalClienteId,
           vendedor_id: user?.id ?? null,
-          nome: parsed.ordem_compra || file?.name?.replace(".xml", "") || "Orçamento XML",
-          ordem_compra: parsed.ordem_compra || null,
-          arquivo_nome: file?.name || null,
-          total_tabela: parsed.total_tabela,
-          total_pedido: parsed.total_pedido,
-          valor_negociado: calc.valorVenda,
-          desconto_global: globalDiscount,
-          frete_loja: frete,
-          montagem_loja: montagem,
-          categorias: categoriasJson as unknown as never,
-          itens: parsed.itens as unknown as never,
-          acrescimos: [
-            ...parsed.acrescimos,
-            { id: "frete", description: "Frete", value: frete, percentual: 0 },
-            { id: "montagem", description: "Montagem", value: montagem, percentual: 0 },
-          ] as unknown as never,
+          nome: ambientes.length === 1 ? ambientes[0].nome : `Orçamento Multiambientes (${ambientes.length})`,
+          total_tabela: totalTabela,
+          total_pedido: totalPedido,
+          valor_negociado: totals.totalGeral + totalFrete + totalMontagem,
+          desconto_global: 0, // Descontos agora são por ambiente
+          frete_loja: totalFrete,
+          montagem_loja: totalMontagem,
+          categorias: todasCategorias as any,
+          itens: todosItens as any,
           status: "rascunho",
         })
         .select("id")
@@ -142,11 +164,11 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
         
       if (orcErr) throw orcErr;
 
-      toast.success("Orçamento importado! Agora defina a condição de pagamento.");
+      toast.success("Orçamento criado com sucesso!");
       handleClose(false);
       navigate(`/orcamentos/${orcamento.id}/negociacao`);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao importar orçamento");
+      toast.error(e instanceof Error ? e.message : "Falha ao criar orçamento");
     } finally {
       setCreating(false);
     }
@@ -154,200 +176,122 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[760px] max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Importar XML Promob</DialogTitle>
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col p-0 overflow-hidden">
+        <DialogHeader className="p-6 pb-2">
+          <DialogTitle className="text-xl">PASSO 2 — Orçamento XML (múltiplos ambientes)</DialogTitle>
           <DialogDescription>
-            {parsed ? "Passo 2 — Revisar descontos e calcular valor de venda." : "Passo 1 — Faça upload do XML para gerar um orçamento."}
+            Importe um ou mais arquivos XML do Promob. Cada arquivo representa um ambiente.
           </DialogDescription>
         </DialogHeader>
 
-        {!parsed && (
-          <label
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setDragOver(false);
-              handleFile(e.dataTransfer.files?.[0] ?? null);
-            }}
-            className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed py-10 transition-colors hover:border-[#1E6FBF]"
-            style={{
-              borderColor: dragOver ? "#1E6FBF" : "#E8ECF2",
-              background: dragOver ? "#F0F7FF" : "#FAFBFC",
-            }}
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
+            accept=".xml"
+            className="hidden"
+          />
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full border-dashed border-2 py-8 flex flex-col gap-2 hover:bg-slate-50 hover:border-primary/50 transition-all"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={parsing}
           >
-            <input
-              type="file"
-              accept=".xml,text/xml,application/xml"
-              className="hidden"
-              onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
-            />
-            {file && !error ? (
-              <>
-                <FileCode2 className="h-8 w-8" style={{ color: "#1E6FBF" }} />
-                <p className="mt-2 text-sm font-medium" style={{ color: "#0D1117" }}>{file.name}</p>
-                <p className="mt-0.5 text-xs" style={{ color: "#6B7A90" }}>
-                  {(file.size / 1024).toFixed(1)} KB · clique para trocar
-                </p>
-              </>
+            {parsing ? (
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
             ) : (
-              <>
-                <Upload className="h-8 w-8" style={{ color: "#6B7A90" }} />
-                <p className="mt-2 text-sm font-medium" style={{ color: "#0D1117" }}>
-                  Arraste o XML gerado pelo Promob
-                </p>
-                <p className="mt-0.5 text-xs" style={{ color: "#6B7A90" }}>
-                  Promob → Relatórios → Orçamento → Exportar XML
-                </p>
-              </>
+              <Plus className="h-6 w-6 text-primary" />
             )}
-          </label>
-        )}
+            <span className="font-semibold text-primary">
+              {parsing ? "Lendo XML..." : "+ Adicionar ambiente (XML)"}
+            </span>
+          </Button>
 
-        {parsing && (
-          <p className="text-center text-sm" style={{ color: "#6B7A90" }}>Lendo XML...</p>
-        )}
-
-        {error && (
-          <div
-            className="flex items-start gap-2 rounded-md p-3"
-            style={{ background: "#FEF2F2", border: "1px solid #FECACA" }}
-          >
-            <AlertCircle className="h-4 w-4 mt-0.5" style={{ color: "#E53935" }} />
-            <p className="text-sm" style={{ color: "#991B1B" }}>{error}</p>
-          </div>
-        )}
-
-        {parsed && !error && calc && (
-          <div className="space-y-4">
-            {/* Header pós-parse */}
-            <div className="flex items-start justify-between gap-3 rounded-md p-3" style={{ background: "#FAFBFC", border: "1px solid #E8ECF2" }}>
-              <div className="min-w-0">
-                <p className="text-xs" style={{ color: "#6B7A90" }}>Cliente</p>
-                <p className="text-sm font-semibold truncate" style={{ color: "#0D1117" }}>
-                  {clienteNome || parsed.cliente_nome || "—"}
-                </p>
-                <p className="mt-1 text-xs" style={{ color: "#6B7A90" }}>
-                  Ordem: <span style={{ color: "#0D1117" }}>{parsed.ordem_compra || "—"}</span>
-                </p>
-              </div>
-              <div
-                className="flex items-center gap-1.5 rounded-full px-2.5 py-1 shrink-0"
-                style={{ background: "#ECFDF3", border: "1px solid #B7E4C7" }}
-              >
-                <CheckCircle2 className="h-3.5 w-3.5" style={{ color: "#12B76A" }} />
-                <span className="text-xs font-medium" style={{ color: "#12B76A" }}>XML carregado</span>
-              </div>
+          {error && (
+            <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm p-3 rounded-md flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              {error}
             </div>
+          )}
 
-            {/* Seção Única — Ambiente e Negociação */}
-            <section className="space-y-4">
-              <div
-                className="rounded-md p-4"
-                style={{ background: "#FFFFFF", border: "1px solid #E8ECF2" }}
+          <div className="grid gap-3">
+            {totals.list.map((amb) => (
+              <div 
+                key={amb.id}
+                className="bg-white border rounded-lg p-4 shadow-sm hover:border-primary/30 transition-colors"
               >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-wider" style={{ color: "#6B7A90" }}>Ambiente</p>
-                    <p className="text-lg font-semibold" style={{ color: "#0D1117" }}>
-                      {parsed.ordem_compra || file?.name?.replace(".xml", "") || "Novo Ambiente"}
-                    </p>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="bg-emerald-100 p-1 rounded-full">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    </div>
+                    <span className="font-bold text-slate-800">{amb.nome}</span>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeAmbiente(amb.id)}
+                    className="text-slate-400 hover:text-destructive hover:bg-destructive/5 h-8 px-2"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    <span className="text-xs">Remover</span>
+                  </Button>
                 </div>
 
-                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <p className="text-xs font-medium" style={{ color: "#6B7A90" }}>Desconto global %</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-xs text-slate-500 uppercase font-medium">Valor de venda</p>
+                    <p className="text-lg font-semibold text-slate-900">{formatBRL(amb.valorBase)}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs text-slate-500 uppercase font-medium">Desconto (%)</p>
                     <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        step={0.5}
-                        min={0}
-                        max={60}
-                        value={globalDiscount}
-                        onChange={(e) => {
-                          const v = Math.max(0, Math.min(60, parseFloat(e.target.value) || 0));
-                          setGlobalDiscount(v);
-                        }}
-                        className="h-10 text-right font-medium"
-                      />
-                      <span className="text-sm font-medium" style={{ color: "#6B7A90" }}>%</span>
+                      <div className="relative flex-1">
+                        <Input
+                          type="number"
+                          value={amb.desconto}
+                          onChange={(e) => updateDesconto(amb.id, parseFloat(e.target.value) || 0)}
+                          className="h-9 pr-7 font-bold text-primary"
+                        />
+                        <span className="absolute right-2 top-2 text-xs font-bold text-slate-400">%</span>
+                      </div>
+                      <div className="text-slate-400">→</div>
+                      <div className="flex-1 font-bold text-emerald-600 bg-emerald-50 h-9 flex items-center px-3 rounded-md border border-emerald-100">
+                        {formatBRL(amb.valorFinal)}
+                      </div>
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <AcrescimoInput label="Frete" value={frete} onChange={setFrete} />
-                    <AcrescimoInput label="Montagem" value={montagem} onChange={setMontagem} />
-                  </div>
                 </div>
               </div>
-            </section>
-
-            {/* Seção 2 — Valor de venda destacado */}
-            <section className="rounded-lg p-5" style={{ background: "#0D1117" }}>
-              <div className="space-y-1.5 text-sm" style={{ color: "#B0BAC9" }}>
-                <Row label="Total dos produtos" value={formatBRL(calc.subtotal)} />
-                <Row label="Investimento Frete" value={formatBRL(frete)} />
-                <Row label="Investimento Montagem" value={formatBRL(montagem)} />
-              </div>
-              <div className="my-4 h-px" style={{ background: "#1F2A3A" }} />
-              <div className="flex flex-col gap-1">
-                <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "#6B7A90" }}>
-                  Valor total de venda
-                </span>
-                <span style={{ color: "#FFFFFF", fontSize: 40, fontWeight: 600, lineHeight: 1 }}>
-                  {formatBRL(calc.valorVenda)}
-                </span>
-              </div>
-            </section>
-
-            <Button
-              onClick={handleProsseguirNegociacao}
-              disabled={creating || calc.valorVenda <= 0}
-              className="w-full text-white hover:opacity-90"
-              style={{ background: "#12B76A" }}
-            >
-              {creating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Importando...
-                </>
-              ) : (
-                "Próximo: Condição de Pagamento →"
-              )}
-            </Button>
+            ))}
           </div>
-        )}
+        </div>
+
+        <div className="p-6 bg-slate-50 border-t mt-auto">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-slate-600 font-medium">Total geral dos ambientes:</span>
+            <span className="text-2xl font-bold text-slate-900">{formatBRL(totals.totalGeral)}</span>
+          </div>
+          
+          <Button
+            onClick={handleProsseguir}
+            disabled={creating || ambientes.length === 0}
+            className="w-full h-12 text-lg font-semibold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
+          >
+            {creating ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Criando Orçamento...
+              </>
+            ) : (
+              "Próximo →"
+            )}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function AcrescimoInput({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
-  return (
-    <div className="rounded-md p-3" style={{ background: "#FFFFFF", border: "1px solid #E8ECF2" }}>
-      <p className="text-xs" style={{ color: "#6B7A90" }}>{label}</p>
-      <div className="mt-1 flex items-center gap-2">
-        <span className="text-xs" style={{ color: "#6B7A90" }}>R$</span>
-        <Input
-          type="number"
-          step={1}
-          min={0}
-          value={value}
-          onChange={(e) => onChange(Math.max(0, parseFloat(e.target.value) || 0))}
-          className="h-8 text-right"
-        />
-      </div>
-    </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span>{label}</span>
-      <span style={{ color: "#FFFFFF" }}>{value}</span>
-    </div>
   );
 }
