@@ -4,10 +4,12 @@ import { InternaKanban } from "@/components/producao/InternaKanban";
 
 export default function Producao() {
   return (
-    <div className="p-8">
-      <div className="mb-6">
-        <h1 style={{ fontSize: 22, fontWeight: 600, color: "#0D1117" }}>NEXO Produção</h1>
-        <p style={{ fontSize: 13, color: "#6B7A90" }}>Ordens de produção ativas</p>
+    <div className="p-4 md:p-8">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 600, color: "#0D1117" }}>NEXO Produção</h1>
+          <p style={{ fontSize: 13, color: "#6B7A90" }}>Ordens de produção ativas</p>
+        </div>
       </div>
 
       <Tabs defaultValue="terceirizada" className="w-full">

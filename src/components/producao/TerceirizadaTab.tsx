@@ -219,8 +219,8 @@ export function TerceirizadaTab() {
         </Select>
       </div>
 
-      <div className="overflow-hidden rounded-xl bg-white" style={{ border: "0.5px solid #E8ECF2" }}>
-        <table className="w-full">
+      <div className="overflow-x-auto rounded-xl bg-white border border-[#E8ECF2]">
+        <table className="w-full min-w-[1000px]">
           <thead style={{ backgroundColor: "#F7F9FC" }}>
             <tr>
               {["Nº pedido", "OC / Cliente", "Cliente", "Tipo", "Situação", "Data prevista", "Dias restantes", "Vínculo", "Status", "Ações"].map((h) => (

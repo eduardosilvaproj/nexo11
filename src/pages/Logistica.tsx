@@ -135,13 +135,13 @@ export default function Logistica() {
   const todayISO = fmtISODate(new Date());
 
   return (
-    <div className="p-8">
-      <div className="mb-6 flex items-start justify-between gap-4">
+    <div className="p-4 md:p-8">
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-[22px] font-semibold text-foreground">NEXO Logística</h1>
           <p className="text-sm text-muted-foreground">Agenda visual semanal de entregas</p>
         </div>
-        <Button onClick={() => { setCreateDate(undefined); setCreateTurno(undefined); setCreateOpen(true); }}>
+        <Button onClick={() => { setCreateDate(undefined); setCreateTurno(undefined); setCreateOpen(true); }} className="w-full sm:w-auto">
           <Plus className="mr-1 h-4 w-4" /> Nova Entrega
         </Button>
       </div>
@@ -173,22 +173,22 @@ export default function Logistica() {
       </div>
 
       {/* Navegação semana */}
-      <div className="mb-4 flex items-center justify-between rounded-xl bg-card px-4 py-3" style={{ border: "0.5px solid hsl(var(--border))" }}>
-        <Button variant="ghost" size="sm" onClick={() => setAnchor((d) => addDays(d, -7))}>
+      <div className="mb-4 flex flex-col sm:flex-row items-center justify-between rounded-xl bg-card px-4 py-3 gap-4" style={{ border: "0.5px solid hsl(var(--border))" }}>
+        <Button variant="ghost" size="sm" onClick={() => setAnchor((d) => addDays(d, -7))} className="w-full sm:w-auto justify-start">
           <ChevronLeft className="h-4 w-4 mr-1" /> Semana anterior
         </Button>
         <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-foreground">{weekRangeLabel(anchor)}</span>
+          <span className="text-sm font-medium text-foreground whitespace-nowrap">{weekRangeLabel(anchor)}</span>
           <Button variant="outline" size="sm" onClick={() => setAnchor(startOfWeek(new Date()))}>Hoje</Button>
         </div>
-        <Button variant="ghost" size="sm" onClick={() => setAnchor((d) => addDays(d, 7))}>
+        <Button variant="ghost" size="sm" onClick={() => setAnchor((d) => addDays(d, 7))} className="w-full sm:w-auto justify-end">
           Próxima semana <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
       </div>
 
       {/* Grade semanal */}
-      <div className="overflow-hidden rounded-xl bg-card" style={{ border: "0.5px solid hsl(var(--border))" }}>
-        <div className="grid" style={{ gridTemplateColumns: "80px repeat(6, minmax(0, 1fr))" }}>
+      <div className="overflow-x-auto rounded-xl bg-card border border-border">
+        <div className="grid min-w-[1000px]" style={{ gridTemplateColumns: "80px repeat(6, minmax(0, 1fr))" }}>
           {/* Header */}
           <div className="border-b border-r bg-muted/40 px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground"></div>
           {days.map((d, i) => {

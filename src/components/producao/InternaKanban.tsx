@@ -126,7 +126,8 @@ export function InternaKanban() {
         </div>
       </div>
 
-      <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
+      <div className="overflow-x-auto pb-4">
+        <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(4, minmax(280px, 1fr))" }}>
         {COLUMNS.map((col) => (
           <div key={col.key} className="rounded-xl flex flex-col" style={{ backgroundColor: col.bg, border: "0.5px solid #E8ECF2", minHeight: 400 }}>
             <div className="px-4 py-3 rounded-t-xl" style={{ backgroundColor: col.headerBg }}>
@@ -169,6 +170,7 @@ export function InternaKanban() {
             </div>
           </div>
         ))}
+        </div>
       </div>
 
       <NovaOrdemInternaDialog

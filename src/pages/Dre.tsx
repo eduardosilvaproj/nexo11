@@ -384,8 +384,8 @@ export default function Dre() {
   }, [rows, vendedores, rankBy]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="space-y-6 p-4 md:p-0">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold text-[#0B1220]">NEXO DRE</h1>
           <p className="text-sm text-[#6B7A90]">Resultado por contrato</p>
@@ -826,8 +826,8 @@ export default function Dre() {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-lg border border-[#E8ECF2]">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-lg border border-[#E8ECF2]">
+          <table className="w-full text-sm min-w-[800px]">
             <thead className="border-b border-[#E8ECF2] bg-[#F5F7FA] text-left text-[#6B7A90]">
               <tr>
                 <th className="px-4 py-3 font-medium">#</th>
