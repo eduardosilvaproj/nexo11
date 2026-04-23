@@ -174,11 +174,12 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
             Pelo presente instrumento particular, de um lado, <Text style={{ fontWeight: 'bold' }}>{loja?.nome || 'DIAS & DIAS'}</Text>, 
             inscrita no CNPJ sob o nº {loja?.cnpj || '—'}, com sede em {loja?.endereco || '—'}, {loja?.cidade || '—'}/{loja?.estado || '—'}, 
             doravante denominada CONTRATADA; e de outro lado, <Text style={{ fontWeight: 'bold' }}>{contrato.cliente_nome || '—'}</Text>, 
-            inscrito(a) no CPF/CNPJ sob o nº {contrato.cliente_documento || '—'}, residente e domiciliado(a) em {contrato.cliente_endereco || '—'}, 
-            telefone {contrato.cliente_contato || '—'}, e-mail {contrato.cliente_email || '—'}, doravante denominado(a) CONTRATANTE, 
+            inscrito(a) no CPF/CNPJ sob o nº {clienteDocumento}, residente e domiciliado(a) em {clienteEndereco}, 
+            telefone {clienteContato}, e-mail {clienteEmail}, doravante denominado(a) CONTRATANTE, 
             têm entre si justo e contratado o que segue:
           </Text>
         </View>
+
 
         {/* Clauses */}
         <View>
