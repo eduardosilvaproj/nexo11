@@ -55,8 +55,18 @@ const STAGE_LABELS: Record<string, string> = {
 
 const fmtDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString("pt-BR") : "—";
-const fmtDateTime = (d?: string | null) =>
-  d ? new Date(d).toLocaleString("pt-BR") : "—";
+const formatDateTime = (date: any) => {
+  if (!date) return '—';
+  const d = new Date(date);
+  const day = d.getDate().toString().padStart(2, '0');
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  const year = d.getFullYear();
+  const hours = d.getHours().toString().padStart(2, '0');
+  const minutes = d.getMinutes().toString().padStart(2, '0');
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
+};
+
+const fmtDateTime = (d?: string | null) => d ? formatDateTime(d) : "—";
 
 export default function PortalCliente() {
   const { token } = useParams<{ token: string }>();
