@@ -374,7 +374,7 @@ export function NovoOrcamentoClienteDialog({
             <div className="rounded-lg p-4" style={{ background: "#0D1117" }}>
               <div className="space-y-1.5 text-sm">
                 <div className="flex items-center justify-between">
-                  <span style={{ color: "#6B7A90" }}>Valor sugerido Promob</span>
+                  <span style={{ color: "#6B7A90" }}>Valor de Venda (Base)</span>
                   <span style={{ color: "#6B7A90" }}>{formatBRL(valorSugerido)}</span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -384,49 +384,12 @@ export function NovoOrcamentoClienteDialog({
               </div>
               <div className="my-3 h-px bg-slate-800" />
               <div className="flex items-baseline justify-between">
-                <span className="text-xs uppercase tracking-wide text-slate-500">Valor de venda</span>
+                <span className="text-xs uppercase tracking-wide text-slate-500">Valor de venda final</span>
                 <span className="text-white" style={{ fontSize: 32, fontWeight: 500, lineHeight: 1 }}>
                   {formatBRL(calc.valorVenda)}
                 </span>
               </div>
-              <div className="my-3 h-px bg-slate-800" />
-              <div className="flex items-center justify-between">
-                <span style={{ fontSize: 12, color: "#6B7A90" }}>Custo fabricante</span>
-                <span style={{ fontSize: 12, color: "#6B7A90" }}>{formatBRL(calc.custoProduto)}</span>
-              </div>
-              <div className="mt-1 flex items-center justify-between">
-                <span className="text-slate-300" style={{ fontSize: 14 }}>Margem prevista</span>
-                <span
-                  style={{
-                    fontSize: 16,
-                    fontWeight: 600,
-                    color:
-                      calc.margemPrev >= 30
-                        ? "#10B981"
-                        : calc.margemPrev >= 15
-                        ? "#F59E0B"
-                        : "#E53935",
-                  }}
-                >
-                  {calc.margemPrev.toFixed(1)}%
-                </span>
-              </div>
             </div>
-
-            {calc.margemPrev < 15 && (
-              <div
-                style={{
-                  background: "#FDECEA",
-                  border: "1px solid #E53935",
-                  borderRadius: 8,
-                  padding: 10,
-                  color: "#8B1F1B",
-                  fontSize: 13,
-                }}
-              >
-                ⚠ Margem abaixo do mínimo recomendado (15%). Considere reduzir o desconto ou aumentar o valor de venda.
-              </div>
-            )}
           </div>
         )}
 
