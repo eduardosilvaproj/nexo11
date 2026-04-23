@@ -336,7 +336,7 @@ export function NovoOrcamentoClienteDialog({
                   <tr className="border-t">
                     <td className="px-3 py-2">Total</td>
                     <td className="px-3 py-2 text-right">
-                      {formatBRL(calc.linhas.reduce((s, l) => s + l.tabela, 0))}
+                      {formatBRL(calc.linhas.reduce((s, l) => s + l.budget, 0))}
                     </td>
                     <td className="px-3 py-2 text-right text-muted-foreground">—</td>
                     <td className="px-3 py-2 text-right">{formatBRL(calc.subtotal)}</td>
