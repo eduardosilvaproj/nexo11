@@ -107,7 +107,7 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
       const categoriasJson = calc.linhas.map((l) => ({
         id: l.id,
         descricao: l.descricao,
-        tabela: l.tabela,
+        tabela: l.budget,
         desconto_pct: l.desc,
         valor: l.valor,
       }));
