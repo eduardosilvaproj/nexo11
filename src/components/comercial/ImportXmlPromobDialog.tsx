@@ -85,16 +85,14 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
   const calc = useMemo(() => {
     if (!parsed) return null;
     const linhas = parsed.categorias.map((c) => {
-      const tabela = c.tabela || c.itens.reduce((s, x) => s + x.price * x.quantity, 0) || c.total;
+      const budget = c.budget || c.total || 0;
       const desc = globalDiscount;
-      const valor = tabela * (1 - desc / 100);
-      return { id: c.id, descricao: c.description, tabela, desc, valor };
+      const valor = budget * (1 - desc / 100);
+      return { id: c.id, descricao: c.description, budget, desc, valor };
     });
     const subtotal = linhas.reduce((s, l) => s + l.valor, 0);
     const valorVenda = subtotal + frete + montagem;
-    const custoProduto = parsed.total_tabela;
-    const margem = valorVenda > 0 ? ((valorVenda - custoProduto) / valorVenda) * 100 : 0;
-    return { linhas, subtotal, valorVenda, custoProduto, margem };
+    return { linhas, subtotal, valorVenda };
   }, [parsed, globalDiscount, frete, montagem]);
 
   const handleProsseguirNegociacao = async () => {
@@ -109,7 +107,7 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
       const categoriasJson = calc.linhas.map((l) => ({
         id: l.id,
         descricao: l.descricao,
-        tabela: l.tabela,
+        tabela: l.budget,
         desconto_pct: l.desc,
         valor: l.valor,
       }));

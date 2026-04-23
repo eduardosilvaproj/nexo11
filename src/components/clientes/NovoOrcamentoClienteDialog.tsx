@@ -109,7 +109,7 @@ export function NovoOrcamentoClienteDialog({
       setDescontos(initial);
       setFreteLoja(data.frete);
       setMontagemLoja(data.montagem);
-      setValorSugerido(data.total_orcamento || data.total_pedido || 0);
+      setValorSugerido(data.total_orcamento || 0);
       setDescontoGlobal(0);
       // Default: preencher nome com ordem_compra do XML, se ainda vazio
       if (!nome.trim() && data.ordem_compra) {
@@ -126,17 +126,15 @@ export function NovoOrcamentoClienteDialog({
   const calc = useMemo(() => {
     if (!parsed) return null;
     const linhas = parsed.categorias.map((c) => {
-      const tabela = c.tabela || c.itens.reduce((s, x) => s + x.price * x.quantity, 0) || c.total;
+      const budget = c.budget || c.total || 0;
       const desc = descontos[c.id] ?? 0;
-      const negociado = tabela * (1 - desc / 100);
-      return { id: c.id, descricao: c.description, tabela, desc, negociado };
+      const negociado = budget * (1 - desc / 100);
+      return { id: c.id, descricao: c.description, budget, desc, negociado };
     });
     const subtotal = linhas.reduce((s, l) => s + l.negociado, 0);
     const descGlobalSafe = Math.max(0, Math.min(60, descontoGlobal || 0));
     const valorVenda = Math.max(0, (valorSugerido || 0) * (1 - descGlobalSafe / 100));
-    const custoProduto = parsed.total_pedido || parsed.total_tabela; // ORDER = custo real
-    const margemPrev = valorVenda > 0 ? ((valorVenda - custoProduto) / valorVenda) * 100 : 0;
-    return { linhas, subtotal, valorVenda, custoProduto, margemPrev, descGlobalSafe };
+    return { linhas, subtotal, valorVenda, descGlobalSafe };
   }, [parsed, descontos, valorSugerido, descontoGlobal]);
 
   const margemColor = (m: number) =>
@@ -157,7 +155,7 @@ export function NovoOrcamentoClienteDialog({
       const categoriasJson = calc.linhas.map((l) => ({
         id: l.id,
         descricao: l.descricao,
-        tabela: l.tabela,
+        tabela: l.budget,
         desconto_pct: l.desc,
         valor: l.negociado,
       }));
@@ -306,7 +304,7 @@ export function NovoOrcamentoClienteDialog({
                 <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
                   <tr>
                     <th className="px-3 py-2 text-left font-medium">Categoria</th>
-                    <th className="px-3 py-2 text-right font-medium">Tabela</th>
+                    <th className="px-3 py-2 text-right font-medium">Valor Base</th>
                     <th className="px-3 py-2 text-right font-medium">Desc %</th>
                     <th className="px-3 py-2 text-right font-medium">Negociado</th>
                   </tr>
@@ -315,7 +313,7 @@ export function NovoOrcamentoClienteDialog({
                   {calc.linhas.map((l) => (
                     <tr key={l.id} className="border-t">
                       <td className="px-3 py-2">{l.descricao || "Categoria"}</td>
-                      <td className="px-3 py-2 text-right">{formatBRL(l.tabela)}</td>
+                      <td className="px-3 py-2 text-right">{formatBRL(l.budget)}</td>
                       <td className="px-3 py-2 text-right">
                         <Input
                           type="number"
@@ -338,7 +336,7 @@ export function NovoOrcamentoClienteDialog({
                   <tr className="border-t">
                     <td className="px-3 py-2">Total</td>
                     <td className="px-3 py-2 text-right">
-                      {formatBRL(calc.linhas.reduce((s, l) => s + l.tabela, 0))}
+                      {formatBRL(calc.linhas.reduce((s, l) => s + l.budget, 0))}
                     </td>
                     <td className="px-3 py-2 text-right text-muted-foreground">—</td>
                     <td className="px-3 py-2 text-right">{formatBRL(calc.subtotal)}</td>
@@ -349,7 +347,7 @@ export function NovoOrcamentoClienteDialog({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Valor de venda sugerido (Promob)</Label>
+                <Label>Valor de Venda (Base)</Label>
                 <Input
                   type="number"
                   step={0.01}
@@ -376,7 +374,7 @@ export function NovoOrcamentoClienteDialog({
             <div className="rounded-lg p-4" style={{ background: "#0D1117" }}>
               <div className="space-y-1.5 text-sm">
                 <div className="flex items-center justify-between">
-                  <span style={{ color: "#6B7A90" }}>Valor sugerido Promob</span>
+                  <span style={{ color: "#6B7A90" }}>Valor de Venda (Base)</span>
                   <span style={{ color: "#6B7A90" }}>{formatBRL(valorSugerido)}</span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -386,49 +384,12 @@ export function NovoOrcamentoClienteDialog({
               </div>
               <div className="my-3 h-px bg-slate-800" />
               <div className="flex items-baseline justify-between">
-                <span className="text-xs uppercase tracking-wide text-slate-500">Valor de venda</span>
+                <span className="text-xs uppercase tracking-wide text-slate-500">Valor de venda final</span>
                 <span className="text-white" style={{ fontSize: 32, fontWeight: 500, lineHeight: 1 }}>
                   {formatBRL(calc.valorVenda)}
                 </span>
               </div>
-              <div className="my-3 h-px bg-slate-800" />
-              <div className="flex items-center justify-between">
-                <span style={{ fontSize: 12, color: "#6B7A90" }}>Custo fabricante</span>
-                <span style={{ fontSize: 12, color: "#6B7A90" }}>{formatBRL(calc.custoProduto)}</span>
-              </div>
-              <div className="mt-1 flex items-center justify-between">
-                <span className="text-slate-300" style={{ fontSize: 14 }}>Margem prevista</span>
-                <span
-                  style={{
-                    fontSize: 16,
-                    fontWeight: 600,
-                    color:
-                      calc.margemPrev >= 30
-                        ? "#10B981"
-                        : calc.margemPrev >= 15
-                        ? "#F59E0B"
-                        : "#E53935",
-                  }}
-                >
-                  {calc.margemPrev.toFixed(1)}%
-                </span>
-              </div>
             </div>
-
-            {calc.margemPrev < 15 && (
-              <div
-                style={{
-                  background: "#FDECEA",
-                  border: "1px solid #E53935",
-                  borderRadius: 8,
-                  padding: 10,
-                  color: "#8B1F1B",
-                  fontSize: 13,
-                }}
-              >
-                ⚠ Margem abaixo do mínimo recomendado (15%). Considere reduzir o desconto ou aumentar o valor de venda.
-              </div>
-            )}
           </div>
         )}
 
