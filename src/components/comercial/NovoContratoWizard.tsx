@@ -214,6 +214,11 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
     }
   };
 
+  const condicaoSel = useMemo(
+    () => condicoes.find((c) => c.id === condicaoId) || null,
+    [condicoes, condicaoId],
+  );
+
   const totalsOrcamento = useMemo(() => {
     const list = ambientes.map(a => {
       const valorBase = a.parsed.total_orcamento || a.parsed.total_pedido || 0;
@@ -261,7 +266,7 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
       toast.error("Selecione ao menos um ambiente");
       return;
     }
-    setStep(3);
+    setStep(2); // In the new layout, we only have step 1 and 2
   };
 
   useEffect(() => {
@@ -352,17 +357,17 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
           cliente_id: finalClienteId,
           vendedor_id: clientData.vendedor_id || user?.id,
           nome: ambientes.length === 1 ? ambientes[0].nome : `Orçamento Multi (${ambientes.length})`,
-          valor_negociado: totalsStep2.totalFinal,
+          valor_negociado: totalsOrcamento.valorFinalTotal,
           total_pedido: totalPedido,
           total_tabela: totalTabela,
-          desconto_global: 0,
-          frete_loja: totalsStep2.totalFrete,
-          montagem_loja: totalsStep2.totalMontagem,
+          desconto_global: descontoGlobal,
+          frete_loja: totalsOrcamento.totalFrete,
+          montagem_loja: totalsOrcamento.totalMontagem,
           status: isDraft ? "rascunho" : "aprovado",
           condicao_pagamento_id: condicaoSel?.id || null,
           taxa_financeira: condicaoSel?.taxa || 0,
           parcelas: condicaoSel?.parcelas || null,
-          valor_parcela: isDraft ? null : Number(calcStep3.valorParcela.toFixed(2)),
+          valor_parcela: isDraft ? null : Number(totalsOrcamento.valorParcela.toFixed(2)),
           percentual_parceiro: percParceiro,
           ocultar_parceiro: ocultarParceiro,
           tipo_venda: tipoVenda,
@@ -381,7 +386,7 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
             loja_id: perfil.loja_id,
             cliente_id: finalClienteId,
             cliente_nome: clientData.nome,
-            valor_venda: Number(calcStep3.comParceiro.toFixed(2)),
+            valor_venda: Number(totalsOrcamento.valorFinalTotal.toFixed(2)),
             vendedor_id: clientData.vendedor_id || user?.id,
             status: "comercial",
           })
