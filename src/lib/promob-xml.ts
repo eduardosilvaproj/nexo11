@@ -71,6 +71,7 @@ const findData = (parent: Element | null | Document, id: string): string => {
 export function parsePromobXml(xmlText: string): PromobParsed {
   const parser = new DOMParser();
   const doc = parser.parseFromString(xmlText, "text/xml");
+  console.log("XML Promob Structure:", doc);
 
   if (doc.querySelector("parsererror")) {
     throw new Error("Arquivo XML inválido");
