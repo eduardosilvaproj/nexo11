@@ -28,6 +28,12 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 type Condicao = {
@@ -37,6 +43,15 @@ type Condicao = {
   taxa: number;
   ativo: boolean;
   ordem: number | null;
+};
+
+type Categoria = {
+  id: string;
+  descricao: string;
+  tabela: number;
+  valor: number;
+  desconto_pct: number;
+  ambiente?: string;
 };
 
 type Orcamento = {
@@ -60,6 +75,7 @@ type Orcamento = {
   status: string | null;
   frete_loja?: number | null;
   montagem_loja?: number | null;
+  categorias: Categoria[] | null;
 };
 
 type Parcela = { label: string; data: string; valor: number };
@@ -85,6 +101,7 @@ export default function OrcamentoNegociacao() {
   const [ocultarParceiro, setOcultarParceiro] = useState(false);
   const [descontoExtra, setDescontoExtra] = useState(0);
   const [datasParcelas, setDatasParcelas] = useState<string[]>([]);
+  const [ambientesSelecionados, setAmbientesSelecionados] = useState<string[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -93,7 +110,7 @@ export default function OrcamentoNegociacao() {
       const { data: orc, error } = await supabase
         .from("orcamentos")
         .select(
-          "id,nome,loja_id,cliente_id,vendedor_id,valor_negociado,total_pedido,total_tabela,condicao_pagamento_id,taxa_financeira,parcelas,valor_parcela,percentual_parceiro,ocultar_parceiro,tipo_venda,parcelas_datas,desconto_global,status,frete_loja,montagem_loja",
+          "id,nome,loja_id,cliente_id,vendedor_id,valor_negociado,total_pedido,total_tabela,condicao_pagamento_id,taxa_financeira,parcelas,valor_parcela,percentual_parceiro,ocultar_parceiro,tipo_venda,parcelas_datas,desconto_global,status,frete_loja,montagem_loja,categorias",
         )
         .eq("id", id)
         .maybeSingle();
@@ -124,6 +141,9 @@ export default function OrcamentoNegociacao() {
       setPercParceiro(Number(orc.percentual_parceiro || 0));
       setOcultarParceiro(!!orc.ocultar_parceiro);
       setDescontoExtra(Number(orc.desconto_global || 0));
+      if (orc.categorias && Array.isArray(orc.categorias)) {
+        setAmbientesSelecionados(orc.categorias.map((c: any) => c.id));
+      }
       if (Array.isArray(orc.parcelas_datas)) {
         setDatasParcelas((orc.parcelas_datas as string[]) ?? []);
       }
@@ -136,10 +156,14 @@ export default function OrcamentoNegociacao() {
     [condicoes, condicaoId],
   );
 
-  const valorBase = useMemo(
-    () => Number(orcamento?.valor_negociado || orcamento?.total_pedido || 0),
-    [orcamento],
-  );
+  const valorBase = useMemo(() => {
+    if (!orcamento?.categorias || !Array.isArray(orcamento.categorias)) {
+      return Number(orcamento?.valor_negociado || orcamento?.total_pedido || 0);
+    }
+    return orcamento.categorias
+      .filter((c) => ambientesSelecionados.includes(c.id))
+      .reduce((acc, c) => acc + (Number(c.valor) || 0), 0);
+  }, [orcamento, ambientesSelecionados]);
 
   const calc = useMemo(() => {
     const taxa = Number(condicaoSel?.taxa || 0);
@@ -335,9 +359,46 @@ export default function OrcamentoNegociacao() {
                 <h2 className="text-xl font-medium">{orcamento.nome}</h2>
               </div>
 
+              <div className="space-y-4 border-t pt-4">
+                <p className="text-xs text-muted-foreground uppercase font-semibold">Ambientes incluídos</p>
+                <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                  {orcamento.categorias?.map((c) => {
+                    const selected = ambientesSelecionados.includes(c.id);
+                    return (
+                      <div
+                        key={c.id}
+                        className={cn(
+                          "flex items-center justify-between p-2 rounded-md border transition-all",
+                          selected ? "bg-white border-slate-200" : "bg-slate-50 border-slate-100 opacity-50",
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Checkbox
+                            checked={selected}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setAmbientesSelecionados((prev) => [...prev, c.id]);
+                              } else {
+                                setAmbientesSelecionados((prev) => prev.filter((id) => id !== c.id));
+                              }
+                            }}
+                          />
+                          <span className={cn("text-sm font-medium", !selected && "line-through text-muted-foreground")}>
+                            {c.descricao}
+                          </span>
+                        </div>
+                        <span className={cn("text-sm tabular-nums", !selected && "line-through text-muted-foreground")}>
+                          {formatBRL(c.valor)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="space-y-1 border-t pt-4">
-                <p className="text-sm text-muted-foreground">Valor de venda base</p>
-                <p className="text-3xl font-bold text-slate-900">{formatBRL(valorBase)}</p>
+                <p className="text-sm text-muted-foreground">Valor de venda base (selecionados)</p>
+                <p className="text-3xl font-bold text-slate-900 tabular-nums">{formatBRL(valorBase)}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4 border-t pt-4">
@@ -352,8 +413,10 @@ export default function OrcamentoNegociacao() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Valor após desconto</p>
-                  <p className="text-lg font-medium py-2">{formatBRL(valorBase * (1 - descontoExtra / 100))}</p>
+                  <p className="text-xs text-muted-foreground">Total Geral (sem taxa)</p>
+                  <p className="text-lg font-medium py-2 tabular-nums">
+                    {formatBRL(valorBase * (1 - descontoExtra / 100))}
+                  </p>
                 </div>
               </div>
 
@@ -374,17 +437,13 @@ export default function OrcamentoNegociacao() {
                   </Select>
                 </div>
 
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Taxa financeira embutida</p>
-                  <p className="text-sm font-medium">
-                    {formatBRL(calc.comTaxa - valorBase)}
-                  </p>
-                </div>
-
                 <div className="bg-slate-50 p-4 rounded-lg space-y-1 border border-slate-100">
                   <p className="text-xs text-muted-foreground font-semibold uppercase">Valor Total Final</p>
                   <p className="text-4xl font-bold text-emerald-600 tabular-nums">
                     {formatBRL(calc.comParceiro)}
+                  </p>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Inclui taxa financeira de {formatBRL(calc.comTaxa - valorBase)}
                   </p>
                 </div>
               </div>
@@ -404,27 +463,35 @@ export default function OrcamentoNegociacao() {
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs flex items-center gap-1.5 print:hidden">
-                    Per. % Parceiro
-                    <button
-                      type="button"
-                      onClick={() => setOcultarParceiro((v) => !v)}
-                      className="text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      {ocultarParceiro ? (
-                        <Lock className="h-3.5 w-3.5" />
-                      ) : (
-                        <Unlock className="h-3.5 w-3.5" />
-                      )}
-                    </button>
-                  </Label>
+                  <div className="flex items-center gap-1.5 h-4 mb-1">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={() => setOcultarParceiro((v) => !v)}
+                            className="text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            {ocultarParceiro ? (
+                              <Lock className="h-4 w-4" />
+                            ) : (
+                              <Unlock className="h-4 w-4" />
+                            )}
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Percentual parceiro (oculto ao imprimir)</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                   <div className={cn("relative", ocultarParceiro && "print:hidden")}>
                     <Input
                       type="number"
                       step="0.1"
                       value={percParceiro}
                       onChange={(e) => setPercParceiro(Number(e.target.value || 0))}
-                      className="h-10 pr-8"
+                      className="h-10 pr-8 w-24"
                     />
                     <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">%</span>
                   </div>
@@ -460,11 +527,11 @@ export default function OrcamentoNegociacao() {
                           <TableCell>
                             <Popover>
                               <PopoverTrigger asChild>
-                                <Button
+                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   className={cn(
-                                    "h-8 w-full justify-start font-normal hover:bg-slate-100",
+                                    "h-8 w-full justify-start font-normal hover:bg-slate-100 text-blue-600 hover:text-blue-700 underline-offset-4 hover:underline px-2",
                                     !p.data && "text-muted-foreground",
                                   )}
                                 >
