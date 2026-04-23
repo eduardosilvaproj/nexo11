@@ -141,6 +141,9 @@ export default function OrcamentoNegociacao() {
       setPercParceiro(Number(orc.percentual_parceiro || 0));
       setOcultarParceiro(!!orc.ocultar_parceiro);
       setDescontoExtra(Number(orc.desconto_global || 0));
+      if (orc.categorias && Array.isArray(orc.categorias)) {
+        setAmbientesSelecionados(orc.categorias.map((c: any) => c.id));
+      }
       if (Array.isArray(orc.parcelas_datas)) {
         setDatasParcelas((orc.parcelas_datas as string[]) ?? []);
       }
