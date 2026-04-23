@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   ChevronRight, 
@@ -81,6 +81,8 @@ const toISO = (d: Date) => format(d, "yyyy-MM-dd");
 
 export default function NewContract() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const leadIdFromUrl = searchParams.get("leadId");
   const { perfil, user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -89,8 +91,8 @@ export default function NewContract() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // STEP 1: Cliente
-  const [clientOption, setClientOption] = useState<"lead" | "new">("lead");
-  const [selectedLeadId, setSelectedLeadId] = useState<string>("");
+  const [clientOption, setClientOption] = useState<"lead" | "new">(leadIdFromUrl ? "lead" : "lead");
+  const [selectedLeadId, setSelectedLeadId] = useState<string>(leadIdFromUrl || "");
   const [clientData, setClientData] = useState({
     nome: "",
     telefone: "",
