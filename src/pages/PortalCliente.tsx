@@ -221,11 +221,33 @@ export default function PortalCliente() {
 
   async function handleAssinarContrato() {
     if (!token) return;
+    if (!nomeAssinatura.trim()) {
+      toast.error("Por favor, informe seu nome completo para assinar.");
+      return;
+    }
     setSigning(true);
     try {
+      // 1. Obter IP
+      let ip = "0.0.0.0";
+      try {
+        const resp = await fetch("https://api.ipify.org?format=json");
+        const json = await resp.json();
+        ip = json.ip;
+      } catch (err) {
+        console.warn("Não foi possível obter IP:", err);
+      }
+
+      // 2. Gerar hash simples para registro
+      const hash = btoa(Math.random().toString()).slice(0, 12).toUpperCase();
+
       const { data, error } = await supabase.rpc(
         "portal_assinar_contrato" as any,
-        { _token: token }
+        { 
+          _token: token,
+          _nome: nomeAssinatura.trim(),
+          _ip: ip,
+          _hash: hash
+        }
       );
       if (error) throw error;
       const r = data as { ok: boolean; erro?: string };
