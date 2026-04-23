@@ -43,9 +43,13 @@ interface ContratoDetailHeaderProps {
     cliente_nome: string;
     status: ContratoStatus;
     valor_venda: number;
+    created_at?: string;
     data_finalizacao?: string | null;
     descricao_ambiente?: string | null;
+    loja_id: string;
   };
+  loja?: any;
+  ambientes?: any[];
   descricao?: string;
   dataPrevista?: string | null;
   travaMensagem?: string | null;
@@ -54,6 +58,8 @@ interface ContratoDetailHeaderProps {
 
 export function ContratoDetailHeader({
   contrato,
+  loja,
+  ambientes = [],
   descricao,
   dataPrevista,
   travaMensagem,
