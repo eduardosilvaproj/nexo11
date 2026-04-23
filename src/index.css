@@ -118,10 +118,19 @@
     @apply text-white/40 !important;
   }
 
-  /* Status Badges - override standard variants if needed */
-  .badge-status {
-    @apply bg-opacity-20 border-opacity-30;
-  }
+    /* Badges de status - tons escuros */
+    .badge-success {
+      @apply bg-[#052e16] text-[#22c97a] border-[#065f46]/30;
+    }
+    .badge-warning {
+      @apply bg-[#422006] text-[#f59e0b] border-[#92400e]/30;
+    }
+    .badge-error {
+      @apply bg-[#450a0a] text-[#ef4444] border-[#991b1b]/30;
+    }
+    .badge-info {
+      @apply bg-[#082f49] text-[#1a9be8] border-[#075985]/30;
+    }
 }
 
 @layer utilities {
