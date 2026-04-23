@@ -13,6 +13,10 @@ interface ComercialTabProps {
     vendedor_id: string | null;
     data_criacao: string;
     assinado: boolean;
+    data_assinatura?: string | null;
+    assinatura_nome?: string | null;
+    assinatura_ip?: string | null;
+    assinatura_hash?: string | null;
     contrato_gerado?: boolean;
     loja_id: string;
     valor_venda?: number;
@@ -134,8 +138,19 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
   const total = produto + montagem + frete + comissao + outros;
   const margem = Number(dre?.margem_prevista ?? 0);
 
+  const formatDateTime = (date: any) => {
+    if (!date) return '—';
+    const d = new Date(date);
+    const day = d.getDate().toString().padStart(2, '0');
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const year = d.getFullYear();
+    const hours = d.getHours().toString().padStart(2, '0');
+    const minutes = d.getMinutes().toString().padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  };
+
   const dataAssinatura = contrato.assinado
-    ? new Date(contrato.data_criacao).toLocaleDateString("pt-BR")
+    ? formatDateTime(contrato.data_assinatura || contrato.data_criacao)
     : "Não assinado";
 
   return (
@@ -162,7 +177,39 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
         <Field label="E-mail" value={lead?.email} />
         <Field label="Origem do lead" value={lead?.origem} />
         <Field label="Vendedor" value={vendedor?.nome} />
-        <Field label="Data de assinatura" value={dataAssinatura} />
+        {contrato.assinado ? (
+          <div 
+            className="mt-6 p-4 rounded-lg border flex flex-col gap-3" 
+            style={{ backgroundColor: "#F0FDF4", borderColor: "#05873C", color: "#05873C" }}
+          >
+            <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-[11px] border-b pb-2" style={{ borderColor: "#05873C40" }}>
+              <span>Assinado Eletronicamente</span>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-[12px]">
+              <div className="min-w-0">
+                <div className="opacity-70 text-[10px] uppercase font-semibold">Signatário</div>
+                <div className="font-medium text-slate-900 truncate">{contrato.assinatura_nome}</div>
+              </div>
+              <div className="min-w-0">
+                <div className="opacity-70 text-[10px] uppercase font-semibold">Data e Hora</div>
+                <div className="font-medium text-slate-900">{dataAssinatura}</div>
+              </div>
+              <div className="min-w-0">
+                <div className="opacity-70 text-[10px] uppercase font-semibold">IP</div>
+                <div className="font-medium text-slate-900">{contrato.assinatura_ip}</div>
+              </div>
+              <div className="min-w-0 col-span-2">
+                <div className="opacity-70 text-[10px] uppercase font-semibold">Hash de Verificação</div>
+                <div className="font-mono text-[9px] break-all text-slate-900 bg-white/50 p-1.5 rounded border border-slate-200 mt-1">
+                  {contrato.assinatura_hash}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <Field label="Data de assinatura" value="Pendente" />
+        )}
         <Field label="Descrição" value={lead?.observacoes} />
         <button
           className="mt-3 hover:underline"

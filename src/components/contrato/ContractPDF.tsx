@@ -110,30 +110,67 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   signatureStamp: {
-    marginTop: 40,
-    padding: 10,
-    borderWidth: 2,
+    marginTop: 30,
+    padding: 15,
+    borderWidth: 1,
     borderColor: '#05873C',
-    borderRadius: 4,
+    borderRadius: 8,
     width: '100%',
+    backgroundColor: '#F0FDF4',
   },
   signatureStampText: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 'bold',
     color: '#05873C',
-    marginBottom: 5,
+    marginBottom: 8,
     textAlign: 'center',
+    textTransform: 'uppercase',
   },
-  signatureStampDetail: {
-    fontSize: 8,
+  signatureStampGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  signatureStampItem: {
+    width: '48%',
+    marginBottom: 4,
+  },
+  signatureStampLabel: {
+    fontSize: 7,
     color: '#666',
-    textAlign: 'center',
     marginBottom: 2,
+  },
+  signatureStampValue: {
+    fontSize: 8,
+    color: '#333',
+    fontWeight: 'medium',
+  },
+  signatureStampFooter: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 0.5,
+    borderTopColor: '#05873C',
+    fontSize: 7,
+    color: '#05873C',
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });
 
 const formatCurrency = (val: number) => 
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
+
+const formatDateTime = (date: any) => {
+  if (!date) return '—';
+  const d = new Date(date);
+  const day = d.getDate().toString().padStart(2, '0');
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  const year = d.getFullYear();
+  const hours = d.getHours().toString().padStart(2, '0');
+  const minutes = d.getMinutes().toString().padStart(2, '0');
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
+};
 
 interface ContractPDFProps {
   contrato: any;
@@ -237,19 +274,29 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
       {contrato.assinado && (
         <View style={styles.signatureStamp}>
           <Text style={styles.signatureStampText}>
-            DOCUMENTO ASSINADO ELETRONICAMENTE
+            Documento Assinado Eletronicamente
           </Text>
-          <Text style={styles.signatureStampDetail}>
-            Signatário: {contrato.assinatura_nome}
-          </Text>
-          <Text style={styles.signatureStampDetail}>
-            Data/Hora: {new Date(contrato.data_assinatura).toLocaleString('pt-BR')}
-          </Text>
-          <Text style={styles.signatureStampDetail}>
-            IP: {contrato.assinatura_ip} | Hash: {contrato.assinatura_hash}
-          </Text>
-          <Text style={[styles.signatureStampDetail, { marginTop: 4, fontStyle: 'italic' }]}>
-            Este documento possui validade jurídica conforme MP nº 2.200-2/2001.
+          <View style={styles.signatureStampGrid}>
+            <View style={styles.signatureStampItem}>
+              <Text style={styles.signatureStampLabel}>Signatário</Text>
+              <Text style={styles.signatureStampValue}>{contrato.assinatura_nome}</Text>
+            </View>
+            <View style={styles.signatureStampItem}>
+              <Text style={styles.signatureStampLabel}>Data e Hora</Text>
+              <Text style={styles.signatureStampValue}>{formatDateTime(contrato.data_assinatura)}</Text>
+            </View>
+            <View style={styles.signatureStampItem}>
+              <Text style={styles.signatureStampLabel}>IP de Origem</Text>
+              <Text style={styles.signatureStampValue}>{contrato.assinatura_ip}</Text>
+            </View>
+            <View style={styles.signatureStampItem}>
+              <Text style={styles.signatureStampLabel}>Hash de Verificação</Text>
+              <Text style={styles.signatureStampValue}>{contrato.assinatura_hash}</Text>
+            </View>
+          </View>
+          <Text style={styles.signatureStampFooter}>
+            A autenticidade deste documento pode ser validada através do hash de verificação.
+            Validade jurídica conforme Medida Provisória nº 2.200-2/2001.
           </Text>
         </View>
       )}

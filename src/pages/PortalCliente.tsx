@@ -55,8 +55,18 @@ const STAGE_LABELS: Record<string, string> = {
 
 const fmtDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString("pt-BR") : "—";
-const fmtDateTime = (d?: string | null) =>
-  d ? new Date(d).toLocaleString("pt-BR") : "—";
+const formatDateTime = (date: any) => {
+  if (!date) return '—';
+  const d = new Date(date);
+  const day = d.getDate().toString().padStart(2, '0');
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  const year = d.getFullYear();
+  const hours = d.getHours().toString().padStart(2, '0');
+  const minutes = d.getMinutes().toString().padStart(2, '0');
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
+};
+
+const fmtDateTime = (d?: string | null) => d ? formatDateTime(d) : "—";
 
 export default function PortalCliente() {
   const { token } = useParams<{ token: string }>();
@@ -237,8 +247,12 @@ export default function PortalCliente() {
         console.warn("Não foi possível obter IP:", err);
       }
 
-      // 2. Gerar hash simples para registro
-      const hash = btoa(Math.random().toString()).slice(0, 12).toUpperCase();
+      // 2. Gerar hash SHA-256 completo para registro
+      const hashInput = `${contrato.id}-${nomeAssinatura}-${ip}-${new Date().toISOString()}`;
+      const msgBuffer = new TextEncoder().encode(hashInput);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
 
       const { data, error } = await supabase.rpc(
         "portal_assinar_contrato" as any,
@@ -546,12 +560,37 @@ export default function PortalCliente() {
               </div>
             ) : (
               <div 
-                className="p-4 rounded-lg flex items-center gap-3" 
-                style={{ backgroundColor: "#E8F8EF", color: "#05873C" }}
+                className="p-6 rounded-xl border flex flex-col gap-4" 
+                style={{ backgroundColor: "#F0FDF4", borderColor: "#05873C", color: "#05873C" }}
               >
-                <CheckCircle2 size={20} />
-                <div style={{ fontSize: 14, fontWeight: 500 }}>
-                  Contrato assinado por {contrato.assinatura_nome} em {new Date(contrato.data_assinatura).toLocaleString('pt-BR')}
+                <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-sm border-b pb-3" style={{ borderColor: "#05873C40" }}>
+                  <CheckCircle2 size={18} />
+                  <span>Documento Assinado Eletronicamente</span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6 text-[13px]">
+                  <div>
+                    <div className="opacity-70 text-[11px] uppercase font-semibold mb-0.5">Signatário</div>
+                    <div className="font-medium text-slate-900">{contrato.assinatura_nome}</div>
+                  </div>
+                  <div>
+                    <div className="opacity-70 text-[11px] uppercase font-semibold mb-0.5">Data e Hora</div>
+                    <div className="font-medium text-slate-900">{formatDateTime(contrato.data_assinatura)}</div>
+                  </div>
+                  <div>
+                    <div className="opacity-70 text-[11px] uppercase font-semibold mb-0.5">IP de Origem</div>
+                    <div className="font-medium text-slate-900">{contrato.assinatura_ip}</div>
+                  </div>
+                  <div>
+                    <div className="opacity-70 text-[11px] uppercase font-semibold mb-0.5">Hash de Verificação</div>
+                    <div className="font-mono text-[10px] break-all text-slate-900 bg-white/50 p-1.5 rounded border border-slate-200 mt-1">
+                      {contrato.assinatura_hash}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="text-[11px] pt-2 border-t mt-1 opacity-70 italic" style={{ borderColor: "#05873C40" }}>
+                  Este registro comprova a assinatura eletrônica com validade jurídica (MP nº 2.200-2/2001).
                 </div>
               </div>
             )}
