@@ -846,7 +846,8 @@ export default function PortalCliente() {
                       );
                     })}
                   </tbody>
-                </table>
+                  </table>
+                </div>
               </div>
               <div
                 className="flex items-center justify-between mt-4 pt-4"

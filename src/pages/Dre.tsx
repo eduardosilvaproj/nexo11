@@ -504,9 +504,9 @@ export default function Dre() {
         ))}
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-[#E8ECF2] bg-white">
-        <table className="w-full text-sm">
-          <thead className="border-b border-[#E8ECF2] bg-[#F5F7FA] text-left text-[#6B7A90]">
+        <div className="overflow-x-auto rounded-lg border border-[#E8ECF2] bg-white">
+          <table className="w-full min-w-[1000px] text-sm">
+            <thead className="border-b border-[#E8ECF2] bg-[#F5F7FA] text-left text-[#6B7A90]">
             <tr>
               <th className="px-4 py-3 font-medium">Nº</th>
               <th className="px-4 py-3 font-medium">Cliente</th>
