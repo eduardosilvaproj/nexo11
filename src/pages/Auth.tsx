@@ -71,9 +71,9 @@ export default function AuthPage() {
     }`;
 
   return (
-    <div className="flex h-screen w-full bg-[#050c18] font-sans overflow-hidden">
+    <div className="flex h-screen overflow-hidden">
       {/* Painel Esquerdo (60%) */}
-      <div className="hidden lg:flex lg:w-[60%] h-full relative flex-col items-center justify-center bg-[#050c18] overflow-hidden">
+      <div className="hidden lg:flex lg:w-[60%] relative flex items-center justify-center h-screen overflow-hidden bg-[#050c18]">
         {/* Radial Gradient */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(26,155,232,0.08)_0%,_transparent_70%)]" />
         
