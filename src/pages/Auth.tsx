@@ -78,7 +78,7 @@ export default function AuthPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(26,155,232,0.08)_0%,_transparent_70%)]" />
         
         {/* Logo Centralizada */}
-        <div className="z-10 flex flex-col items-center animate-fade-up -mt-20">
+        <div className="z-10 flex flex-col items-center animate-fade-up">
           <img
             src="/nexo-logo.png"
             alt="NEXO Logo"
