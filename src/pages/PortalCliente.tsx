@@ -247,20 +247,13 @@ export default function PortalCliente() {
         console.warn("Não foi possível obter IP:", err);
       }
 
-      // 2. Gerar hash SHA-256 completo para registro
-      const hashInput = `${contrato.id}-${nomeAssinatura}-${ip}-${new Date().toISOString()}`;
-      const msgBuffer = new TextEncoder().encode(hashInput);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
-
+      // 2. O hash agora é gerado e verificado no backend para maior segurança
       const { data, error } = await supabase.rpc(
         "portal_assinar_contrato" as any,
         { 
           _token: token,
           _nome: nomeAssinatura.trim(),
-          _ip: ip,
-          _hash: hash
+          _ip: ip
         }
       );
       if (error) throw error;
