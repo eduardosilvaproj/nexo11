@@ -49,28 +49,32 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
     onOpenChange(o);
   };
 
-  const handleFile = async (f: File | null) => {
-    if (!f) return;
-    if (!/\.xml$/i.test(f.name)) {
-      toast.error("Apenas arquivos .xml são aceitos");
-      return;
-    }
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
     
     setParsing(true);
     setError(null);
+    
     try {
-      const text = await f.text();
-      const data = parsePromobXml(text);
-      
-      const novoAmbiente: Ambiente = {
-        id: Math.random().toString(36).substring(7),
-        nome: data.ordem_compra || f.name.replace(".xml", ""),
-        parsed: data,
-        desconto: 0,
-      };
+      for (const f of Array.from(files)) {
+        if (!/\.xml$/i.test(f.name)) {
+          toast.error(`Arquivo "${f.name}" não é .xml`);
+          continue;
+        }
+        
+        const text = await f.text();
+        const data = parsePromobXml(text);
+        
+        const novoAmbiente: Ambiente = {
+          id: Math.random().toString(36).substring(7),
+          nome: data.ordem_compra || f.name.replace(".xml", ""),
+          parsed: data,
+          desconto: 0,
+        };
 
-      setAmbientes((prev) => [...prev, novoAmbiente]);
-      toast.success(`Ambiente "${novoAmbiente.nome}" adicionado`);
+        setAmbientes((prev) => [...prev, novoAmbiente]);
+        toast.success(`Ambiente "${novoAmbiente.nome}" adicionado`);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Falha ao ler XML");
     } finally {
