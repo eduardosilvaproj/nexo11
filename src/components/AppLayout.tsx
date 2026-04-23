@@ -55,11 +55,11 @@ export default function AppLayout() {
                 <>
                   <Link
                     to="/"
-                    className="text-[#6B7A90] transition-colors hover:text-[#1E6FBF]"
+                    className="text-[#64748b] transition-colors hover:text-[#1a9be8]"
                   >
                     Dashboard
                   </Link>
-                  <span className="text-[#B0BAC9]">/</span>
+                  <span className="text-[#64748b]/40">/</span>
                   <span className="font-medium text-foreground">{currentLabel}</span>
                 </>
               )}
@@ -70,7 +70,7 @@ export default function AppLayout() {
               <NotificationsBell />
               <div
                 className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white"
-                style={{ background: "#1E6FBF" }}
+                style={{ background: "#1a9be8" }}
                 title={perfil?.nome ?? perfil?.email ?? ""}
               >
                 {initials}
