@@ -164,7 +164,7 @@ export function parsePromobXml(xmlText: string): PromobParsed {
 
   const itens = categorias.flatMap((c) => c.itens);
 
-  return {
+  const result = {
     cliente_nome,
     ordem_compra,
     total_tabela,
@@ -176,6 +176,9 @@ export function parsePromobXml(xmlText: string): PromobParsed {
     categorias,
     itens,
   };
+
+  console.log("Parsed Promob Data:", result);
+  return result;
 }
 
 // Helper: calcula valor de venda com descontos do vendedor
