@@ -192,8 +192,9 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
           <input
             type="file"
             ref={fileInputRef}
-            onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
+            onChange={(e) => handleFiles(e.target.files)}
             accept=".xml"
+            multiple
             className="hidden"
           />
 
