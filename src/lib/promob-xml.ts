@@ -24,6 +24,7 @@ export interface PromobCategoria {
   tabela: number;
   pedido: number;
   total: number;
+  budget: number;
   itens: PromobItem[];
 }
 
