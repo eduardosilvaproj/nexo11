@@ -236,13 +236,19 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
             <Text style={styles.col2}>Status</Text>
             <Text style={styles.col3}>Valor</Text>
           </View>
-          {ambientes.map((amb, index) => (
+          {ambientes && ambientes.length > 0 ? ambientes.map((amb, index) => (
             <View key={index} style={styles.tableRow}>
-              <Text style={styles.col1}>{amb.nome}</Text>
+              <Text style={styles.col1}>{amb.nome || '—'}</Text>
               <Text style={styles.col2}>{amb.status_montagem || 'Pendente'}</Text>
-              <Text style={styles.col3}>{formatCurrency(amb.valor_liquido)}</Text>
+              <Text style={styles.col3}>{formatCurrency(amb.valor_liquido || 0)}</Text>
             </View>
-          ))}
+          )) : (
+            <View style={styles.tableRow}>
+              <Text style={styles.col1}>Nenhum ambiente registrado</Text>
+              <Text style={styles.col2}>—</Text>
+              <Text style={styles.col3}>{formatCurrency(0)}</Text>
+            </View>
+          )}
         </View>
       </View>
 
