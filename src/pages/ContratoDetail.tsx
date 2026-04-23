@@ -335,6 +335,8 @@ export default function ContratoDetail() {
 
         <ContratoDetailHeader
           contrato={contrato}
+          loja={loja}
+          ambientes={ambientes}
           travaMensagem={travaMensagem}
           onAvancar={handleAvancar}
         />
