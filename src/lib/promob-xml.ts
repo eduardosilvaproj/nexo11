@@ -87,6 +87,10 @@ export function parsePromobXml(xmlText: string): PromobParsed {
   
   // O total_orcamento (Valor de Venda Base) deve ser a soma de todos os itens com TYPE="BUDGET"
   const allItems = Array.from(doc.querySelectorAll("ITEM, item"));
+  console.log("Total items found in XML:", allItems.length);
+  if (allItems.length > 0) {
+    console.log("First item XML element:", allItems[0]);
+  }
   let total_orcamento = 0;
   allItems.forEach(item => {
     if (attr(item, "TYPE") === "BUDGET") {
