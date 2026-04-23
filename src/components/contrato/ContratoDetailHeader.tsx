@@ -62,7 +62,9 @@ export function ContratoDetailHeader({
   contrato,
   loja,
   ambientes = [],
+  orcamentos = [],
   descricao,
+
   dataPrevista,
   travaMensagem,
   onAvancar,
