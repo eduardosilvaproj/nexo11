@@ -324,7 +324,7 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
             </section>
 
             <Button
-              onClick={handleCriarContrato}
+              onClick={handleProsseguirNegociacao}
               disabled={creating || calc.valorVenda <= 0}
               className="w-full text-white hover:opacity-90"
               style={{ background: "#12B76A" }}
@@ -332,10 +332,10 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
               {creating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Criando contrato...
+                  Importando...
                 </>
               ) : (
-                "Criar contrato com este orçamento →"
+                "Próximo: Condição de Pagamento →"
               )}
             </Button>
           </div>
