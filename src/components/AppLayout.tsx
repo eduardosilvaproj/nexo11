@@ -1,5 +1,5 @@
 import { Outlet, useLocation, Link } from "react-router-dom";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { NotificationsBell } from "@/components/NotificationsBell";
@@ -44,10 +44,12 @@ export default function AppLayout() {
         <AppSidebar />
         <div className="flex flex-1 flex-col">
           <header
-            className="flex h-14 items-center justify-between bg-card px-6 border-b border-border"
+            className="flex h-14 items-center justify-between bg-card px-4 md:px-6 border-b border-border"
           >
-            {/* Breadcrumb */}
-            <nav className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 md:gap-4">
+              <SidebarTrigger className="md:hidden" />
+              {/* Breadcrumb */}
+              <nav className="hidden sm:flex items-center gap-2 text-sm">
               {isDashboard ? (
                 <span className="font-medium text-foreground">Dashboard</span>
               ) : (
@@ -62,7 +64,12 @@ export default function AppLayout() {
                   <span className="font-medium text-foreground">{currentLabel}</span>
                 </>
               )}
-            </nav>
+              </nav>
+              {/* Mobile Title */}
+              <span className="sm:hidden font-medium text-foreground text-sm">
+                {currentLabel}
+              </span>
+            </div>
 
             {/* Right side: bell + avatar */}
             <div className="flex items-center gap-3">
@@ -76,7 +83,7 @@ export default function AppLayout() {
               </div>
             </div>
           </header>
-          <main className="flex-1 p-6">
+          <main className="flex-1 p-4 md:p-6 overflow-x-hidden">
             <Outlet />
           </main>
         </div>
