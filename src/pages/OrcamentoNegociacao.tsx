@@ -44,6 +44,7 @@ type Orcamento = {
   nome: string;
   loja_id: string;
   cliente_id: string;
+  vendedor_id?: string | null;
   valor_negociado: number | null;
   total_pedido: number | null;
   total_tabela: number | null;
@@ -57,6 +58,8 @@ type Orcamento = {
   parcelas_datas: unknown;
   desconto_global: number | null;
   status: string | null;
+  frete_loja?: number | null;
+  montagem_loja?: number | null;
 };
 
 type Parcela = { label: string; data: string; valor: number };
@@ -90,7 +93,7 @@ export default function OrcamentoNegociacao() {
       const { data: orc, error } = await supabase
         .from("orcamentos")
         .select(
-          "id,nome,loja_id,cliente_id,valor_negociado,total_pedido,total_tabela,condicao_pagamento_id,taxa_financeira,parcelas,valor_parcela,percentual_parceiro,ocultar_parceiro,tipo_venda,parcelas_datas,desconto_global,status",
+          "id,nome,loja_id,cliente_id,vendedor_id,valor_negociado,total_pedido,total_tabela,condicao_pagamento_id,taxa_financeira,parcelas,valor_parcela,percentual_parceiro,ocultar_parceiro,tipo_venda,parcelas_datas,desconto_global,status,frete_loja,montagem_loja",
         )
         .eq("id", id)
         .maybeSingle();
