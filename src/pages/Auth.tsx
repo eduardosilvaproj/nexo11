@@ -94,7 +94,7 @@ export default function AuthPage() {
 
       {/* Painel Direito (40%) */}
       <div className="w-full lg:w-[40%] bg-[#0c1526] flex flex-col justify-between p-[56px_44px] relative border-l border-white/5 animate-fade-up">
-        <div className="flex flex-col flex-1 justify-center max-w-sm mx-auto w-full">
+        <div className="flex flex-col flex-1 justify-center w-full">
           <div className="mb-10">
             <h1 className="text-[26px] font-bold text-white mb-2 leading-tight">
               Bem-vindo de volta!
