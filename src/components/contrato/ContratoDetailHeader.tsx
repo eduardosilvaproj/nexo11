@@ -1,79 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Check, FileDown, Loader2 } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { PDFDownloadLink } from "@react-pdf/renderer";
-import { ContractPDF } from "./ContractPDF";
 import type { Database } from "@/integrations/supabase/types";
 
-type ContratoStatus = Database["public"]["Enums"]["contrato_status"];
-
-const STATUS_STYLES: Record<ContratoStatus, { bg: string; fg: string; label: string }> = {
-  comercial:  { bg: "#E6F3FF", fg: "#1E6FBF", label: "Comercial" },
-  tecnico:    { bg: "#EEEDFE", fg: "#534AB7", label: "Técnico" },
-  producao:   { bg: "#FAECE7", fg: "#993C1D", label: "Produção" },
-  logistica:  { bg: "#D1FAE5", fg: "#05873C", label: "Logística" },
-  montagem:   { bg: "#E1F5EE", fg: "#0F6E56", label: "Montagem" },
-  pos_venda:  { bg: "#FEF3C7", fg: "#E8A020", label: "Pós-venda" },
-  finalizado: { bg: "#D1FAE5", fg: "#05873C", label: "Finalizado" },
-};
-
-const NEXT_STAGE: Partial<Record<ContratoStatus, ContratoStatus>> = {
-  comercial: "tecnico",
-  tecnico: "producao",
-  producao: "logistica",
-  logistica: "montagem",
-  montagem: "pos_venda",
-  pos_venda: "finalizado",
-};
-
-const formatBRL = (n: number) =>
-  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
-
-const formatDate = (d?: string | null) => {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("pt-BR");
-};
-
-const shortNumber = (id: string) => id.slice(0, 6).toUpperCase();
-
-interface ContratoDetailHeaderProps {
-  contrato: {
-    id: string;
-    cliente_nome: string;
-    status: ContratoStatus;
-    valor_venda: number;
-    created_at?: string;
-    data_finalizacao?: string | null;
-    descricao_ambiente?: string | null;
-    loja_id: string;
-  };
-  loja?: any;
-  ambientes?: any[];
-  orcamentos?: any[];
-  descricao?: string;
-
-  dataPrevista?: string | null;
-  travaMensagem?: string | null;
-  onAvancar?: () => void;
-}
-
-export function ContratoDetailHeader({
-  contrato,
-  loja,
-  ambientes = [],
-  orcamentos = [],
-  descricao,
-
-  dataPrevista,
-  travaMensagem,
-  onAvancar,
-}: ContratoDetailHeaderProps) {
-  const navigate = useNavigate();
-  const status = STATUS_STYLES[contrato.status];
-  const isFinalizado = contrato.status === "finalizado";
-  const proxima = NEXT_STAGE[contrato.status];
-  const disabled = !!travaMensagem || !proxima;
+// ... keep existing code (types and format functions)
+// ... lines 9-77
 
   const avancarBtn = (
     <Button
@@ -123,27 +55,6 @@ export function ContratoDetailHeader({
 
       {/* LADO DIREITO */}
       <div className="flex items-center gap-4">
-        <div className="mr-2">
-          <PDFDownloadLink
-            document={<ContractPDF contrato={contrato} loja={loja} ambientes={ambientes} orcamentos={orcamentos} />}
-            fileName={`contrato_${contrato.id?.slice(0, 8)}.pdf`}
-          >
-            {({ loading }) => (
-              <Button
-                variant="outline"
-                className="flex items-center gap-2 rounded-lg border-[#1E6FBF] text-[#1E6FBF] hover:bg-[#F5F9FF]"
-                disabled={loading}
-              >
-                {loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <FileDown className="h-4 w-4" />
-                )}
-                Gerar Contrato
-              </Button>
-            )}
-          </PDFDownloadLink>
-        </div>
         <div className="flex flex-col items-end gap-1">
           <span
             className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
@@ -152,6 +63,7 @@ export function ContratoDetailHeader({
             {isFinalizado && <Check className="h-3 w-3" />}
             {status.label}
           </span>
+// ... keep remaining code
           <div style={{ fontSize: 18, fontWeight: 500, color: "#0D1117" }}>
             {formatBRL(contrato.valor_venda)}
           </div>
