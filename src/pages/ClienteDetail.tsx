@@ -675,12 +675,15 @@ export default function ClienteDetail() {
         }}
       />
 
-      <ImportXmlPromobDialog
-        open={importOpen}
-        onOpenChange={setImportOpen}
-        clienteId={cliente.id}
-        clienteNome={cliente.nome}
-      />
+      <Dialog open={importOpen} onOpenChange={setImportOpen}>
+        <DialogContent className="max-w-[1000px] max-h-[90vh] overflow-y-auto p-0">
+          <NovoContratoWizard 
+            initialStep={2} 
+            clienteId={cliente.id} 
+            onClose={() => setImportOpen(false)} 
+          />
+        </DialogContent>
+      </Dialog>
 
       <GerarContratoDialog
         open={gerarOpen}
