@@ -59,5 +59,5 @@ export const CanvasWaves = () => {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="w-full h-32 opacity-40" />;
+  return <canvas ref={canvasRef} className="w-full h-full opacity-40" />;
 };
