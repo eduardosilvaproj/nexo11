@@ -341,7 +341,9 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
 
           <View style={styles.summaryRow}>
             <Text style={styles.colLabel}>Ambientes:</Text>
-            <Text style={styles.colValue}>{ambientesNomes}</Text>
+            <Text style={[styles.colValue, { fontSize: (ambientesNomes?.length || 0) > 100 ? 7 : 8 }]}>
+              {ambientesNomes}
+            </Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.colLabel}>Valor Total:</Text>
@@ -349,7 +351,9 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.colLabel}>Pagamento:</Text>
-            <Text style={styles.colValue}>{getParcelasDesc()}</Text>
+            <Text style={[styles.colValue, { fontSize: (getParcelasDesc()?.length || 0) > 100 ? 7 : 8 }]}>
+              {getParcelasDesc()}
+            </Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.colLabel}>Prazo:</Text>
