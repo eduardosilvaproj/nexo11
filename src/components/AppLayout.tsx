@@ -40,12 +40,12 @@ export default function AppLayout() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
+      <div className="flex min-h-screen w-full bg-[#060d1a]">
         <AppSidebar />
         <div className="flex flex-1 flex-col">
           <header
-            className="flex h-14 items-center justify-between bg-white px-6"
-            style={{ borderBottom: "0.5px solid #E8ECF2" }}
+            className="flex h-14 items-center justify-between bg-[#0c1526] px-6"
+            style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
           >
             {/* Breadcrumb */}
             <nav className="flex items-center gap-2 text-sm">
@@ -55,11 +55,11 @@ export default function AppLayout() {
                 <>
                   <Link
                     to="/"
-                    className="text-[#6B7A90] transition-colors hover:text-[#1E6FBF]"
+                    className="text-[#64748b] transition-colors hover:text-[#1a9be8]"
                   >
                     Dashboard
                   </Link>
-                  <span className="text-[#B0BAC9]">/</span>
+                  <span className="text-[#64748b]/40">/</span>
                   <span className="font-medium text-foreground">{currentLabel}</span>
                 </>
               )}
@@ -70,7 +70,7 @@ export default function AppLayout() {
               <NotificationsBell />
               <div
                 className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white"
-                style={{ background: "#1E6FBF" }}
+                style={{ background: "#1a9be8" }}
                 title={perfil?.nome ?? perfil?.email ?? ""}
               >
                 {initials}

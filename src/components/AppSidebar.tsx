@@ -69,29 +69,29 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
 
   // Inativo: SEM fundo, texto #6B7A90, hover discreto.
-  // Ativo: bg #1A2332 + borda esquerda 2px #1E6FBF + texto/ícone #00AAFF.
+  // Ativo: bg rgba(26,155,232,0.12) + borda esquerda 2px #1a9be8 + texto/ícone branco.
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     isActive
-      ? "!bg-[#1A2332] !text-white font-medium border-l-2 border-[#1E6FBF] pl-[calc(0.5rem-2px)] rounded-l-none rounded-r-md transition-colors duration-150 ease-in-out hover:!bg-[#1A2332] hover:!text-white [&_svg]:!text-white"
-      : "!bg-transparent !text-[#6B7A90] transition-colors duration-150 ease-in-out hover:!bg-[#1A2332]/60 hover:!text-[#B0BAC9]";
+      ? "!bg-[rgba(26,155,232,0.12)] !text-white font-medium border-l-2 border-[#1a9be8] pl-[calc(0.5rem-2px)] rounded-l-none rounded-r-md transition-colors duration-150 ease-in-out hover:!bg-[rgba(26,155,232,0.12)] hover:!text-white [&_svg]:!text-white"
+      : "!bg-transparent !text-[#64748b] transition-colors duration-150 ease-in-out hover:!bg-[rgba(255,255,255,0.04)] hover:!text-white";
 
   const canSee = (item: { roles?: string[] }) =>
     !item.roles || item.roles.some((r) => roles.includes(r as any));
 
   return (
-    <Sidebar collapsible="icon" className="bg-[#0D1117]">
-      <SidebarHeader className="border-b border-sidebar-border bg-[#0D1117] px-4 py-4">
+    <Sidebar collapsible="icon" className="bg-[#0a0e1a] border-r border-white/5">
+      <SidebarHeader className="border-b border-white/5 bg-[#0a0e1a] px-4 py-4">
         {collapsed ? (
-          <LogoNexo size="sm" />
+          <img src="/nexo-logo.png" alt="Logo" className="w-8 h-8 object-contain" />
         ) : (
-          <div>
-            <LogoNexo size="md" />
+          <div className="flex flex-col gap-1">
+            <img src="/nexo-logo.png" alt="NEXO Logo" className="w-28 h-auto object-contain" />
             <p className="mt-0.5 nexo-sidebar-subtitle">Gestão de Planejados</p>
           </div>
         )}
       </SidebarHeader>
 
-      <SidebarContent className="bg-[#0D1117]">
+      <SidebarContent className="bg-[#0a0e1a]">
         <SidebarGroup>
           <SidebarGroupLabel className="nexo-sidebar-label">Início</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -163,7 +163,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border bg-[#1A2332] p-3">
+      <SidebarFooter className="border-t border-white/5 bg-[#0c1526] p-3">
         {!collapsed && perfil && (
           <div className="mb-2 px-2">
             <p className="truncate nexo-sidebar-user-name">{perfil.nome}</p>
