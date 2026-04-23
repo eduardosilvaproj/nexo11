@@ -109,6 +109,27 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 12,
   },
+  signatureStamp: {
+    marginTop: 40,
+    padding: 10,
+    borderWidth: 2,
+    borderColor: '#05873C',
+    borderRadius: 4,
+    width: '100%',
+  },
+  signatureStampText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#05873C',
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  signatureStampDetail: {
+    fontSize: 8,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 2,
+  },
 });
 
 const formatCurrency = (val: number) => 
