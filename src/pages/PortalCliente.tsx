@@ -218,6 +218,44 @@ export default function PortalCliente() {
     }
   }
 
+  async function handleAssinarContrato() {
+    if (!token) return;
+    setSigning(true);
+    try {
+      const { data, error } = await supabase.rpc(
+        "portal_assinar_contrato" as any,
+        { _token: token }
+      );
+      if (error) throw error;
+      const r = data as { ok: boolean; erro?: string };
+      if (!r?.ok) throw new Error(r?.erro ?? "Erro ao assinar");
+      toast.success("Contrato assinado com sucesso!");
+      load();
+    } catch (e: any) {
+      toast.error(e.message ?? "Não foi possível assinar o contrato");
+    } finally {
+      setSigning(false);
+    }
+  }
+
+  async function handleDownloadContrato() {
+    try {
+      const doc = (
+        <ContractPDF
+          contrato={contrato}
+          loja={contrato.lojas}
+          ambientes={ambientes}
+          orcamentos={orcamentos}
+        />
+      );
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch (e: any) {
+      toast.error("Erro ao gerar PDF do contrato");
+    }
+  }
+
   if (loading) {
     return (
       <div
