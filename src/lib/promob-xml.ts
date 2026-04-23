@@ -71,6 +71,7 @@ const findData = (parent: Element | null | Document, id: string): string => {
 export function parsePromobXml(xmlText: string): PromobParsed {
   const parser = new DOMParser();
   const doc = parser.parseFromString(xmlText, "text/xml");
+  console.log("XML Promob Structure:", doc);
 
   if (doc.querySelector("parsererror")) {
     throw new Error("Arquivo XML inválido");
@@ -86,6 +87,10 @@ export function parsePromobXml(xmlText: string): PromobParsed {
   
   // O total_orcamento (Valor de Venda Base) deve ser a soma de todos os itens com TYPE="BUDGET"
   const allItems = Array.from(doc.querySelectorAll("ITEM, item"));
+  console.log("Total items found in XML:", allItems.length);
+  if (allItems.length > 0) {
+    console.log("First item XML element:", allItems[0]);
+  }
   let total_orcamento = 0;
   allItems.forEach(item => {
     if (attr(item, "TYPE") === "BUDGET") {
@@ -163,7 +168,7 @@ export function parsePromobXml(xmlText: string): PromobParsed {
 
   const itens = categorias.flatMap((c) => c.itens);
 
-  return {
+  const result = {
     cliente_nome,
     ordem_compra,
     total_tabela,
@@ -175,6 +180,9 @@ export function parsePromobXml(xmlText: string): PromobParsed {
     categorias,
     itens,
   };
+
+  console.log("Parsed Promob Data:", result);
+  return result;
 }
 
 // Helper: calcula valor de venda com descontos do vendedor
