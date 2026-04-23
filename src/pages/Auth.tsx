@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2, Mail, Lock, User, Eye, EyeOff, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { z } from "zod";
-import nexoLogo from "@/assets/nexo-logo.jpg";
+// Removed local import as we're using /nexo-logo.png from public folder
 
 const emailSchema = z.string().trim().email("E-mail inválido").max(255);
 const passwordSchema = z.string().min(6, "Mínimo 6 caracteres").max(72);
@@ -110,7 +110,7 @@ export default function AuthPage() {
           {/* Logo */}
           <div className="mb-8 flex flex-col items-center">
             <img
-              src={nexoLogo}
+              src="/nexo-logo.png"
               alt="NEXO"
               className="h-24 w-auto object-contain drop-shadow-[0_0_30px_rgba(0,170,255,0.25)]"
             />
