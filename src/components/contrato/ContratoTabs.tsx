@@ -30,7 +30,6 @@ interface ContratoTabsProps {
 export function ContratoTabs({ active, onChange, pendencias = {} }: ContratoTabsProps) {
   return (
     <div
-      className="bg-white"
       style={{ padding: "0 24px md:0 32px", borderBottom: "0.5px solid #E8ECF2" }}
       className="bg-white overflow-x-auto no-scrollbar"
     >
