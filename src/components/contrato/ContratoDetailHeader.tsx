@@ -50,7 +50,9 @@ interface ContratoDetailHeaderProps {
   };
   loja?: any;
   ambientes?: any[];
+  orcamentos?: any[];
   descricao?: string;
+
   dataPrevista?: string | null;
   travaMensagem?: string | null;
   onAvancar?: () => void;
@@ -60,7 +62,9 @@ export function ContratoDetailHeader({
   contrato,
   loja,
   ambientes = [],
+  orcamentos = [],
   descricao,
+
   dataPrevista,
   travaMensagem,
   onAvancar,
@@ -121,7 +125,7 @@ export function ContratoDetailHeader({
       <div className="flex items-center gap-4">
         <div className="mr-2">
           <PDFDownloadLink
-            document={<ContractPDF contrato={contrato} loja={loja} ambientes={ambientes} />}
+            document={<ContractPDF contrato={contrato} loja={loja} ambientes={ambientes} orcamentos={orcamentos} />}
             fileName={`contrato_${contrato.id?.slice(0, 8)}.pdf`}
           >
             {({ loading }) => (

@@ -1,4 +1,6 @@
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { substituteContractVariables } from '@/lib/contract-utils';
+
 
 // Register a font for better appearance
 Font.register({
@@ -116,9 +118,16 @@ interface ContractPDFProps {
   contrato: any;
   loja: any;
   ambientes: any[];
+  orcamentos?: any[];
 }
 
-export const ContractPDF = ({ contrato, loja, ambientes }: ContractPDFProps) => (
+export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractPDFProps) => {
+  const termsText = loja?.contrato_modelo 
+    ? substituteContractVariables(loja.contrato_modelo, { loja, cliente: null, contrato, ambientes, orcamentos })
+    : "";
+
+  return (
+
   <Document>
     <Page size="A4" style={styles.page}>
       {/* Header */}
@@ -193,6 +202,16 @@ export const ContractPDF = ({ contrato, loja, ambientes }: ContractPDFProps) => 
         </View>
       </View>
 
+      {/* Custom Terms from Loja Template */}
+      {termsText ? (
+        <View style={[styles.section, { marginTop: 30, borderTopWidth: 1, borderTopColor: '#EEE', paddingTop: 20 }]}>
+          <Text style={styles.sectionTitle}>TERMOS E CONDIÇÕES</Text>
+          <Text style={{ fontSize: 9, lineHeight: 1.4, textAlign: 'justify' }}>
+            {termsText}
+          </Text>
+        </View>
+      ) : null}
+
       {/* Footer */}
       <Text style={styles.footer}>
         Este documento é um resumo do contrato. Para mais detalhes, consulte o portal do cliente.
@@ -201,3 +220,5 @@ export const ContractPDF = ({ contrato, loja, ambientes }: ContractPDFProps) => 
     </Page>
   </Document>
 );
+}
+

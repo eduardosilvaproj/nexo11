@@ -8,7 +8,9 @@ import { LojasKpiRow } from "@/components/lojas/LojasKpiRow";
 import { LojaResumoTab } from "@/components/lojas/LojaResumoTab";
 import { LojaContratosTab } from "@/components/lojas/LojaContratosTab";
 import { LojaEquipeTab } from "@/components/lojas/LojaEquipeTab";
+import { EditLojaDialog } from "@/components/lojas/EditLojaDialog";
 import { useAuth } from "@/contexts/AuthContext";
+
 
 const fmtBRL = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
@@ -20,6 +22,7 @@ export default function LojaDetail() {
   const { hasRole } = useAuth();
   const podeEditarLoja = hasRole("franqueador");
   const [tab, setTab] = useState<Tab>("resumo");
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: loja } = useQuery({
     queryKey: ["loja", id],
@@ -27,12 +30,13 @@ export default function LojaDetail() {
     queryFn: async () => {
       const { data } = await supabase
         .from("lojas")
-        .select("id, nome, cidade, estado, cnpj, telefone, email")
+        .select("id, nome, cidade, estado, cnpj, telefone, email, endereco, contrato_modelo, franqueado_id")
         .eq("id", id)
         .maybeSingle();
       return data as any;
     },
   });
+
 
   // contratos agora em LojaContratosTab
 
@@ -99,12 +103,20 @@ export default function LojaDetail() {
         {podeEditarLoja && (
           <Button
             variant="outline"
+            onClick={() => setEditOpen(true)}
             style={{ borderColor: "#1E6FBF", color: "#1E6FBF" }}
           >
             Editar loja
           </Button>
         )}
       </div>
+
+      <EditLojaDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        loja={loja}
+      />
+
 
       <LojasKpiRow mes={new Date().toISOString().slice(0, 7)} lojaId={id} />
 

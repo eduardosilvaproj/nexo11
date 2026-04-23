@@ -178,6 +178,21 @@ export default function ContratoDetail() {
     enabled: !!id,
   });
 
+  // Orçamentos do contrato (para pegar parcelas_datas)
+  const { data: orcamentos } = useQuery({
+    queryKey: ["contrato_orcamentos", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orcamentos")
+        .select("*")
+        .eq("contrato_id", id!);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!id,
+  });
+
+
   // Dados da loja
   const { data: loja } = useQuery({
     queryKey: ["loja", contrato?.loja_id],
@@ -337,7 +352,9 @@ export default function ContratoDetail() {
           contrato={contrato}
           loja={loja}
           ambientes={ambientes}
+          orcamentos={orcamentos}
           travaMensagem={travaMensagem}
+
           onAvancar={handleAvancar}
         />
         <ContratoStepper current={contrato.status} blocked={!!travaMensagem} />
