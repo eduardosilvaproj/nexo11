@@ -233,6 +233,27 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
         </View>
       ) : null}
 
+      {/* Signature Stamp */}
+      {contrato.assinado && (
+        <View style={styles.signatureStamp}>
+          <Text style={styles.signatureStampText}>
+            DOCUMENTO ASSINADO ELETRONICAMENTE
+          </Text>
+          <Text style={styles.signatureStampDetail}>
+            Signatário: {contrato.assinatura_nome}
+          </Text>
+          <Text style={styles.signatureStampDetail}>
+            Data/Hora: {new Date(contrato.data_assinatura).toLocaleString('pt-BR')}
+          </Text>
+          <Text style={styles.signatureStampDetail}>
+            IP: {contrato.assinatura_ip} | Hash: {contrato.assinatura_hash}
+          </Text>
+          <Text style={[styles.signatureStampDetail, { marginTop: 4, fontStyle: 'italic' }]}>
+            Este documento possui validade jurídica conforme MP nº 2.200-2/2001.
+          </Text>
+        </View>
+      )}
+
       {/* Footer */}
       <Text style={styles.footer}>
         Este documento é um resumo do contrato. Para mais detalhes, consulte o portal do cliente.
