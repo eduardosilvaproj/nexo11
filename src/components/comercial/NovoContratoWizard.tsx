@@ -55,6 +55,7 @@ interface Ambiente {
   nome: string;
   parsed: PromobParsed;
   desconto: number;
+  selecionado: boolean;
 }
 
 type Parcela = { label: string; data: string; valor: number };
@@ -78,6 +79,7 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState<Step>(initialStep);
+  const [descontoGlobal, setDescontoGlobal] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // STEP 1: Cliente
@@ -101,6 +103,7 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
   const [percParceiro, setPercParceiro] = useState(0);
   const [ocultarParceiro, setOcultarParceiro] = useState(false);
   const [datasParcelas, setDatasParcelas] = useState<string[]>([]);
+  const [showPercParceiro, setShowPercParceiro] = useState(true);
 
   // --- Queries ---
   const { data: leads = [] } = useQuery({
@@ -199,6 +202,7 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
           nome: data.ordem_compra || f.name.replace(".xml", ""),
           parsed: data,
           desconto: 0,
+          selecionado: true,
         };
         setAmbientes(prev => [...prev, novo]);
         toast.success(`Ambiente "${novo.nome}" adicionado`);
