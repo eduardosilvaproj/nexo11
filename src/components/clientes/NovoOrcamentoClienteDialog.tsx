@@ -155,7 +155,7 @@ export function NovoOrcamentoClienteDialog({
       const categoriasJson = calc.linhas.map((l) => ({
         id: l.id,
         descricao: l.descricao,
-        tabela: l.tabela,
+        tabela: l.budget,
         desconto_pct: l.desc,
         valor: l.negociado,
       }));
