@@ -304,7 +304,7 @@ export function NovoOrcamentoClienteDialog({
                 <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
                   <tr>
                     <th className="px-3 py-2 text-left font-medium">Categoria</th>
-                    <th className="px-3 py-2 text-right font-medium">Tabela</th>
+                    <th className="px-3 py-2 text-right font-medium">Valor Base</th>
                     <th className="px-3 py-2 text-right font-medium">Desc %</th>
                     <th className="px-3 py-2 text-right font-medium">Negociado</th>
                   </tr>
