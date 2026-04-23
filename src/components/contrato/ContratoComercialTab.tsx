@@ -177,8 +177,39 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
         <Field label="E-mail" value={lead?.email} />
         <Field label="Origem do lead" value={lead?.origem} />
         <Field label="Vendedor" value={vendedor?.nome} />
-        <Field label="Data de assinatura" value={dataAssinatura} />
-        <Field label="Descrição" value={lead?.observacoes} />
+        {contrato.assinado ? (
+          <div 
+            className="mt-6 p-4 rounded-lg border flex flex-col gap-3" 
+            style={{ backgroundColor: "#F0FDF4", borderColor: "#05873C", color: "#05873C" }}
+          >
+            <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-[11px] border-b pb-2" style={{ borderColor: "#05873C40" }}>
+              <span>Assinado Eletronicamente</span>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-[12px]">
+              <div>
+                <div className="opacity-70 text-[10px] uppercase font-semibold">Signatário</div>
+                <div className="font-medium text-slate-900 truncate">{contrato.assinatura_nome}</div>
+              </div>
+              <div>
+                <div className="opacity-70 text-[10px] uppercase font-semibold">Data e Hora</div>
+                <div className="font-medium text-slate-900">{dataAssinatura}</div>
+              </div>
+              <div>
+                <div className="opacity-70 text-[10px] uppercase font-semibold">IP</div>
+                <div className="font-medium text-slate-900">{contrato.assinatura_ip}</div>
+              </div>
+              <div>
+                <div className="opacity-70 text-[10px] uppercase font-semibold">Hash</div>
+                <div className="font-mono text-[9px] break-all text-slate-900 bg-white/50 p-1 rounded border border-slate-200 mt-0.5">
+                  {contrato.assinatura_hash}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <Field label="Data de assinatura" value="Pendente" />
+        )}
         <button
           className="mt-3 hover:underline"
           style={{ fontSize: 13, color: "#1E6FBF" }}
