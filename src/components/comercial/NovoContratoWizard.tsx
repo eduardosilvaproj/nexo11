@@ -124,19 +124,39 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
     }
   });
 
-  const { data: vendedores = [] } = useQuery({
-    queryKey: ["vendedores-loja", perfil?.loja_id],
+  const { data: membrosEquipe = [] } = useQuery({
+    queryKey: ["membros-equipe-loja", perfil?.loja_id],
     enabled: !!perfil?.loja_id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("usuarios")
-        .select("id, nome")
+        .select(`
+          id, 
+          nome,
+          papeis_comissao!papel_comissao_id (
+            nome
+          )
+        `)
         .eq("loja_id", perfil!.loja_id!)
         .order("nome");
       if (error) throw error;
       return data;
     }
   });
+
+  const vendedores = useMemo(() => {
+    return membrosEquipe.filter(m => {
+      const papel = (m as any).papeis_comissao?.nome;
+      return papel === "Vendedor" || papel === "Vendedor + Projetista";
+    });
+  }, [membrosEquipe]);
+
+  const projetistas = useMemo(() => {
+    return membrosEquipe.filter(m => {
+      const papel = (m as any).papeis_comissao?.nome;
+      return papel === "Projetista" || papel === "Vendedor + Projetista";
+    });
+  }, [membrosEquipe]);
 
   const { data: condicoes = [] } = useQuery({
     queryKey: ["condicoes-pagamento", perfil?.loja_id],
@@ -158,13 +178,13 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
       (async () => {
         const { data } = await supabase.from("clientes").select("*").eq("id", clienteId).single();
         if (data) {
-          setClientData({
+          setClientData(prev => ({
+            ...prev,
             id: data.id,
             nome: data.nome,
             telefone: data.telefone || "",
             email: data.email || "",
-            vendedor_id: ""
-          });
+          }));
         }
       })();
     }
@@ -174,13 +194,16 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
     if (clientOption === "lead" && selectedLeadId) {
       const lead = leads.find(l => l.id === selectedLeadId);
       if (lead) {
-        setClientData({
+        setClientData(prev => ({
+          ...prev,
           id: "",
           nome: lead.nome,
           telefone: lead.contato || "",
           email: lead.email || "",
-          vendedor_id: lead.vendedor_id || ""
-        });
+          vendedor_id: lead.vendedor_id || "",
+          projetista_id: lead.vendedor_id || "", // Default projetista to lead's vendedor
+          mesmo_vendedor: true
+        }));
       }
     }
   }, [selectedLeadId, clientOption, leads]);
@@ -189,6 +212,10 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
   const handleNextStep1 = () => {
     if (!clientData.nome || (!clienteId && !clientData.vendedor_id)) {
       toast.error("Preencha o nome e o vendedor responsável");
+      return;
+    }
+    if (!clientData.projetista_id) {
+      toast.error("Preencha o projetista responsável");
       return;
     }
     setStep(2);
@@ -361,6 +388,7 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
           loja_id: perfil.loja_id,
           cliente_id: finalClienteId,
           vendedor_id: clientData.vendedor_id || user?.id,
+          projetista_id: clientData.projetista_id || user?.id,
           nome: ambientes.length === 1 ? ambientes[0].nome : `Orçamento Multi (${ambientes.length})`,
           valor_negociado: totalsOrcamento.valorFinalTotal,
           total_pedido: totalPedido,
@@ -393,6 +421,7 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
             cliente_nome: clientData.nome,
             valor_venda: Number(totalsOrcamento.valorFinalTotal.toFixed(2)),
             vendedor_id: clientData.vendedor_id || user?.id,
+            projetista_id: clientData.projetista_id || user?.id,
             status: "comercial",
           })
           .select("id")
@@ -455,16 +484,62 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
                     <Label className="text-xs">Nome Completo</Label>
                     <Input value={clientData.nome} onChange={e => setClientData(d => ({ ...d, nome: e.target.value }))} readOnly={clientOption === "fixed"} />
                   </div>
-                  <div>
-                    <Label className="text-xs">Vendedor Responsável</Label>
-                    <Select value={clientData.vendedor_id} onValueChange={v => setClientData(d => ({ ...d, vendedor_id: v }))}>
-                      <SelectTrigger className="bg-white">
-                        <SelectValue placeholder="Selecione..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {vendedores.map(v => <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-semibold">Vendedor *</Label>
+                      <Select 
+                        value={clientData.vendedor_id} 
+                        onValueChange={v => setClientData(d => {
+                          const newData = { ...d, vendedor_id: v };
+                          if (d.mesmo_vendedor) {
+                            newData.projetista_id = v;
+                          }
+                          return newData;
+                        })}
+                      >
+                        <SelectTrigger className="bg-white border-slate-200">
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {vendedores.map(v => <SelectItem key={v.id} value={v.id}>{v.nome}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-semibold">Projetista *</Label>
+                        <div className="flex items-center gap-1.5">
+                          <Checkbox 
+                            id="mesmo_vendedor"
+                            checked={clientData.mesmo_vendedor}
+                            onCheckedChange={(checked) => {
+                              const isChecked = checked === true;
+                              setClientData(d => ({
+                                ...d,
+                                mesmo_vendedor: isChecked,
+                                projetista_id: isChecked ? d.vendedor_id : ""
+                              }));
+                            }}
+                          />
+                          <Label htmlFor="mesmo_vendedor" className="text-[10px] text-slate-500 cursor-pointer">
+                            Mesmo que o vendedor
+                          </Label>
+                        </div>
+                      </div>
+                      <Select 
+                        value={clientData.projetista_id} 
+                        disabled={clientData.mesmo_vendedor}
+                        onValueChange={v => setClientData(d => ({ ...d, projetista_id: v }))}
+                      >
+                        <SelectTrigger className={cn("bg-white border-slate-200", clientData.mesmo_vendedor && "opacity-60")}>
+                          <SelectValue placeholder="Selecione..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {projetistas.map(p => <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
               </CardContent>
