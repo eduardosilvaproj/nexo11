@@ -1,5 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { FileText } from "lucide-react";
+import { pdf } from "@react-pdf/renderer";
+import { ContractPDF } from "./ContractPDF";
 
 interface ComercialTabProps {
   contrato: {
@@ -9,7 +13,13 @@ interface ComercialTabProps {
     vendedor_id: string | null;
     data_criacao: string;
     assinado: boolean;
+    contrato_gerado?: boolean;
+    loja_id: string;
+    valor_venda?: number;
   };
+  loja: any;
+  ambientes: any[];
+  orcamentos: any[];
 }
 
 const formatBRL = (n: number) =>
@@ -21,14 +31,17 @@ const marginColor = (m: number) => {
   return "#E53935";
 };
 
-const Card = ({ title, children }: { title: string; children: React.ReactNode }) => (
+const Card = ({ title, children, actions }: { title: string; children: React.ReactNode; actions?: React.ReactNode }) => (
   <div
     className="rounded-xl bg-white"
     style={{ border: "0.5px solid #E8ECF2", padding: 20 }}
   >
-    <h3 style={{ fontSize: 14, fontWeight: 500, color: "#0D1117", marginBottom: 16 }}>
-      {title}
-    </h3>
+    <div className="flex items-center justify-between mb-4">
+      <h3 style={{ fontSize: 14, fontWeight: 500, color: "#0D1117", margin: 0 }}>
+        {title}
+      </h3>
+      {actions}
+    </div>
     {children}
   </div>
 );
@@ -40,7 +53,9 @@ const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
   </div>
 );
 
-export function ContratoComercialTab({ contrato }: ComercialTabProps) {
+export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: ComercialTabProps) {
+  const qc = useQueryClient();
+
   const { data: vendedor } = useQuery({
     queryKey: ["usuario", contrato.vendedor_id],
     queryFn: async () => {
@@ -81,6 +96,36 @@ export function ContratoComercialTab({ contrato }: ComercialTabProps) {
     },
   });
 
+  async function handleGerarContrato() {
+    try {
+      // 1. Marcar contrato_gerado no DB
+      const { error: updErr } = await supabase
+        .from("contratos")
+        .update({ contrato_gerado: true })
+        .eq("id", contrato.id);
+
+      if (updErr) throw updErr;
+
+      // 2. Gerar PDF
+      const doc = <ContractPDF contrato={contrato as any} loja={loja} ambientes={ambientes} orcamentos={orcamentos} />;
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      
+      // 3. Abrir em nova aba para download/impressão
+      const win = window.open(url, "_blank");
+      if (!win) {
+        toast.error("O bloqueador de popups impediu a abertura do contrato. Por favor, habilite popups para este site.");
+      } else {
+        toast.success("Contrato gerado e disponibilizado para assinatura no Portal do Cliente.");
+      }
+
+      // 4. Invalidar queries para atualizar UI
+      qc.invalidateQueries({ queryKey: ["contrato_dre_view", contrato.id] });
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao gerar contrato");
+    }
+  }
+
   const produto = Number(dre?.custo_produto_previsto ?? 0);
   const montagem = Number(dre?.custo_montagem_previsto ?? 0);
   const frete = Number(dre?.custo_frete_previsto ?? 0);
@@ -95,7 +140,23 @@ export function ContratoComercialTab({ contrato }: ComercialTabProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <Card title="Dados do contrato">
+      <Card 
+        title="Dados do contrato"
+        actions={
+          <button
+            onClick={handleGerarContrato}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white transition-all hover:opacity-90 active:scale-95"
+            style={{ 
+              backgroundColor: "#1E6FBF", 
+              fontSize: 12, 
+              fontWeight: 500,
+            }}
+          >
+            <FileText size={14} />
+            Gerar Contrato
+          </button>
+        }
+      >
         <Field label="Cliente" value={contrato.cliente_nome} />
         <Field label="Telefone" value={contrato.cliente_contato} />
         <Field label="E-mail" value={lead?.email} />
