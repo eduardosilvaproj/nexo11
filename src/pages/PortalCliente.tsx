@@ -280,7 +280,10 @@ export default function PortalCliente() {
       );
       const blob = await pdf(doc).toBlob();
       const url = URL.createObjectURL(blob);
-      window.open(url, "_blank");
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `contrato_${contrato.id.slice(0, 8)}_${contrato.cliente_nome.replace(/\s+/g, '_')}.pdf`;
+      link.click();
     } catch (e: any) {
       toast.error("Erro ao gerar PDF do contrato");
     }

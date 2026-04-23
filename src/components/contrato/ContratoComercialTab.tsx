@@ -115,11 +115,13 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
       const blob = await pdf(doc).toBlob();
       const url = URL.createObjectURL(blob);
       
-      // 3. Abrir em nova aba para download/impressão
-      const win = window.open(url, "_blank");
-      if (!win) {
-        toast.error("O bloqueador de popups impediu a abertura do contrato. Por favor, habilite popups para este site.");
-      } else {
+      // 3. Download direto
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `contrato_${contrato.id.slice(0, 8)}_${contrato.cliente_nome.replace(/\s+/g, '_')}.pdf`;
+      link.click();
+      
+      toast.success("Contrato gerado e baixado com sucesso.");
         toast.success("Contrato gerado e disponibilizado para assinatura no Portal do Cliente.");
       }
 
