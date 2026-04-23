@@ -164,6 +164,35 @@ export default function ContratoDetail() {
     enabled: !!id,
   });
 
+  // Ambientes do contrato
+  const { data: ambientes } = useQuery({
+    queryKey: ["contrato_ambientes", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contrato_ambientes")
+        .select("*")
+        .eq("contrato_id", id!);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!id,
+  });
+
+  // Dados da loja
+  const { data: loja } = useQuery({
+    queryKey: ["loja", contrato?.loja_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("lojas")
+        .select("*")
+        .eq("id", contrato.loja_id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!contrato?.loja_id,
+  });
+
   // Realtime DRE
   useEffect(() => {
     if (!id) return;
