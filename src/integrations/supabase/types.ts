@@ -775,6 +775,7 @@ export type Database = {
           id: string
           loja_id: string
           medicao_responsavel_id: string | null
+          projetista_id: string | null
           status: Database["public"]["Enums"]["contrato_status"]
           sub_etapa_tecnico: string
           trava_medicao_ok: boolean
@@ -796,6 +797,7 @@ export type Database = {
           id?: string
           loja_id: string
           medicao_responsavel_id?: string | null
+          projetista_id?: string | null
           status?: Database["public"]["Enums"]["contrato_status"]
           sub_etapa_tecnico?: string
           trava_medicao_ok?: boolean
@@ -817,6 +819,7 @@ export type Database = {
           id?: string
           loja_id?: string
           medicao_responsavel_id?: string | null
+          projetista_id?: string | null
           status?: Database["public"]["Enums"]["contrato_status"]
           sub_etapa_tecnico?: string
           trava_medicao_ok?: boolean
@@ -839,6 +842,20 @@ export type Database = {
             columns: ["loja_id"]
             isOneToOne: false
             referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_projetista_id_fkey"
+            columns: ["projetista_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_projetista_id_fkey"
+            columns: ["projetista_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios_publico"
             referencedColumns: ["id"]
           },
         ]
@@ -1384,6 +1401,7 @@ export type Database = {
           parcelas: number | null
           parcelas_datas: Json | null
           percentual_parceiro: number | null
+          projetista_id: string | null
           status: string | null
           taxa_financeira: number | null
           tipo_venda: string | null
@@ -1418,6 +1436,7 @@ export type Database = {
           parcelas?: number | null
           parcelas_datas?: Json | null
           percentual_parceiro?: number | null
+          projetista_id?: string | null
           status?: string | null
           taxa_financeira?: number | null
           tipo_venda?: string | null
@@ -1452,6 +1471,7 @@ export type Database = {
           parcelas?: number | null
           parcelas_datas?: Json | null
           percentual_parceiro?: number | null
+          projetista_id?: string | null
           status?: string | null
           taxa_financeira?: number | null
           tipo_venda?: string | null
@@ -1498,6 +1518,20 @@ export type Database = {
             columns: ["loja_id"]
             isOneToOne: false
             referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_projetista_id_fkey"
+            columns: ["projetista_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_projetista_id_fkey"
+            columns: ["projetista_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios_publico"
             referencedColumns: ["id"]
           },
           {
