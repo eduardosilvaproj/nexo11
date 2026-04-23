@@ -200,7 +200,7 @@ export default function AuthPage() {
           </Button>
         </div>
 
-        <div className="text-center mt-12">
+        <div className="text-center absolute bottom-8 left-0 w-full">
           <p className="text-gray-500 text-[10px] tracking-wide uppercase">
             © 2024 NEXO. Todos os direitos reservados.
           </p>
