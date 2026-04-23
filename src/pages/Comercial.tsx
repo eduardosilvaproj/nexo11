@@ -207,7 +207,6 @@ export default function Comercial() {
   const [formOpen, setFormOpen] = useState(false);
   const [contratoFormOpen, setContratoFormOpen] = useState(false);
   const [importXmlOpen, setImportXmlOpen] = useState(false);
-  const [convertLead, setConvertLead] = useState<Lead | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("leads");
   const [filterStatus, setFilterStatus] = useState<"all" | LeadStatus>("all");
@@ -413,7 +412,7 @@ export default function Comercial() {
                 title={col.title}
                 
                 leads={col.leads}
-                onConvert={setConvertLead}
+                onConvert={(lead) => navigate(`/contratos/novo?leadId=${lead.id}`)}
               />
             ))}
           </div>
@@ -431,13 +430,7 @@ export default function Comercial() {
       )}
 
       <LeadFormDialog open={formOpen} onOpenChange={setFormOpen} />
-      <ContratoFormDialog open={contratoFormOpen} onOpenChange={setContratoFormOpen} />
       <ImportXmlPromobDialog open={importXmlOpen} onOpenChange={setImportXmlOpen} />
-      <ConvertLeadDialog
-        lead={convertLead}
-        open={!!convertLead}
-        onOpenChange={(o) => !o && setConvertLead(null)}
-      />
     </div>
   );
 }
