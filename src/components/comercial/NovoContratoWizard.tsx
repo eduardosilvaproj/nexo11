@@ -110,6 +110,13 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
   const [datasParcelas, setDatasParcelas] = useState<string[]>([]);
   const [showPercParceiro, setShowPercParceiro] = useState(true);
 
+  // Manter sincronizado se "mesmo_vendedor" estiver ativo
+  useEffect(() => {
+    if (clientData.mesmo_vendedor && clientData.vendedor_id !== clientData.projetista_id) {
+      setClientData(prev => ({ ...prev, projetista_id: prev.vendedor_id }));
+    }
+  }, [clientData.mesmo_vendedor, clientData.vendedor_id, clientData.projetista_id]);
+
   // --- Queries ---
   const { data: leads = [] } = useQuery({
     queryKey: ["leads-all"],
@@ -223,11 +230,6 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
     if (!clientData.mesmo_vendedor && !clientData.projetista_id) {
       toast.error("Selecione o projetista responsável");
       return;
-    }
-
-    // Se "mesmo vendedor", garante que o ID do projetista seja igual ao do vendedor
-    if (clientData.mesmo_vendedor) {
-      setClientData(prev => ({ ...prev, projetista_id: prev.vendedor_id }));
     }
 
     setStep(2);
@@ -501,13 +503,11 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
                       <Label className="text-xs font-semibold">Vendedor *</Label>
                       <Select 
                         value={clientData.vendedor_id} 
-                        onValueChange={v => setClientData(d => {
-                          const newData = { ...d, vendedor_id: v };
-                          if (d.mesmo_vendedor) {
-                            newData.projetista_id = v;
-                          }
-                          return newData;
-                        })}
+                        onValueChange={v => setClientData(d => ({
+                          ...d, 
+                          vendedor_id: v,
+                          projetista_id: d.mesmo_vendedor ? v : d.projetista_id
+                        }))}
                       >
                         <SelectTrigger className="bg-white border-slate-200">
                           <SelectValue placeholder="Selecione..." />
