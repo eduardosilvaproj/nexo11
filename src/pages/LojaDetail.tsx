@@ -103,12 +103,20 @@ export default function LojaDetail() {
         {podeEditarLoja && (
           <Button
             variant="outline"
+            onClick={() => setEditOpen(true)}
             style={{ borderColor: "#1E6FBF", color: "#1E6FBF" }}
           >
             Editar loja
           </Button>
         )}
       </div>
+
+      <EditLojaDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        loja={loja}
+      />
+
 
       <LojasKpiRow mes={new Date().toISOString().slice(0, 7)} lojaId={id} />
 
