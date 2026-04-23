@@ -739,7 +739,8 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
                   <div className="space-y-4">
                     <h4 className="text-sm font-bold text-slate-700">Tabela de parcelas</h4>
                     <div className="rounded-lg border overflow-hidden">
-                      <Table>
+                <div className="overflow-x-auto">
+                  <Table className="min-w-[600px]">
                         <TableHeader className="bg-slate-50">
                           <TableRow>
                             <TableHead className="h-9 text-[11px] font-bold">Parcela</TableHead>
@@ -779,7 +780,8 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
                             </TableRow>
                           ))}
                         </TableBody>
-                      </Table>
+                  </Table>
+                </div>
                     </div>
                   </div>
                 </CardContent>
