@@ -110,6 +110,13 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
   const [datasParcelas, setDatasParcelas] = useState<string[]>([]);
   const [showPercParceiro, setShowPercParceiro] = useState(true);
 
+  // Manter sincronizado se "mesmo_vendedor" estiver ativo
+  useEffect(() => {
+    if (clientData.mesmo_vendedor && clientData.vendedor_id !== clientData.projetista_id) {
+      setClientData(prev => ({ ...prev, projetista_id: prev.vendedor_id }));
+    }
+  }, [clientData.mesmo_vendedor, clientData.vendedor_id, clientData.projetista_id]);
+
   // --- Queries ---
   const { data: leads = [] } = useQuery({
     queryKey: ["leads-all"],
