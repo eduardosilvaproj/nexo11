@@ -118,9 +118,16 @@ interface ContractPDFProps {
   contrato: any;
   loja: any;
   ambientes: any[];
+  orcamentos?: any[];
 }
 
-export const ContractPDF = ({ contrato, loja, ambientes }: ContractPDFProps) => (
+export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractPDFProps) => {
+  const termsText = loja?.contrato_modelo 
+    ? substituteContractVariables(loja.contrato_modelo, { loja, cliente: null, contrato, ambientes, orcamentos })
+    : "";
+
+  return (
+
   <Document>
     <Page size="A4" style={styles.page}>
       {/* Header */}
