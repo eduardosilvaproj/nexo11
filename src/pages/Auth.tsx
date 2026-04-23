@@ -71,9 +71,9 @@ export default function AuthPage() {
     }`;
 
   return (
-    <div className="flex min-h-screen w-full bg-[#060d1a] font-sans overflow-hidden">
-      {/* Painel Esquerdo */}
-      <div className="hidden lg:flex flex-1 relative flex-col items-center justify-center bg-[#050c18] overflow-hidden">
+    <div className="flex min-h-screen w-full bg-[#050c18] font-sans overflow-hidden">
+      {/* Painel Esquerdo (60%) */}
+      <div className="hidden lg:flex lg:w-[60%] relative flex-col items-center justify-center bg-[#050c18] overflow-hidden">
         {/* Radial Gradient */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(26,155,232,0.08)_0%,_transparent_70%)]" />
         
@@ -82,13 +82,8 @@ export default function AuthPage() {
           <img
             src="/nexo-logo.png"
             alt="NEXO Logo"
-            className="w-64 h-auto object-contain animate-logo-glow"
+            className="w-[300px] h-auto object-contain animate-logo-glow"
           />
-          <div className="mt-8 text-center">
-            <h2 className="text-blue-400/60 text-sm tracking-[0.3em] uppercase font-medium">
-              Gestão que conecta
-            </h2>
-          </div>
         </div>
 
         {/* Ondas Animadas */}
@@ -97,9 +92,9 @@ export default function AuthPage() {
         </div>
       </div>
 
-      {/* Painel Direito */}
-      <div className="w-full lg:w-[420px] bg-[#0c1526] flex flex-col justify-between p-8 md:p-12 relative shadow-2xl animate-fade-up">
-        <div className="flex flex-col flex-1 justify-center max-w-sm mx-auto w-full">
+      {/* Painel Direito (40%) */}
+      <div className="w-full lg:w-[40%] bg-[#0c1526] flex flex-col justify-between p-[56px_44px] relative border-l border-white/5 animate-fade-up">
+        <div className="flex flex-col flex-1 justify-center w-full">
           <div className="mb-10">
             <h1 className="text-[26px] font-bold text-white mb-2 leading-tight">
               Bem-vindo de volta!
