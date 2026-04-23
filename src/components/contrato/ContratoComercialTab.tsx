@@ -187,21 +187,21 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
             </div>
             
             <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-[12px]">
-              <div>
+              <div className="min-w-0">
                 <div className="opacity-70 text-[10px] uppercase font-semibold">Signatário</div>
                 <div className="font-medium text-slate-900 truncate">{contrato.assinatura_nome}</div>
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="opacity-70 text-[10px] uppercase font-semibold">Data e Hora</div>
                 <div className="font-medium text-slate-900">{dataAssinatura}</div>
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="opacity-70 text-[10px] uppercase font-semibold">IP</div>
                 <div className="font-medium text-slate-900">{contrato.assinatura_ip}</div>
               </div>
-              <div>
-                <div className="opacity-70 text-[10px] uppercase font-semibold">Hash</div>
-                <div className="font-mono text-[9px] break-all text-slate-900 bg-white/50 p-1 rounded border border-slate-200 mt-0.5">
+              <div className="min-w-0 col-span-2">
+                <div className="opacity-70 text-[10px] uppercase font-semibold">Hash de Verificação</div>
+                <div className="font-mono text-[9px] break-all text-slate-900 bg-white/50 p-1.5 rounded border border-slate-200 mt-1">
                   {contrato.assinatura_hash}
                 </div>
               </div>
@@ -210,6 +210,7 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
         ) : (
           <Field label="Data de assinatura" value="Pendente" />
         )}
+        <Field label="Descrição" value={lead?.observacoes} />
         <button
           className="mt-3 hover:underline"
           style={{ fontSize: 13, color: "#1E6FBF" }}
