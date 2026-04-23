@@ -8,7 +8,9 @@ import { LojasKpiRow } from "@/components/lojas/LojasKpiRow";
 import { LojaResumoTab } from "@/components/lojas/LojaResumoTab";
 import { LojaContratosTab } from "@/components/lojas/LojaContratosTab";
 import { LojaEquipeTab } from "@/components/lojas/LojaEquipeTab";
+import { EditLojaDialog } from "@/components/lojas/EditLojaDialog";
 import { useAuth } from "@/contexts/AuthContext";
+
 
 const fmtBRL = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
