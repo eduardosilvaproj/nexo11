@@ -9,6 +9,7 @@ import { ArrowLeft, Pencil, Plus, Eye, ArrowRight, CheckCircle2, FileText, FileS
 import { toast } from "sonner";
 import { ClienteFormDialog } from "@/components/clientes/ClienteFormDialog";
 import { NovoOrcamentoClienteDialog } from "@/components/clientes/NovoOrcamentoClienteDialog";
+import { ImportXmlPromobDialog } from "@/components/comercial/ImportXmlPromobDialog";
 import { GerarContratoDialog } from "@/components/clientes/GerarContratoDialog";
 import { EnviarPortalDialog } from "@/components/clientes/EnviarPortalDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -674,13 +675,11 @@ export default function ClienteDetail() {
         }}
       />
 
-      <NovoOrcamentoClienteDialog
+      <ImportXmlPromobDialog
         open={importOpen}
         onOpenChange={setImportOpen}
         clienteId={cliente.id}
         clienteNome={cliente.nome}
-        lojaId={cliente.loja_id}
-        onSaved={fetchAll}
       />
 
       <GerarContratoDialog
