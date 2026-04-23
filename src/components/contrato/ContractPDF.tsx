@@ -94,10 +94,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 0.5,
     borderBottomColor: '#EEE',
-    padding: 5,
+    padding: 6,
+    minHeight: 25,
+    alignItems: 'flex-start',
   },
-  colLabel: { width: '40%', fontSize: 9 },
-  colValue: { width: '60%', fontSize: 9, fontWeight: 'medium' },
+  colLabel: { 
+    width: '30%', 
+    fontSize: 9, 
+    fontWeight: 'bold',
+    paddingRight: 10 
+  },
+  colValue: { 
+    width: '70%', 
+    fontSize: 8, 
+    fontWeight: 'medium',
+    textAlign: 'justify'
+  },
   signatureSection: {
     marginTop: 40,
     flexDirection: 'row',
