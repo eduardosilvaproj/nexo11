@@ -9,10 +9,11 @@ import { ArrowLeft, Pencil, Plus, Eye, ArrowRight, CheckCircle2, FileText, FileS
 import { toast } from "sonner";
 import { ClienteFormDialog } from "@/components/clientes/ClienteFormDialog";
 import { NovoOrcamentoClienteDialog } from "@/components/clientes/NovoOrcamentoClienteDialog";
-import { ImportXmlPromobDialog } from "@/components/comercial/ImportXmlPromobDialog";
+import { NovoContratoWizard } from "@/components/comercial/NovoContratoWizard";
 import { GerarContratoDialog } from "@/components/clientes/GerarContratoDialog";
 import { EnviarPortalDialog } from "@/components/clientes/EnviarPortalDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 type Cliente = {
@@ -675,12 +676,15 @@ export default function ClienteDetail() {
         }}
       />
 
-      <ImportXmlPromobDialog
-        open={importOpen}
-        onOpenChange={setImportOpen}
-        clienteId={cliente.id}
-        clienteNome={cliente.nome}
-      />
+      <Dialog open={importOpen} onOpenChange={setImportOpen}>
+        <DialogContent className="max-w-[1000px] max-h-[90vh] overflow-y-auto p-0">
+          <NovoContratoWizard 
+            initialStep={2} 
+            clienteId={cliente.id} 
+            onClose={() => setImportOpen(false)} 
+          />
+        </DialogContent>
+      </Dialog>
 
       <GerarContratoDialog
         open={gerarOpen}

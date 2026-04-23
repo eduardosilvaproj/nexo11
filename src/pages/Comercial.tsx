@@ -21,7 +21,6 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LeadFormDialog } from "@/components/comercial/LeadFormDialog";
 import { ContratosTable } from "@/components/comercial/ContratosTable";
-import { ImportXmlPromobDialog } from "@/components/comercial/ImportXmlPromobDialog";
 import { FileCode2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -203,8 +202,6 @@ export default function Comercial() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
-  const [contratoFormOpen, setContratoFormOpen] = useState(false);
-  const [importXmlOpen, setImportXmlOpen] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("leads");
   const [filterStatus, setFilterStatus] = useState<"all" | LeadStatus>("all");
@@ -395,7 +392,7 @@ export default function Comercial() {
       )}
 
       {tab === "contratos" ? (
-        <ContratosTable onCreate={() => setContratoFormOpen(true)} />
+        <ContratosTable onCreate={() => navigate("/contratos/novo")} />
       ) : isLoading ? (
         <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
           Carregando leads...
@@ -428,7 +425,6 @@ export default function Comercial() {
       )}
 
       <LeadFormDialog open={formOpen} onOpenChange={setFormOpen} />
-      <ImportXmlPromobDialog open={importXmlOpen} onOpenChange={setImportXmlOpen} />
     </div>
   );
 }
