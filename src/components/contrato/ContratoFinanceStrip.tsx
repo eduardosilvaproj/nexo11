@@ -80,10 +80,10 @@ export function ContratoFinanceStrip({ contratoId, onVerDre }: ContratoFinanceSt
 
   return (
     <div
-      className="flex items-center justify-between"
-      style={{ backgroundColor: "#0D1117", padding: "12px 32px" }}
+      className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 md:gap-4"
+      style={{ backgroundColor: "#0D1117", padding: "16px 24px md:12px 32px" }}
     >
-      <div className="flex items-center" style={{ gap: 40 }}>
+      <div className="flex flex-wrap items-center gap-x-10 gap-y-4">
         <Item label="Receita líquida" value={formatBRL(valorVenda)} />
         <Item label="Custo previsto" value={formatBRL(custoPrev)} />
         <Item label="Custo real" value={hasReal ? formatBRL(custoReal) : "—"} />
@@ -115,7 +115,7 @@ export function ContratoFinanceStrip({ contratoId, onVerDre }: ContratoFinanceSt
 
       <button
         onClick={onVerDre}
-        className="inline-flex items-center gap-1 rounded-md border px-3 py-1.5 transition-colors hover:bg-white/10"
+        className="inline-flex w-full md:w-auto items-center justify-center gap-1 rounded-md border px-3 py-1.5 transition-colors hover:bg-white/10"
         style={{ borderColor: "#FFFFFF", color: "#FFFFFF", fontSize: 12 }}
       >
         Ver DRE completo

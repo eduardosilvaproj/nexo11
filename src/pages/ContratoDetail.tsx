@@ -361,14 +361,14 @@ export default function ContratoDetail() {
         <ContratoFinanceStrip contratoId={contrato.id} />
         <ContratoTabs active={active} onChange={setActive} pendencias={pendencias} />
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 320px",
-            gap: 24,
-            padding: "24px 32px",
-          }}
-        >
+          <div
+            className="flex flex-col lg:grid"
+            style={{
+              gridTemplateColumns: "1fr 320px",
+              gap: 24,
+              padding: "24px 16px md:24px 32px",
+            }}
+          >
           <div
             style={
               isFinalizado
