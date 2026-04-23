@@ -203,8 +203,6 @@ export default function Comercial() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
-  const [contratoFormOpen, setContratoFormOpen] = useState(false);
-  const [importXmlOpen, setImportXmlOpen] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("leads");
   const [filterStatus, setFilterStatus] = useState<"all" | LeadStatus>("all");
@@ -428,7 +426,6 @@ export default function Comercial() {
       )}
 
       <LeadFormDialog open={formOpen} onOpenChange={setFormOpen} />
-      <ImportXmlPromobDialog open={importXmlOpen} onOpenChange={setImportXmlOpen} />
     </div>
   );
 }
