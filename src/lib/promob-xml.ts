@@ -114,9 +114,11 @@ export function parsePromobXml(xmlText: string): PromobParsed {
     const tp = c.querySelector(":scope > TOTALPRICES, :scope > totalprices");
     const tabela = num(attr(tp, "TABLE")) || num(attr(c, "TABLE"));
     const catOrder = tp?.querySelector("MARGINS ORDER, margins order") ?? null;
+    const catBudget = tp?.querySelector("MARGINS BUDGET, margins budget") ?? null;
     const pedido = num(attr(catOrder, "VALUE")) || num(attr(c, "TOTAL"));
+    const budget = num(attr(catBudget, "VALUE")) || num(attr(c, "BUDGET")) || pedido;
     const desconto_pct =
-      tabela > 0 ? Math.max(0, Math.round((1 - pedido / tabela) * 1000) / 10) : 0;
+      budget > 0 ? Math.max(0, Math.round((1 - pedido / budget) * 1000) / 10) : 0;
 
     const itensEls = Array.from(c.querySelectorAll(":scope ITEMS > ITEM, :scope items > item"));
     const itens: PromobItem[] = itensEls.map((it, ii) => {
