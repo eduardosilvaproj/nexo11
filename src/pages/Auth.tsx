@@ -71,9 +71,9 @@ export default function AuthPage() {
     }`;
 
   return (
-    <div className="flex min-h-screen w-full bg-[#050c18] font-sans overflow-hidden">
+    <div className="flex h-screen w-full bg-[#050c18] font-sans overflow-hidden">
       {/* Painel Esquerdo (60%) */}
-      <div className="hidden lg:flex lg:w-[60%] relative flex-col items-center justify-center bg-[#050c18] overflow-hidden">
+      <div className="hidden lg:flex lg:w-[60%] h-full relative flex-col items-center justify-center bg-[#050c18] overflow-hidden">
         {/* Radial Gradient */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(26,155,232,0.08)_0%,_transparent_70%)]" />
         
@@ -87,13 +87,13 @@ export default function AuthPage() {
         </div>
 
         {/* Ondas Animadas */}
-        <div className="absolute bottom-0 left-0 w-full h-[40%]">
+        <div className="absolute bottom-0 left-0 w-full h-[35%] overflow-hidden">
           <CanvasWaves />
         </div>
       </div>
 
       {/* Painel Direito (40%) */}
-      <div className="w-full lg:w-[40%] bg-[#0c1526] flex flex-col justify-center p-[56px_44px] relative border-l border-white/5 animate-fade-up">
+      <div className="w-full lg:w-[40%] h-full bg-[#0c1526] flex flex-col justify-center p-[56px_44px] relative border-l border-white/5 animate-fade-up">
         <div className="flex flex-col w-full">
           <div className="mb-10">
             <h1 className="text-[26px] font-bold text-white mb-2 leading-tight">
