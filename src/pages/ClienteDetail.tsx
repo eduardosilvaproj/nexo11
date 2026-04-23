@@ -13,6 +13,7 @@ import { NovoContratoWizard } from "@/components/comercial/NovoContratoWizard";
 import { GerarContratoDialog } from "@/components/clientes/GerarContratoDialog";
 import { EnviarPortalDialog } from "@/components/clientes/EnviarPortalDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 type Cliente = {
