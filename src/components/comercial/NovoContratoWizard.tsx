@@ -421,8 +421,8 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
         .insert({
           loja_id: perfil.loja_id,
           cliente_id: finalClienteId,
-          vendedor_id: clientData.vendedor_id || user?.id,
-          projetista_id: clientData.projetista_id || user?.id,
+          vendedor_id: finalVendedorId,
+          projetista_id: finalProjetistaId,
           nome: ambientes.length === 1 ? ambientes[0].nome : `Orçamento Multi (${ambientes.length})`,
           valor_negociado: totalsOrcamento.valorFinalTotal,
           total_pedido: totalPedido,
