@@ -517,8 +517,12 @@ export default function PortalCliente() {
             {[
               { label: "Cliente", value: contrato.cliente_nome },
               {
-                label: "Data de assinatura",
-                value: fmtDate(contrato.data_criacao),
+                label: "Contrato assinado em",
+                value: contrato.assinado && contrato.data_assinatura 
+                  ? fmtDate(contrato.data_assinatura)
+                  : contrato.assinado 
+                    ? fmtDate(contrato.data_criacao)
+                    : "Pendente",
               },
               {
                 label: "Previsão de entrega",
