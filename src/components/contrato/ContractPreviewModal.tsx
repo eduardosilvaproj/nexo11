@@ -83,6 +83,7 @@ export function ContractPreviewModal({
       );
       const blob = await pdf(doc).toBlob();
       const newUrl = URL.createObjectURL(blob);
+      setIframeLoaded(false);
       setUrl(newUrl);
     } catch (error) {
       console.error("Erro ao gerar PDF:", error);
