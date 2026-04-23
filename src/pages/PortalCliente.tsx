@@ -68,10 +68,12 @@ export default function PortalCliente() {
   const [parcelas, setParcelas] = useState<any[]>([]);
   const [vendedorNome, setVendedorNome] = useState<string | null>(null);
   const [entregaPrevista, setEntregaPrevista] = useState<string | null>(null);
+  const [ambientes, setAmbientes] = useState<any[]>([]);
   const [npsRespondido, setNpsRespondido] = useState(false);
   const [npsNota, setNpsNota] = useState<number | null>(null);
   const [npsComentario, setNpsComentario] = useState("");
   const [npsSubmitting, setNpsSubmitting] = useState(false);
+  const [signing, setSigning] = useState(false);
 
   const portalClient = createClient(
     import.meta.env.VITE_SUPABASE_URL,
