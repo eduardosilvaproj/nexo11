@@ -93,7 +93,9 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
     nome: "",
     telefone: "",
     email: "",
-    vendedor_id: ""
+    vendedor_id: "",
+    projetista_id: "",
+    mesmo_vendedor: true
   });
 
   // STEP 2: Orçamento XML
