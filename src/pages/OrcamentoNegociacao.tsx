@@ -156,10 +156,14 @@ export default function OrcamentoNegociacao() {
     [condicoes, condicaoId],
   );
 
-  const valorBase = useMemo(
-    () => Number(orcamento?.valor_negociado || orcamento?.total_pedido || 0),
-    [orcamento],
-  );
+  const valorBase = useMemo(() => {
+    if (!orcamento?.categorias || !Array.isArray(orcamento.categorias)) {
+      return Number(orcamento?.valor_negociado || orcamento?.total_pedido || 0);
+    }
+    return orcamento.categorias
+      .filter((c) => ambientesSelecionados.includes(c.id))
+      .reduce((acc, c) => acc + (Number(c.valor) || 0), 0);
+  }, [orcamento, ambientesSelecionados]);
 
   const calc = useMemo(() => {
     const taxa = Number(condicaoSel?.taxa || 0);
