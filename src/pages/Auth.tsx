@@ -78,16 +78,16 @@ export default function AuthPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(26,155,232,0.08)_0%,_transparent_70%)]" />
         
         {/* Logo Centralizada */}
-        <div className="relative z-10 flex flex-col items-center animate-fade-up">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center animate-fade-up">
           <img
             src="/nexo-logo.png"
             alt="NEXO Logo"
-            className="w-[300px] h-auto object-contain animate-logo-glow"
+            className="w-[400px] h-auto object-contain animate-logo-glow"
           />
         </div>
 
         {/* Ondas Animadas */}
-        <div className="absolute bottom-0 left-0 w-full">
+        <div className="absolute bottom-0 left-0 w-full h-[40%]">
           <CanvasWaves />
         </div>
       </div>
