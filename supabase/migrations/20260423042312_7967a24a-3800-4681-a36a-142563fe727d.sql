@@ -1,0 +1,1 @@
+ALTER TABLE public.contratos ADD COLUMN contrato_gerado BOOLEAN NOT NULL DEFAULT false;

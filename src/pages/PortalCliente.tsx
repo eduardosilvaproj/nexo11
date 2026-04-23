@@ -3,9 +3,12 @@ import { useParams } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Link2Off, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Link2Off, ArrowRight, CheckCircle2, FileText, Download, Check } from "lucide-react";
 import { LogoNexo } from "@/components/LogoNexo";
 import { ContratoStepper } from "@/components/contrato/ContratoStepper";
+import { pdf } from "@react-pdf/renderer";
+import { ContractPDF } from "@/components/contrato/ContractPDF";
+import { Button } from "@/components/ui/button";
 
 const PUBLIC_EVENTS: Record<
   string,
@@ -65,10 +68,12 @@ export default function PortalCliente() {
   const [parcelas, setParcelas] = useState<any[]>([]);
   const [vendedorNome, setVendedorNome] = useState<string | null>(null);
   const [entregaPrevista, setEntregaPrevista] = useState<string | null>(null);
+  const [ambientes, setAmbientes] = useState<any[]>([]);
   const [npsRespondido, setNpsRespondido] = useState(false);
   const [npsNota, setNpsNota] = useState<number | null>(null);
   const [npsComentario, setNpsComentario] = useState("");
   const [npsSubmitting, setNpsSubmitting] = useState(false);
+  const [signing, setSigning] = useState(false);
 
   const portalClient = createClient(
     import.meta.env.VITE_SUPABASE_URL,
@@ -85,11 +90,11 @@ export default function PortalCliente() {
     setLoading(true);
     setError(null);
     try {
-      const [{ data: c, error: cErr }, { data: l }, { data: chs }, { data: ents }, { data: orcs }, { data: trs }] =
+      const [{ data: c, error: cErr }, { data: l }, { data: chs }, { data: ents }, { data: orcs }, { data: trs }, { data: ambs }] =
         await Promise.all([
           portalClient
             .from("contratos")
-            .select("*, lojas(nome, cidade, estado)")
+            .select("*, lojas(*)")
             .limit(1)
             .maybeSingle(),
           portalClient
@@ -116,6 +121,9 @@ export default function PortalCliente() {
             .select("id, descricao, valor, data_vencimento, data_pagamento, status, tipo")
             .eq("tipo", "receita")
             .order("data_vencimento", { ascending: true }),
+          portalClient
+            .from("contrato_ambientes")
+            .select("*"),
         ]);
 
       if (cErr || !c) {
@@ -126,6 +134,7 @@ export default function PortalCliente() {
       setContrato(c);
       setLogs(l ?? []);
       setOrcamentos(orcs ?? []);
+      setAmbientes(ambs ?? []);
 
       // Parcelas: prioridade transações → orcamento.parcelas_datas → orcamento.parcelas+valor
       let parcelasFinal: any[] = trs ?? [];
@@ -206,6 +215,44 @@ export default function PortalCliente() {
       toast.error(e.message ?? "Não foi possível enviar");
     } finally {
       setNpsSubmitting(false);
+    }
+  }
+
+  async function handleAssinarContrato() {
+    if (!token) return;
+    setSigning(true);
+    try {
+      const { data, error } = await supabase.rpc(
+        "portal_assinar_contrato" as any,
+        { _token: token }
+      );
+      if (error) throw error;
+      const r = data as { ok: boolean; erro?: string };
+      if (!r?.ok) throw new Error(r?.erro ?? "Erro ao assinar");
+      toast.success("Contrato assinado com sucesso!");
+      load();
+    } catch (e: any) {
+      toast.error(e.message ?? "Não foi possível assinar o contrato");
+    } finally {
+      setSigning(false);
+    }
+  }
+
+  async function handleDownloadContrato() {
+    try {
+      const doc = (
+        <ContractPDF
+          contrato={contrato}
+          loja={contrato.lojas}
+          ambientes={ambientes}
+          orcamentos={orcamentos}
+        />
+      );
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch (e: any) {
+      toast.error("Erro ao gerar PDF do contrato");
     }
   }
 
@@ -386,6 +433,77 @@ export default function PortalCliente() {
           </div>
         </section>
 
+        {/* 3.5 Assinatura do Contrato */}
+        {contrato.contrato_gerado && !contrato.assinado && (
+          <section
+            className="portal-card bg-white rounded-xl mx-auto w-full"
+            style={{ 
+              maxWidth: 680, 
+              border: "2px solid #1E6FBF", 
+              padding: 24,
+              backgroundColor: "#F0F7FF"
+            }}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div 
+                className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: "#1E6FBF", color: "#fff" }}
+              >
+                <FileText size={20} />
+              </div>
+              <div>
+                <h2 style={{ fontSize: 16, fontWeight: 600, color: "#0D1117", margin: 0 }}>
+                  Contrato disponível para assinatura
+                </h2>
+                <p style={{ fontSize: 13, color: "#1E6FBF", margin: 0 }}>
+                  Leia o contrato e confirme sua assinatura abaixo
+                </p>
+              </div>
+            </div>
+
+            <div 
+              className="p-4 rounded-lg bg-white mb-6 flex items-center justify-between"
+              style={{ border: "1px solid #E8ECF2" }}
+            >
+              <div className="flex items-center gap-3">
+                <FileText size={24} color="#6B7A90" />
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: "#0D1117" }}>
+                    Contrato de Prestação de Serviços
+                  </div>
+                  <div style={{ fontSize: 12, color: "#6B7A90" }}>
+                    {numero}.pdf
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={handleDownloadContrato}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-slate-50 transition-all"
+                style={{ border: "1px solid #E8ECF2", fontSize: 13, color: "#0D1117" }}
+              >
+                <Download size={16} />
+                Visualizar PDF
+              </button>
+            </div>
+
+            <button
+              onClick={handleAssinarContrato}
+              disabled={signing}
+              className="w-full py-3 rounded-lg flex items-center justify-center gap-2 text-white font-medium transition-all hover:opacity-90 disabled:opacity-50"
+              style={{ backgroundColor: "#12B76A", fontSize: 15 }}
+            >
+              {signing ? (
+                "Assinando..."
+              ) : (
+                <>
+                  <Check size={20} />
+                  Confirmar Assinatura do Contrato
+                </>
+              )}
+            </button>
+          </section>
+        )}
+
         {/* 4. Detalhes do pedido */}
         <section
           className="portal-card bg-white rounded-xl mx-auto w-full"
@@ -399,8 +517,12 @@ export default function PortalCliente() {
             {[
               { label: "Cliente", value: contrato.cliente_nome },
               {
-                label: "Data de assinatura",
-                value: fmtDate(contrato.data_criacao),
+                label: "Contrato assinado em",
+                value: contrato.assinado && contrato.data_assinatura 
+                  ? fmtDate(contrato.data_assinatura)
+                  : contrato.assinado 
+                    ? fmtDate(contrato.data_criacao)
+                    : "Pendente",
               },
               {
                 label: "Previsão de entrega",
