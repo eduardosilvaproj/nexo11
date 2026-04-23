@@ -1274,6 +1274,7 @@ export type Database = {
           cnpj: string | null
           created_at: string
           email: string | null
+          endereco: string | null
           estado: string | null
           franqueado_id: string | null
           id: string
@@ -1286,6 +1287,7 @@ export type Database = {
           cnpj?: string | null
           created_at?: string
           email?: string | null
+          endereco?: string | null
           estado?: string | null
           franqueado_id?: string | null
           id?: string
@@ -1298,6 +1300,7 @@ export type Database = {
           cnpj?: string | null
           created_at?: string
           email?: string | null
+          endereco?: string | null
           estado?: string | null
           franqueado_id?: string | null
           id?: string
