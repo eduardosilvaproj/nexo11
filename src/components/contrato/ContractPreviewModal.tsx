@@ -187,7 +187,7 @@ export function ContractPreviewModal({
           <Button
             onClick={handleSendForSignature}
             disabled={!url || loading}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+            className="flex items-center gap-2"
           >
             <Send className="h-4 w-4" />
             Enviar para assinar
@@ -197,3 +197,4 @@ export function ContractPreviewModal({
     </Dialog>
   );
 }
+
