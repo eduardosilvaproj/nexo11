@@ -354,9 +354,17 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
 
   const handleFinalize = async (isDraft = false) => {
     if (!perfil?.loja_id) return;
-    if (!isDraft && !condicaoSel) {
-      toast.error("Selecione uma condição de pagamento");
-      return;
+    
+    if (!isDraft) {
+      if (!condicaoSel) {
+        toast.error("Selecione uma condição de pagamento");
+        return;
+      }
+      
+      if (!clientData.mesmo_vendedor && clientData.vendedor_id === clientData.projetista_id) {
+        toast.error("Vendedor e Projetista não podem ser a mesma pessoa se a opção 'Mesmo que o vendedor' estiver desmarcada");
+        return;
+      }
     }
 
     setIsSubmitting(true);
