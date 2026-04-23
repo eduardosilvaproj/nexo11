@@ -456,36 +456,37 @@ export default function PortalCliente() {
           </div>
         </section>
 
-        {/* 3.5 Assinatura do Contrato */}
-        {contrato.contrato_gerado && !contrato.assinado && (
+        {/* 3.5 Seção Contrato */}
+        {contrato.contrato_gerado && (
           <section
             className="portal-card bg-white rounded-xl mx-auto w-full"
             style={{ 
               maxWidth: 680, 
-              border: "2px solid #1E6FBF", 
+              border: "1px solid #E8ECF2", 
               padding: 24,
-              backgroundColor: "#F0F7FF"
             }}
           >
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-6">
               <div 
                 className="w-10 h-10 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: "#1E6FBF", color: "#fff" }}
+                style={{ backgroundColor: "#F0F7FF", color: "#1E6FBF" }}
               >
                 <FileText size={20} />
               </div>
               <div>
                 <h2 style={{ fontSize: 16, fontWeight: 600, color: "#0D1117", margin: 0 }}>
-                  Contrato disponível para assinatura
+                  Contrato
                 </h2>
-                <p style={{ fontSize: 13, color: "#1E6FBF", margin: 0 }}>
-                  Leia o contrato e confirme sua assinatura abaixo
+                <p style={{ fontSize: 13, color: "#6B7A90", margin: 0 }}>
+                  {contrato.assinado 
+                    ? "Contrato assinado eletronicamente" 
+                    : "Visualize e assine seu contrato eletronicamente"}
                 </p>
               </div>
             </div>
 
             <div 
-              className="p-4 rounded-lg bg-white mb-6 flex items-center justify-between"
+              className="p-4 rounded-lg bg-slate-50 mb-6 flex items-center justify-between"
               style={{ border: "1px solid #E8ECF2" }}
             >
               <div className="flex items-center gap-3">
@@ -499,31 +500,61 @@ export default function PortalCliente() {
                   </div>
                 </div>
               </div>
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleDownloadContrato}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-slate-50 transition-all"
-                style={{ border: "1px solid #E8ECF2", fontSize: 13, color: "#0D1117" }}
+                className="bg-white"
               >
-                <Download size={16} />
-                Visualizar PDF
-              </button>
+                <FileText className="w-4 h-4 mr-2" />
+                Visualizar contrato
+              </Button>
             </div>
 
-            <button
-              onClick={handleAssinarContrato}
-              disabled={signing}
-              className="w-full py-3 rounded-lg flex items-center justify-center gap-2 text-white font-medium transition-all hover:opacity-90 disabled:opacity-50"
-              style={{ backgroundColor: "#12B76A", fontSize: 15 }}
-            >
-              {signing ? (
-                "Assinando..."
-              ) : (
-                <>
-                  <Check size={20} />
-                  Confirmar Assinatura do Contrato
-                </>
-              )}
-            </button>
+            {!contrato.assinado ? (
+              <div className="space-y-4 pt-4 border-t" style={{ borderColor: "#E8ECF2" }}>
+                <div className="space-y-2">
+                  <label style={{ fontSize: 13, fontWeight: 500, color: "#374151" }}>
+                    Nome completo para assinatura *
+                  </label>
+                  <input
+                    type="text"
+                    value={nomeAssinatura}
+                    onChange={(e) => setNomeAssinatura(e.target.value)}
+                    placeholder="Digite seu nome completo como no documento"
+                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    style={{ fontSize: 14 }}
+                  />
+                </div>
+                
+                <Button
+                  onClick={handleAssinarContrato}
+                  disabled={signing || !nomeAssinatura.trim()}
+                  className="w-full bg-[#1E6FBF] hover:bg-[#155ca1] text-white py-6"
+                >
+                  {signing ? "Processando..." : (
+                    <>
+                      <CheckCircle2 className="w-5 h-5 mr-2" />
+                      Assinar contrato eletronicamente
+                    </>
+                  )}
+                </Button>
+                
+                <p style={{ fontSize: 11, color: "#6B7A90", textAlign: "center" }}>
+                  Ao clicar em assinar, você concorda com os termos do contrato e registra sua assinatura eletrônica com IP, data e hash de verificação.
+                </p>
+              </div>
+            ) : (
+              <div 
+                className="p-4 rounded-lg flex items-center gap-3" 
+                style={{ backgroundColor: "#E8F8EF", color: "#05873C" }}
+              >
+                <CheckCircle2 size={20} />
+                <div style={{ fontSize: 14, fontWeight: 500 }}>
+                  Contrato assinado por {contrato.assinatura_nome} em {new Date(contrato.data_assinatura).toLocaleString('pt-BR')}
+                </div>
+              </div>
+            )}
           </section>
         )}
 
