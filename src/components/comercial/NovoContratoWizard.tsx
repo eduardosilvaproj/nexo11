@@ -499,7 +499,7 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
               <Card>
                 <CardContent className="p-4 space-y-4">
                   <div className="space-y-2">
-                    {ambientes.map((amb) => (
+                    {totalsOrcamento.list.map((amb) => (
                       <div key={amb.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all">
                         <Checkbox 
                           checked={amb.selecionado} 
@@ -683,7 +683,7 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
               <ChevronLeft className="mr-2 h-4 w-4" /> Voltar
             </Button>
             <div className="flex items-center gap-3">
-              <Button variant="outline" onClick={() => handleFinalize(true)} disabled={isSubmitting || environments.length === 0}>
+              <Button variant="outline" onClick={() => handleFinalize(true)} disabled={isSubmitting || ambientes.length === 0}>
                 {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
                 Liberar desconto
               </Button>
