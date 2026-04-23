@@ -2593,7 +2593,12 @@ export type Database = {
       portal_assinar_contrato:
         | { Args: { _token: string }; Returns: Json }
         | {
-            Args: { _hash: string; _ip: string; _nome: string; _token: string }
+            Args: {
+              _hash_frontend?: string
+              _ip: string
+              _nome: string
+              _token: string
+            }
             Returns: Json
           }
       portal_registrar_nps: {
