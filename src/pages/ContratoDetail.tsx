@@ -352,7 +352,9 @@ export default function ContratoDetail() {
           contrato={contrato}
           loja={loja}
           ambientes={ambientes}
+          orcamentos={orcamentos}
           travaMensagem={travaMensagem}
+
           onAvancar={handleAvancar}
         />
         <ContratoStepper current={contrato.status} blocked={!!travaMensagem} />
