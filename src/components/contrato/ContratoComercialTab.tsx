@@ -110,12 +110,37 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
 
       if (updErr) throw updErr;
 
-      // 2. Gerar PDF
-      const doc = <ContractPDF contrato={contrato as any} loja={loja} ambientes={ambientes} orcamentos={orcamentos} />;
+      // 2. Buscar dados completos do cliente e contrato real (para ter cliente_id)
+      const { data: realContrato } = await supabase
+        .from("contratos")
+        .select("cliente_id, assinatura_nome, data_assinatura, assinatura_ip, assinatura_hash")
+        .eq("id", contrato.id)
+        .single();
+
+      let clienteData = null;
+      if (realContrato?.cliente_id) {
+        const { data: cli } = await supabase
+          .from("clientes")
+          .select("*")
+          .eq("id", realContrato.cliente_id)
+          .single();
+        clienteData = cli;
+      }
+
+      // 3. Gerar PDF
+      const doc = (
+        <ContractPDF 
+          contrato={{ ...contrato, ...realContrato, cliente: clienteData }} 
+          loja={loja} 
+          ambientes={ambientes} 
+          orcamentos={orcamentos} 
+        />
+      );
+      
       const blob = await pdf(doc).toBlob();
       const url = URL.createObjectURL(blob);
       
-      // 3. Download direto
+      // 4. Download direto
       const link = document.createElement('a');
       link.href = url;
       link.download = `contrato_${contrato.id.slice(0, 8)}_${contrato.cliente_nome.replace(/\s+/g, '_')}.pdf`;
@@ -123,12 +148,14 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
       
       toast.success("Contrato gerado e baixado com sucesso.");
 
-      // 4. Invalidar queries para atualizar UI
+      // 5. Invalidar queries para atualizar UI
       qc.invalidateQueries({ queryKey: ["contrato_dre_view", contrato.id] });
     } catch (e: any) {
+      console.error(e);
       toast.error(e.message || "Erro ao gerar contrato");
     }
   }
+
 
   const produto = Number(dre?.custo_produto_previsto ?? 0);
   const montagem = Number(dre?.custo_montagem_previsto ?? 0);

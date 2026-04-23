@@ -23,13 +23,12 @@ export function substituteContractVariables(text: string, data: {
   const { loja, cliente, contrato, ambientes, orcamentos } = data;
   const now = new Date();
   
-  // Se parcelas_datas não estiver no contrato, tenta pegar do primeiro orçamento
   const parcelasDatas = contrato?.parcelas_datas || orcamentos?.[0]?.parcelas_datas;
   
   const formatDate = (date: any) => {
     if (!date) return '—';
     const d = new Date(date);
-    return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleDateString('pt-BR');
   };
 
   const replacements: Record<string, string> = {
@@ -37,13 +36,13 @@ export function substituteContractVariables(text: string, data: {
     '{{empresa.cnpj}}': loja?.cnpj || '—',
     '{{empresa.endereco}}': loja?.endereco || '—',
     '{{empresa.cidade}}': loja?.cidade || '—',
+    '{{empresa.estado}}': loja?.estado || '—',
     '{{cliente.nome}}': cliente?.nome || contrato?.cliente_nome || '—',
     '{{cliente.email}}': cliente?.email || '—',
     '{{cliente.telefone}}': cliente?.telefone || contrato?.cliente_contato || '—',
     '{{contrato.valor_total}}': formatBRL(contrato?.valor_venda),
-    '{{contrato.parcelas_description}}': generateParcelasDescription(parcelasDatas),
-    '{{contrato.parcelas_descricao}}': generateParcelasDescription(parcelasDatas),
-    '{{contrato.ambientes}}': ambientes?.map((a: any) => a.nome).join(', ') || '—',
+    '{{contrato.parcelas}}': generateParcelasDescription(parcelasDatas),
+    '{{contrato.ambientes}}': ambientes?.map((a: any) => a.nome).join(', ') || orcamentos?.map(o => o.nome).join(', ') || '—',
     '{{assinatura.nome}}': contrato?.assinatura_nome || '—',
     '{{assinatura.data}}': formatDate(contrato?.data_assinatura),
     '{{assinatura.ip}}': contrato?.assinatura_ip || '—',
@@ -60,4 +59,5 @@ export function substituteContractVariables(text: string, data: {
   }
   return result;
 }
+
 

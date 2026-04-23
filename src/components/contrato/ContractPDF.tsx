@@ -15,162 +15,126 @@ Font.register({
 
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    padding: 50,
     fontFamily: 'Roboto',
     fontSize: 10,
     color: '#333',
+    lineHeight: 1.5,
   },
   header: {
-    marginBottom: 20,
+    marginBottom: 30,
+    textAlign: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
+    borderBottomColor: '#333',
     paddingBottom: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
   },
   title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#0D1117',
-  },
-  storeInfo: {
-    fontSize: 9,
-    textAlign: 'right',
-    color: '#666',
-  },
-  section: {
-    marginBottom: 15,
-  },
-  sectionTitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 5,
-    backgroundColor: '#F3F4F6',
-    padding: 4,
+    textTransform: 'uppercase',
+  },
+  subtitle: {
+    fontSize: 10,
+    fontWeight: 'medium',
+    color: '#666',
+  },
+  preamble: {
+    marginBottom: 20,
+    textAlign: 'justify',
+  },
+  sectionTitle: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    marginTop: 15,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#EEE',
+    paddingBottom: 2,
+  },
+  clause: {
+    marginBottom: 10,
+    textAlign: 'justify',
+  },
+  clauseTitle: {
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  clauseContent: {
+    fontSize: 9,
   },
   row: {
     flexDirection: 'row',
-    marginBottom: 3,
+    marginBottom: 5,
   },
   label: {
-    width: 100,
+    width: 120,
     fontWeight: 'bold',
+    fontSize: 9,
   },
   value: {
     flex: 1,
+    fontSize: 9,
   },
-  table: {
-    marginTop: 10,
-  },
-  tableHeader: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#000',
-    paddingBottom: 3,
-    fontWeight: 'bold',
-    backgroundColor: '#FAFAFA',
-  },
-  tableRow: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEE',
-    paddingVertical: 5,
-  },
-  col1: { width: '60%' },
-  col2: { width: '20%', textAlign: 'right' },
-  col3: { width: '20%', textAlign: 'right' },
-  footer: {
-    position: 'absolute',
-    bottom: 30,
-    left: 40,
-    right: 40,
-    borderTopWidth: 1,
-    borderTopColor: '#EEE',
-    paddingTop: 10,
-    fontSize: 8,
-    textAlign: 'center',
-    color: '#999',
-  },
-  totals: {
+  summaryTable: {
     marginTop: 20,
-    alignSelf: 'flex-end',
-    width: 150,
+    borderWidth: 0.5,
+    borderColor: '#333',
   },
-  totalRow: {
+  summaryHeader: {
+    backgroundColor: '#F3F4F6',
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 2,
-  },
-  grandTotal: {
-    borderTopWidth: 1,
-    borderTopColor: '#000',
-    marginTop: 5,
-    paddingTop: 5,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#333',
+    padding: 5,
     fontWeight: 'bold',
-    fontSize: 12,
   },
-  signatureStamp: {
-    marginTop: 30,
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#05873C',
-    borderRadius: 8,
-    width: '100%',
-    backgroundColor: '#F0FDF4',
+  summaryRow: {
+    flexDirection: 'row',
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#EEE',
+    padding: 5,
   },
-  signatureStampText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#05873C',
-    marginBottom: 8,
-    textAlign: 'center',
-    textTransform: 'uppercase',
-  },
-  signatureStampGrid: {
+  colLabel: { width: '40%', fontSize: 9 },
+  colValue: { width: '60%', fontSize: 9, fontWeight: 'medium' },
+  signatureSection: {
+    marginTop: 40,
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: 10,
   },
-  signatureStampItem: {
-    width: '48%',
-    marginBottom: 4,
+  signatureBlock: {
+    width: '45%',
+    marginTop: 30,
+    alignItems: 'center',
   },
-  signatureStampLabel: {
-    fontSize: 7,
-    color: '#666',
-    marginBottom: 2,
-  },
-  signatureStampValue: {
-    fontSize: 8,
-    color: '#333',
-    fontWeight: 'medium',
-  },
-  signatureStampFooter: {
-    marginTop: 8,
-    paddingTop: 8,
+  signatureLine: {
+    width: '100%',
     borderTopWidth: 0.5,
-    borderTopColor: '#05873C',
-    fontSize: 7,
-    color: '#05873C',
+    borderTopColor: '#333',
+    marginBottom: 5,
+  },
+  signatureText: {
+    fontSize: 8,
     textAlign: 'center',
-    fontStyle: 'italic',
+  },
+  footer: {
+    position: 'absolute',
+    bottom: 30,
+    left: 50,
+    right: 50,
+    fontSize: 8,
+    textAlign: 'center',
+    color: '#999',
+    borderTopWidth: 0.5,
+    borderTopColor: '#EEE',
+    paddingTop: 10,
   },
 });
 
 const formatCurrency = (val: number) => 
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
-
-const formatDateTime = (date: any) => {
-  if (!date) return '—';
-  const d = new Date(date);
-  const day = d.getDate().toString().padStart(2, '0');
-  const month = (d.getMonth() + 1).toString().padStart(2, '0');
-  const year = d.getFullYear();
-  const hours = d.getHours().toString().padStart(2, '0');
-  const minutes = d.getMinutes().toString().padStart(2, '0');
-  return `${day}/${month}/${year} ${hours}:${minutes}`;
-};
 
 interface ContractPDFProps {
   contrato: any;
@@ -180,138 +144,229 @@ interface ContractPDFProps {
 }
 
 export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractPDFProps) => {
-  const termsText = loja?.contrato_modelo 
-    ? substituteContractVariables(loja.contrato_modelo, { loja, cliente: null, contrato, ambientes, orcamentos })
-    : "";
+  const cliente = contrato.cliente;
+  
+  const getParcelasDesc = () => {
+    const p = contrato.parcelas_datas || orcamentos?.[0]?.parcelas_datas;
+    if (!Array.isArray(p)) return "A definir";
+    return p.map((item: any) => `${item.label || 'Parcela'}: ${formatCurrency(item.valor)} (${new Date(item.data).toLocaleDateString('pt-BR')})`).join(', ');
+  };
+
+  const ambientesNomes = ambientes?.map(a => a.nome).join(', ') || orcamentos?.map(o => o.nome).join(', ') || '—';
+  const clienteDocumento = cliente?.cpf || cliente?.cnpj || '—';
+  const clienteEndereco = cliente?.endereco ? `${cliente.endereco}, ${cliente.cidade || ''} - ${cliente.estado || ''}` : '—';
+  const clienteContato = cliente?.telefone || cliente?.celular || contrato.cliente_contato || '—';
+  const clienteEmail = cliente?.email || orcamentos?.[0]?.cliente_email || '—';
+
 
   return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>CONTRATO DE PRESTAÇÃO DE SERVIÇOS E FORNECIMENTO DE MÓVEIS PLANEJADOS SOB MEDIDA</Text>
+          <Text style={styles.subtitle}>CONTRATO Nº: {contrato.id?.slice(0, 8).toUpperCase()}</Text>
+        </View>
 
-  <Document>
-    <Page size="A4" style={styles.page}>
-      {/* Header */}
-      <View style={styles.header}>
+        {/* Preambulo */}
+        <View style={styles.preamble}>
+          <Text style={{ fontSize: 9 }}>
+            Pelo presente instrumento particular, de um lado, <Text style={{ fontWeight: 'bold' }}>{loja?.nome || 'DIAS & DIAS'}</Text>, 
+            inscrita no CNPJ sob o nº {loja?.cnpj || '—'}, com sede em {loja?.endereco || '—'}, {loja?.cidade || '—'}/{loja?.estado || '—'}, 
+            doravante denominada CONTRATADA; e de outro lado, <Text style={{ fontWeight: 'bold' }}>{contrato.cliente_nome || '—'}</Text>, 
+            inscrito(a) no CPF/CNPJ sob o nº {clienteDocumento}, residente e domiciliado(a) em {clienteEndereco}, 
+            telefone {clienteContato}, e-mail {clienteEmail}, doravante denominado(a) CONTRATANTE, 
+            têm entre si justo e contratado o que segue:
+          </Text>
+        </View>
+
+
+        {/* Clauses */}
         <View>
-          <Text style={styles.title}>CONTRATO DE PRESTAÇÃO DE SERVIÇOS</Text>
-          <Text style={{ color: '#666' }}>ID: {contrato.id?.slice(0, 8).toUpperCase()}</Text>
-        </View>
-        <View style={styles.storeInfo}>
-          <Text style={{ fontWeight: 'bold' }}>{loja?.nome || '—'}</Text>
-          <Text>{loja?.cidade || '—'} - {loja?.estado || '—'}</Text>
-          {loja?.cnpj && <Text>CNPJ: {loja.cnpj}</Text>}
-        </View>
-      </View>
+          <Text style={styles.clauseTitle}>CLÁUSULA PRIMEIRA - DO OBJETO</Text>
+          <Text style={styles.clauseContent}>
+            O presente contrato tem por objeto a prestação de serviços de projeto, fabricação e instalação de móveis planejados sob medida, conforme descritivo técnico e orçamentos aprovados para os ambientes: {ambientesNomes}.
+          </Text>
 
-      {/* Customer Info */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>DADOS DO CLIENTE</Text>
-        <View style={styles.row}>
-          <Text style={styles.label}>Nome:</Text>
-          <Text style={styles.value}>{contrato.cliente_nome || '—'}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Contato:</Text>
-          <Text style={styles.value}>{contrato.cliente_contato || '—'}</Text>
-        </View>
-      </View>
+          <Text style={[styles.clauseTitle, { marginTop: 10 }]}>CLÁUSULA SEGUNDA - DA NATUREZA DA RELAÇÃO JURÍDICA</Text>
+          <Text style={styles.clauseContent}>
+            As partes declaram que a relação estabelecida é de prestação de serviços e fornecimento de produtos, regida pelo Código de Defesa do Consumidor.
+          </Text>
 
-      {/* Contract Details */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>DETALHES DO CONTRATO</Text>
-        <View style={styles.row}>
-          <Text style={styles.label}>Data:</Text>
-          <Text style={styles.value}>{contrato.created_at ? new Date(contrato.created_at).toLocaleDateString('pt-BR') : '—'}</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Status:</Text>
-          <Text style={styles.value}>{(contrato.status || 'Pendente').toUpperCase()}</Text>
-        </View>
-      </View>
+          <Text style={[styles.clauseTitle, { marginTop: 10 }]}>CLÁUSULA TERCEIRA - DA MEDIÇÃO, DO PROJETO TÉCNICO E DA APROVAÇÃO</Text>
+          <Text style={styles.clauseContent}>
+            A CONTRATADA realizará a medição técnica no local após a assinatura deste contrato. O projeto final será apresentado ao CONTRATANTE para aprovação definitiva antes do início da produção.
+          </Text>
 
-      {/* Environments / Items */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>AMBIENTES E SERVIÇOS</Text>
-        <View style={styles.table}>
-          <View style={styles.tableHeader}>
-            <Text style={styles.col1}>Descrição</Text>
-            <Text style={styles.col2}>Status</Text>
-            <Text style={styles.col3}>Valor</Text>
+          <Text style={[styles.clauseTitle, { marginTop: 10 }]}>CLÁUSULA QUARTA - DAS OBRIGAÇÕES DO CONTRATANTE</Text>
+          <Text style={styles.clauseContent}>
+            O CONTRATANTE obriga-se a disponibilizar o local livre e desembaraçado para medição e instalação, bem como realizar os pagamentos nos prazos acordados.
+          </Text>
+
+          <Text style={[styles.clauseTitle, { marginTop: 10 }]}>CLÁUSULA QUINTA - DOS PRAZOS DE EXECUÇÃO</Text>
+          <Text style={styles.clauseContent}>
+            O prazo para entrega e montagem dos móveis é de 45 (quarenta e cinco) dias corridos, contados a partir da aprovação final do projeto técnico e liberação financeira.
+          </Text>
+
+          <Text style={[styles.clauseTitle, { marginTop: 10 }]}>CLÁUSULA SEXTA - DAS TOLERÂNCIAS TÉCNICAS</Text>
+          <Text style={styles.clauseContent}>
+            Ficam estabelecidas as tolerâncias técnicas de fabricação e instalação conforme normas da ABNT aplicáveis ao setor moveleiro.
+          </Text>
+
+          <Text style={[styles.clauseTitle, { marginTop: 10 }]}>CLÁUSULA SÉTIMA - DO PREÇO E DO PAGAMENTO</Text>
+          <Text style={styles.clauseContent}>
+            Pelo objeto deste contrato, o CONTRATANTE pagará o valor total de {formatCurrency(contrato.valor_venda)}, sendo parcelado da seguinte forma: {getParcelasDesc()}.
+          </Text>
+
+          <Text style={[styles.clauseTitle, { marginTop: 10 }]}>CLÁUSULA OITAVA - DAS GARANTIAS</Text>
+          <Text style={styles.clauseContent}>
+            A CONTRATADA oferece garantia legal de 90 (noventa) dias acrescida de garantia contratual de 3 (três) anos contra defeitos de fabricação, totalizando a proteção ao consumidor.
+          </Text>
+
+          <Text style={[styles.clauseTitle, { marginTop: 10 }]}>CLÁUSULA NONA - DA ENTREGA E DA INSTALAÇÃO</Text>
+          <Text style={styles.clauseContent}>
+            A entrega e instalação serão realizadas em horário comercial, devendo haver responsável no local para acompanhamento e assinatura do termo de aceite.
+          </Text>
+
+          <Text style={[styles.clauseTitle, { marginTop: 10 }]}>CLÁUSULA DÉCIMA - DA RESCISÃO E DAS PENALIDADES</Text>
+          <Text style={styles.clauseContent}>
+            Em caso de rescisão imotivada por parte do CONTRATANTE após o início da produção, será aplicada multa de 30% (trinta por cento) sobre o valor total do contrato.
+          </Text>
+
+          <Text style={[styles.clauseTitle, { marginTop: 10 }]}>CLÁUSULA DÉCIMA PRIMEIRA - DAS ALTERAÇÕES DO PROJETO</Text>
+          <Text style={styles.clauseContent}>
+            Alterações solicitadas após a aprovação técnica poderão gerar custos adicionais e dilação do prazo de entrega.
+          </Text>
+
+          <Text style={[styles.clauseTitle, { marginTop: 10 }]}>CLÁUSULA DÉCIMA SEGUNDA - DA PROPRIEDADE INTELECTUAL</Text>
+          <Text style={styles.clauseContent}>
+            Os projetos elaborados pela CONTRATADA são de sua propriedade intelectual exclusiva, vedada a reprodução total ou parcial sem autorização.
+          </Text>
+
+          <Text style={[styles.clauseTitle, { marginTop: 10 }]}>CLÁUSULA DÉCIMA TERCEIRA - DA VISTORIA E ACEITE</Text>
+          <Text style={styles.clauseContent}>
+            Após a finalização da montagem, as partes realizarão a vistoria final, formalizada pelo Termo de Entrega e Aceite.
+          </Text>
+
+          <Text style={[styles.clauseTitle, { marginTop: 10 }]}>CLÁUSULA DÉCIMA QUARTA - DOS DOCUMENTOS INTEGRANTES</Text>
+          <Text style={styles.clauseContent}>
+            Integram este contrato o orçamento aprovado, o projeto técnico e os memoriais descritivos dos materiais.
+          </Text>
+
+          <Text style={[styles.clauseTitle, { marginTop: 10 }]}>CLÁUSULA DÉCIMA QUINTA - DO TRATAMENTO DE DADOS (LGPD)</Text>
+          <Text style={styles.clauseContent}>
+            As partes comprometem-se a tratar os dados pessoais envolvidos nesta relação conforme a Lei Geral de Proteção de Dados (Lei nº 13.709/2018).
+          </Text>
+
+          <Text style={[styles.clauseTitle, { marginTop: 10 }]}>CLÁUSULA DÉCIMA SEXTA - DAS COMUNICAÇÕES</Text>
+          <Text style={styles.clauseContent}>
+            As comunicações oficiais serão realizadas através dos endereços de e-mail e telefones indicados no preâmbulo.
+          </Text>
+
+          <Text style={[styles.clauseTitle, { marginTop: 10 }]}>CLÁUSULA DÉCIMA SÉTIMA - DA ASSINATURA ELETRÔNICA</Text>
+          <Text style={styles.clauseContent}>
+            Este contrato poderá ser assinado eletronicamente, possuindo plena validade jurídica conforme MP nº 2.200-2/2001.
+          </Text>
+
+          <Text style={[styles.clauseTitle, { marginTop: 10 }]}>CLÁUSULA DÉCIMA OITAVA - DAS CONDIÇÕES GERAIS</Text>
+          <Text style={styles.clauseContent}>
+            Eventuais tolerâncias de uma parte com relação a infrações contratuais da outra não constituirão novação ou renúncia a direitos.
+          </Text>
+
+          <Text style={[styles.clauseTitle, { marginTop: 10 }]}>CLÁUSULA DÉCIMA NONA - DO FORO</Text>
+          <Text style={styles.clauseContent}>
+            Fica eleito o Foro da Comarca de {loja?.cidade || '—'}/{loja?.estado || '—'} para dirimir quaisquer dúvidas oriundas deste instrumento.
+          </Text>
+        </View>
+
+        {/* Footer info */}
+        <View style={{ marginTop: 20 }}>
+          <Text style={{ fontSize: 9, textAlign: 'right' }}>
+            {loja?.cidade || '—'}, {new Date().toLocaleDateString('pt-BR')}
+          </Text>
+        </View>
+
+        {/* Signature Blocks */}
+        <View style={styles.signatureSection}>
+          <View style={styles.signatureBlock}>
+            <View style={styles.signatureLine} />
+            <Text style={styles.signatureText}>CONTRATADA</Text>
+            <Text style={[styles.signatureText, { fontWeight: 'bold' }]}>{loja?.nome || 'DIAS & DIAS'}</Text>
           </View>
-          {ambientes && ambientes.length > 0 ? ambientes.map((amb, index) => (
-            <View key={index} style={styles.tableRow}>
-              <Text style={styles.col1}>{amb.nome || '—'}</Text>
-              <Text style={styles.col2}>{amb.status_montagem || 'Pendente'}</Text>
-              <Text style={styles.col3}>{formatCurrency(amb.valor_liquido || 0)}</Text>
-            </View>
-          )) : (
-            <View style={styles.tableRow}>
-              <Text style={styles.col1}>Nenhum ambiente registrado</Text>
-              <Text style={styles.col2}>—</Text>
-              <Text style={styles.col3}>{formatCurrency(0)}</Text>
-            </View>
-          )}
-        </View>
-      </View>
-
-      {/* Totals */}
-      <View style={styles.totals}>
-        <View style={styles.totalRow}>
-          <Text>Subtotal:</Text>
-          <Text>{formatCurrency(contrato.valor_venda)}</Text>
-        </View>
-        <View style={[styles.totalRow, styles.grandTotal]}>
-          <Text>TOTAL:</Text>
-          <Text>{formatCurrency(contrato.valor_venda)}</Text>
-        </View>
-      </View>
-
-      {/* Custom Terms from Loja Template */}
-      {termsText ? (
-        <View style={[styles.section, { marginTop: 30, borderTopWidth: 1, borderTopColor: '#EEE', paddingTop: 20 }]}>
-          <Text style={styles.sectionTitle}>TERMOS E CONDIÇÕES</Text>
-          <Text style={{ fontSize: 9, lineHeight: 1.4, textAlign: 'justify' }}>
-            {termsText}
-          </Text>
-        </View>
-      ) : null}
-
-      {/* Signature Stamp */}
-      {contrato.assinado && (
-        <View style={styles.signatureStamp}>
-          <Text style={styles.signatureStampText}>
-            Documento Assinado Eletronicamente
-          </Text>
-          <View style={styles.signatureStampGrid}>
-            <View style={styles.signatureStampItem}>
-              <Text style={styles.signatureStampLabel}>Signatário</Text>
-              <Text style={styles.signatureStampValue}>{contrato.assinatura_nome || "—"}</Text>
-            </View>
-            <View style={styles.signatureStampItem}>
-              <Text style={styles.signatureStampLabel}>Data e Hora</Text>
-              <Text style={styles.signatureStampValue}>{formatDateTime(contrato.data_assinatura)}</Text>
-            </View>
-            <View style={styles.signatureStampItem}>
-              <Text style={styles.signatureStampLabel}>IP de Origem</Text>
-              <Text style={styles.signatureStampValue}>{contrato.assinatura_ip || "—"}</Text>
-            </View>
-            <View style={styles.signatureStampItem}>
-              <Text style={styles.signatureStampLabel}>Hash de Verificação</Text>
-              <Text style={styles.signatureStampValue}>{contrato.assinatura_hash || "—"}</Text>
-            </View>
+          <View style={styles.signatureBlock}>
+            <View style={styles.signatureLine} />
+            <Text style={styles.signatureText}>CONTRATANTE</Text>
+            <Text style={[styles.signatureText, { fontWeight: 'bold' }]}>{contrato.cliente_nome}</Text>
           </View>
-          <Text style={styles.signatureStampFooter}>
-            A autenticidade deste documento pode ser validada através do hash de verificação.
-            Validade jurídica conforme Medida Provisória nº 2.200-2/2001.
-          </Text>
+          <View style={styles.signatureBlock}>
+            <View style={styles.signatureLine} />
+            <Text style={styles.signatureText}>Testemunha 1</Text>
+            <Text style={styles.signatureText}>CPF:</Text>
+          </View>
+          <View style={styles.signatureBlock}>
+            <View style={styles.signatureLine} />
+            <Text style={styles.signatureText}>Testemunha 2</Text>
+            <Text style={styles.signatureText}>CPF:</Text>
+          </View>
         </View>
-      )}
 
-      {/* Footer */}
-      <Text style={styles.footer}>
-        Este documento é um resumo do contrato. Para mais detalhes, consulte o portal do cliente.
-        {"\n"}Gerado em {new Date().toLocaleString('pt-BR')}
-      </Text>
-    </Page>
-  </Document>
-);
-}
+        {/* Page Break for Summary */}
+        <View break />
+
+        {/* Quadro Resumo */}
+        <View style={styles.header}>
+          <Text style={styles.title}>QUADRO RESUMO DO CONTRATO</Text>
+        </View>
+
+        <View style={styles.summaryTable}>
+          <View style={styles.summaryRow}>
+            <Text style={styles.colLabel}>Contratante:</Text>
+            <Text style={styles.colValue}>{contrato.cliente_nome}</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.colLabel}>CPF/CNPJ:</Text>
+            <Text style={styles.colValue}>{clienteDocumento}</Text>
+          </View>
+
+          <View style={styles.summaryRow}>
+            <Text style={styles.colLabel}>Ambientes:</Text>
+            <Text style={styles.colValue}>{ambientesNomes}</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.colLabel}>Valor Total:</Text>
+            <Text style={styles.colValue}>{formatCurrency(contrato.valor_venda)}</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.colLabel}>Forma de Pagamento:</Text>
+            <Text style={styles.colValue}>{getParcelasDesc()}</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.colLabel}>Prazo de Entrega:</Text>
+            <Text style={styles.colValue}>45 dias corridos após aprovação técnica</Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.colLabel}>Garantia:</Text>
+            <Text style={styles.colValue}>90 dias legal + 3 anos contratual</Text>
+          </View>
+        </View>
+
+        {/* Signature Stamp if signed */}
+        {contrato.assinado && (
+          <View style={{ marginTop: 30, padding: 10, border: '1pt solid #05873C', borderRadius: 4, backgroundColor: '#F0FDF4' }}>
+            <Text style={{ fontSize: 9, fontWeight: 'bold', color: '#05873C', textAlign: 'center' }}>ASSINADO ELETRONICAMENTE</Text>
+            <Text style={{ fontSize: 8, color: '#333', marginTop: 5 }}>Signatário: {contrato.assinatura_nome}</Text>
+            <Text style={{ fontSize: 8, color: '#333' }}>Data: {new Date(contrato.data_assinatura).toLocaleString('pt-BR')}</Text>
+            <Text style={{ fontSize: 8, color: '#333' }}>IP: {contrato.assinatura_ip}</Text>
+            <Text style={{ fontSize: 8, color: '#333' }}>Hash: {contrato.assinatura_hash}</Text>
+          </View>
+        )}
+
+        <Text style={styles.footer}>
+          Documento gerado pelo Sistema NEXO em {new Date().toLocaleString('pt-BR')}
+        </Text>
+      </Page>
+    </Document>
+  );
+};
+
 
