@@ -202,6 +202,16 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
         </View>
       </View>
 
+      {/* Custom Terms from Loja Template */}
+      {termsText ? (
+        <View style={[styles.section, { marginTop: 30, borderTopWidth: 1, borderTopColor: '#EEE', paddingTop: 20 }]}>
+          <Text style={styles.sectionTitle}>TERMOS E CONDIÇÕES</Text>
+          <Text style={{ fontSize: 9, lineHeight: 1.4, textAlign: 'justify' }}>
+            {termsText}
+          </Text>
+        </View>
+      ) : null}
+
       {/* Footer */}
       <Text style={styles.footer}>
         Este documento é um resumo do contrato. Para mais detalhes, consulte o portal do cliente.
@@ -210,3 +220,5 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
     </Page>
   </Document>
 );
+}
+
