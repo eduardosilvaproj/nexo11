@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   DndContext,
@@ -201,6 +202,7 @@ type TabKey = "leads" | "contratos";
 
 export default function Comercial() {
   const { perfil } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [contratoFormOpen, setContratoFormOpen] = useState(false);
@@ -296,7 +298,7 @@ export default function Comercial() {
         <div className="flex items-center gap-2">
           {/* Botão Importar XML Promob removido daqui por solicitação do usuário. Agora está no Perfil do Cliente -> Orçamentos */}
           <button
-            onClick={() => (tab === "contratos" ? setContratoFormOpen(true) : setFormOpen(true))}
+            onClick={() => (tab === "contratos" ? navigate("/contratos/novo") : setFormOpen(true))}
             className="inline-flex items-center gap-1.5 px-4 py-2 text-white transition-colors hover:bg-[#1759A0]"
             style={{ background: "#1E6FBF", borderRadius: 8, fontSize: 13, fontWeight: 500 }}
           >
