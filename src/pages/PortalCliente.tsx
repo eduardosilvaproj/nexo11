@@ -3,9 +3,12 @@ import { useParams } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Link2Off, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Link2Off, ArrowRight, CheckCircle2, FileText, Download, Check } from "lucide-react";
 import { LogoNexo } from "@/components/LogoNexo";
 import { ContratoStepper } from "@/components/contrato/ContratoStepper";
+import { pdf } from "@react-pdf/renderer";
+import { ContractPDF } from "@/components/contrato/ContractPDF";
+import { Button } from "@/components/ui/button";
 
 const PUBLIC_EVENTS: Record<
   string,
