@@ -12,6 +12,8 @@ import { toast } from "sonner";
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  clienteId?: string;
+  clienteNome?: string;
 }
 
 const formatBRL = (n: number) =>
@@ -19,7 +21,7 @@ const formatBRL = (n: number) =>
 
 const clampDesc = (n: number) => Math.max(0, Math.min(60, Math.round(n * 10) / 10));
 
-export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
+export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNome }: Props) {
   const navigate = useNavigate();
   const { perfil, user } = useAuth();
   const [file, setFile] = useState<File | null>(null);
