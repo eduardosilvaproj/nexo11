@@ -211,7 +211,7 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
               <Plus className="h-6 w-6 text-primary" />
             )}
             <span className="font-semibold text-primary">
-              {parsing ? "Lendo XML..." : "+ Adicionar ambiente (XML)"}
+              {parsing ? "Lendo XML..." : "+ Adicionar ambiente"}
             </span>
           </Button>
 
