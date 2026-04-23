@@ -47,9 +47,33 @@ export function ContractPreviewModal({
   async function generatePdf() {
     setLoading(true);
     try {
+      // 1. Fetch full contract and client data for PDF
+      const { data: realContrato } = await supabase
+        .from("contratos")
+        .select("cliente_id, assinatura_nome, data_assinatura, assinatura_ip, assinatura_hash")
+        .eq("id", contrato.id)
+        .single();
+
+      let clienteData = null;
+      if (realContrato?.cliente_id) {
+        const { data: cli } = await supabase
+          .from("clientes")
+          .select("*")
+          .eq("id", realContrato.cliente_id)
+          .single();
+        clienteData = cli;
+      }
+
+      const fullContrato = { 
+        ...contrato, 
+        ...realContrato, 
+        cliente: clienteData 
+      };
+
+      // 2. Generate PDF
       const doc = (
         <ContractPDF
-          contrato={contrato}
+          contrato={fullContrato}
           loja={loja}
           ambientes={ambientes}
           orcamentos={orcamentos}
@@ -65,6 +89,7 @@ export function ContractPreviewModal({
       setLoading(false);
     }
   }
+
 
   const handlePrint = () => {
     if (iframeRef.current) {
