@@ -214,43 +214,55 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
     }
   };
 
-  const totalsStep2 = useMemo(() => {
+  const totalsOrcamento = useMemo(() => {
     const list = ambientes.map(a => {
       const valorBase = a.parsed.total_orcamento || a.parsed.total_pedido || 0;
       const valorFinal = valorBase * (1 - a.desconto / 100);
       return { ...a, valorBase, valorFinal };
     });
-    const totalVendaBase = list.reduce((s, i) => s + i.valorFinal, 0);
-    const totalFrete = ambientes.reduce((s, a) => s + a.parsed.frete, 0);
-    const totalMontagem = ambientes.reduce((s, a) => s + a.parsed.montagem, 0);
-    const totalFinal = totalVendaBase + totalFrete + totalMontagem;
-    return { list, totalVendaBase, totalFrete, totalMontagem, totalFinal };
-  }, [ambientes]);
+    
+    // Subtotal: Apenas os ambientes selecionados
+    const subtotalSelecionados = list
+      .filter(a => a.selecionado)
+      .reduce((s, i) => s + i.valorFinal, 0);
+
+    // Aplicar desconto global sobre o subtotal dos selecionados
+    const totalComDescontoGlobal = subtotalSelecionados * (1 - descontoGlobal / 100);
+    
+    const totalFrete = ambientes.filter(a => a.selecionado).reduce((s, a) => s + (a.parsed.frete || 0), 0);
+    const totalMontagem = ambientes.filter(a => a.selecionado).reduce((s, a) => s + (a.parsed.montagem || 0), 0);
+    
+    const baseNegociacao = totalComDescontoGlobal + totalFrete + totalMontagem;
+
+    // Negociação (Taxa e Parceiro)
+    const taxa = Number(condicaoSel?.taxa || 0);
+    const numParcelas = Math.max(1, Number(condicaoSel?.parcelas || 1));
+    const valorComTaxa = baseNegociacao * (1 + taxa / 100);
+    const valorFinalTotal = valorComTaxa * (1 + percParceiro / 100);
+    const valorParcela = valorFinalTotal / numParcelas;
+
+    return { 
+      list, 
+      subtotalSelecionados, 
+      totalComDescontoGlobal,
+      totalFrete, 
+      totalMontagem, 
+      baseNegociacao,
+      valorComTaxa,
+      valorFinalTotal,
+      valorParcela,
+      numParcelas,
+      taxa
+    };
+  }, [ambientes, descontoGlobal, condicaoSel, percParceiro]);
 
   const handleNextStep2 = () => {
-    if (ambientes.length === 0) {
-      toast.error("Importe ao menos um XML do Promob");
+    if (ambientes.filter(a => a.selecionado).length === 0) {
+      toast.error("Selecione ao menos um ambiente");
       return;
     }
     setStep(3);
   };
-
-  // --- Handlers STEP 3 ---
-  const condicaoSel = useMemo(
-    () => condicoes.find((c) => c.id === condicaoId) || null,
-    [condicoes, condicaoId],
-  );
-
-  const valorBase = totalsStep2.totalFinal;
-
-  const calcStep3 = useMemo(() => {
-    const taxa = Number(condicaoSel?.taxa || 0);
-    const numParcelas = Math.max(1, Number(condicaoSel?.parcelas || 1));
-    const comTaxa = valorBase * (1 + taxa / 100);
-    const comParceiro = comTaxa * (1 + percParceiro / 100);
-    const valorParcela = comParceiro / numParcelas;
-    return { taxa, numParcelas, comTaxa, comParceiro, valorParcela };
-  }, [valorBase, condicaoSel, percParceiro]);
 
   useEffect(() => {
     if (!condicaoSel) {
@@ -270,17 +282,17 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
     out.push({
       label: "Entrada",
       data: datasParcelas[0] || toISO(new Date()),
-      valor: calcStep3.valorParcela,
+      valor: totalsOrcamento.valorParcela,
     });
     for (let i = 1; i <= condicaoSel.parcelas; i++) {
       out.push({
         label: String(i),
         data: datasParcelas[i] || toISO(addDays(new Date(), i * 30)),
-        valor: calcStep3.valorParcela,
+        valor: totalsOrcamento.valorParcela,
       });
     }
     return out;
-  }, [condicaoSel, datasParcelas, calcStep3.valorParcela]);
+  }, [condicaoSel, datasParcelas, totalsOrcamento.valorParcela]);
 
   const handleFinalize = async (isDraft = false) => {
     if (!perfil?.loja_id) return;
