@@ -1,4 +1,6 @@
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { substituteContractVariables } from '@/lib/contract-utils';
+
 
 // Register a font for better appearance
 Font.register({
