@@ -593,7 +593,7 @@ export default function OrcamentoNegociacao() {
               style={{ backgroundColor: "#12B76A" }}
               className="text-white hover:opacity-90"
             >
-              Aprovar orçamento →
+              Aprovar e Gerar Contrato ✓
             </Button>
           </div>
         </TabsContent>
