@@ -25,7 +25,7 @@ export default function AuthPage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#060d1a]">
+      <div className="flex h-screen items-center justify-center bg-slate-50">
         <Loader2 className="h-6 w-6 animate-spin text-[#1a7fe8]" />
       </div>
     );
@@ -66,14 +66,14 @@ export default function AuthPage() {
   };
 
   const inputClass = (hasError?: string) =>
-    `h-12 bg-transparent border-[rgba(26,155,232,0.35)] text-white placeholder:text-gray-500 focus:border-[#1a7fe8] focus:ring-1 focus:ring-[#1a7fe8] transition-all pl-11 rounded-lg ${
+    `h-12 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-[#1a7fe8] focus:ring-1 focus:ring-[#1a7fe8] transition-all pl-11 rounded-lg ${
       hasError ? "border-red-500 focus:ring-red-500" : ""
     }`;
 
   return (
-    <div className="flex h-screen overflow-hidden dark">
+    <div className="flex h-screen overflow-hidden">
       {/* Painel Esquerdo (60%) */}
-      <div className="hidden lg:flex lg:w-[60%] relative flex flex-col items-center justify-center h-screen overflow-hidden bg-[#050c18]">
+      <div className="hidden lg:flex lg:w-[60%] relative flex flex-col items-center justify-center h-screen overflow-hidden bg-slate-50">
         {/* Radial Gradient */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(26,155,232,0.08)_0%,_transparent_70%)]" />
         
@@ -93,22 +93,22 @@ export default function AuthPage() {
       </div>
 
       {/* Painel Direito (40%) */}
-      <div className="w-full lg:w-[40%] min-h-screen bg-[#0c1526] flex flex-col justify-center p-11 relative border-l border-white/5 animate-fade-up">
+      <div className="w-full lg:w-[40%] min-h-screen bg-white flex flex-col justify-center p-11 relative border-l border-slate-100 animate-fade-up">
         <div className="flex flex-col w-full">
           <div className="mb-10">
-            <h1 className="text-[26px] font-bold text-white mb-2 leading-tight">
+            <h1 className="text-[26px] font-bold text-slate-900 mb-2 leading-tight">
               Bem-vindo de volta!
             </h1>
-            <p className="text-gray-400 text-sm">
+            <p className="text-slate-500 text-sm">
               Acesse sua conta para continuar gerenciando sua rede.
             </p>
           </div>
 
           <form onSubmit={handleSignIn} className="space-y-6">
             <div className="space-y-2">
-              <Label className="text-gray-300 text-sm font-medium">E-mail</Label>
+              <Label className="text-slate-700 text-sm font-medium">E-mail</Label>
               <div className="relative group">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-[#1a7fe8] transition-colors" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-[#1a7fe8] transition-colors" />
                 <Input
                   type="email"
                   placeholder="exemplo@nexo.com"
@@ -122,13 +122,13 @@ export default function AuthPage() {
 
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label className="text-gray-300 text-sm font-medium">Senha</Label>
+                <Label className="text-slate-700 text-sm font-medium">Senha</Label>
                 <button type="button" className="text-xs text-[#1a7fe8] hover:underline transition-all">
                   Esqueceu a senha?
                 </button>
               </div>
               <div className="relative group">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 group-focus-within:text-[#1a7fe8] transition-colors" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-[#1a7fe8] transition-colors" />
                 <Input
                   type={showPwd ? "text" : "password"}
                   placeholder="Sua senha"
@@ -139,7 +139,7 @@ export default function AuthPage() {
                 <button
                   type="button"
                   onClick={() => setShowPwd(!showPwd)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   {showPwd ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -165,10 +165,10 @@ export default function AuthPage() {
 
           <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-gray-700/50"></span>
+              <span className="w-full border-t border-slate-200"></span>
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-[#0c1526] px-4 text-gray-500 font-medium tracking-wider">ou</span>
+              <span className="bg-white px-4 text-slate-400 font-medium tracking-wider">ou</span>
             </div>
           </div>
 
@@ -176,7 +176,7 @@ export default function AuthPage() {
             type="button"
             variant="outline"
             onClick={handleGoogleLogin}
-            className="w-full h-12 border-gray-700/50 bg-transparent hover:bg-gray-800/30 text-gray-300 rounded-lg flex items-center justify-center gap-3 transition-all"
+            className="w-full h-12 border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-lg flex items-center justify-center gap-3 transition-all"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">
               <path

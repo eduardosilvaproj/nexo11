@@ -61,26 +61,6 @@
     --sidebar-ring: 202 82% 51%;
   }
 
-  /* Dark mode class for specific screens (Login) */
-  .dark {
-    --background: 219 63% 6%;
-    --foreground: 210 40% 96%;
-    --card: 219 52% 10%;
-    --card-foreground: 210 40% 96%;
-    --popover: 219 52% 10%;
-    --popover-foreground: 210 40% 96%;
-    --primary: 202 82% 51%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 215 16% 47%;
-    --secondary-foreground: 210 40% 96%;
-    --muted: 219 52% 10%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 202 82% 51%;
-    --accent-foreground: 0 0% 100%;
-    --border: 210 40% 96% / 0.06;
-    --input: 210 40% 96% / 0.04;
-    --ring: 202 82% 51%;
-  }
 }
 
 @layer base {
@@ -116,25 +96,6 @@
     @apply text-slate-400 !important;
   }
 
-  /* Dark mode overrides for Tables/Inputs when inside .dark */
-  .dark table {
-    @apply bg-[#0c1526];
-  }
-  .dark thead tr {
-    @apply bg-[rgba(255,255,255,0.04)];
-  }
-  .dark tbody tr:nth-child(even) {
-    @apply bg-[rgba(255,255,255,0.02)];
-  }
-  .dark td, .dark th {
-    @apply border-white/5;
-  }
-  .dark input, .dark select, .dark textarea {
-    @apply bg-[rgba(255,255,255,0.04)] border-[rgba(26,155,232,0.3)] text-white !important;
-  }
-  .dark input::placeholder {
-    @apply text-white/40 !important;
-  }
 
   /* Badges de status */
   .badge-success {
@@ -150,19 +111,6 @@
     @apply bg-sky-50 text-sky-700 border-sky-200;
   }
 
-  /* Dark badges */
-  .dark .badge-success {
-    @apply bg-[#052e16] text-[#22c97a] border-[#065f46]/30;
-  }
-  .dark .badge-warning {
-    @apply bg-[#422006] text-[#f59e0b] border-[#92400e]/30;
-  }
-  .dark .badge-error {
-    @apply bg-[#450a0a] text-[#ef4444] border-[#991b1b]/30;
-  }
-  .dark .badge-info {
-    @apply bg-[#082f49] text-[#1a9be8] border-[#075985]/30;
-  }
 }
 
 @layer utilities {
