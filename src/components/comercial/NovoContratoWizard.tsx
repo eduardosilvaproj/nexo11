@@ -17,8 +17,11 @@ import {
   CalendarIcon,
   Loader2,
   Trash2,
-  AlertCircle
+  AlertCircle,
+  Eye,
+  EyeOff
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { format, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
@@ -411,30 +414,9 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 p-4">
-      <div className="flex items-center justify-center gap-4">
-        {[
-          { n: 1, label: "Cliente" },
-          { n: 2, label: "Orçamento XML" },
-          { n: 3, label: "Negociação" }
-        ].map((s, idx) => (
-          <div key={s.n} className="flex items-center">
-            <div className="flex flex-col items-center gap-1">
-              <div className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold",
-                step === s.n ? "border-primary bg-primary/10 text-primary" : step > s.n ? "border-emerald-500 bg-emerald-50 text-emerald-500" : "border-slate-200 text-slate-400"
-              )}>
-                {step > s.n ? <CheckCircle className="h-4 w-4" /> : s.n}
-              </div>
-              <span className="text-[10px] font-bold uppercase text-slate-400">{s.label}</span>
-            </div>
-            {idx < 2 && <div className={cn("mx-2 h-[2px] w-8 md:w-20", step > s.n ? "bg-emerald-500" : "bg-slate-200")} />}
-          </div>
-        ))}
-      </div>
-
-      <div className="min-h-[400px]">
-        {step === 1 && (
+    <div className="mx-auto max-w-6xl space-y-8 p-4">
+      {step === 1 ? (
+        <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {clientOption !== "fixed" && (
               <Card 
@@ -486,108 +468,233 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
               </CardContent>
             </Card>
           </div>
-        )}
-
-        {step === 2 && (
-          <div className="space-y-6">
-            <input type="file" ref={fileInputRef} onChange={e => handleFiles(e.target.files)} multiple className="hidden" accept=".xml" />
-            <Button variant="outline" className="w-full h-24 border-dashed flex flex-col gap-2" onClick={() => fileInputRef.current?.click()} disabled={parsing}>
-              {parsing ? <Loader2 className="animate-spin" /> : <Upload />}
-              <span>{parsing ? "Processando..." : "+ Adicionar Arquivo XML Promob"}</span>
+          <div className="flex justify-end">
+            <Button onClick={handleNextStep1} size="lg">
+              Próximo <ChevronRight className="ml-2 h-4 w-4" />
             </Button>
-            
-            <div className="grid gap-4">
-              {ambientes.map(amb => (
-                <Card key={amb.id}>
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className="font-bold">{amb.nome}</p>
-                      <p className="text-sm text-slate-500">{formatBRL(amb.parsed.total_orcamento)} (Base BUDGET)</p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="w-24">
-                        <Label className="text-[10px]">Desc %</Label>
-                        <Input type="number" value={amb.desconto} onChange={e => setAmbientes(prev => prev.map(x => x.id === amb.id ? { ...x, desconto: Number(e.target.value) } : x))} />
-                      </div>
-                      <Button variant="ghost" size="icon" className="text-slate-400 hover:text-red-500" onClick={() => setAmbientes(prev => prev.filter(x => x.id !== amb.id))}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold">Orçamento e Negociação</h2>
+            <div className="flex items-center gap-2">
+               <span className="text-sm font-medium text-slate-500">Cliente:</span>
+               <span className="text-sm font-bold text-slate-900">{clientData.nome}</span>
             </div>
           </div>
-        )}
 
-        {step === 3 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card>
-              <CardContent className="p-6 space-y-6">
-                <div className="space-y-4">
-                  <div>
-                    <Label>Condição de Pagamento</Label>
-                    <Select value={condicaoId} onValueChange={setCondicaoId}>
-                      <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
-                      <SelectContent>{condicoes.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Percentual Parceiro (%)</Label>
-                    <Input type="number" value={percParceiro} onChange={e => setPercParceiro(Number(e.target.value))} />
-                  </div>
-                  <div className="bg-primary/5 p-4 rounded-lg border border-primary/20">
-                    <p className="text-xs text-primary font-bold uppercase">Total Final</p>
-                    <p className="text-3xl font-bold">{formatBRL(calcStep3.comParceiro)}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="font-bold mb-4">Plano de Pagamento</h3>
-                <Table>
-                  <TableHeader><TableRow><TableHead>Parcela</TableHead><TableHead>Vencimento</TableHead><TableHead className="text-right">Valor</TableHead></TableRow></TableHeader>
-                  <TableBody>
-                    {parcelas.map((p, i) => (
-                      <TableRow key={i}>
-                        <TableCell>{p.label}</TableCell>
-                        <TableCell>{format(new Date(p.data), "dd/MM/yyyy")}</TableCell>
-                        <TableCell className="text-right">{formatBRL(p.valor)}</TableCell>
-                      </TableRow>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+            {/* COLUNA ESQUERDA — Ambientes */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-slate-700 uppercase text-xs tracking-wider">Ambientes</h3>
+                <input type="file" ref={fileInputRef} onChange={e => handleFiles(e.target.files)} multiple className="hidden" accept=".xml" />
+                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()} disabled={parsing}>
+                  {parsing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
+                  + Adicionar ambiente (XML)
+                </Button>
+              </div>
+
+              <Card>
+                <CardContent className="p-4 space-y-4">
+                  <div className="space-y-2">
+                    {ambientes.map((amb) => (
+                      <div key={amb.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-all">
+                        <Checkbox 
+                          checked={amb.selecionado} 
+                          onCheckedChange={(val) => setAmbientes(prev => prev.map(x => x.id === amb.id ? { ...x, selecionado: !!val } : x))} 
+                        />
+                        <div className="flex-1 grid grid-cols-[1fr,auto] gap-2 items-center">
+                          <span className={cn("text-sm font-medium", !amb.selecionado && "text-slate-400 line-through")}>{amb.nome}</span>
+                          <span className={cn("text-sm font-bold tabular-nums", !amb.selecionado && "text-slate-400")}>
+                            {formatBRL(amb.valorFinal)}
+                          </span>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] text-slate-400">Desc:</span>
+                            <div className="flex items-center gap-1">
+                              <Input 
+                                type="number" 
+                                value={amb.desconto} 
+                                onChange={e => setAmbientes(prev => prev.map(x => x.id === amb.id ? { ...x, desconto: Number(e.target.value) } : x))}
+                                className="h-6 w-12 text-[10px] px-1"
+                              />
+                              <span className="text-[10px] text-slate-400">%</span>
+                            </div>
+                            <span className="text-[10px] text-slate-400">→ {formatBRL(amb.valorFinal)}</span>
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-slate-300 hover:text-red-500"
+                            onClick={() => setAmbientes(prev => prev.filter(x => x.id !== amb.id))}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
                     ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </div>
+                    {ambientes.length === 0 && (
+                      <p className="text-center py-8 text-slate-400 text-sm italic">Nenhum ambiente importado</p>
+                    )}
+                  </div>
 
-      <div className="flex justify-between items-center border-t pt-6">
-        <Button variant="ghost" onClick={() => {
-          if (step > 1) {
-            setStep(s => (s - 1) as Step);
-          } else if (onClose) {
-            onClose();
-          } else {
-            navigate(-1);
-          }
-        }}>
-          {step === 1 ? "Cancelar" : "Anterior"}
-        </Button>
-        <div className="flex gap-2">
-          {step === 3 && <Button variant="outline" onClick={() => handleFinalize(true)} disabled={isSubmitting}>Salvar Rascunho</Button>}
-          <Button onClick={() => {
-            if (step === 1) handleNextStep1();
-            else if (step === 2) handleNextStep2();
-            else handleFinalize();
-          }} disabled={isSubmitting}>
-            {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : null}
-            {step === 3 ? "Finalizar Contrato" : "Próximo"}
-          </Button>
+                  <div className="pt-4 border-t space-y-2">
+                    <div className="flex justify-between text-sm text-slate-600">
+                      <span>Subtotal ambientes selecionados:</span>
+                      <span className="font-bold tabular-nums">{formatBRL(totalsOrcamento.subtotalSelecionados)}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-slate-600">
+                      <span>Desconto adicional global %:</span>
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          type="number" 
+                          value={descontoGlobal} 
+                          onChange={e => setDescontoGlobal(Number(e.target.value))}
+                          className="h-8 w-16"
+                        />
+                      </div>
+                    </div>
+                    <div className="pt-2 flex justify-between items-center">
+                      <span className="text-sm font-bold text-slate-900 uppercase">Total Geral:</span>
+                      <span className="text-2xl font-black text-slate-900 tabular-nums">
+                        {formatBRL(totalsOrcamento.baseNegociacao)}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* COLUNA DIREITA — Negociação */}
+            <div className="space-y-6">
+              <h3 className="font-bold text-slate-700 uppercase text-xs tracking-wider">Negociação</h3>
+              <Card>
+                <CardContent className="p-6 space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Condição de Pagamento</Label>
+                      <Select value={condicaoId} onValueChange={setCondicaoId}>
+                        <SelectTrigger className="h-9"><SelectValue placeholder="Selecione..." /></SelectTrigger>
+                        <SelectContent>{condicoes.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <p className="text-xs font-medium text-slate-500">Taxa financeira</p>
+                      <p className="text-sm font-bold pt-2">
+                        {formatBRL(totalsOrcamento.valorComTaxa - totalsOrcamento.baseNegociacao)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Tipo de Venda</Label>
+                      <Select value={tipoVenda} onValueChange={setTipoVenda}>
+                        <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Normal">Normal</SelectItem>
+                          <SelectItem value="Assistencia">Assistência</SelectItem>
+                          <SelectItem value="Outros">Outros</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-1.5 print:hidden">
+                        <Label className="text-[10px] text-slate-400">Per.%</Label>
+                        <button type="button" onClick={() => setShowPercParceiro(!showPercParceiro)}>
+                          {showPercParceiro ? <Eye className="h-3 w-3 text-slate-400" /> : <EyeOff className="h-3 w-3 text-slate-400" />}
+                        </button>
+                      </div>
+                      {showPercParceiro && (
+                        <div className="flex items-center gap-1">
+                           <Input 
+                            type="number" 
+                            className="h-8 w-16 text-xs" 
+                            value={percParceiro} 
+                            onChange={e => setPercParceiro(Number(e.target.value))} 
+                          />
+                          <span className="text-xs text-slate-400">%</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 space-y-1">
+                    <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Valor Final Total</p>
+                    <p className="text-4xl font-black text-emerald-600 tabular-nums">
+                      {formatBRL(totalsOrcamento.valorFinalTotal)}
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-bold text-slate-700">Tabela de parcelas</h4>
+                    <div className="rounded-lg border overflow-hidden">
+                      <Table>
+                        <TableHeader className="bg-slate-50">
+                          <TableRow>
+                            <TableHead className="h-9 text-[11px] font-bold">Parcela</TableHead>
+                            <TableHead className="h-9 text-[11px] font-bold">Vencimento</TableHead>
+                            <TableHead className="h-9 text-[11px] font-bold text-right">Valor</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {parcelas.map((p, idx) => (
+                            <TableRow key={idx} className="h-10">
+                              <TableCell className="text-xs font-medium">{p.label}</TableCell>
+                              <TableCell className="text-xs">
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="h-7 px-2 text-xs hover:bg-slate-100">
+                                      {format(new Date(p.data), "dd/MM/yyyy")}
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar 
+                                      mode="single" 
+                                      selected={new Date(p.data)} 
+                                      onSelect={(d) => {
+                                        if (d) {
+                                          const newDatas = [...datasParcelas];
+                                          newDatas[idx] = toISO(d);
+                                          setDatasParcelas(newDatas);
+                                        }
+                                      }}
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                              </TableCell>
+                              <TableCell className="text-xs text-right font-bold tabular-nums">
+                                {formatBRL(p.valor)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          <div className="flex justify-between items-center border-t pt-8">
+            <Button variant="ghost" onClick={() => setStep(1)} disabled={isSubmitting}>
+              <ChevronLeft className="mr-2 h-4 w-4" /> Voltar
+            </Button>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" onClick={() => handleFinalize(true)} disabled={isSubmitting || environments.length === 0}>
+                {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
+                Liberar desconto
+              </Button>
+              <Button onClick={() => handleFinalize(false)} disabled={isSubmitting || !condicaoSel} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                Aprovar e gerar contrato
+              </Button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
