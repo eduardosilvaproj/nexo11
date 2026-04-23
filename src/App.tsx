@@ -35,6 +35,8 @@ import OrcamentoNegociacao from "./pages/OrcamentoNegociacao";
 import ConfigFornecedores from "./pages/ConfigFornecedores";
 import Compras from "./pages/Compras";
 
+import NewContract from "./pages/NewContract";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -69,6 +71,11 @@ const App = () => (
                 </ProtectedRoute>
               } />
               <Route path="/contratos/:id" element={<ContratoDetail />} />
+              <Route path="/contratos/novo" element={
+                <ProtectedRoute roles={["admin","gerente","vendedor"]}>
+                  <NewContract />
+                </ProtectedRoute>
+              } />
               <Route path="/tecnico" element={
                 <ProtectedRoute roles={["admin","gerente","tecnico","franqueador"]}>
                   <Tecnico />

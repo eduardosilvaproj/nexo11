@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   DndContext,
@@ -19,9 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LeadFormDialog } from "@/components/comercial/LeadFormDialog";
-import { ConvertLeadDialog } from "@/components/comercial/ConvertLeadDialog";
 import { ContratosTable } from "@/components/comercial/ContratosTable";
-import { ContratoFormDialog } from "@/components/comercial/ContratoFormDialog";
 import { ImportXmlPromobDialog } from "@/components/comercial/ImportXmlPromobDialog";
 import { FileCode2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
@@ -126,7 +125,7 @@ function LeadCard({ lead, onConvert }: { lead: Lead; onConvert: (l: Lead) => voi
           className="mt-2 inline-flex w-full items-center justify-center gap-1 rounded-md py-1 transition-colors hover:bg-[#E6F3FF]"
           style={{ fontSize: 11, color: "#1E6FBF", fontWeight: 500 }}
         >
-          <ArrowRightLeft className="h-3 w-3" /> Converter em contrato
+          <ArrowRightLeft className="h-3 w-3" /> Gerar contrato
         </button>
       )}
     </div>
@@ -201,11 +200,11 @@ type TabKey = "leads" | "contratos";
 
 export default function Comercial() {
   const { perfil } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [contratoFormOpen, setContratoFormOpen] = useState(false);
   const [importXmlOpen, setImportXmlOpen] = useState(false);
-  const [convertLead, setConvertLead] = useState<Lead | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("leads");
   const [filterStatus, setFilterStatus] = useState<"all" | LeadStatus>("all");
@@ -296,7 +295,7 @@ export default function Comercial() {
         <div className="flex items-center gap-2">
           {/* Botão Importar XML Promob removido daqui por solicitação do usuário. Agora está no Perfil do Cliente -> Orçamentos */}
           <button
-            onClick={() => (tab === "contratos" ? setContratoFormOpen(true) : setFormOpen(true))}
+            onClick={() => (tab === "contratos" ? navigate("/contratos/novo") : setFormOpen(true))}
             className="inline-flex items-center gap-1.5 px-4 py-2 text-white transition-colors hover:bg-[#1759A0]"
             style={{ background: "#1E6FBF", borderRadius: 8, fontSize: 13, fontWeight: 500 }}
           >
@@ -411,7 +410,7 @@ export default function Comercial() {
                 title={col.title}
                 
                 leads={col.leads}
-                onConvert={setConvertLead}
+                onConvert={(lead) => navigate(`/contratos/novo?leadId=${lead.id}`)}
               />
             ))}
           </div>
@@ -429,13 +428,7 @@ export default function Comercial() {
       )}
 
       <LeadFormDialog open={formOpen} onOpenChange={setFormOpen} />
-      <ContratoFormDialog open={contratoFormOpen} onOpenChange={setContratoFormOpen} />
       <ImportXmlPromobDialog open={importXmlOpen} onOpenChange={setImportXmlOpen} />
-      <ConvertLeadDialog
-        lead={convertLead}
-        open={!!convertLead}
-        onOpenChange={(o) => !o && setConvertLead(null)}
-      />
     </div>
   );
 }
