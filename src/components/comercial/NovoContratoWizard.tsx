@@ -544,7 +544,15 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
       </div>
 
       <div className="flex justify-between items-center border-t pt-6">
-        <Button variant="ghost" onClick={() => step > 1 ? setStep(s => (s - 1) as Step) : onClose?.() || navigate(-1)}>
+        <Button variant="ghost" onClick={() => {
+          if (step > 1) {
+            setStep(s => (s - 1) as Step);
+          } else if (onClose) {
+            onClose();
+          } else {
+            navigate(-1);
+          }
+        }}>
           {step === 1 ? "Cancelar" : "Anterior"}
         </Button>
         <div className="flex gap-2">
