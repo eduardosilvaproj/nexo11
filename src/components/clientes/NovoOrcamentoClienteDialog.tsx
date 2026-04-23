@@ -313,7 +313,7 @@ export function NovoOrcamentoClienteDialog({
                   {calc.linhas.map((l) => (
                     <tr key={l.id} className="border-t">
                       <td className="px-3 py-2">{l.descricao || "Categoria"}</td>
-                      <td className="px-3 py-2 text-right">{formatBRL(l.tabela)}</td>
+                      <td className="px-3 py-2 text-right">{formatBRL(l.budget)}</td>
                       <td className="px-3 py-2 text-right">
                         <Input
                           type="number"
