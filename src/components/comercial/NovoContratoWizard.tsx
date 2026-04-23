@@ -227,9 +227,16 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
       return;
     }
 
-    if (!clientData.mesmo_vendedor && !clientData.projetista_id) {
-      toast.error("Selecione o projetista responsável");
-      return;
+    if (!clientData.mesmo_vendedor) {
+      if (!clientData.projetista_id) {
+        toast.error("Selecione o projetista responsável");
+        return;
+      }
+      
+      if (clientData.vendedor_id === clientData.projetista_id) {
+        toast.error("Vendedor e Projetista não podem ser a mesma pessoa se a opção 'Mesmo que o vendedor' estiver desmarcada");
+        return;
+      }
     }
 
     setStep(2);
