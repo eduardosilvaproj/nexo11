@@ -144,18 +144,8 @@ interface ContractPDFProps {
 }
 
 export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractPDFProps) => {
-  const dataSub = {
-    loja,
-    cliente: {
-      nome: contrato.cliente_nome,
-      email: contrato.cliente_email || (orcamentos?.[0]?.cliente_email),
-      telefone: contrato.cliente_contato || (orcamentos?.[0]?.cliente_telefone)
-    },
-    contrato,
-    ambientes,
-    orcamentos
-  };
-
+  const cliente = contrato.cliente;
+  
   const getParcelasDesc = () => {
     const p = contrato.parcelas_datas || orcamentos?.[0]?.parcelas_datas;
     if (!Array.isArray(p)) return "A definir";
@@ -163,6 +153,11 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
   };
 
   const ambientesNomes = ambientes?.map(a => a.nome).join(', ') || orcamentos?.map(o => o.nome).join(', ') || '—';
+  const clienteDocumento = cliente?.cpf || cliente?.cnpj || '—';
+  const clienteEndereco = cliente?.endereco ? `${cliente.endereco}, ${cliente.cidade || ''} - ${cliente.estado || ''}` : '—';
+  const clienteContato = cliente?.telefone || cliente?.celular || contrato.cliente_contato || '—';
+  const clienteEmail = cliente?.email || orcamentos?.[0]?.cliente_email || '—';
+
 
   return (
     <Document>
