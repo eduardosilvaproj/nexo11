@@ -170,6 +170,18 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
   const clienteContato = cliente?.telefone || cliente?.celular || contrato.cliente_contato || '—';
   const clienteEmail = cliente?.email || orcamentos?.[0]?.cliente_email || '—';
 
+  const getDynamicStyles = (text: string) => {
+    const len = text?.length || 0;
+    if (len > 250) return { fontSize: 6, paddingVertical: 1.5, minHeight: 12 };
+    if (len > 180) return { fontSize: 6.5, paddingVertical: 2, minHeight: 14 };
+    if (len > 120) return { fontSize: 7, paddingVertical: 3, minHeight: 16 };
+    return { fontSize: 8, paddingVertical: 4, minHeight: 18 };
+  };
+
+  const contratanteStyles = getDynamicStyles(contrato.cliente_nome || '');
+  const ambientesStyles = getDynamicStyles(ambientesNomes);
+  const parcelasStyles = getDynamicStyles(getParcelasDesc());
+
 
   return (
     <Document>
@@ -331,18 +343,18 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
         </View>
 
         <View style={styles.summaryTable}>
-          <View style={styles.summaryRow}>
+          <View style={[styles.summaryRow, { minHeight: contratanteStyles.minHeight, paddingVertical: contratanteStyles.paddingVertical }]}>
             <Text style={styles.colLabel}>Contratante:</Text>
-            <Text style={styles.colValue}>{contrato.cliente_nome}</Text>
+            <Text style={[styles.colValue, { fontSize: contratanteStyles.fontSize }]}>{contrato.cliente_nome}</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.colLabel}>CPF/CNPJ:</Text>
             <Text style={styles.colValue}>{clienteDocumento}</Text>
           </View>
 
-          <View style={styles.summaryRow}>
+          <View style={[styles.summaryRow, { minHeight: ambientesStyles.minHeight, paddingVertical: ambientesStyles.paddingVertical }]}>
             <Text style={styles.colLabel}>Ambientes:</Text>
-            <Text style={[styles.colValue, { fontSize: (ambientesNomes?.length || 0) > 100 ? 7 : 8 }]}>
+            <Text style={[styles.colValue, { fontSize: ambientesStyles.fontSize }]}>
               {ambientesNomes}
             </Text>
           </View>
@@ -350,9 +362,9 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
             <Text style={styles.colLabel}>Valor Total:</Text>
             <Text style={styles.colValue}>{formatCurrency(contrato.valor_venda)}</Text>
           </View>
-          <View style={styles.summaryRow}>
+          <View style={[styles.summaryRow, { minHeight: parcelasStyles.minHeight, paddingVertical: parcelasStyles.paddingVertical }]}>
             <Text style={styles.colLabel}>Pagamento:</Text>
-            <Text style={[styles.colValue, { fontSize: (getParcelasDesc()?.length || 0) > 100 ? 7 : 8 }]}>
+            <Text style={[styles.colValue, { fontSize: parcelasStyles.fontSize }]}>
               {getParcelasDesc()}
             </Text>
           </View>
