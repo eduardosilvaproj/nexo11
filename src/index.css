@@ -12,45 +12,45 @@
     --nexo-sidebar-dark: #0a0e1a;
     --nexo-surface-dark: #0c1526;
     --nexo-border-dark: rgba(255, 255, 255, 0.06);
-    --nexo-text-primary: #f1f5f9;
+    --nexo-text-primary: #1e293b;
     --nexo-text-secondary: #64748b;
     --nexo-blue: #1a9be8;
     --nexo-green: #22c97a;
 
     --nexo-gradient-primary: linear-gradient(90deg, #1a7fe8, #22c97a);
 
-    /* === Shadcn semantic tokens (HSL) — Updated to requested dark theme === */
-    --background: 219 63% 6%;             /* #060d1a */
-    --foreground: 210 40% 96%;            /* #f1f5f9 */
+    /* === Shadcn semantic tokens (HSL) — REVERTED TO LIGHT THEME === */
+    --background: 210 20% 98%;             /* #f8fafc (Light Gray/White) */
+    --foreground: 222.2 84% 4.9%;          /* #020817 */
 
-    --card: 219 52% 10%;                  /* #0c1526 */
-    --card-foreground: 210 40% 96%;
+    --card: 0 0% 100%;                     /* White */
+    --card-foreground: 222.2 84% 4.9%;
 
-    --popover: 219 52% 10%;
-    --popover-foreground: 210 40% 96%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
 
     --primary: 202 82% 51%;               /* #1a9be8 */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 215 16% 47%;             /* #64748b */
-    --secondary-foreground: 210 40% 96%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --muted: 219 52% 10%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 202 82% 51%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 210 40% 96% / 0.06;         /* rgba(255,255,255,0.06) */
-    --input: 210 40% 96% / 0.04;          /* rgba(255,255,255,0.04) */
+    --border: 214.3 31.8% 91.4%;         /* #e2e8f0 */
+    --input: 214.3 31.8% 91.4%;
     --ring: 202 82% 51%;
 
     --radius: 0.5rem;
 
-    /* Sidebar */
+    /* Sidebar - KEEP DARK AS REQUESTED */
     --sidebar-background: 225 44% 7%;     /* #0a0e1a */
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 202 82% 51%;
@@ -61,8 +61,7 @@
     --sidebar-ring: 202 82% 51%;
   }
 
-  /* Force dark mode variables even without .dark class if needed, 
-     but we'll apply .dark to the html/body anyway. */
+  /* Dark mode class for specific screens (Login) */
   .dark {
     --background: 219 63% 6%;
     --foreground: 210 40% 96%;
@@ -91,46 +90,79 @@
 
   body {
     @apply bg-background text-foreground;
-    background-color: #060d1a;
     font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     font-feature-settings: 'cv11', 'ss01';
   }
 
-  /* Global Table styles */
+  /* Global Table styles - Light theme by default */
   table {
-    @apply bg-[#0c1526];
+    @apply bg-white;
   }
   thead tr {
-    @apply bg-[rgba(255,255,255,0.04)];
+    @apply bg-slate-50;
   }
   tbody tr:nth-child(even) {
-    @apply bg-[rgba(255,255,255,0.02)];
+    @apply bg-slate-50/50;
   }
   td, th {
-    @apply border-white/5;
+    @apply border-slate-100;
   }
 
-  /* Global Input/Select styles */
+  /* Global Input/Select styles - Reset to standard */
   input, select, textarea {
-    @apply bg-[rgba(255,255,255,0.04)] border-[rgba(26,155,232,0.3)] text-white !important;
+    @apply bg-white border-slate-200 text-slate-900 !important;
   }
   input::placeholder {
+    @apply text-slate-400 !important;
+  }
+
+  /* Dark mode overrides for Tables/Inputs when inside .dark */
+  .dark table {
+    @apply bg-[#0c1526];
+  }
+  .dark thead tr {
+    @apply bg-[rgba(255,255,255,0.04)];
+  }
+  .dark tbody tr:nth-child(even) {
+    @apply bg-[rgba(255,255,255,0.02)];
+  }
+  .dark td, .dark th {
+    @apply border-white/5;
+  }
+  .dark input, .dark select, .dark textarea {
+    @apply bg-[rgba(255,255,255,0.04)] border-[rgba(26,155,232,0.3)] text-white !important;
+  }
+  .dark input::placeholder {
     @apply text-white/40 !important;
   }
 
-    /* Badges de status - tons escuros */
-    .badge-success {
-      @apply bg-[#052e16] text-[#22c97a] border-[#065f46]/30;
-    }
-    .badge-warning {
-      @apply bg-[#422006] text-[#f59e0b] border-[#92400e]/30;
-    }
-    .badge-error {
-      @apply bg-[#450a0a] text-[#ef4444] border-[#991b1b]/30;
-    }
-    .badge-info {
-      @apply bg-[#082f49] text-[#1a9be8] border-[#075985]/30;
-    }
+  /* Badges de status */
+  .badge-success {
+    @apply bg-emerald-50 text-emerald-700 border-emerald-200;
+  }
+  .badge-warning {
+    @apply bg-amber-50 text-amber-700 border-amber-200;
+  }
+  .badge-error {
+    @apply bg-red-50 text-red-700 border-red-200;
+  }
+  .badge-info {
+    @apply bg-sky-50 text-sky-700 border-sky-200;
+  }
+
+  /* Dark badges */
+  .dark .badge-success {
+    @apply bg-[#052e16] text-[#22c97a] border-[#065f46]/30;
+  }
+  .dark .badge-warning {
+    @apply bg-[#422006] text-[#f59e0b] border-[#92400e]/30;
+  }
+  .dark .badge-error {
+    @apply bg-[#450a0a] text-[#ef4444] border-[#991b1b]/30;
+  }
+  .dark .badge-info {
+    @apply bg-[#082f49] text-[#1a9be8] border-[#075985]/30;
+  }
 }
 
 @layer utilities {
@@ -145,10 +177,10 @@
     color: transparent;
   }
 
-  /* Sidebar typography per NEXO spec */
+  /* Sidebar typography */
   .nexo-sidebar-subtitle {
     font-size: 11px;
-    color: var(--nexo-gray-text);
+    color: #64748b;
   }
   .nexo-sidebar-label {
     font-size: 10px !important;
@@ -164,13 +196,13 @@
   }
   .nexo-sidebar-user-email {
     font-size: 11px;
-    color: var(--nexo-gray-text);
+    color: #64748b;
   }
   .nexo-sidebar-logout {
-    color: var(--nexo-gray-text);
+    color: #64748b;
   }
   .nexo-sidebar-logout:hover {
-    color: var(--nexo-red) !important;
+    color: #ef4444 !important;
     background: transparent !important;
   }
 }
