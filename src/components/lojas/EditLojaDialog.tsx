@@ -82,7 +82,7 @@ export function EditLojaDialog({ open, onOpenChange, loja }: Props) {
         contrato_modelo: loja.contrato_modelo || "",
       });
     }
-  }, [loja]);
+  }, [loja, open]);
 
   const { data: admins = [] } = useQuery({
     queryKey: ["admins-disponiveis"],
@@ -155,9 +155,106 @@ export function EditLojaDialog({ open, onOpenChange, loja }: Props) {
             <Label>Cidade *</Label>
             <Input
               value={form.cidade}
-              onChange={(e) => setForm({ ...form, city: e.target.value })} // Fixed typo: city -> cidade
-              // Wait, I noticed I had a typo in my thought process, let me fix it in the code
+              onChange={(e) => setForm({ ...form, cidade: e.target.value })}
             />
           </div>
-          {/* Correction in the actual code below */}
-          ...
+          <div>
+            <Label>Estado *</Label>
+            <Select
+              value={form.estado}
+              onValueChange={(v) => setForm({ ...form, estado: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="UF" />
+              </SelectTrigger>
+              <SelectContent>
+                {UFS.map((u) => (
+                  <SelectItem key={u} value={u}>
+                    {u}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="col-span-2">
+            <Label>Endereço</Label>
+            <Input
+              placeholder="Rua, número, bairro..."
+              value={form.endereco}
+              onChange={(e) => setForm({ ...form, endereco: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>CNPJ</Label>
+            <Input
+              placeholder="XX.XXX.XXX/XXXX-XX"
+              value={form.cnpj}
+              onChange={(e) => setForm({ ...form, cnpj: maskCNPJ(e.target.value) })}
+            />
+          </div>
+          <div>
+            <Label>Telefone</Label>
+            <Input
+              value={form.telefone}
+              onChange={(e) => setForm({ ...form, telefone: e.target.value })}
+            />
+          </div>
+          <div className="col-span-2">
+            <Label>Email</Label>
+            <Input
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+            />
+          </div>
+          <div className="col-span-2">
+            <Label>Responsável (admin da loja) *</Label>
+            <Select
+              value={form.franqueado_id}
+              onValueChange={(v) => setForm({ ...form, franqueado_id: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={admins.length ? "Selecione um admin" : "Nenhum admin disponível"} />
+              </SelectTrigger>
+              <SelectContent>
+                {admins.map((a: any) => (
+                  <SelectItem key={a.id} value={a.id}>
+                    {a.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="col-span-2 space-y-2">
+            <Label>Modelo de Contrato (com variáveis dinâmicas)</Label>
+            <p className="text-[10px] text-muted-foreground">
+              Variáveis: {"{{empresa.razao_social}}"}, {"{{empresa.cnpj}}"}, {"{{empresa.endereco}}"}, {"{{empresa.cidade}}"}, 
+              {"{{cliente.nome}}"}, {"{{cliente.email}}"}, {"{{cliente.telefone}}"}, 
+              {"{{contrato.valor_total}}"}, {"{{contrato.parcelas_descricao}}"}, {"{{contrato.ambientes}}"}, 
+              {"{{DIA}}"}, {"{{MES}}"}, {"{{ANO}}"}
+            </p>
+            <Textarea
+              rows={10}
+              placeholder="Texto do contrato..."
+              value={form.contrato_modelo}
+              onChange={(e) => setForm({ ...form, contrato_modelo: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => updateLoja.mutate()}
+            disabled={updateLoja.isPending}
+            style={{ background: "#1E6FBF" }}
+          >
+            {updateLoja.isPending ? "Salvando..." : "Salvar alterações"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
