@@ -359,9 +359,46 @@ export default function OrcamentoNegociacao() {
                 <h2 className="text-xl font-medium">{orcamento.nome}</h2>
               </div>
 
+              <div className="space-y-4 border-t pt-4">
+                <p className="text-xs text-muted-foreground uppercase font-semibold">Ambientes incluídos</p>
+                <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                  {orcamento.categorias?.map((c) => {
+                    const selected = ambientesSelecionados.includes(c.id);
+                    return (
+                      <div
+                        key={c.id}
+                        className={cn(
+                          "flex items-center justify-between p-2 rounded-md border transition-all",
+                          selected ? "bg-white border-slate-200" : "bg-slate-50 border-slate-100 opacity-50",
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Checkbox
+                            checked={selected}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setAmbientesSelecionados((prev) => [...prev, c.id]);
+                              } else {
+                                setAmbientesSelecionados((prev) => prev.filter((id) => id !== c.id));
+                              }
+                            }}
+                          />
+                          <span className={cn("text-sm font-medium", !selected && "line-through text-muted-foreground")}>
+                            {c.descricao}
+                          </span>
+                        </div>
+                        <span className={cn("text-sm tabular-nums", !selected && "line-through text-muted-foreground")}>
+                          {formatBRL(c.valor)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="space-y-1 border-t pt-4">
-                <p className="text-sm text-muted-foreground">Valor de venda base</p>
-                <p className="text-3xl font-bold text-slate-900">{formatBRL(valorBase)}</p>
+                <p className="text-sm text-muted-foreground">Valor de venda base (selecionados)</p>
+                <p className="text-3xl font-bold text-slate-900 tabular-nums">{formatBRL(valorBase)}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4 border-t pt-4">
@@ -377,7 +414,9 @@ export default function OrcamentoNegociacao() {
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">Valor após desconto</p>
-                  <p className="text-lg font-medium py-2">{formatBRL(valorBase * (1 - descontoExtra / 100))}</p>
+                  <p className="text-lg font-medium py-2 tabular-nums">
+                    {formatBRL(valorBase * (1 - descontoExtra / 100))}
+                  </p>
                 </div>
               </div>
 
@@ -398,17 +437,13 @@ export default function OrcamentoNegociacao() {
                   </Select>
                 </div>
 
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Taxa financeira embutida</p>
-                  <p className="text-sm font-medium">
-                    {formatBRL(calc.comTaxa - valorBase)}
-                  </p>
-                </div>
-
                 <div className="bg-slate-50 p-4 rounded-lg space-y-1 border border-slate-100">
                   <p className="text-xs text-muted-foreground font-semibold uppercase">Valor Total Final</p>
                   <p className="text-4xl font-bold text-emerald-600 tabular-nums">
                     {formatBRL(calc.comParceiro)}
+                  </p>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Inclui taxa financeira de {formatBRL(calc.comTaxa - valorBase)}
                   </p>
                 </div>
               </div>
@@ -428,27 +463,35 @@ export default function OrcamentoNegociacao() {
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs flex items-center gap-1.5 print:hidden">
-                    Per. % Parceiro
-                    <button
-                      type="button"
-                      onClick={() => setOcultarParceiro((v) => !v)}
-                      className="text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      {ocultarParceiro ? (
-                        <Lock className="h-3.5 w-3.5" />
-                      ) : (
-                        <Unlock className="h-3.5 w-3.5" />
-                      )}
-                    </button>
-                  </Label>
+                  <div className="flex items-center gap-1.5 h-4 mb-1">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            onClick={() => setOcultarParceiro((v) => !v)}
+                            className="text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            {ocultarParceiro ? (
+                              <Lock className="h-4 w-4" />
+                            ) : (
+                              <Unlock className="h-4 w-4" />
+                            )}
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Percentual parceiro (oculto ao imprimir)</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                   <div className={cn("relative", ocultarParceiro && "print:hidden")}>
                     <Input
                       type="number"
                       step="0.1"
                       value={percParceiro}
                       onChange={(e) => setPercParceiro(Number(e.target.value || 0))}
-                      className="h-10 pr-8"
+                      className="h-10 pr-8 w-24"
                     />
                     <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">%</span>
                   </div>
