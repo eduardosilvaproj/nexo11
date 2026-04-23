@@ -45,6 +45,15 @@ type Condicao = {
   ordem: number | null;
 };
 
+type Categoria = {
+  id: string;
+  descricao: string;
+  tabela: number;
+  valor: number;
+  desconto_pct: number;
+  ambiente?: string;
+};
+
 type Orcamento = {
   id: string;
   nome: string;
@@ -66,6 +75,7 @@ type Orcamento = {
   status: string | null;
   frete_loja?: number | null;
   montagem_loja?: number | null;
+  categorias: Categoria[] | null;
 };
 
 type Parcela = { label: string; data: string; valor: number };
