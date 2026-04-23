@@ -122,8 +122,6 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
       link.click();
       
       toast.success("Contrato gerado e baixado com sucesso.");
-        toast.success("Contrato gerado e disponibilizado para assinatura no Portal do Cliente.");
-      }
 
       // 4. Invalidar queries para atualizar UI
       qc.invalidateQueries({ queryKey: ["contrato_dre_view", contrato.id] });
