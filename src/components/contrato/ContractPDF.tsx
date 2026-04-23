@@ -351,9 +351,9 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
             <Text style={styles.colValue}>{clienteDocumento}</Text>
           </View>
 
-          <View style={styles.summaryRow}>
+          <View style={[styles.summaryRow, { minHeight: ambientesStyles.minHeight, paddingVertical: ambientesStyles.paddingVertical }]}>
             <Text style={styles.colLabel}>Ambientes:</Text>
-            <Text style={[styles.colValue, { fontSize: (ambientesNomes?.length || 0) > 100 ? 7 : 8 }]}>
+            <Text style={[styles.colValue, { fontSize: ambientesStyles.fontSize }]}>
               {ambientesNomes}
             </Text>
           </View>
@@ -361,9 +361,9 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
             <Text style={styles.colLabel}>Valor Total:</Text>
             <Text style={styles.colValue}>{formatCurrency(contrato.valor_venda)}</Text>
           </View>
-          <View style={styles.summaryRow}>
+          <View style={[styles.summaryRow, { minHeight: parcelasStyles.minHeight, paddingVertical: parcelasStyles.paddingVertical }]}>
             <Text style={styles.colLabel}>Pagamento:</Text>
-            <Text style={[styles.colValue, { fontSize: (getParcelasDesc()?.length || 0) > 100 ? 7 : 8 }]}>
+            <Text style={[styles.colValue, { fontSize: parcelasStyles.fontSize }]}>
               {getParcelasDesc()}
             </Text>
           </View>
