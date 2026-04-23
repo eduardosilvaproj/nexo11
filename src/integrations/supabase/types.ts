@@ -1272,6 +1272,7 @@ export type Database = {
         Row: {
           cidade: string | null
           cnpj: string | null
+          contrato_modelo: string | null
           created_at: string
           email: string | null
           endereco: string | null
@@ -1285,6 +1286,7 @@ export type Database = {
         Insert: {
           cidade?: string | null
           cnpj?: string | null
+          contrato_modelo?: string | null
           created_at?: string
           email?: string | null
           endereco?: string | null
@@ -1298,6 +1300,7 @@ export type Database = {
         Update: {
           cidade?: string | null
           cnpj?: string | null
+          contrato_modelo?: string | null
           created_at?: string
           email?: string | null
           endereco?: string | null
