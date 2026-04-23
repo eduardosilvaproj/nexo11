@@ -2581,6 +2581,7 @@ export type Database = {
         Args: { _contrato_id: string }
         Returns: undefined
       }
+      portal_assinar_contrato: { Args: { _token: string }; Returns: Json }
       portal_registrar_nps: {
         Args: { _comentario?: string; _nota: number; _token: string }
         Returns: Json
