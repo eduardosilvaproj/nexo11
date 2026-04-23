@@ -454,8 +454,8 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
             cliente_id: finalClienteId,
             cliente_nome: clientData.nome,
             valor_venda: Number(totalsOrcamento.valorFinalTotal.toFixed(2)),
-            vendedor_id: clientData.vendedor_id || user?.id,
-            projetista_id: clientData.projetista_id || user?.id,
+            vendedor_id: finalVendedorId,
+            projetista_id: finalProjetistaId,
             status: "comercial",
           })
           .select("id")
