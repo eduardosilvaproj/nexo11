@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Upload, FileCode2, AlertCircle, CheckCircle2, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,8 @@ import { toast } from "sonner";
 interface Props {
   open: boolean;
   onOpenChange: (o: boolean) => void;
+  clienteId?: string;
+  clienteNome?: string;
 }
 
 const formatBRL = (n: number) =>
@@ -19,8 +21,9 @@ const formatBRL = (n: number) =>
 
 const clampDesc = (n: number) => Math.max(0, Math.min(60, Math.round(n * 10) / 10));
 
-export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
+export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNome }: Props) {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const { perfil, user } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -30,20 +33,18 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
   const [creating, setCreating] = useState(false);
 
   // Negociação
-  const [descontos, setDescontos] = useState<Record<string, number>>({});
+  const [globalDiscount, setGlobalDiscount] = useState(0);
   const [frete, setFrete] = useState(0);
   const [montagem, setMontagem] = useState(0);
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   const reset = () => {
     setFile(null);
     setParsed(null);
     setError(null);
     setParsing(false);
-    setDescontos({});
+    setGlobalDiscount(0);
     setFrete(0);
     setMontagem(0);
-    setExpanded({});
   };
 
   const handleClose = (o: boolean) => {
@@ -69,11 +70,8 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
       const data = parsePromobXml(text);
       setParsed(data);
 
-      const initialDesc: Record<string, number> = {};
-      data.categorias.forEach((c) => {
-        initialDesc[c.id] = clampDesc(c.desconto_pct);
-      });
-      setDescontos(initialDesc);
+      const initialDesc = data.categorias.length > 0 ? clampDesc(data.categorias[0].desconto_pct) : 0;
+      setGlobalDiscount(initialDesc);
       setFrete(data.frete);
       setMontagem(data.montagem);
     } catch (e) {
@@ -88,7 +86,7 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
     if (!parsed) return null;
     const linhas = parsed.categorias.map((c) => {
       const tabela = c.tabela || c.itens.reduce((s, x) => s + x.price * x.quantity, 0) || c.total;
-      const desc = descontos[c.id] ?? 0;
+      const desc = globalDiscount;
       const valor = tabela * (1 - desc / 100);
       return { id: c.id, descricao: c.description, tabela, desc, valor };
     });
@@ -97,17 +95,15 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
     const custoProduto = parsed.total_tabela;
     const margem = valorVenda > 0 ? ((valorVenda - custoProduto) / valorVenda) * 100 : 0;
     return { linhas, subtotal, valorVenda, custoProduto, margem };
-  }, [parsed, descontos, frete, montagem]);
+  }, [parsed, globalDiscount, frete, montagem]);
 
-  const margemColor = (m: number) =>
-    m >= 30 ? "#12B76A" : m >= 15 ? "#F59E0B" : "#E53935";
-
-  const handleCriarContrato = async () => {
-    if (!parsed || !calc) return;
-    if (!perfil?.loja_id) {
-      toast.error("Loja do usuário não encontrada");
+  const handleProsseguirNegociacao = async () => {
+    const finalClienteId = id || clienteId;
+    if (!parsed || !calc || !perfil?.loja_id || !finalClienteId) {
+      toast.error("Faltam dados para prosseguir");
       return;
     }
+    
     setCreating(true);
     try {
       const categoriasJson = calc.linhas.map((l) => ({
@@ -118,59 +114,41 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
         valor: l.valor,
       }));
 
-      // 1) Contrato (trigger cria dre_contrato automaticamente)
-      const { data: contrato, error: contErr } = await supabase
-        .from("contratos")
+      // 1) Criar Orçamento (sem contrato ainda)
+      const { data: orcamento, error: orcErr } = await supabase
+        .from("orcamentos")
         .insert({
           loja_id: perfil.loja_id,
-          cliente_nome: parsed.cliente_nome || "Cliente Promob",
-          valor_venda: calc.valorVenda,
+          cliente_id: finalClienteId,
           vendedor_id: user?.id ?? null,
+          nome: parsed.ordem_compra || file?.name?.replace(".xml", "") || "Orçamento XML",
+          ordem_compra: parsed.ordem_compra || null,
+          arquivo_nome: file?.name || null,
+          total_tabela: parsed.total_tabela,
+          total_pedido: parsed.total_pedido,
+          valor_negociado: calc.valorVenda,
+          desconto_global: globalDiscount,
+          frete_loja: frete,
+          montagem_loja: montagem,
+          categorias: categoriasJson as unknown as never,
+          itens: parsed.itens as unknown as never,
+          acrescimos: [
+            ...parsed.acrescimos,
+            { id: "frete", description: "Frete", value: frete, percentual: 0 },
+            { id: "montagem", description: "Montagem", value: montagem, percentual: 0 },
+          ] as unknown as never,
+          status: "rascunho",
         })
         .select("id")
         .single();
-      if (contErr) throw contErr;
-
-      // 2) Orçamento vinculado ao contrato
-      const { error: orcErr } = await supabase.from("orcamentos_promob").insert({
-        loja_id: perfil.loja_id,
-        contrato_id: contrato.id,
-        cliente_nome: parsed.cliente_nome || null,
-        ordem_compra: parsed.ordem_compra || null,
-        arquivo_nome: file?.name || null,
-        total_tabela: parsed.total_tabela,
-        total_pedido: parsed.total_pedido,
-        total_orcamento: parsed.total_orcamento,
-        categorias: categoriasJson as unknown as never,
-        itens: parsed.itens as unknown as never,
-        acrescimos: [
-          ...parsed.acrescimos,
-          { id: "frete", description: "Frete", value: frete, percentual: 0 },
-          { id: "montagem", description: "Montagem", value: montagem, percentual: 0 },
-        ] as unknown as never,
-        valor_negociado: calc.valorVenda,
-        status: "convertido",
-        criado_por: user?.id ?? null,
-      });
+        
       if (orcErr) throw orcErr;
 
-      // 3) DRE com custos previstos do XML
-      const { error: dreErr } = await supabase
-        .from("dre_contrato")
-        .update({
-          valor_venda: calc.valorVenda,
-          custo_produto_previsto: parsed.total_tabela,
-          custo_frete_previsto: frete,
-          custo_montagem_previsto: montagem,
-        })
-        .eq("contrato_id", contrato.id);
-      if (dreErr) throw dreErr;
-
-      toast.success("Contrato criado com DRE preenchido ✓");
+      toast.success("Orçamento importado! Agora defina a condição de pagamento.");
       handleClose(false);
-      navigate(`/contratos/${contrato.id}`);
+      navigate(`/orcamentos/${orcamento.id}/negociacao`);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao criar contrato");
+      toast.error(e instanceof Error ? e.message : "Falha ao importar orçamento");
     } finally {
       setCreating(false);
     }
@@ -250,7 +228,7 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
               <div className="min-w-0">
                 <p className="text-xs" style={{ color: "#6B7A90" }}>Cliente</p>
                 <p className="text-sm font-semibold truncate" style={{ color: "#0D1117" }}>
-                  {parsed.cliente_nome || "—"}
+                  {clienteNome || parsed.cliente_nome || "—"}
                 </p>
                 <p className="mt-1 text-xs" style={{ color: "#6B7A90" }}>
                   Ordem: <span style={{ color: "#0D1117" }}>{parsed.ordem_compra || "—"}</span>
@@ -265,158 +243,69 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
               </div>
             </div>
 
-            {/* Seção 1 — Resumo do fabricante */}
-            <section className="rounded-md p-3" style={{ background: "#F5F7FA", border: "1px solid #E8ECF2" }}>
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#6B7A90" }}>
-                Resumo do fabricante
-              </p>
-              <div className="mt-2 grid grid-cols-3 gap-3">
-                <ResumoItem label="Preço de tabela" value={parsed.total_tabela} />
-                <ResumoItem label="Valor do pedido" value={parsed.total_pedido} />
-                <ResumoItem label="Valor orçamento" value={parsed.total_orcamento} />
-              </div>
-              <p className="mt-2 text-xs" style={{ color: "#B0BAC9" }}>
-                Valores conforme tabela do fabricante
-              </p>
-            </section>
+            {/* Seção Única — Ambiente e Negociação */}
+            <section className="space-y-4">
+              <div
+                className="rounded-md p-4"
+                style={{ background: "#FFFFFF", border: "1px solid #E8ECF2" }}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-wider" style={{ color: "#6B7A90" }}>Ambiente</p>
+                    <p className="text-lg font-semibold" style={{ color: "#0D1117" }}>
+                      {parsed.ordem_compra || file?.name?.replace(".xml", "") || "Novo Ambiente"}
+                    </p>
+                  </div>
+                </div>
 
-            {/* Seção 2 — Categorias */}
-            <section className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#6B7A90" }}>
-                Categorias — desconto do vendedor
-              </p>
-              {calc.linhas.map((l) => (
-                <div
-                  key={l.id}
-                  className="rounded-md p-3"
-                  style={{ background: "#FFFFFF", border: "1px solid #E8ECF2" }}
-                >
-                  <p className="text-sm font-medium truncate" style={{ color: "#0D1117" }}>
-                    {l.descricao || "Categoria"}
-                  </p>
-                  <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-                    <div>
-                      <p className="text-xs" style={{ color: "#6B7A90" }}>Tabela</p>
-                      <p className="text-sm font-medium" style={{ color: "#0D1117" }}>
-                        {formatBRL(l.tabela)}
-                      </p>
-                    </div>
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-medium" style={{ color: "#6B7A90" }}>Desconto global %</p>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs" style={{ color: "#6B7A90" }}>Desc.</span>
                       <Input
                         type="number"
                         step={0.5}
                         min={0}
                         max={60}
-                        value={l.desc}
+                        value={globalDiscount}
                         onChange={(e) => {
                           const v = Math.max(0, Math.min(60, parseFloat(e.target.value) || 0));
-                          setDescontos((prev) => ({ ...prev, [l.id]: v }));
+                          setGlobalDiscount(v);
                         }}
-                        className="h-8 w-20 text-right"
+                        className="h-10 text-right font-medium"
                       />
-                      <span className="text-xs" style={{ color: "#6B7A90" }}>%</span>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs" style={{ color: "#6B7A90" }}>Valor</p>
-                      <p className="text-sm font-semibold" style={{ color: "#1E6FBF" }}>
-                        {formatBRL(l.valor)}
-                      </p>
+                      <span className="text-sm font-medium" style={{ color: "#6B7A90" }}>%</span>
                     </div>
                   </div>
-                  {(() => {
-                    const cat = parsed.categorias.find((c) => c.id === l.id);
-                    if (!cat || cat.itens.length === 0) return null;
-                    const isOpen = !!expanded[l.id];
-                    return (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => setExpanded((p) => ({ ...p, [l.id]: !isOpen }))}
-                          className="mt-2 flex items-center gap-1 text-xs font-medium hover:underline"
-                          style={{ color: "#1E6FBF" }}
-                        >
-                          {isOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                          {isOpen ? "Ocultar itens" : `Ver itens (${cat.itens.length})`}
-                        </button>
-                        {isOpen && (
-                          <div className="mt-2 overflow-x-auto rounded-md" style={{ border: "1px solid #E8ECF2" }}>
-                            <table className="w-full text-xs">
-                              <thead style={{ background: "#F5F7FA", color: "#6B7A90" }}>
-                                <tr>
-                                  <th className="px-2 py-1.5 text-left font-medium">Ref</th>
-                                  <th className="px-2 py-1.5 text-left font-medium">Descrição</th>
-                                  <th className="px-2 py-1.5 text-right font-medium">Qtd</th>
-                                  <th className="px-2 py-1.5 text-right font-medium">Tabela unit.</th>
-                                  <th className="px-2 py-1.5 text-right font-medium">Total tabela</th>
-                                  <th className="px-2 py-1.5 text-right font-medium">Total negociado</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {cat.itens.map((it) => {
-                                  const totalTabela = it.total || it.price * it.quantity;
-                                  const totalNeg = totalTabela * (1 - l.desc / 100);
-                                  return (
-                                    <tr key={it.id} style={{ borderTop: "1px solid #E8ECF2" }}>
-                                      <td className="px-2 py-1.5" style={{ color: "#6B7A90" }}>{it.reference || "—"}</td>
-                                      <td className="px-2 py-1.5" style={{ color: "#0D1117" }}>{it.description || "—"}</td>
-                                      <td className="px-2 py-1.5 text-right" style={{ color: "#0D1117" }}>{it.quantity}</td>
-                                      <td className="px-2 py-1.5 text-right" style={{ color: "#0D1117" }}>{formatBRL(it.price)}</td>
-                                      <td className="px-2 py-1.5 text-right" style={{ color: "#0D1117" }}>{formatBRL(totalTabela)}</td>
-                                      <td className="px-2 py-1.5 text-right font-medium" style={{ color: "#1E6FBF" }}>{formatBRL(totalNeg)}</td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </>
-                    );
-                  })()}
-                </div>
-              ))}
 
-              <div className="grid grid-cols-2 gap-3 pt-1">
-                <AcrescimoInput label="Frete" value={frete} onChange={setFrete} />
-                <AcrescimoInput label="Montagem" value={montagem} onChange={setMontagem} />
+                  <div className="grid grid-cols-2 gap-2">
+                    <AcrescimoInput label="Frete" value={frete} onChange={setFrete} />
+                    <AcrescimoInput label="Montagem" value={montagem} onChange={setMontagem} />
+                  </div>
+                </div>
               </div>
             </section>
 
-            {/* Seção 3 — Valor de venda calculado */}
-            <section className="rounded-lg p-4" style={{ background: "#0D1117" }}>
+            {/* Seção 2 — Valor de venda destacado */}
+            <section className="rounded-lg p-5" style={{ background: "#0D1117" }}>
               <div className="space-y-1.5 text-sm" style={{ color: "#B0BAC9" }}>
-                <Row label="Subtotal categorias" value={formatBRL(calc.subtotal)} />
-                <Row label="+ Frete" value={formatBRL(frete)} />
-                <Row label="+ Montagem" value={formatBRL(montagem)} />
+                <Row label="Total dos produtos" value={formatBRL(calc.subtotal)} />
+                <Row label="Investimento Frete" value={formatBRL(frete)} />
+                <Row label="Investimento Montagem" value={formatBRL(montagem)} />
               </div>
-              <div className="my-3 h-px" style={{ background: "#1F2A3A" }} />
-              <div className="flex items-baseline justify-between">
-                <span className="text-xs uppercase tracking-wide" style={{ color: "#6B7A90" }}>
-                  Valor de venda
+              <div className="my-4 h-px" style={{ background: "#1F2A3A" }} />
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "#6B7A90" }}>
+                  Valor total de venda
                 </span>
-                <span style={{ color: "#FFFFFF", fontSize: 32, fontWeight: 500, lineHeight: 1 }}>
+                <span style={{ color: "#FFFFFF", fontSize: 40, fontWeight: 600, lineHeight: 1 }}>
                   {formatBRL(calc.valorVenda)}
                 </span>
-              </div>
-              <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
-                <div>
-                  <p style={{ color: "#6B7A90" }}>Custo do produto (tabela)</p>
-                  <p className="mt-0.5 text-sm font-medium" style={{ color: "#FFFFFF" }}>
-                    {formatBRL(calc.custoProduto)}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p style={{ color: "#6B7A90" }}>Margem prevista</p>
-                  <p className="mt-0.5 text-sm font-semibold" style={{ color: margemColor(calc.margem) }}>
-                    {calc.margem.toFixed(1)}%
-                  </p>
-                </div>
               </div>
             </section>
 
             <Button
-              onClick={handleCriarContrato}
+              onClick={handleProsseguirNegociacao}
               disabled={creating || calc.valorVenda <= 0}
               className="w-full text-white hover:opacity-90"
               style={{ background: "#12B76A" }}
@@ -424,27 +313,16 @@ export function ImportXmlPromobDialog({ open, onOpenChange }: Props) {
               {creating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Criando contrato...
+                  Importando...
                 </>
               ) : (
-                "Criar contrato com este orçamento →"
+                "Próximo: Condição de Pagamento →"
               )}
             </Button>
           </div>
         )}
       </DialogContent>
     </Dialog>
-  );
-}
-
-function ResumoItem({ label, value }: { label: string; value: number }) {
-  return (
-    <div>
-      <p className="text-xs" style={{ color: "#6B7A90" }}>{label}</p>
-      <p className="mt-0.5 text-sm font-semibold" style={{ color: "#0D1117" }}>
-        {formatBRL(value)}
-      </p>
-    </div>
   );
 }
 

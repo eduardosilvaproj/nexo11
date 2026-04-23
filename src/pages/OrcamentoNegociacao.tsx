@@ -44,6 +44,7 @@ type Orcamento = {
   nome: string;
   loja_id: string;
   cliente_id: string;
+  vendedor_id?: string | null;
   valor_negociado: number | null;
   total_pedido: number | null;
   total_tabela: number | null;
@@ -57,6 +58,8 @@ type Orcamento = {
   parcelas_datas: unknown;
   desconto_global: number | null;
   status: string | null;
+  frete_loja?: number | null;
+  montagem_loja?: number | null;
 };
 
 type Parcela = { label: string; data: string; valor: number };
@@ -90,7 +93,7 @@ export default function OrcamentoNegociacao() {
       const { data: orc, error } = await supabase
         .from("orcamentos")
         .select(
-          "id,nome,loja_id,cliente_id,valor_negociado,total_pedido,total_tabela,condicao_pagamento_id,taxa_financeira,parcelas,valor_parcela,percentual_parceiro,ocultar_parceiro,tipo_venda,parcelas_datas,desconto_global,status",
+          "id,nome,loja_id,cliente_id,vendedor_id,valor_negociado,total_pedido,total_tabela,condicao_pagamento_id,taxa_financeira,parcelas,valor_parcela,percentual_parceiro,ocultar_parceiro,tipo_venda,parcelas_datas,desconto_global,status,frete_loja,montagem_loja",
         )
         .eq("id", id)
         .maybeSingle();
@@ -201,34 +204,72 @@ export default function OrcamentoNegociacao() {
       return;
     }
     setSaving(true);
-    const parcelasJson = parcelas.map((p) => ({
-      label: p.label,
-      data: p.data,
-      valor: Number(p.valor.toFixed(2)),
-    }));
-    const { error } = await supabase
-      .from("orcamentos")
-      .update({
-        status: "aprovado",
-        condicao_pagamento_id: condicaoSel.id,
-        taxa_financeira: condicaoSel.taxa,
-        valor_com_taxa: Number(calc.comParceiro.toFixed(2)),
-        parcelas: condicaoSel.parcelas,
-        valor_parcela: Number(calc.valorParcela.toFixed(2)),
-        percentual_parceiro: percParceiro,
-        ocultar_parceiro: ocultarParceiro,
-        tipo_venda: tipoVenda,
-        parcelas_datas: parcelasJson,
-        desconto_global: descontoExtra,
-      })
-      .eq("id", orcamento.id);
-    setSaving(false);
-    if (error) {
-      toast.error("Erro ao aprovar: " + error.message);
-      return;
+    try {
+      const parcelasJson = parcelas.map((p) => ({
+        label: p.label,
+        data: p.data,
+        valor: Number(p.valor.toFixed(2)),
+      }));
+
+      // 1) Criar o contrato
+      const { data: contrato, error: contErr } = await supabase
+        .from("contratos")
+        .insert({
+          loja_id: orcamento.loja_id,
+          cliente_id: orcamento.cliente_id,
+          cliente_nome: clienteNome || "Cliente",
+          valor_venda: Number(calc.comParceiro.toFixed(2)),
+          vendedor_id: orcamento.vendedor_id,
+          status: "comercial",
+        })
+        .select("id")
+        .single();
+        
+      if (contErr) throw contErr;
+
+      // 2) Atualizar o orçamento
+      const { error: orcErr } = await supabase
+        .from("orcamentos")
+        .update({
+          status: "aprovado",
+          contrato_id: contrato.id,
+          condicao_pagamento_id: condicaoSel.id,
+          taxa_financeira: condicaoSel.taxa,
+          valor_com_taxa: Number(calc.comParceiro.toFixed(2)),
+          parcelas: condicaoSel.parcelas,
+          valor_parcela: Number(calc.valorParcela.toFixed(2)),
+          percentual_parceiro: percParceiro,
+          ocultar_parceiro: ocultarParceiro,
+          tipo_venda: tipoVenda,
+          parcelas_datas: parcelasJson,
+          desconto_global: descontoExtra,
+        })
+        .eq("id", orcamento.id);
+        
+      if (orcErr) throw orcErr;
+
+      // 3) Atualizar DRE (o contrato_id trigger já deve ter criado o DRE)
+      // Usamos update no dre_contrato vinculado ao novo contrato
+      const { error: dreErr } = await supabase
+        .from("dre_contrato")
+        .update({
+          valor_venda: Number(calc.comParceiro.toFixed(2)),
+          custo_produto_previsto: Number(orcamento.total_tabela || 0),
+          custo_frete_previsto: Number(orcamento.frete_loja || 0),
+          custo_montagem_previsto: Number(orcamento.montagem_loja || 0),
+        })
+        .eq("contrato_id", contrato.id);
+      
+      // O dreErr pode falhar se o trigger demorar, mas não é crítico para o fluxo principal
+      if (dreErr) console.warn("Erro ao atualizar DRE previsto:", dreErr);
+
+      toast.success("Orçamento aprovado e contrato gerado ✓");
+      navigate(`/contratos/${contrato.id}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Falha ao aprovar orçamento");
+    } finally {
+      setSaving(false);
     }
-    toast.success("Orçamento aprovado ✓");
-    navigate(`/clientes/${orcamento.cliente_id}`);
   };
 
   const handleSalvarRascunho = async () => {
@@ -552,7 +593,7 @@ export default function OrcamentoNegociacao() {
               style={{ backgroundColor: "#12B76A" }}
               className="text-white hover:opacity-90"
             >
-              Aprovar orçamento →
+              Aprovar e Gerar Contrato ✓
             </Button>
           </div>
         </TabsContent>

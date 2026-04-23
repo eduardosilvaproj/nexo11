@@ -294,22 +294,7 @@ export default function Comercial() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {tab === "contratos" && (
-            <button
-              onClick={() => setImportXmlOpen(true)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 transition-colors hover:bg-[#E6F3FF]"
-              style={{
-                background: "#FFFFFF",
-                border: "1px solid #1E6FBF",
-                color: "#1E6FBF",
-                borderRadius: 8,
-                fontSize: 13,
-                fontWeight: 500,
-              }}
-            >
-              <FileCode2 className="h-4 w-4" /> Importar XML Promob
-            </button>
-          )}
+          {/* Botão Importar XML Promob removido daqui por solicitação do usuário. Agora está no Perfil do Cliente -> Orçamentos */}
           <button
             onClick={() => (tab === "contratos" ? setContratoFormOpen(true) : setFormOpen(true))}
             className="inline-flex items-center gap-1.5 px-4 py-2 text-white transition-colors hover:bg-[#1759A0]"
