@@ -248,7 +248,7 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <p className="text-xs text-slate-500 uppercase font-medium">Valor de venda</p>
+                    <p className="text-xs text-slate-500 uppercase font-medium">Valor de Venda (Base)</p>
                     <p className="text-lg font-semibold text-slate-900">{formatBRL(amb.valorBase)}</p>
                   </div>
                   <div className="space-y-1">
