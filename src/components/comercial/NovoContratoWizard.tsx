@@ -369,6 +369,9 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
       }
     }
 
+    const finalVendedorId = clientData.vendedor_id || user?.id;
+    const finalProjetistaId = clientData.mesmo_vendedor ? finalVendedorId : (clientData.projetista_id || user?.id);
+
     setIsSubmitting(true);
     try {
       let finalClienteId = clientData.id;
