@@ -127,7 +127,7 @@ function LeadCard({ lead, onConvert }: { lead: Lead; onConvert: (l: Lead) => voi
           className="mt-2 inline-flex w-full items-center justify-center gap-1 rounded-md py-1 transition-colors hover:bg-[#E6F3FF]"
           style={{ fontSize: 11, color: "#1E6FBF", fontWeight: 500 }}
         >
-          <ArrowRightLeft className="h-3 w-3" /> Converter em contrato
+          <ArrowRightLeft className="h-3 w-3" /> Gerar contrato
         </button>
       )}
     </div>
