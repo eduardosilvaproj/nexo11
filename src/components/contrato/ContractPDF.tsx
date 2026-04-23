@@ -274,19 +274,29 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
       {contrato.assinado && (
         <View style={styles.signatureStamp}>
           <Text style={styles.signatureStampText}>
-            DOCUMENTO ASSINADO ELETRONICAMENTE
+            Documento Assinado Eletronicamente
           </Text>
-          <Text style={styles.signatureStampDetail}>
-            Signatário: {contrato.assinatura_nome}
-          </Text>
-          <Text style={styles.signatureStampDetail}>
-            Data/Hora: {new Date(contrato.data_assinatura).toLocaleString('pt-BR')}
-          </Text>
-          <Text style={styles.signatureStampDetail}>
-            IP: {contrato.assinatura_ip} | Hash: {contrato.assinatura_hash}
-          </Text>
-          <Text style={[styles.signatureStampDetail, { marginTop: 4, fontStyle: 'italic' }]}>
-            Este documento possui validade jurídica conforme MP nº 2.200-2/2001.
+          <View style={styles.signatureStampGrid}>
+            <View style={styles.signatureStampItem}>
+              <Text style={styles.signatureStampLabel}>Signatário</Text>
+              <Text style={styles.signatureStampValue}>{contrato.assinatura_nome}</Text>
+            </View>
+            <View style={styles.signatureStampItem}>
+              <Text style={styles.signatureStampLabel}>Data e Hora</Text>
+              <Text style={styles.signatureStampValue}>{formatDateTime(contrato.data_assinatura)}</Text>
+            </View>
+            <View style={styles.signatureStampItem}>
+              <Text style={styles.signatureStampLabel}>IP de Origem</Text>
+              <Text style={styles.signatureStampValue}>{contrato.assinatura_ip}</Text>
+            </View>
+            <View style={styles.signatureStampItem}>
+              <Text style={styles.signatureStampLabel}>Hash de Verificação</Text>
+              <Text style={styles.signatureStampValue}>{contrato.assinatura_hash}</Text>
+            </View>
+          </View>
+          <Text style={styles.signatureStampFooter}>
+            A autenticidade deste documento pode ser validada através do hash de verificação.
+            Validade jurídica conforme Medida Provisória nº 2.200-2/2001.
           </Text>
         </View>
       )}
