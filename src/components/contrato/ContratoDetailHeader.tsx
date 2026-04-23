@@ -50,7 +50,9 @@ interface ContratoDetailHeaderProps {
   };
   loja?: any;
   ambientes?: any[];
+  orcamentos?: any[];
   descricao?: string;
+
   dataPrevista?: string | null;
   travaMensagem?: string | null;
   onAvancar?: () => void;
