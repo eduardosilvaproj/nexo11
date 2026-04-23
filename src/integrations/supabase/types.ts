@@ -765,6 +765,9 @@ export type Database = {
       contratos: {
         Row: {
           assinado: boolean
+          assinatura_hash: string | null
+          assinatura_ip: string | null
+          assinatura_nome: string | null
           cliente_contato: string | null
           cliente_id: string | null
           cliente_nome: string
@@ -789,6 +792,9 @@ export type Database = {
         }
         Insert: {
           assinado?: boolean
+          assinatura_hash?: string | null
+          assinatura_ip?: string | null
+          assinatura_nome?: string | null
           cliente_contato?: string | null
           cliente_id?: string | null
           cliente_nome: string
@@ -813,6 +819,9 @@ export type Database = {
         }
         Update: {
           assinado?: boolean
+          assinatura_hash?: string | null
+          assinatura_ip?: string | null
+          assinatura_nome?: string | null
           cliente_contato?: string | null
           cliente_id?: string | null
           cliente_nome?: string
@@ -2581,7 +2590,12 @@ export type Database = {
         Args: { _contrato_id: string }
         Returns: undefined
       }
-      portal_assinar_contrato: { Args: { _token: string }; Returns: Json }
+      portal_assinar_contrato:
+        | { Args: { _token: string }; Returns: Json }
+        | {
+            Args: { _hash: string; _ip: string; _nome: string; _token: string }
+            Returns: Json
+          }
       portal_registrar_nps: {
         Args: { _comentario?: string; _nota: number; _token: string }
         Returns: Json
