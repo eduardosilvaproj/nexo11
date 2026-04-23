@@ -170,6 +170,17 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
   const clienteContato = cliente?.telefone || cliente?.celular || contrato.cliente_contato || '—';
   const clienteEmail = cliente?.email || orcamentos?.[0]?.cliente_email || '—';
 
+  const getDynamicStyles = (text: string) => {
+    const len = text?.length || 0;
+    if (len > 250) return { fontSize: 6, paddingVertical: 1.5, minHeight: 12 };
+    if (len > 180) return { fontSize: 6.5, paddingVertical: 2, minHeight: 14 };
+    if (len > 120) return { fontSize: 7, paddingVertical: 3, minHeight: 16 };
+    return { fontSize: 8, paddingVertical: 4, minHeight: 18 };
+  };
+
+  const ambientesStyles = getDynamicStyles(ambientesNomes);
+  const parcelasStyles = getDynamicStyles(getParcelasDesc());
+
 
   return (
     <Document>
