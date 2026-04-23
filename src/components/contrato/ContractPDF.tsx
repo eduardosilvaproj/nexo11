@@ -94,10 +94,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 0.5,
     borderBottomColor: '#EEE',
-    padding: 5,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    minHeight: 18,
+    alignItems: 'flex-start',
   },
-  colLabel: { width: '40%', fontSize: 9 },
-  colValue: { width: '60%', fontSize: 9, fontWeight: 'medium' },
+  colLabel: { 
+    width: '30%', 
+    fontSize: 9, 
+    fontWeight: 'bold',
+    paddingRight: 10 
+  },
+  colValue: { 
+    width: '70%', 
+    fontSize: 8, 
+    fontWeight: 'medium',
+  },
   signatureSection: {
     marginTop: 40,
     flexDirection: 'row',
@@ -330,23 +342,27 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
 
           <View style={styles.summaryRow}>
             <Text style={styles.colLabel}>Ambientes:</Text>
-            <Text style={styles.colValue}>{ambientesNomes}</Text>
+            <Text style={[styles.colValue, { fontSize: (ambientesNomes?.length || 0) > 100 ? 7 : 8 }]}>
+              {ambientesNomes}
+            </Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.colLabel}>Valor Total:</Text>
             <Text style={styles.colValue}>{formatCurrency(contrato.valor_venda)}</Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.colLabel}>Forma de Pagamento:</Text>
-            <Text style={styles.colValue}>{getParcelasDesc()}</Text>
+            <Text style={styles.colLabel}>Pagamento:</Text>
+            <Text style={[styles.colValue, { fontSize: (getParcelasDesc()?.length || 0) > 100 ? 7 : 8 }]}>
+              {getParcelasDesc()}
+            </Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.colLabel}>Prazo de Entrega:</Text>
-            <Text style={styles.colValue}>45 dias corridos após aprovação técnica</Text>
+            <Text style={styles.colLabel}>Prazo:</Text>
+            <Text style={styles.colValue}>45 dias corridos após aprovação técnica e liberação financeira</Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.colLabel}>Garantia:</Text>
-            <Text style={styles.colValue}>90 dias legal + 3 anos contratual</Text>
+            <Text style={[styles.colLabel, { borderBottomWidth: 0 }]}>Garantia:</Text>
+            <Text style={[styles.colValue, { borderBottomWidth: 0 }]}>90 dias legal + 3 anos contratual contra defeitos de fabricação</Text>
           </View>
         </View>
 
