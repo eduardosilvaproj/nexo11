@@ -94,7 +94,7 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
 
   const totals = useMemo(() => {
     const list = ambientes.map((a) => {
-      const valorBase = a.parsed.total_pedido || a.parsed.total_orcamento || 0;
+      const valorBase = a.parsed.total_orcamento || a.parsed.total_pedido || 0;
       const valorFinal = valorBase * (1 - a.desconto / 100);
       return { ...a, valorBase, valorFinal };
     });
