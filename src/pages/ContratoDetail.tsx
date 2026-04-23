@@ -378,7 +378,12 @@ export default function ContratoDetail() {
             aria-disabled={isFinalizado || undefined}
           >
             {active === "comercial" ? (
-              <ContratoComercialTab contrato={contrato} />
+              <ContratoComercialTab
+                contrato={contrato}
+                loja={loja}
+                ambientes={ambientes}
+                orcamentos={orcamentos}
+              />
             ) : active === "tecnico" ? (
               <ContratoTecnicoTab contratoId={contrato.id} />
             ) : active === "producao" ? (
