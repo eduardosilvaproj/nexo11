@@ -1,7 +1,9 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, FileDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { ContractPDF } from "./ContractPDF";
 import type { Database } from "@/integrations/supabase/types";
 
 type ContratoStatus = Database["public"]["Enums"]["contrato_status"];
@@ -41,9 +43,13 @@ interface ContratoDetailHeaderProps {
     cliente_nome: string;
     status: ContratoStatus;
     valor_venda: number;
+    created_at?: string;
     data_finalizacao?: string | null;
     descricao_ambiente?: string | null;
+    loja_id: string;
   };
+  loja?: any;
+  ambientes?: any[];
   descricao?: string;
   dataPrevista?: string | null;
   travaMensagem?: string | null;
@@ -52,6 +58,8 @@ interface ContratoDetailHeaderProps {
 
 export function ContratoDetailHeader({
   contrato,
+  loja,
+  ambientes = [],
   descricao,
   dataPrevista,
   travaMensagem,
@@ -110,7 +118,28 @@ export function ContratoDetailHeader({
       </div>
 
       {/* LADO DIREITO */}
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-4">
+        <div className="mr-2">
+          <PDFDownloadLink
+            document={<ContractPDF contrato={contrato} loja={loja} ambientes={ambientes} />}
+            fileName={`contrato_${contrato.id?.slice(0, 8)}.pdf`}
+          >
+            {({ loading }) => (
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 rounded-lg border-[#1E6FBF] text-[#1E6FBF] hover:bg-[#F5F9FF]"
+                disabled={loading}
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <FileDown className="h-4 w-4" />
+                )}
+                Gerar Contrato
+              </Button>
+            )}
+          </PDFDownloadLink>
+        </div>
         <div className="flex flex-col items-end gap-1">
           <span
             className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
