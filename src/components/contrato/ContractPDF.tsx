@@ -279,7 +279,7 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
           <View style={styles.signatureStampGrid}>
             <View style={styles.signatureStampItem}>
               <Text style={styles.signatureStampLabel}>Signatário</Text>
-              <Text style={styles.signatureStampValue}>{contrato.assinatura_nome}</Text>
+              <Text style={styles.signatureStampValue}>{contrato.assinatura_nome || "—"}</Text>
             </View>
             <View style={styles.signatureStampItem}>
               <Text style={styles.signatureStampLabel}>Data e Hora</Text>
@@ -287,11 +287,11 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
             </View>
             <View style={styles.signatureStampItem}>
               <Text style={styles.signatureStampLabel}>IP de Origem</Text>
-              <Text style={styles.signatureStampValue}>{contrato.assinatura_ip}</Text>
+              <Text style={styles.signatureStampValue}>{contrato.assinatura_ip || "—"}</Text>
             </View>
             <View style={styles.signatureStampItem}>
               <Text style={styles.signatureStampLabel}>Hash de Verificação</Text>
-              <Text style={styles.signatureStampValue}>{contrato.assinatura_hash}</Text>
+              <Text style={styles.signatureStampValue}>{contrato.assinatura_hash || "—"}</Text>
             </View>
           </View>
           <Text style={styles.signatureStampFooter}>
