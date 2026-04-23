@@ -31,6 +31,7 @@ export function ContractPreviewModal({
 }: ContractPreviewModalProps) {
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [iframeLoaded, setIframeLoaded] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export function ContractPreviewModal({
       if (url) {
         URL.revokeObjectURL(url);
         setUrl(null);
+        setIframeLoaded(false);
       }
     }
   }, [open]);
@@ -92,8 +94,14 @@ export function ContractPreviewModal({
 
 
   const handlePrint = () => {
-    if (iframeRef.current) {
-      iframeRef.current.contentWindow?.print();
+    if (iframeRef.current && iframeLoaded) {
+      const contentWindow = iframeRef.current.contentWindow;
+      if (contentWindow) {
+        contentWindow.focus();
+        contentWindow.print();
+      }
+    } else {
+      toast.info("Aguarde o carregamento do documento para imprimir.");
     }
   };
 
@@ -159,6 +167,7 @@ export function ContractPreviewModal({
               src={url}
               className="w-full h-full border-none"
               title="Preview do Contrato"
+              onLoad={() => setIframeLoaded(true)}
             />
           ) : (
             <div className="text-slate-400">Falha ao carregar prévia</div>
