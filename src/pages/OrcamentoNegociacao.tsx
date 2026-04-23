@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { format, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowLeft, CalendarIcon, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, CalendarIcon, Eye, EyeOff, Lock, Unlock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -325,56 +325,46 @@ export default function OrcamentoNegociacao() {
         </p>
       </div>
 
-      <Tabs defaultValue="negociacao" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="dados">Dados</TabsTrigger>
-          <TabsTrigger value="negociacao">Negociação</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="dados">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Coluna Esquerda — Resumo do orçamento */}
+        <div className="space-y-4">
           <Card>
-            <CardContent className="py-6 space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Nome do orçamento</span>
-                <span>{orcamento.nome}</span>
+            <CardContent className="p-6 space-y-6">
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground uppercase font-semibold">Resumo do Orçamento</p>
+                <h2 className="text-xl font-medium">{orcamento.nome}</h2>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Tabela fábrica</span>
-                <span>{formatBRL(Number(orcamento.total_tabela || 0))}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Custo (pedido)</span>
-                <span>{formatBRL(Number(orcamento.total_pedido || 0))}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Valor de venda</span>
-                <span className="font-medium">{formatBRL(valorBase)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Status</span>
-                <span className="capitalize">{orcamento.status || "rascunho"}</span>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
-        <TabsContent value="negociacao" className="space-y-4">
-          {/* LINHA 1 — Controles principais */}
-          <Card>
-            <CardContent className="py-5">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-                <div>
-                  <Label className="text-xs">Condição de Pagamento *</Label>
+              <div className="space-y-1 border-t pt-4">
+                <p className="text-sm text-muted-foreground">Valor de venda base</p>
+                <p className="text-3xl font-bold text-slate-900">{formatBRL(valorBase)}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 border-t pt-4">
+                <div className="space-y-1">
+                  <Label className="text-xs">Desconto (%)</Label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={descontoExtra}
+                    onChange={(e) => setDescontoExtra(Number(e.target.value || 0))}
+                    className="h-10"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Valor após desconto</p>
+                  <p className="text-lg font-medium py-2">{formatBRL(valorBase * (1 - descontoExtra / 100))}</p>
+                </div>
+              </div>
+
+              <div className="space-y-4 border-t pt-4">
+                <div className="space-y-1">
+                  <Label className="text-xs">Condição de Pagamento</Label>
                   <Select value={condicaoId} onValueChange={setCondicaoId}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-10">
                       <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {condicoes.length === 0 && (
-                        <SelectItem value="__none" disabled>
-                          Nenhuma condição cadastrada
-                        </SelectItem>
-                      )}
                       {condicoes.map((c) => (
                         <SelectItem key={c.id} value={c.id}>
                           {c.nome}
@@ -383,32 +373,27 @@ export default function OrcamentoNegociacao() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label className="text-xs">Parcelamento</Label>
-                  <Input
-                    readOnly
-                    value={condicaoSel ? `${condicaoSel.parcelas}x` : "—"}
-                    className="bg-muted"
-                  />
+
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Taxa financeira embutida</p>
+                  <p className="text-sm font-medium">
+                    {formatBRL(calc.comTaxa - valorBase)}
+                  </p>
                 </div>
-                <div>
-                  <Label className="text-xs">Taxa Financeira</Label>
-                  <Input
-                    readOnly
-                    value={
-                      condicaoSel
-                        ? condicaoSel.taxa > 0
-                          ? `(${condicaoSel.taxa}%)`
-                          : "(nenhuma)"
-                        : "—"
-                    }
-                    className="bg-muted"
-                  />
+
+                <div className="bg-slate-50 p-4 rounded-lg space-y-1 border border-slate-100">
+                  <p className="text-xs text-muted-foreground font-semibold uppercase">Valor Total Final</p>
+                  <p className="text-4xl font-bold text-emerald-600 tabular-nums">
+                    {formatBRL(calc.comParceiro)}
+                  </p>
                 </div>
-                <div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 border-t pt-4">
+                <div className="space-y-1">
                   <Label className="text-xs">Tipo de Venda</Label>
                   <Select value={tipoVenda} onValueChange={setTipoVenda}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-10">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -418,186 +403,142 @@ export default function OrcamentoNegociacao() {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* LINHA 2 — Tabela de produtos */}
-          <Card>
-            <CardContent className="py-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-10"></TableHead>
-                    <TableHead>Produto/Ambiente</TableHead>
-                    <TableHead className="text-center">Qtd</TableHead>
-                    <TableHead className="text-center">Pont.</TableHead>
-                    <TableHead className="text-right">Valor Líquido</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell>
-                      <Checkbox checked disabled />
-                    </TableCell>
-                    <TableCell>{orcamento.nome}</TableCell>
-                    <TableCell className="text-center">1</TableCell>
-                    <TableCell className="text-center text-muted-foreground">—</TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatBRL(valorBase)}
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-
-              {/* Rodapé totais */}
-              <div className="mt-4 flex flex-col gap-4 border-t pt-4 md:flex-row md:items-end md:justify-between">
-                <div className="flex flex-wrap items-end gap-3">
-                  <div className="w-32">
-                    <Label className="text-xs flex items-center gap-1">
-                      Per. %
-                      <button
-                        type="button"
-                        onClick={() => setOcultarParceiro((v) => !v)}
-                        title={
-                          ocultarParceiro
-                            ? "Per. oculto do cliente"
-                            : "Per. visível no contrato"
-                        }
-                      >
-                        {ocultarParceiro ? (
-                          <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
-                        ) : (
-                          <Eye className="h-3.5 w-3.5 text-primary" />
-                        )}
-                      </button>
-                    </Label>
+                <div className="space-y-1">
+                  <Label className="text-xs flex items-center gap-1.5 print:hidden">
+                    Per. % Parceiro
+                    <button
+                      type="button"
+                      onClick={() => setOcultarParceiro((v) => !v)}
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      {ocultarParceiro ? (
+                        <Lock className="h-3.5 w-3.5" />
+                      ) : (
+                        <Unlock className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+                  </Label>
+                  <div className={cn("relative", ocultarParceiro && "print:hidden")}>
                     <Input
                       type="number"
                       step="0.1"
                       value={percParceiro}
                       onChange={(e) => setPercParceiro(Number(e.target.value || 0))}
+                      className="h-10 pr-8"
                     />
-                  </div>
-                  <div className="text-sm">
-                    <p className="text-xs text-muted-foreground">Pontuação</p>
-                    <p className="tabular-nums">{formatBRL(calc.pontuacao)}</p>
-                  </div>
-                  <div className="text-sm">
-                    <p className="text-xs text-muted-foreground">Valor Líquido</p>
-                    <p className="tabular-nums">{formatBRL(valorBase)}</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-end gap-3">
-                  <div className="w-32">
-                    <Label className="text-xs">Desconto (%)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={descontoExtra}
-                      onChange={(e) => setDescontoExtra(Number(e.target.value || 0))}
-                    />
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-muted-foreground">Valor Total</p>
-                    <p
-                      className="text-[20px] font-medium tabular-nums"
-                      style={{ color: "#0D1117" }}
-                    >
-                      {formatBRL(calc.comParceiro)}
-                    </p>
+                    <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">%</span>
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
+        </div>
 
-          {/* TABELA DE PARCELAS */}
-          {parcelas.length > 0 && (
-            <Card>
-              <CardContent className="py-4">
-                <p className="mb-3 text-sm font-medium">Parcelas</p>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Parcela</TableHead>
-                      <TableHead>Vencimento</TableHead>
-                      <TableHead className="text-right">Valor (R$)</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {parcelas.map((p, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell>{p.label}</TableCell>
-                        <TableCell>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className={cn(
-                                  "h-8 w-[160px] justify-start font-normal",
-                                  !p.data && "text-muted-foreground",
-                                )}
-                              >
-                                <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                                {p.data
-                                  ? format(new Date(p.data + "T00:00:00"), "dd/MM/yyyy", {
-                                      locale: ptBR,
-                                    })
-                                  : "—"}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={p.data ? new Date(p.data + "T00:00:00") : undefined}
-                                onSelect={(d) => handleDataChange(idx, d)}
-                                initialFocus
-                                className={cn("p-3 pointer-events-auto")}
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {formatBRL(p.valor)}
-                        </TableCell>
+        {/* Coluna Direita — Parcelas */}
+        <div className="space-y-4">
+          <Card className="h-full">
+            <CardContent className="p-6">
+              <div className="mb-6">
+                <p className="text-xs text-muted-foreground uppercase font-semibold">Plano de Pagamento</p>
+                <h3 className="text-lg font-medium">Parcelas e Vencimentos</h3>
+              </div>
+              
+              {parcelas.length > 0 ? (
+                <div className="rounded-md border overflow-hidden">
+                  <Table>
+                    <TableHeader className="bg-slate-50">
+                      <TableRow>
+                        <TableHead className="font-semibold text-slate-700">Parcela</TableHead>
+                        <TableHead className="font-semibold text-slate-700">Vencimento</TableHead>
+                        <TableHead className="text-right font-semibold text-slate-700">Valor</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          )}
+                    </TableHeader>
+                    <TableBody>
+                      {parcelas.map((p, idx) => (
+                        <TableRow key={idx} className="hover:bg-slate-50/50">
+                          <TableCell className="font-medium">{p.label}</TableCell>
+                          <TableCell>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className={cn(
+                                    "h-8 w-full justify-start font-normal hover:bg-slate-100",
+                                    !p.data && "text-muted-foreground",
+                                  )}
+                                >
+                                  <CalendarIcon className="mr-2 h-3.5 w-3.5 text-slate-400" />
+                                  {p.data
+                                    ? format(new Date(p.data + "T00:00:00"), "dd/MM/yyyy", {
+                                        locale: ptBR,
+                                      })
+                                    : "—"}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={p.data ? new Date(p.data + "T00:00:00") : undefined}
+                                  onSelect={(d) => handleDataChange(idx, d)}
+                                  initialFocus
+                                  className="p-3"
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums font-medium">
+                            {formatBRL(p.valor)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="h-64 flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-lg">
+                  <p>Selecione uma condição de pagamento</p>
+                  <p className="text-xs">para visualizar as parcelas</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
-          {/* Botões */}
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => navigate(`/clientes/${orcamento.cliente_id}`)}
-            >
-              Voltar
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleSalvarRascunho}
-              disabled={saving}
-              className="border-amber-500 text-amber-700 hover:bg-amber-50"
-            >
-              Liberar desconto
-            </Button>
-            <Button
-              onClick={handleAprovar}
-              disabled={saving || !condicaoSel}
-              style={{ backgroundColor: "#12B76A" }}
-              className="text-white hover:opacity-90"
-            >
-              Aprovar e Gerar Contrato ✓
-            </Button>
-          </div>
-        </TabsContent>
-      </Tabs>
+      {/* Rodapé — Ações */}
+      <div className="grid grid-cols-3 items-center pt-6 border-t mt-4">
+        <div className="flex justify-start">
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/clientes/${orcamento.cliente_id}`)}
+            className="h-11 px-6"
+          >
+            Voltar
+          </Button>
+        </div>
+
+        <div className="flex justify-center">
+          <Button
+            variant="ghost"
+            onClick={handleSalvarRascunho}
+            disabled={saving}
+            className="text-muted-foreground hover:text-amber-600 hover:bg-amber-50 h-11 px-6"
+          >
+            Liberar desconto
+          </Button>
+        </div>
+
+        <div className="flex justify-end">
+          <Button
+            onClick={handleAprovar}
+            disabled={saving || !condicaoSel}
+            className="h-11 px-8 bg-emerald-600 text-white hover:bg-emerald-700 font-semibold shadow-lg shadow-emerald-600/20"
+          >
+            Aprovar Orçamento ✓
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
