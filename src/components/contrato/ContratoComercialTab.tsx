@@ -7,7 +7,57 @@ import { ContractPDF } from "./ContractPDF";
 import { ContractPreviewModal } from "./ContractPreviewModal";
 import { useState } from "react";
 
-// ... existing code (Card, Field components)
+interface ComercialTabProps {
+  contrato: {
+    id: string;
+    cliente_nome: string;
+    cliente_contato: string | null;
+    vendedor_id: string | null;
+    data_criacao: string;
+    assinado: boolean;
+    data_assinatura?: string | null;
+    assinatura_nome?: string | null;
+    assinatura_ip?: string | null;
+    assinatura_hash?: string | null;
+    contrato_gerado?: boolean;
+    loja_id: string;
+    valor_venda?: number;
+  };
+  loja: any;
+  ambientes: any[];
+  orcamentos: any[];
+}
+
+const formatBRL = (n: number) =>
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
+
+const marginColor = (m: number) => {
+  if (m >= 30) return "#12B76A";
+  if (m >= 15) return "#E8A020";
+  return "#E53935";
+};
+
+const Card = ({ title, children, actions }: { title: string; children: React.ReactNode; actions?: React.ReactNode }) => (
+  <div
+    className="rounded-xl bg-white"
+    style={{ border: "0.5px solid #E8ECF2", padding: 20 }}
+  >
+    <div className="flex items-center justify-between mb-4">
+      <h3 style={{ fontSize: 14, fontWeight: 500, color: "#0D1117", margin: 0 }}>
+        {title}
+      </h3>
+      {actions}
+    </div>
+    {children}
+  </div>
+);
+
+const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
+  <div className="flex justify-between py-1.5">
+    <span style={{ fontSize: 12, color: "#6B7A90" }}>{label}</span>
+    <span style={{ fontSize: 13, color: "#0D1117", fontWeight: 500 }}>{value || "—"}</span>
+  </div>
+);
 
 export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: ComercialTabProps) {
   const qc = useQueryClient();
@@ -15,15 +65,43 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: vendedor } = useQuery({
-    // ... existing code
+    queryKey: ["usuario", contrato.vendedor_id],
+    queryFn: async () => {
+      if (!contrato.vendedor_id) return null;
+      const { data } = await supabase
+        .from("usuarios")
+        .select("nome, email")
+        .eq("id", contrato.vendedor_id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!contrato.vendedor_id,
   });
 
   const { data: lead } = useQuery({
-    // ... existing code
+    queryKey: ["lead-by-contrato", contrato.id, contrato.cliente_nome],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("leads")
+        .select("origem, observacoes, email")
+        .eq("nome", contrato.cliente_nome)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
   });
 
   const { data: dre } = useQuery({
-    // ... existing code
+    queryKey: ["dre", contrato.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("dre_contrato")
+        .select("*")
+        .eq("contrato_id", contrato.id)
+        .maybeSingle();
+      return data;
+    },
   });
 
   async function handleGerarContrato() {
@@ -50,7 +128,6 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
       setIsSubmitting(false);
     }
   }
-
 
 
   const produto = Number(dre?.custo_produto_previsto ?? 0);
@@ -83,14 +160,15 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
         actions={
           <button
             onClick={handleGerarContrato}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white transition-all hover:opacity-90 active:scale-95"
+            disabled={isSubmitting}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
             style={{ 
               backgroundColor: "#1E6FBF", 
               fontSize: 12, 
               fontWeight: 500,
             }}
           >
-            <FileText size={14} />
+            {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText size={14} />}
             Gerar Contrato
           </button>
         }
@@ -207,6 +285,15 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
           Editar custos previstos
         </button>
       </Card>
+
+      <ContractPreviewModal
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        contrato={contrato}
+        loja={loja}
+        ambientes={ambientes}
+        orcamentos={orcamentos}
+      />
     </div>
   );
 }
