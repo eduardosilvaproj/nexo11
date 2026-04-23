@@ -111,17 +111,17 @@ export default function Clientes() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Clientes</h1>
           <p className="text-sm text-muted-foreground">Cadastro e orçamentos</p>
         </div>
-        <Button onClick={abrirNovo} style={{ backgroundColor: "#1E6FBF" }}>
+        <Button onClick={abrirNovo} className="w-full sm:w-auto" style={{ backgroundColor: "#1E6FBF" }}>
           <Plus className="h-4 w-4 mr-2" /> Novo cliente
         </Button>
       </div>
 
-      <div className="relative max-w-md">
+      <div className="relative w-full max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Buscar por nome, email ou telefone..."
@@ -147,7 +147,8 @@ export default function Clientes() {
             )}
           </div>
         ) : (
-          <Table>
+          <div className="overflow-x-auto">
+            <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
@@ -195,7 +196,8 @@ export default function Clientes() {
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+            </Table>
+          </div>
         )}
       </Card>
 

@@ -280,7 +280,7 @@ export default function Comercial() {
 
   return (
     <div className="flex h-full flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 style={{ fontSize: 18, fontWeight: 500, color: "#0D1117" }}>
             {tab === "contratos" ? "Contratos" : "Leads"}
@@ -290,10 +290,9 @@ export default function Comercial() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {/* Botão Importar XML Promob removido daqui por solicitação do usuário. Agora está no Perfil do Cliente -> Orçamentos */}
           <button
             onClick={() => (tab === "contratos" ? navigate("/contratos/novo") : setFormOpen(true))}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-white transition-colors hover:bg-[#1759A0]"
+            className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 px-4 py-2 text-white transition-colors hover:bg-[#1759A0]"
             style={{ background: "#1E6FBF", borderRadius: 8, fontSize: 13, fontWeight: 500 }}
           >
             <Plus className="h-4 w-4" /> {tab === "contratos" ? "Novo contrato" : "Novo lead"}
@@ -302,7 +301,7 @@ export default function Comercial() {
       </div>
 
       {/* Abas */}
-      <div className="flex items-center gap-6 border-b border-[#E8ECF2]">
+      <div className="flex items-center gap-6 border-b border-[#E8ECF2] overflow-x-auto no-scrollbar">
         {([
           { key: "leads", label: "Leads" },
           { key: "contratos", label: "Contratos" },
@@ -312,7 +311,7 @@ export default function Comercial() {
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className="-mb-px pb-2 pt-1 transition-colors"
+              className="-mb-px pb-2 pt-1 transition-colors whitespace-nowrap"
               style={{
                 fontSize: 14,
                 fontWeight: active ? 600 : 500,
