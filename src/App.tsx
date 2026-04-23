@@ -45,6 +45,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            <Route path="/login" element={<AuthPage />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/portal" element={<PortalEntrada />} />
             <Route path="/portal/:token" element={<PortalCliente />} />

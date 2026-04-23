@@ -102,11 +102,21 @@ export default {
           "0%, 100%": { boxShadow: "0 0 0 0 rgba(0, 170, 255, 0.5)" },
           "50%": { boxShadow: "0 0 0 8px rgba(0, 170, 255, 0)" },
         },
+        "logo-glow": {
+          "0%, 100%": { filter: "drop-shadow(0 0 10px rgba(26,155,232,0.4))" },
+          "50%": { filter: "drop-shadow(0 0 25px rgba(26,155,232,0.8))" },
+        },
+        "fade-up": {
+          "0%": { opacity: "0", transform: "translateY(20px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "nexo-pulse": "nexo-pulse 2s ease-in-out infinite",
+        "logo-glow": "logo-glow 3s ease-in-out infinite",
+        "fade-up": "fade-up 0.7s ease-out forwards",
       },
     },
   },
