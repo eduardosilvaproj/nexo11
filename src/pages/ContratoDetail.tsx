@@ -227,7 +227,7 @@ export default function ContratoDetail() {
     }
   }, [contrato?.status, initialTabSet, setActive]);
 
-  if (isLoading || !id) return <ContratoDetailSkeleton />;
+  if (isLoading || !id || !loja) return <ContratoDetailSkeleton />;
   if (!contrato) return <div className="p-8 text-sm text-muted-foreground">Contrato não encontrado.</div>;
 
   const isFinalizado = contrato.status === "finalizado";
