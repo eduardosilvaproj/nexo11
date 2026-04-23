@@ -227,7 +227,7 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
 
     // Se "mesmo vendedor", garante que o ID do projetista seja igual ao do vendedor
     if (clientData.mesmo_vendedor) {
-      clientData.projetista_id = clientData.vendedor_id;
+      setClientData(prev => ({ ...prev, projetista_id: prev.vendedor_id }));
     }
 
     setStep(2);
