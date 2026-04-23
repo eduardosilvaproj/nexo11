@@ -94,8 +94,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderBottomWidth: 0.5,
     borderBottomColor: '#EEE',
-    padding: 6,
-    minHeight: 25,
+    padding: '4 6',
+    minHeight: 18,
     alignItems: 'flex-start',
   },
   colLabel: { 
@@ -108,7 +108,6 @@ const styles = StyleSheet.create({
     width: '70%', 
     fontSize: 8, 
     fontWeight: 'medium',
-    textAlign: 'justify'
   },
   signatureSection: {
     marginTop: 40,
