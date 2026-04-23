@@ -496,13 +496,11 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
                       <Label className="text-xs font-semibold">Vendedor *</Label>
                       <Select 
                         value={clientData.vendedor_id} 
-                        onValueChange={v => setClientData(d => {
-                          const newData = { ...d, vendedor_id: v };
-                          if (d.mesmo_vendedor) {
-                            newData.projetista_id = v;
-                          }
-                          return newData;
-                        })}
+                        onValueChange={v => setClientData(d => ({
+                          ...d, 
+                          vendedor_id: v,
+                          projetista_id: d.mesmo_vendedor ? v : d.projetista_id
+                        }))}
                       >
                         <SelectTrigger className="bg-white border-slate-200">
                           <SelectValue placeholder="Selecione..." />
