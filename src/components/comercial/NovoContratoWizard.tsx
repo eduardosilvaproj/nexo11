@@ -210,14 +210,26 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
 
   // --- Handlers STEP 1 ---
   const handleNextStep1 = () => {
-    if (!clientData.nome || (!clienteId && !clientData.vendedor_id)) {
-      toast.error("Preencha o nome e o vendedor responsável");
+    if (!clientData.nome) {
+      toast.error("Preencha o nome do cliente");
       return;
     }
-    if (!clientData.projetista_id) {
-      toast.error("Preencha o projetista responsável");
+    
+    if (!clientData.vendedor_id) {
+      toast.error("Selecione o vendedor responsável");
       return;
     }
+
+    if (!clientData.mesmo_vendedor && !clientData.projetista_id) {
+      toast.error("Selecione o projetista responsável");
+      return;
+    }
+
+    // Se "mesmo vendedor", garante que o ID do projetista seja igual ao do vendedor
+    if (clientData.mesmo_vendedor) {
+      clientData.projetista_id = clientData.vendedor_id;
+    }
+
     setStep(2);
   };
 
