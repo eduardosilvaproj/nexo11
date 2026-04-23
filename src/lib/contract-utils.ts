@@ -26,18 +26,28 @@ export function substituteContractVariables(text: string, data: {
   // Se parcelas_datas não estiver no contrato, tenta pegar do primeiro orçamento
   const parcelasDatas = contrato?.parcelas_datas || orcamentos?.[0]?.parcelas_datas;
   
+  const formatDate = (date: any) => {
+    if (!date) return '—';
+    const d = new Date(date);
+    return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  };
+
   const replacements: Record<string, string> = {
-    '{{empresa.razao_social}}': loja?.nome || '',
-    '{{empresa.cnpj}}': loja?.cnpj || '',
-    '{{empresa.endereco}}': loja?.endereco || '',
-    '{{empresa.cidade}}': loja?.cidade || '',
-    '{{cliente.nome}}': cliente?.nome || contrato?.cliente_nome || '',
-    '{{cliente.email}}': cliente?.email || '',
-    '{{cliente.telefone}}': cliente?.telefone || contrato?.cliente_contato || '',
+    '{{empresa.razao_social}}': loja?.nome || '—',
+    '{{empresa.cnpj}}': loja?.cnpj || '—',
+    '{{empresa.endereco}}': loja?.endereco || '—',
+    '{{empresa.cidade}}': loja?.cidade || '—',
+    '{{cliente.nome}}': cliente?.nome || contrato?.cliente_nome || '—',
+    '{{cliente.email}}': cliente?.email || '—',
+    '{{cliente.telefone}}': cliente?.telefone || contrato?.cliente_contato || '—',
     '{{contrato.valor_total}}': formatBRL(contrato?.valor_venda),
     '{{contrato.parcelas_description}}': generateParcelasDescription(parcelasDatas),
-    '{{contrato.parcelas_descricao}}': generateParcelasDescription(parcelasDatas), // Both versions just in case
-    '{{contrato.ambientes}}': ambientes?.map((a: any) => a.nome).join(', ') || '',
+    '{{contrato.parcelas_descricao}}': generateParcelasDescription(parcelasDatas),
+    '{{contrato.ambientes}}': ambientes?.map((a: any) => a.nome).join(', ') || '—',
+    '{{assinatura.nome}}': contrato?.assinatura_nome || '—',
+    '{{assinatura.data}}': formatDate(contrato?.data_assinatura),
+    '{{assinatura.ip}}': contrato?.assinatura_ip || '—',
+    '{{assinatura.hash}}': contrato?.assinatura_hash || '—',
     '{{DIA}}': String(now.getDate()).padStart(2, '0'),
     '{{MES}}': String(now.getMonth() + 1).padStart(2, '0'),
     '{{ANO}}': String(now.getFullYear()),
@@ -46,7 +56,7 @@ export function substituteContractVariables(text: string, data: {
   let result = text;
   for (const [key, value] of Object.entries(replacements)) {
     const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    result = result.replace(new RegExp(escapedKey, 'g'), value || '');
+    result = result.replace(new RegExp(escapedKey, 'g'), value);
   }
   return result;
 }
