@@ -40,12 +40,11 @@ export default function AppLayout() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-[#060d1a]">
+      <div className="flex min-h-screen w-full bg-background">
         <AppSidebar />
         <div className="flex flex-1 flex-col">
           <header
-            className="flex h-14 items-center justify-between bg-[#0c1526] px-6"
-            style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+            className="flex h-14 items-center justify-between bg-white px-6 border-b border-slate-200"
           >
             {/* Breadcrumb */}
             <nav className="flex items-center gap-2 text-sm">
