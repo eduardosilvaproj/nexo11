@@ -131,7 +131,7 @@ export default function Dashboard() {
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           label="Contratos ativos"
           value={String(stats?.contratosAtivos ?? 0)}
@@ -159,7 +159,7 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
         {/* Contratos por etapa */}
         <div className="bg-white p-5" style={cardStyle}>
           <h2
