@@ -78,7 +78,7 @@ export default function AuthPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(26,155,232,0.08)_0%,_transparent_70%)]" />
         
         {/* Logo Centralizada */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center animate-fade-up">
+        <div className="absolute top-[45%] left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center animate-fade-up">
           <img
             src="/nexo-logo.png"
             alt="NEXO Logo"
@@ -93,7 +93,7 @@ export default function AuthPage() {
       </div>
 
       {/* Painel Direito (40%) */}
-      <div className="w-full lg:w-[40%] h-full bg-[#0c1526] flex flex-col justify-center p-[56px_44px] relative border-l border-white/5 animate-fade-up">
+      <div className="w-full lg:w-[40%] min-h-screen bg-[#0c1526] flex flex-col justify-center p-11 relative border-l border-white/5 animate-fade-up">
         <div className="flex flex-col w-full">
           <div className="mb-10">
             <h1 className="text-[26px] font-bold text-white mb-2 leading-tight">
