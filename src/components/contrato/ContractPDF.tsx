@@ -178,6 +178,7 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
     return { fontSize: 8, paddingVertical: 4, minHeight: 18 };
   };
 
+  const contratanteStyles = getDynamicStyles(contrato.cliente_nome || '');
   const ambientesStyles = getDynamicStyles(ambientesNomes);
   const parcelasStyles = getDynamicStyles(getParcelasDesc());
 
@@ -342,9 +343,9 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
         </View>
 
         <View style={styles.summaryTable}>
-          <View style={styles.summaryRow}>
+          <View style={[styles.summaryRow, { minHeight: contratanteStyles.minHeight, paddingVertical: contratanteStyles.paddingVertical }]}>
             <Text style={styles.colLabel}>Contratante:</Text>
-            <Text style={styles.colValue}>{contrato.cliente_nome}</Text>
+            <Text style={[styles.colValue, { fontSize: contratanteStyles.fontSize }]}>{contrato.cliente_nome}</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.colLabel}>CPF/CNPJ:</Text>
