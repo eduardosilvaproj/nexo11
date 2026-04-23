@@ -349,16 +349,16 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
             <Text style={styles.colValue}>{formatCurrency(contrato.valor_venda)}</Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.colLabel}>Forma de Pagamento:</Text>
+            <Text style={styles.colLabel}>Pagamento:</Text>
             <Text style={styles.colValue}>{getParcelasDesc()}</Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.colLabel}>Prazo de Entrega:</Text>
-            <Text style={styles.colValue}>45 dias corridos após aprovação técnica</Text>
+            <Text style={styles.colLabel}>Prazo:</Text>
+            <Text style={styles.colValue}>45 dias corridos após aprovação técnica e liberação financeira</Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.colLabel}>Garantia:</Text>
-            <Text style={styles.colValue}>90 dias legal + 3 anos contratual</Text>
+            <Text style={[styles.colLabel, { borderBottomWidth: 0 }]}>Garantia:</Text>
+            <Text style={[styles.colValue, { borderBottomWidth: 0 }]}>90 dias legal + 3 anos contratual contra defeitos de fabricação</Text>
           </View>
         </View>
 
