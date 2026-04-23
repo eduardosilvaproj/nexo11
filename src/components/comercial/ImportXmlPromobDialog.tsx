@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Upload, FileCode2, AlertCircle, CheckCircle2, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ const clampDesc = (n: number) => Math.max(0, Math.min(60, Math.round(n * 10) / 1
 
 export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNome }: Props) {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const { perfil, user } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -35,7 +36,6 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
   const [globalDiscount, setGlobalDiscount] = useState(0);
   const [frete, setFrete] = useState(0);
   const [montagem, setMontagem] = useState(0);
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   const reset = () => {
     setFile(null);
@@ -45,7 +45,6 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
     setGlobalDiscount(0);
     setFrete(0);
     setMontagem(0);
-    setExpanded({});
   };
 
   const handleClose = (o: boolean) => {
@@ -98,15 +97,13 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
     return { linhas, subtotal, valorVenda, custoProduto, margem };
   }, [parsed, globalDiscount, frete, montagem]);
 
-  const margemColor = (m: number) =>
-    m >= 30 ? "#12B76A" : m >= 15 ? "#F59E0B" : "#E53935";
-
-  const handleCriarContrato = async () => {
-    if (!parsed || !calc) return;
-    if (!perfil?.loja_id) {
-      toast.error("Loja do usuário não encontrada");
+  const handleProsseguirNegociacao = async () => {
+    const finalClienteId = id || clienteId;
+    if (!parsed || !calc || !perfil?.loja_id || !finalClienteId) {
+      toast.error("Faltam dados para prosseguir");
       return;
     }
+    
     setCreating(true);
     try {
       const categoriasJson = calc.linhas.map((l) => ({
@@ -117,59 +114,41 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
         valor: l.valor,
       }));
 
-      // 1) Contrato (trigger cria dre_contrato automaticamente)
-      const { data: contrato, error: contErr } = await supabase
-        .from("contratos")
+      // 1) Criar Orçamento (sem contrato ainda)
+      const { data: orcamento, error: orcErr } = await supabase
+        .from("orcamentos")
         .insert({
           loja_id: perfil.loja_id,
-          cliente_nome: parsed.cliente_nome || "Cliente Promob",
-          valor_venda: calc.valorVenda,
+          cliente_id: finalClienteId,
           vendedor_id: user?.id ?? null,
+          nome: parsed.ordem_compra || file?.name?.replace(".xml", "") || "Orçamento XML",
+          ordem_compra: parsed.ordem_compra || null,
+          arquivo_nome: file?.name || null,
+          total_tabela: parsed.total_tabela,
+          total_pedido: parsed.total_pedido,
+          valor_negociado: calc.valorVenda,
+          desconto_global: globalDiscount,
+          frete_loja: frete,
+          montagem_loja: montagem,
+          categorias: categoriasJson as unknown as never,
+          itens: parsed.itens as unknown as never,
+          acrescimos: [
+            ...parsed.acrescimos,
+            { id: "frete", description: "Frete", value: frete, percentual: 0 },
+            { id: "montagem", description: "Montagem", value: montagem, percentual: 0 },
+          ] as unknown as never,
+          status: "rascunho",
         })
         .select("id")
         .single();
-      if (contErr) throw contErr;
-
-      // 2) Orçamento vinculado ao contrato
-      const { error: orcErr } = await supabase.from("orcamentos_promob").insert({
-        loja_id: perfil.loja_id,
-        contrato_id: contrato.id,
-        cliente_nome: parsed.cliente_nome || null,
-        ordem_compra: parsed.ordem_compra || null,
-        arquivo_nome: file?.name || null,
-        total_tabela: parsed.total_tabela,
-        total_pedido: parsed.total_pedido,
-        total_orcamento: parsed.total_orcamento,
-        categorias: categoriasJson as unknown as never,
-        itens: parsed.itens as unknown as never,
-        acrescimos: [
-          ...parsed.acrescimos,
-          { id: "frete", description: "Frete", value: frete, percentual: 0 },
-          { id: "montagem", description: "Montagem", value: montagem, percentual: 0 },
-        ] as unknown as never,
-        valor_negociado: calc.valorVenda,
-        status: "convertido",
-        criado_por: user?.id ?? null,
-      });
+        
       if (orcErr) throw orcErr;
 
-      // 3) DRE com custos previstos do XML
-      const { error: dreErr } = await supabase
-        .from("dre_contrato")
-        .update({
-          valor_venda: calc.valorVenda,
-          custo_produto_previsto: parsed.total_tabela,
-          custo_frete_previsto: frete,
-          custo_montagem_previsto: montagem,
-        })
-        .eq("contrato_id", contrato.id);
-      if (dreErr) throw dreErr;
-
-      toast.success("Contrato criado com DRE preenchido ✓");
+      toast.success("Orçamento importado! Agora defina a condição de pagamento.");
       handleClose(false);
-      navigate(`/contratos/${contrato.id}`);
+      navigate(`/orcamentos/${orcamento.id}/negociacao`);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Falha ao criar contrato");
+      toast.error(e instanceof Error ? e.message : "Falha ao importar orçamento");
     } finally {
       setCreating(false);
     }
@@ -249,7 +228,7 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
               <div className="min-w-0">
                 <p className="text-xs" style={{ color: "#6B7A90" }}>Cliente</p>
                 <p className="text-sm font-semibold truncate" style={{ color: "#0D1117" }}>
-                  {parsed.cliente_nome || "—"}
+                  {clienteNome || parsed.cliente_nome || "—"}
                 </p>
                 <p className="mt-1 text-xs" style={{ color: "#6B7A90" }}>
                   Ordem: <span style={{ color: "#0D1117" }}>{parsed.ordem_compra || "—"}</span>
@@ -344,17 +323,6 @@ export function ImportXmlPromobDialog({ open, onOpenChange, clienteId, clienteNo
         )}
       </DialogContent>
     </Dialog>
-  );
-}
-
-function ResumoItem({ label, value }: { label: string; value: number }) {
-  return (
-    <div>
-      <p className="text-xs" style={{ color: "#6B7A90" }}>{label}</p>
-      <p className="mt-0.5 text-sm font-semibold" style={{ color: "#0D1117" }}>
-        {formatBRL(value)}
-      </p>
-    </div>
   );
 }
 
