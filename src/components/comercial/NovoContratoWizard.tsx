@@ -216,30 +216,35 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
   }, [selectedLeadId, clientOption, leads]);
 
   // --- Handlers STEP 1 ---
-  const handleNextStep1 = () => {
+  const validateStep1 = () => {
     if (!clientData.nome) {
       toast.error("Preencha o nome do cliente");
-      return;
+      return false;
     }
     
     if (!clientData.vendedor_id) {
       toast.error("Selecione o vendedor responsável");
-      return;
+      return false;
     }
 
     if (!clientData.mesmo_vendedor) {
       if (!clientData.projetista_id) {
         toast.error("Selecione o projetista responsável");
-        return;
+        return false;
       }
       
       if (clientData.vendedor_id === clientData.projetista_id) {
         toast.error("Vendedor e Projetista não podem ser a mesma pessoa se a opção 'Mesmo que o vendedor' estiver desmarcada");
-        return;
+        return false;
       }
     }
+    return true;
+  };
 
-    setStep(2);
+  const handleNextStep1 = () => {
+    if (validateStep1()) {
+      setStep(2);
+    }
   };
 
   // --- Handlers STEP 2 ---
@@ -356,13 +361,10 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
     if (!perfil?.loja_id) return;
     
     if (!isDraft) {
+      if (!validateStep1()) return;
+
       if (!condicaoSel) {
         toast.error("Selecione uma condição de pagamento");
-        return;
-      }
-      
-      if (!clientData.mesmo_vendedor && clientData.vendedor_id === clientData.projetista_id) {
-        toast.error("Vendedor e Projetista não podem ser a mesma pessoa se a opção 'Mesmo que o vendedor' estiver desmarcada");
         return;
       }
     }
