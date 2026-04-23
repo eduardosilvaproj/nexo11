@@ -347,7 +347,7 @@ export function NovoOrcamentoClienteDialog({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Valor de venda sugerido (Promob)</Label>
+                <Label>Valor de Venda (Base)</Label>
                 <Input
                   type="number"
                   step={0.01}
