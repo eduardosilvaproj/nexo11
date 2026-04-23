@@ -1,9 +1,11 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { FileText } from "lucide-react";
+import { FileText, Loader2 } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import { ContractPDF } from "./ContractPDF";
+import { ContractPreviewModal } from "./ContractPreviewModal";
+import { useState } from "react";
 
 interface ComercialTabProps {
   contrato: {
@@ -59,6 +61,8 @@ const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
 
 export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: ComercialTabProps) {
   const qc = useQueryClient();
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: vendedor } = useQuery({
     queryKey: ["usuario", contrato.vendedor_id],
@@ -102,6 +106,7 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
 
   async function handleGerarContrato() {
     try {
+      setIsSubmitting(true);
       // 1. Marcar contrato_gerado no DB
       const { error: updErr } = await supabase
         .from("contratos")
@@ -110,49 +115,17 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
 
       if (updErr) throw updErr;
 
-      // 2. Buscar dados completos do cliente e contrato real (para ter cliente_id)
-      const { data: realContrato } = await supabase
-        .from("contratos")
-        .select("cliente_id, assinatura_nome, data_assinatura, assinatura_ip, assinatura_hash")
-        .eq("id", contrato.id)
-        .single();
-
-      let clienteData = null;
-      if (realContrato?.cliente_id) {
-        const { data: cli } = await supabase
-          .from("clientes")
-          .select("*")
-          .eq("id", realContrato.cliente_id)
-          .single();
-        clienteData = cli;
-      }
-
-      // 3. Gerar PDF
-      const doc = (
-        <ContractPDF 
-          contrato={{ ...contrato, ...realContrato, cliente: clienteData }} 
-          loja={loja} 
-          ambientes={ambientes} 
-          orcamentos={orcamentos} 
-        />
-      );
-      
-      const blob = await pdf(doc).toBlob();
-      const url = URL.createObjectURL(blob);
-      
-      // 4. Download direto
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `contrato_${contrato.id.slice(0, 8)}_${contrato.cliente_nome.replace(/\s+/g, '_')}.pdf`;
-      link.click();
-      
-      toast.success("Contrato gerado e baixado com sucesso.");
-
-      // 5. Invalidar queries para atualizar UI
+      // 2. Invalidar queries para atualizar UI
       qc.invalidateQueries({ queryKey: ["contrato_dre_view", contrato.id] });
+      
+      // 3. Abrir modal de preview
+      setPreviewOpen(true);
+      toast.success("Contrato preparado com sucesso.");
     } catch (e: any) {
       console.error(e);
       toast.error(e.message || "Erro ao gerar contrato");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -187,14 +160,15 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
         actions={
           <button
             onClick={handleGerarContrato}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white transition-all hover:opacity-90 active:scale-95"
+            disabled={isSubmitting}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
             style={{ 
               backgroundColor: "#1E6FBF", 
               fontSize: 12, 
               fontWeight: 500,
             }}
           >
-            <FileText size={14} />
+            {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText size={14} />}
             Gerar Contrato
           </button>
         }
@@ -311,6 +285,15 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
           Editar custos previstos
         </button>
       </Card>
+
+      <ContractPreviewModal
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        contrato={contrato}
+        loja={loja}
+        ambientes={ambientes}
+        orcamentos={orcamentos}
+      />
     </div>
   );
 }
