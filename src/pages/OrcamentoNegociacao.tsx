@@ -361,14 +361,14 @@ export default function OrcamentoNegociacao() {
 
               <div className="space-y-4 border-t pt-4">
                 <p className="text-xs text-muted-foreground uppercase font-semibold">Ambientes incluídos</p>
-                <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                   {orcamento.categorias?.map((c) => {
                     const selected = ambientesSelecionados.includes(c.id);
                     return (
                       <div
                         key={c.id}
                         className={cn(
-                          "flex items-center justify-between p-2 rounded-md border transition-all",
+                          "flex flex-col sm:flex-row sm:items-center justify-between p-3 gap-2 rounded-md border transition-all",
                           selected ? "bg-white border-slate-200" : "bg-slate-50 border-slate-100 opacity-50",
                         )}
                       >
@@ -387,7 +387,7 @@ export default function OrcamentoNegociacao() {
                             {c.descricao}
                           </span>
                         </div>
-                        <span className={cn("text-sm tabular-nums", !selected && "line-through text-muted-foreground")}>
+                        <span className={cn("text-sm tabular-nums font-semibold sm:font-normal", !selected && "line-through text-muted-foreground")}>
                           {formatBRL(c.valor)}
                         </span>
                       </div>
