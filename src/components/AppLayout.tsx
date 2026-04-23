@@ -44,7 +44,7 @@ export default function AppLayout() {
         <AppSidebar />
         <div className="flex flex-1 flex-col">
           <header
-            className="flex h-14 items-center justify-between bg-white px-6 border-b border-slate-200"
+            className="flex h-14 items-center justify-between bg-card px-6 border-b border-border"
           >
             {/* Breadcrumb */}
             <nav className="flex items-center gap-2 text-sm">
