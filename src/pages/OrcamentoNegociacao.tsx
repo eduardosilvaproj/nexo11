@@ -507,24 +507,29 @@ export default function OrcamentoNegociacao() {
       </div>
 
       {/* Rodapé — Ações */}
-      <div className="flex items-center justify-between pt-6 border-t mt-4">
-        <Button
-          variant="outline"
-          onClick={() => navigate(`/clientes/${orcamento.cliente_id}`)}
-          className="h-11 px-6"
-        >
-          Voltar
-        </Button>
+      <div className="grid grid-cols-3 items-center pt-6 border-t mt-4">
+        <div className="flex justify-start">
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/clientes/${orcamento.cliente_id}`)}
+            className="h-11 px-6"
+          >
+            Voltar
+          </Button>
+        </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex justify-center">
           <Button
             variant="ghost"
             onClick={handleSalvarRascunho}
             disabled={saving}
-            className="text-muted-foreground hover:text-amber-600 hover:bg-amber-50 h-11"
+            className="text-muted-foreground hover:text-amber-600 hover:bg-amber-50 h-11 px-6"
           >
             Liberar desconto
           </Button>
+        </div>
+
+        <div className="flex justify-end">
           <Button
             onClick={handleAprovar}
             disabled={saving || !condicaoSel}
