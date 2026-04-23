@@ -179,7 +179,7 @@ export function ContractPreviewModal({
           <Button
             variant="outline"
             onClick={handlePrint}
-            disabled={!url || loading}
+            disabled={!url || loading || !iframeLoaded}
             className="flex items-center gap-2"
           >
             <Printer className="h-4 w-4" />
