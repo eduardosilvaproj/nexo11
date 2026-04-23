@@ -527,11 +527,11 @@ export default function OrcamentoNegociacao() {
                           <TableCell>
                             <Popover>
                               <PopoverTrigger asChild>
-                                <Button
+                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   className={cn(
-                                    "h-8 w-full justify-start font-normal hover:bg-slate-100",
+                                    "h-8 w-full justify-start font-normal hover:bg-slate-100 text-blue-600 hover:text-blue-700 underline-offset-4 hover:underline px-2",
                                     !p.data && "text-muted-foreground",
                                   )}
                                 >
