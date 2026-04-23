@@ -771,6 +771,7 @@ export type Database = {
           conferencia_responsavel_id: string | null
           contrato_gerado: boolean
           created_at: string
+          data_assinatura: string | null
           data_criacao: string
           data_finalizacao: string | null
           id: string
@@ -794,6 +795,7 @@ export type Database = {
           conferencia_responsavel_id?: string | null
           contrato_gerado?: boolean
           created_at?: string
+          data_assinatura?: string | null
           data_criacao?: string
           data_finalizacao?: string | null
           id?: string
@@ -817,6 +819,7 @@ export type Database = {
           conferencia_responsavel_id?: string | null
           contrato_gerado?: boolean
           created_at?: string
+          data_assinatura?: string | null
           data_criacao?: string
           data_finalizacao?: string | null
           id?: string
