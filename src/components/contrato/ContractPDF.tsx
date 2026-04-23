@@ -195,8 +195,8 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
           <Text style={{ color: '#666' }}>ID: {contrato.id?.slice(0, 8).toUpperCase()}</Text>
         </View>
         <View style={styles.storeInfo}>
-          <Text style={{ fontWeight: 'bold' }}>{loja?.nome || 'NEXO'}</Text>
-          <Text>{loja?.cidade || ''} - {loja?.estado || ''}</Text>
+          <Text style={{ fontWeight: 'bold' }}>{loja?.nome || '—'}</Text>
+          <Text>{loja?.cidade || '—'} - {loja?.estado || '—'}</Text>
           {loja?.cnpj && <Text>CNPJ: {loja.cnpj}</Text>}
         </View>
       </View>
@@ -206,14 +206,12 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
         <Text style={styles.sectionTitle}>DADOS DO CLIENTE</Text>
         <View style={styles.row}>
           <Text style={styles.label}>Nome:</Text>
-          <Text style={styles.value}>{contrato.cliente_nome}</Text>
+          <Text style={styles.value}>{contrato.cliente_nome || '—'}</Text>
         </View>
-        {contrato.cliente_contato && (
-          <View style={styles.row}>
-            <Text style={styles.label}>Contato:</Text>
-            <Text style={styles.value}>{contrato.cliente_contato}</Text>
-          </View>
-        )}
+        <View style={styles.row}>
+          <Text style={styles.label}>Contato:</Text>
+          <Text style={styles.value}>{contrato.cliente_contato || '—'}</Text>
+        </View>
       </View>
 
       {/* Contract Details */}
@@ -221,11 +219,11 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
         <Text style={styles.sectionTitle}>DETALHES DO CONTRATO</Text>
         <View style={styles.row}>
           <Text style={styles.label}>Data:</Text>
-          <Text style={styles.value}>{new Date(contrato.created_at).toLocaleDateString('pt-BR')}</Text>
+          <Text style={styles.value}>{contrato.created_at ? new Date(contrato.created_at).toLocaleDateString('pt-BR') : '—'}</Text>
         </View>
         <View style={styles.row}>
           <Text style={styles.label}>Status:</Text>
-          <Text style={styles.value}>{contrato.status.toUpperCase()}</Text>
+          <Text style={styles.value}>{(contrato.status || 'Pendente').toUpperCase()}</Text>
         </View>
       </View>
 
@@ -238,13 +236,19 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
             <Text style={styles.col2}>Status</Text>
             <Text style={styles.col3}>Valor</Text>
           </View>
-          {ambientes.map((amb, index) => (
+          {ambientes && ambientes.length > 0 ? ambientes.map((amb, index) => (
             <View key={index} style={styles.tableRow}>
-              <Text style={styles.col1}>{amb.nome}</Text>
+              <Text style={styles.col1}>{amb.nome || '—'}</Text>
               <Text style={styles.col2}>{amb.status_montagem || 'Pendente'}</Text>
-              <Text style={styles.col3}>{formatCurrency(amb.valor_liquido)}</Text>
+              <Text style={styles.col3}>{formatCurrency(amb.valor_liquido || 0)}</Text>
             </View>
-          ))}
+          )) : (
+            <View style={styles.tableRow}>
+              <Text style={styles.col1}>Nenhum ambiente registrado</Text>
+              <Text style={styles.col2}>—</Text>
+              <Text style={styles.col3}>{formatCurrency(0)}</Text>
+            </View>
+          )}
         </View>
       </View>
 
