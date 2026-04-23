@@ -564,7 +564,7 @@ export default function PortalCliente() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6 text-[13px]">
                   <div>
                     <div className="opacity-70 text-[11px] uppercase font-semibold mb-0.5">Signatário</div>
-                    <div className="font-medium text-slate-900">{contrato.assinatura_nome}</div>
+                    <div className="font-medium text-slate-900">{contrato.assinatura_nome || "—"}</div>
                   </div>
                   <div>
                     <div className="opacity-70 text-[11px] uppercase font-semibold mb-0.5">Data e Hora</div>
@@ -572,12 +572,12 @@ export default function PortalCliente() {
                   </div>
                   <div>
                     <div className="opacity-70 text-[11px] uppercase font-semibold mb-0.5">IP de Origem</div>
-                    <div className="font-medium text-slate-900">{contrato.assinatura_ip}</div>
+                    <div className="font-medium text-slate-900">{contrato.assinatura_ip || "—"}</div>
                   </div>
                   <div>
                     <div className="opacity-70 text-[11px] uppercase font-semibold mb-0.5">Hash de Verificação</div>
                     <div className="font-mono text-[10px] break-all text-slate-900 bg-white/50 p-1.5 rounded border border-slate-200 mt-1">
-                      {contrato.assinatura_hash}
+                      {contrato.assinatura_hash || "—"}
                     </div>
                   </div>
                 </div>
