@@ -78,23 +78,23 @@ export default function AuthPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(26,155,232,0.08)_0%,_transparent_70%)]" />
         
         {/* Logo Centralizada */}
-        <div className="relative z-10 flex flex-col items-center animate-fade-up">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center animate-fade-up">
           <img
             src="/nexo-logo.png"
             alt="NEXO Logo"
-            className="w-[300px] h-auto object-contain animate-logo-glow"
+            className="w-[400px] h-auto object-contain animate-logo-glow"
           />
         </div>
 
         {/* Ondas Animadas */}
-        <div className="absolute bottom-0 left-0 w-full">
+        <div className="absolute bottom-0 left-0 w-full h-[40%]">
           <CanvasWaves />
         </div>
       </div>
 
       {/* Painel Direito (40%) */}
-      <div className="w-full lg:w-[40%] bg-[#0c1526] flex flex-col justify-between p-[56px_44px] relative border-l border-white/5 animate-fade-up">
-        <div className="flex flex-col flex-1 justify-center w-full">
+      <div className="w-full lg:w-[40%] bg-[#0c1526] flex flex-col justify-center p-[56px_44px] relative border-l border-white/5 animate-fade-up">
+        <div className="flex flex-col w-full">
           <div className="mb-10">
             <h1 className="text-[26px] font-bold text-white mb-2 leading-tight">
               Bem-vindo de volta!
@@ -200,7 +200,7 @@ export default function AuthPage() {
           </Button>
         </div>
 
-        <div className="text-center mt-12">
+        <div className="text-center absolute bottom-8 left-0 w-full">
           <p className="text-gray-500 text-[10px] tracking-wide uppercase">
             © 2024 NEXO. Todos os direitos reservados.
           </p>
