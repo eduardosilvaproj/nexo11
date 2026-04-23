@@ -22,6 +22,7 @@ export default function LojaDetail() {
   const { hasRole } = useAuth();
   const podeEditarLoja = hasRole("franqueador");
   const [tab, setTab] = useState<Tab>("resumo");
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: loja } = useQuery({
     queryKey: ["loja", id],
@@ -29,12 +30,13 @@ export default function LojaDetail() {
     queryFn: async () => {
       const { data } = await supabase
         .from("lojas")
-        .select("id, nome, cidade, estado, cnpj, telefone, email")
+        .select("id, nome, cidade, estado, cnpj, telefone, email, endereco, contrato_modelo, franqueado_id")
         .eq("id", id)
         .maybeSingle();
       return data as any;
     },
   });
+
 
   // contratos agora em LojaContratosTab
 
