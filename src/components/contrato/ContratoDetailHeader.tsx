@@ -1,7 +1,9 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, FileDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { ContractPDF } from "./ContractPDF";
 import type { Database } from "@/integrations/supabase/types";
 
 type ContratoStatus = Database["public"]["Enums"]["contrato_status"];
