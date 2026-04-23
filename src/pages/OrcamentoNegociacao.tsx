@@ -413,7 +413,7 @@ export default function OrcamentoNegociacao() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">Valor após desconto</p>
+                  <p className="text-xs text-muted-foreground">Total Geral (sem taxa)</p>
                   <p className="text-lg font-medium py-2 tabular-nums">
                     {formatBRL(valorBase * (1 - descontoExtra / 100))}
                   </p>
