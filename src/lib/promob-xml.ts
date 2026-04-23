@@ -140,7 +140,8 @@ export function parsePromobXml(xmlText: string): PromobParsed {
       desconto_pct,
       tabela,
       pedido,
-      total: pedido || itens.reduce((s, x) => s + x.total, 0),
+      budget,
+      total: budget || pedido || itens.reduce((s, x) => s + x.total, 0),
       itens,
     };
   });
