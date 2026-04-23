@@ -9,7 +9,7 @@ import { ArrowLeft, Pencil, Plus, Eye, ArrowRight, CheckCircle2, FileText, FileS
 import { toast } from "sonner";
 import { ClienteFormDialog } from "@/components/clientes/ClienteFormDialog";
 import { NovoOrcamentoClienteDialog } from "@/components/clientes/NovoOrcamentoClienteDialog";
-import { ImportXmlPromobDialog } from "@/components/comercial/ImportXmlPromobDialog";
+import { NovoContratoWizard } from "@/components/comercial/NovoContratoWizard";
 import { GerarContratoDialog } from "@/components/clientes/GerarContratoDialog";
 import { EnviarPortalDialog } from "@/components/clientes/EnviarPortalDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

@@ -395,7 +395,7 @@ export default function Comercial() {
       )}
 
       {tab === "contratos" ? (
-        <ContratosTable onCreate={() => setContratoFormOpen(true)} />
+        <ContratosTable onCreate={() => navigate("/contratos/novo")} />
       ) : isLoading ? (
         <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
           Carregando leads...
