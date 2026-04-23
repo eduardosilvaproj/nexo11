@@ -769,6 +769,7 @@ export type Database = {
           cliente_id: string | null
           cliente_nome: string
           conferencia_responsavel_id: string | null
+          contrato_gerado: boolean
           created_at: string
           data_criacao: string
           data_finalizacao: string | null
@@ -791,6 +792,7 @@ export type Database = {
           cliente_id?: string | null
           cliente_nome: string
           conferencia_responsavel_id?: string | null
+          contrato_gerado?: boolean
           created_at?: string
           data_criacao?: string
           data_finalizacao?: string | null
@@ -813,6 +815,7 @@ export type Database = {
           cliente_id?: string | null
           cliente_nome?: string
           conferencia_responsavel_id?: string | null
+          contrato_gerado?: boolean
           created_at?: string
           data_criacao?: string
           data_finalizacao?: string | null
