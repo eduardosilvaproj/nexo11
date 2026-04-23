@@ -325,8 +325,9 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.colLabel}>CPF/CNPJ:</Text>
-            <Text style={styles.colValue}>{contrato.cliente_documento || '—'}</Text>
+            <Text style={styles.colValue}>{clienteDocumento}</Text>
           </View>
+
           <View style={styles.summaryRow}>
             <Text style={styles.colLabel}>Ambientes:</Text>
             <Text style={styles.colValue}>{ambientesNomes}</Text>
