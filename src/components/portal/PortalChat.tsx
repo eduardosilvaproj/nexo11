@@ -147,25 +147,49 @@ export function PortalChat({ contractId, clientName, portalClient }: PortalChatP
         anexo_tipo = selectedFile.type;
       }
 
-      const { error } = await portalClient.from("chat_mensagens").insert({
+      const messageContent = newMessage.trim();
+      const messageData = {
         contrato_id: contractId,
-        remetente_tipo: "cliente",
+        remetente_tipo: "cliente" as const,
         remetente_nome: clientName,
-        mensagem: newMessage.trim(),
+        mensagem: messageContent,
         anexo_url,
         anexo_nome,
         anexo_tipo,
-      });
+      };
 
-      if (error) throw error;
+      // Optimistic update
+      const tempId = crypto.randomUUID();
+      const optimisticMsg: Message = {
+        id: tempId,
+        ...messageData,
+        created_at: new Date().toISOString(),
+        lida: false
+      };
+      
+      setMessages((prev) => [...prev, optimisticMsg]);
       setNewMessage("");
       removeFile();
+
+      const { data, error } = await portalClient.from("chat_mensagens").insert(messageData).select().single();
+
+      if (error) {
+        // Rollback optimistic update on error
+        setMessages((prev) => prev.filter(m => m.id !== tempId));
+        throw error;
+      }
+
+      // Update the optimistic message with the real one from DB (to get the real ID and exact timestamp)
+      if (data) {
+        setMessages((prev) => prev.map(m => m.id === tempId ? (data as Message) : m));
+      }
     } catch (e: any) {
       console.error(e);
       toast.error("Erro ao enviar mensagem");
     } finally {
       setSending(false);
     }
+
   }
 
   return (
