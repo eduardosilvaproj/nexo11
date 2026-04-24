@@ -595,14 +595,22 @@ export default function OrcamentoNegociacao() {
         </div>
 
         <div className="flex justify-center">
-          <Button
-            variant="ghost"
-            onClick={handleSalvarRascunho}
-            disabled={saving}
-            className="text-muted-foreground hover:text-amber-600 hover:bg-amber-50 h-11 px-6"
-          >
-            Liberar desconto
-          </Button>
+          {!descontoBloqueado ? (
+            <div className="flex items-center gap-2 text-emerald-600 font-semibold px-4 py-2 bg-emerald-50 rounded-full border border-emerald-100">
+              <ShieldCheck className="h-5 w-5" />
+              Desconto Liberado
+            </div>
+          ) : (
+            <Button
+              variant="ghost"
+              onClick={() => setModalLiberarOpen(true)}
+              disabled={saving}
+              className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 h-11 px-6 font-semibold flex items-center gap-2"
+            >
+              <Lock className="h-4 w-4" />
+              Liberar desconto
+            </Button>
+          )}
         </div>
 
         <div className="flex justify-end">
@@ -615,6 +623,14 @@ export default function OrcamentoNegociacao() {
           </Button>
         </div>
       </div>
+
+      <ModalLiberarDesconto
+        open={modalLiberarOpen}
+        onOpenChange={setModalLiberarOpen}
+        onAprovado={() => setDescontoBloqueado(false)}
+        orcamentoId={id}
+        percentual={descontoExtra}
+      />
     </div>
   );
 }
