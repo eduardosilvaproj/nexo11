@@ -19,8 +19,10 @@ import {
   Trash2,
   AlertCircle,
   Eye,
-  EyeOff
+  EyeOff,
+  ShieldCheck
 } from "lucide-react";
+import { ModalLiberarDesconto } from "./ModalLiberarDesconto";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
