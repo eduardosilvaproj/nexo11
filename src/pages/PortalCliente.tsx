@@ -148,6 +148,11 @@ export default function PortalCliente() {
       global: {
         headers: token ? { "x-portal-token": token } : {},
       },
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
     },
   ), [token]);
 
@@ -333,8 +338,9 @@ export default function PortalCliente() {
       const res = await fetch(assinaturaBase64!);
       const blobSig = await res.blob();
 
-      const { error: uploadSigError } = await supabase.storage
-        .from('contratos-assinados')
+      // Corrigindo para usar o bucket correto 'assinaturas' conforme a estrutura do portal
+      const { error: uploadSigError } = await portalClient.storage
+        .from('assinaturas')
         .upload(signatureFilePath, blobSig, {
           contentType: 'image/png',
           upsert: true
@@ -342,12 +348,12 @@ export default function PortalCliente() {
 
       if (uploadSigError) throw uploadSigError;
 
-      const { data: { publicUrl: signatureUrl } } = supabase.storage
-        .from('contratos-assinados')
+      const { data: { publicUrl: signatureUrl } } = portalClient.storage
+        .from('assinaturas')
         .getPublicUrl(signatureFilePath);
 
       // 2. Chamar RPC para registrar assinatura
-      const { data, error } = await supabase.rpc(
+      const { data, error } = await portalClient.rpc(
         "portal_assinar_contrato" as any,
         { 
           _token: token,
@@ -386,8 +392,8 @@ export default function PortalCliente() {
       const fileName = `contrato_${r.contrato_id}_assinado.pdf`;
       const filePath = `${r.contrato_id}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('contratos-assinados')
+      const { error: uploadError } = await portalClient.storage
+        .from('assinaturas')
         .upload(filePath, blob, {
           contentType: 'application/pdf',
           upsert: true
@@ -395,8 +401,8 @@ export default function PortalCliente() {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('contratos-assinados')
+      const { data: { publicUrl } } = portalClient.storage
+        .from('assinaturas')
         .getPublicUrl(filePath);
 
       await portalClient
