@@ -390,13 +390,21 @@ export default function OrcamentoNegociacao() {
                     type="number"
                     step="0.1"
                     value={descontoExtra}
-                    onChange={(e) => setDescontoExtra(Number(e.target.value || 0))}
-                    disabled={descontoBloqueado}
-                    className={cn("h-10", descontoBloqueado && "bg-slate-100 cursor-not-allowed opacity-70")}
+                    onChange={(e) => {
+                      const val = Number(e.target.value || 0);
+                      setDescontoExtra(val);
+                      if (val > descontoMaximoSemAprovacao && descontoBloqueado) {
+                        setModalLiberarOpen(true);
+                      }
+                    }}
+                    className="h-10"
                   />
-                  {descontoBloqueado && (
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Limite sem aprovação: {descontoMaximoSemAprovacao}%
+                  </p>
+                  {descontoBloqueado && descontoExtra > descontoMaximoSemAprovacao && (
                     <p className="text-[10px] text-amber-600 font-medium flex items-center gap-1 mt-1">
-                      <Lock className="h-3 w-3" /> Bloqueado
+                      <Lock className="h-3 w-3" /> Requer autorização
                     </p>
                   )}
                 </div>
