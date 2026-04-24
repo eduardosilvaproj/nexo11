@@ -1,4 +1,6 @@
 import { NavLink } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard,
   Users,
@@ -70,8 +72,20 @@ export function AppSidebar() {
   const { perfil, roles, signOut } = useAuth();
   const collapsed = state === "collapsed";
 
-  // Inativo: SEM fundo, texto #6B7A90, hover discreto.
-  // Ativo: bg rgba(26,155,232,0.12) + borda esquerda 2px #1a9be8 + texto/ícone branco.
+  const { data: totalUnread } = useQuery({
+    queryKey: ["total_unread_messages"],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("contract_messages")
+        .select("*", { count: "exact", head: true })
+        .eq("is_read", false)
+        .eq("sender_type", "cliente");
+      if (error) return 0;
+      return count || 0;
+    },
+    refetchInterval: 10000,
+  });
+
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     isActive
       ? "!bg-[rgba(26,155,232,0.12)] !text-white font-medium border-l-2 border-[#1a9be8] pl-[calc(0.5rem-2px)] rounded-l-none rounded-r-md transition-colors duration-150 ease-in-out hover:!bg-[rgba(26,155,232,0.12)] hover:!text-white [&_svg]:!text-white"
@@ -118,8 +132,20 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} className={linkClass}>
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-2">
+                          <item.icon className="h-4 w-4" />
+                          {!collapsed && <span>{item.title}</span>}
+                        </div>
+                        {!collapsed && item.url === "/mensagens" && totalUnread !== undefined && totalUnread > 0 && (
+                          <span className="bg-[#1a9be8] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                            {totalUnread}
+                          </span>
+                        )}
+                        {collapsed && item.url === "/mensagens" && totalUnread !== undefined && totalUnread > 0 && (
+                          <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#1a9be8] rounded-full" />
+                        )}
+                      </div>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
