@@ -67,6 +67,7 @@ export function EditLojaDialog({ open, onOpenChange, loja }: Props) {
     email: "",
     franqueado_id: "",
     contrato_modelo: "",
+    desconto_maximo_sem_aprovacao: 10,
   });
 
   useEffect(() => {
@@ -81,6 +82,7 @@ export function EditLojaDialog({ open, onOpenChange, loja }: Props) {
         email: loja.email || "",
         franqueado_id: loja.franqueado_id || "",
         contrato_modelo: loja.contrato_modelo || "",
+        desconto_maximo_sem_aprovacao: loja.desconto_maximo_sem_aprovacao ?? 10,
       });
     }
   }, [loja, open]);
