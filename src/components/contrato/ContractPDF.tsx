@@ -378,20 +378,32 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
           </View>
         </View>
 
-        {/* Signature Stamp if signed */}
+        {/* Signature Stamp on all pages if signed */}
         {contrato.assinado && (
-          <View style={{ marginTop: 30, padding: 10, border: '1pt solid #05873C', borderRadius: 4, backgroundColor: '#F0FDF4' }}>
-            <Text style={{ fontSize: 9, fontWeight: 'bold', color: '#05873C', textAlign: 'center' }}>ASSINADO ELETRONICAMENTE</Text>
-            <Text style={{ fontSize: 8, color: '#333', marginTop: 5 }}>Signatário: {contrato.assinatura_nome}</Text>
-            <Text style={{ fontSize: 8, color: '#333' }}>Data: {new Date(contrato.data_assinatura).toLocaleString('pt-BR')}</Text>
-            <Text style={{ fontSize: 8, color: '#333' }}>IP: {contrato.assinatura_ip}</Text>
-            <Text style={{ fontSize: 8, color: '#333' }}>Hash: {contrato.assinatura_hash}</Text>
+          <View fixed style={{ 
+            position: 'absolute', 
+            bottom: 20, 
+            right: 30, 
+            padding: 8, 
+            border: '1pt solid #05873C', 
+            borderRadius: 4, 
+            backgroundColor: '#F0FDF4',
+            width: 220,
+            zIndex: 100
+          }}>
+            <Text style={{ fontSize: 7, fontWeight: 'bold', color: '#05873C', textAlign: 'center', marginBottom: 2 }}>
+              ✓ DOCUMENTO ASSINADO DIGITALMENTE
+            </Text>
+            <Text style={{ fontSize: 6, color: '#333' }}>Assinado por: {contrato.assinatura_nome}</Text>
+            <Text style={{ fontSize: 6, color: '#333' }}>Data/hora: {new Date(contrato.data_assinatura).toLocaleString('pt-BR')}</Text>
+            <Text style={{ fontSize: 6, color: '#333' }}>IP: {contrato.assinatura_ip}</Text>
+            <Text style={{ fontSize: 6, color: '#333' }}>Hash: {contrato.assinatura_hash?.slice(0, 16)}</Text>
           </View>
         )}
 
-        <Text style={styles.footer}>
-          Documento gerado pelo Sistema NEXO em {new Date().toLocaleString('pt-BR')}
-        </Text>
+        <Text style={styles.footer} render={({ pageNumber, totalPages }) => (
+          `Página ${pageNumber} de ${totalPages} — Documento gerado pelo Sistema NEXO em ${new Date().toLocaleString('pt-BR')}`
+        )} fixed />
       </Page>
     </Document>
   );
