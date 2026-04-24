@@ -89,7 +89,8 @@ export default function Dashboard() {
           supabase
             .from("contratos")
             .select("id, status, valor_venda")
-            .not("status", "eq", "cancelado"),
+            .not("status", "is", null)
+            .not("status", "is", null),
           supabase
             .from("chat_mensagens")
             .select("id, contrato_id, lida, contratos(status)")
@@ -114,7 +115,7 @@ export default function Dashboard() {
 
       const contratosMap: Record<string, string> = {};
       contratosByStatus.data?.forEach((c: any) => {
-        const etapa = c.status || "comercial";
+        const etapa = c.status;
         contratosMap[c.id] = etapa;
         if (pipeline[etapa]) {
           pipeline[etapa].count += 1;
