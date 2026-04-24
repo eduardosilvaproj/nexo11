@@ -283,28 +283,16 @@ export default function PortalCliente() {
         console.warn("Não foi possível obter IP:", err);
       }
 
+      const timestamp = new Date().toISOString();
+      const hash = await gerarHash(contrato.id, nomeAssinatura.trim(), timestamp);
+
       // 1. Upload da imagem da assinatura para o Storage
-      const signatureFileName = `sig_${contrato.id}_${Date.now()}.png`;
-      const signatureFilePath = `assinaturas/${signatureFileName}`;
-      
-      // Converter base64 para blob
-      const res = await fetch(assinaturaBase64!);
-      const blobSig = await res.blob();
-
-      const { error: uploadSigError } = await supabase.storage
-        .from('contratos-assinados')
-        .upload(signatureFilePath, blobSig, {
-          contentType: 'image/png',
-          upsert: true
-        });
-
-      if (uploadSigError) throw uploadSigError;
-
+...
       const { data: { publicUrl: signatureUrl } } = supabase.storage
         .from('contratos-assinados')
         .getPublicUrl(signatureFilePath);
 
-      // 2. Chamar RPC para registrar assinatura (agora recebendo URL da imagem)
+      // 2. Chamar RPC para registrar assinatura
       const { data, error } = await supabase.rpc(
         "portal_assinar_contrato" as any,
         { 
@@ -312,7 +300,9 @@ export default function PortalCliente() {
           _nome: nomeAssinatura.trim(),
           _ip: ip,
           _user_agent: navigator.userAgent,
-          _assinatura_imagem_url: signatureUrl
+          _assinatura_imagem_url: signatureUrl,
+          _hash: hash,
+          _data_assinatura: timestamp
         }
       );
       if (error) throw error;
