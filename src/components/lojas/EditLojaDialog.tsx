@@ -37,6 +37,7 @@ const schema = z.object({
   email: z.string().trim().email("E-mail inválido").max(255).optional().or(z.literal("")),
   franqueado_id: z.string().uuid("Selecione um responsável"),
   contrato_modelo: z.string().trim().optional().or(z.literal("")),
+  desconto_maximo_sem_aprovacao: z.number().min(0).max(100).default(10),
 });
 
 function maskCNPJ(v: string) {
