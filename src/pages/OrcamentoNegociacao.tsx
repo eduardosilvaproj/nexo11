@@ -587,7 +587,7 @@ export default function OrcamentoNegociacao() {
         </div>
 
         <div className="flex justify-center">
-          {!descontoBloqueado ? (
+          {(!descontoBloqueado || descontoExtra <= descontoMaximoSemAprovacao) ? (
             <div className="flex items-center gap-2 text-emerald-600 font-semibold px-4 py-2 bg-emerald-50 rounded-full border border-emerald-100">
               <ShieldCheck className="h-5 w-5" />
               Desconto Liberado
