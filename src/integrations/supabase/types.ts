@@ -2739,15 +2739,26 @@ export type Database = {
         Args: { _contrato_id: string }
         Returns: undefined
       }
-      portal_assinar_contrato: {
-        Args: {
-          _ip: string
-          _nome: string
-          _token: string
-          _user_agent?: string
-        }
-        Returns: Json
-      }
+      portal_assinar_contrato:
+        | {
+            Args: {
+              _assinatura_imagem_url?: string
+              _ip: string
+              _nome: string
+              _token: string
+              _user_agent: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _ip: string
+              _nome: string
+              _token: string
+              _user_agent?: string
+            }
+            Returns: Json
+          }
       portal_registrar_nps: {
         Args: { _comentario?: string; _nota: number; _token: string }
         Returns: Json
