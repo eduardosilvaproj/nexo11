@@ -8,17 +8,18 @@ import {
   Percent,
   Users,
   ArrowRight,
+  MessageSquare,
   type LucideIcon,
 } from "lucide-react";
 
-const ETAPAS_CONFIG: { key: string; label: string; bg: string; text: string }[] = [
-  { key: "comercial", label: "Comercial", bg: "#E6F1FB", text: "#0C447C" },
-  { key: "tecnico", label: "Revisão Técnica", bg: "#EEEDFE", text: "#3C3489" },
-  { key: "producao", label: "Produção", bg: "#FAEEDA", text: "#633806" },
-  { key: "logistica", label: "Logística", bg: "#EAF3DE", text: "#27500A" },
-  { key: "montagem", label: "Montagem", bg: "#E1F5EE", text: "#085041" },
-  { key: "pos_venda", label: "Pós-Venda", bg: "#FBEAF0", text: "#72243E" },
-  { key: "finalizado", label: "Finalizado", bg: "#F1EFE8", text: "#444441" },
+const ETAPAS_CONFIG: { key: string; label: string; border: string; text: string }[] = [
+  { key: "comercial", label: "Comercial", border: "#378ADD", text: "#0C447C" },
+  { key: "tecnico", label: "Revisão Técnica", border: "#7F77DD", text: "#3C3489" },
+  { key: "producao", label: "Produção", border: "#EF9F27", text: "#633806" },
+  { key: "logistica", label: "Logística", border: "#1D9E75", text: "#27500A" },
+  { key: "montagem", label: "Montagem", border: "#5DCAA5", text: "#085041" },
+  { key: "pos_venda", label: "Pós-Venda", border: "#D4537E", text: "#72243E" },
+  { key: "finalizado", label: "Finalizado", border: "#888780", text: "#444441" },
 ];
 
 interface MetricCardProps {
@@ -30,14 +31,14 @@ interface MetricCardProps {
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "0.5px solid #E8ECF2",
+  border: "1px solid #E8ECF2",
   borderRadius: "12px",
 };
 
 function MetricCard({ label, value, icon: Icon, color, valueColor = "#0D1117" }: MetricCardProps) {
   return (
     <div
-      className="relative bg-white p-5"
+      className="relative bg-white p-5 shadow-sm"
       style={{ ...cardStyle, borderTop: `3px solid ${color}` }}
     >
       <Icon
@@ -67,7 +68,7 @@ export default function Dashboard() {
       inicioMes.setDate(1);
       inicioMes.setHours(0, 0, 0, 0);
 
-      const [contratosAtivos, faturamentoMes, dre, leadsAtivos, contratosByStatus] =
+      const [contratosAtivos, faturamentoMes, dre, leadsAtivos, contratosByStatus, mensagensNaoLidas] =
         await Promise.all([
           supabase
             .from("contratos")
@@ -87,6 +88,11 @@ export default function Dashboard() {
             .from("contratos")
             .select("id, status, valor_venda")
             .not("status", "eq", "cancelado"),
+          supabase
+            .from("chat_mensagens")
+            .select("id, contrato_id")
+            .eq("lida", false)
+            .eq("remetente_tipo", "cliente"),
         ]);
 
       const faturamento =
@@ -97,18 +103,33 @@ export default function Dashboard() {
         margens.length > 0 ? margens.reduce((a, b) => a + b, 0) / margens.length : null;
 
       const pipeline: Record<string, { count: number; total: number; noPrazo: number; emAlerta: number; emAtraso: number }> = {};
+      const mensagens: Record<string, { totalConversas: number; unreadCount: number }> = {};
+      
       ETAPAS_CONFIG.forEach((e) => {
         pipeline[e.key] = { count: 0, total: 0, noPrazo: 0, emAlerta: 0, emAtraso: 0 };
+        mensagens[e.key] = { totalConversas: 0, unreadCount: 0 };
       });
 
+      const contratosMap: Record<string, string> = {};
       contratosByStatus.data?.forEach((c: any) => {
         const etapa = c.status || "comercial";
+        contratosMap[c.id] = etapa;
         if (pipeline[etapa]) {
           pipeline[etapa].count += 1;
           pipeline[etapa].total += Number(c.valor_venda || 0);
-          
-          // Fallback para status de prazo já que a coluna não existe em contratos
-          pipeline[etapa].noPrazo += 1;
+          pipeline[etapa].noPrazo += 1; // Fallback
+        }
+        if (mensagens[etapa]) {
+          mensagens[etapa].totalConversas += 1;
+        }
+      });
+
+      let totalUnread = 0;
+      mensagensNaoLidas.data?.forEach((m: any) => {
+        const etapa = contratosMap[m.contrato_id];
+        if (etapa && mensagens[etapa]) {
+          mensagens[etapa].unreadCount += 1;
+          totalUnread += 1;
         }
       });
 
@@ -118,6 +139,8 @@ export default function Dashboard() {
         margemMedia,
         leadsAtivos: leadsAtivos.count ?? 0,
         pipeline,
+        mensagens,
+        totalUnread,
       };
     },
   });
@@ -173,7 +196,7 @@ export default function Dashboard() {
       </div>
 
       {/* Pipeline de contratos */}
-      <div className="bg-white p-6" style={cardStyle}>
+      <div className="bg-white p-6 shadow-sm" style={cardStyle}>
         <div className="mb-6 flex items-center justify-between">
           <h2 style={{ fontSize: 18, fontWeight: 600, color: "#0D1117" }}> Pipeline de contratos </h2>
           <span style={{ fontSize: 14, color: "#6B7A90" }}>
@@ -188,16 +211,16 @@ export default function Dashboard() {
               <button
                 key={etapa.key}
                 onClick={() => navigate(`/comercial?etapa=${etapa.key}`)}
-                className="flex flex-col rounded-xl p-4 text-left transition-all hover:brightness-95 active:scale-[0.98]"
-                style={{ backgroundColor: etapa.bg }}
+                className="flex flex-col rounded-xl border-l-[4px] bg-[#F8F9FA] p-4 text-left transition-all hover:bg-[#F1F3F5] active:scale-[0.98]"
+                style={{ borderLeftColor: etapa.border }}
               >
-                <span className="mb-1 block truncate font-semibold" style={{ color: etapa.text, fontSize: 14 }}>
+                <span className="mb-1 block truncate font-semibold text-[#495057]" style={{ fontSize: 13 }}>
                   {etapa.label}
                 </span>
-                <span className="mb-1 block font-bold" style={{ color: etapa.text, fontSize: 18 }}>
+                <span className="mb-1 block font-bold text-[#212529]" style={{ fontSize: 17 }}>
                   {data.count} {data.count === 1 ? 'contrato' : 'contratos'}
                 </span>
-                <span className="mb-3 block font-medium opacity-80" style={{ color: etapa.text, fontSize: 13 }}>
+                <span className="mb-3 block font-medium text-[#6C757D]" style={{ fontSize: 12 }}>
                   {formatBRL(data.total)}
                 </span>
                 
@@ -237,44 +260,44 @@ export default function Dashboard() {
 
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
         {/* Ponto de equilíbrio */}
-        <div className="flex flex-col bg-white p-5" style={cardStyle}>
+        <div className="flex flex-col bg-white p-6 shadow-sm" style={cardStyle}>
           <h2
             className="mb-4"
-            style={{ fontSize: 15, fontWeight: 500, color: "#0D1117" }}
+            style={{ fontSize: 16, fontWeight: 600, color: "#0D1117" }}
           >
             Ponto de equilíbrio
           </h2>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span style={{ fontSize: 13, color: "#6B7A90" }}>Custo fixo mensal</span>
-              <span style={{ fontSize: 13, fontWeight: 500, color: "#0D1117" }}>
+              <span style={{ fontSize: 14, color: "#6B7A90" }}>Custo fixo mensal</span>
+              <span style={{ fontSize: 14, fontWeight: 500, color: "#0D1117" }}>
                 {formatBRL(custoFixo)}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span style={{ fontSize: 13, color: "#6B7A90" }}>PE calculado</span>
-              <span style={{ fontSize: 13, fontWeight: 500, color: "#0D1117" }}>
+              <span style={{ fontSize: 14, color: "#6B7A90" }}>PE calculado</span>
+              <span style={{ fontSize: 14, fontWeight: 500, color: "#0D1117" }}>
                 {formatBRL(pe)}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span style={{ fontSize: 13, color: "#6B7A90" }}>Faturamento atual</span>
-              <span style={{ fontSize: 13, fontWeight: 500, color: "#0D1117" }}>
+              <span style={{ fontSize: 14, color: "#6B7A90" }}>Faturamento atual</span>
+              <span style={{ fontSize: 14, fontWeight: 500, color: "#0D1117" }}>
                 {formatBRL(faturamentoAtual)}
               </span>
             </div>
           </div>
 
-          <div className="mt-5">
-            <div className="mb-1.5 flex items-center justify-between">
+          <div className="mt-6">
+            <div className="mb-2 flex items-center justify-between">
               <span style={{ fontSize: 12, color: "#6B7A90" }}>% do PE atingido</span>
-              <span style={{ fontSize: 12, color: "#6B7A90" }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "#1E6FBF" }}>
                 {peProgress.toFixed(0)}%
               </span>
             </div>
             <div
-              className="h-2 w-full overflow-hidden"
+              className="h-2.5 w-full overflow-hidden"
               style={{ background: "#E8ECF2", borderRadius: 999 }}
             >
               <div
@@ -290,11 +313,58 @@ export default function Dashboard() {
 
           <Link
             to="/financeiro"
-            className="mt-5 inline-flex items-center gap-1 self-start text-[#1E6FBF] transition-colors hover:text-[#00AAFF]"
+            className="mt-6 inline-flex items-center gap-1 self-start text-[#1E6FBF] transition-colors hover:text-[#00AAFF]"
             style={{ fontSize: 13, fontWeight: 500 }}
           >
             Configurar custos fixos
             <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+
+        {/* Mensagens por etapa */}
+        <div className="flex flex-col bg-white p-6 shadow-sm" style={cardStyle}>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 style={{ fontSize: 16, fontWeight: 600, color: "#0D1117" }}>Mensagens por etapa</h2>
+            {(stats?.totalUnread ?? 0) > 0 && (
+              <span className="flex h-6 items-center justify-center rounded-full bg-red-500 px-2.5 text-[11px] font-bold text-white">
+                {stats?.totalUnread} não lidas
+              </span>
+            )}
+          </div>
+
+          <div className="space-y-1">
+            {ETAPAS_CONFIG.map((etapa) => {
+              const data = stats?.mensagens?.[etapa.key] || { totalConversas: 0, unreadCount: 0 };
+              return (
+                <button
+                  key={etapa.key}
+                  onClick={() => navigate(`/mensagens?etapa=${etapa.key}`)}
+                  className="group flex w-full items-center justify-between rounded-lg p-2.5 transition-colors hover:bg-gray-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white" style={{ color: etapa.border }}>
+                      <MessageSquare className="h-5 w-5" />
+                    </div>
+                    <div className="flex flex-col items-start">
+                      <span className="text-sm font-semibold text-gray-700">{etapa.label}</span>
+                      <span className="text-xs text-gray-500">{data.totalConversas} {data.totalConversas === 1 ? 'conversa' : 'conversas'}</span>
+                    </div>
+                  </div>
+                  {data.unreadCount > 0 && (
+                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                      {data.unreadCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          
+          <Link
+            to="/mensagens"
+            className="mt-auto pt-4 text-[11px] text-[#6B7A90] hover:text-[#1E6FBF]"
+          >
+            Ver todas as mensagens
           </Link>
         </div>
       </div>
