@@ -412,8 +412,14 @@ export default function OrcamentoNegociacao() {
                     step="0.1"
                     value={descontoExtra}
                     onChange={(e) => setDescontoExtra(Number(e.target.value || 0))}
-                    className="h-10"
+                    disabled={descontoBloqueado}
+                    className={cn("h-10", descontoBloqueado && "bg-slate-100 cursor-not-allowed opacity-70")}
                   />
+                  {descontoBloqueado && (
+                    <p className="text-[10px] text-amber-600 font-medium flex items-center gap-1 mt-1">
+                      <Lock className="h-3 w-3" /> Bloqueado
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">Total Geral (sem taxa)</p>
