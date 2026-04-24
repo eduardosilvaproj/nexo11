@@ -199,6 +199,9 @@ export type Database = {
       }
       chat_mensagens: {
         Row: {
+          anexo_nome: string | null
+          anexo_tipo: string | null
+          anexo_url: string | null
           contrato_id: string
           created_at: string
           id: string
@@ -209,6 +212,9 @@ export type Database = {
           remetente_tipo: string
         }
         Insert: {
+          anexo_nome?: string | null
+          anexo_tipo?: string | null
+          anexo_url?: string | null
           contrato_id: string
           created_at?: string
           id?: string
@@ -219,6 +225,9 @@ export type Database = {
           remetente_tipo: string
         }
         Update: {
+          anexo_nome?: string | null
+          anexo_tipo?: string | null
+          anexo_url?: string | null
           contrato_id?: string
           created_at?: string
           id?: string
