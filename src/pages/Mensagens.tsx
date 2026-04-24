@@ -33,10 +33,19 @@ const ETAPAS_CONFIG: Record<string, { label: string, bg: string, text: string, p
 };
 
 export default function Mensagens() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeEtapa, setActiveEtapa] = useState<string>("Todas");
   const queryClient = useQueryClient();
+
+  // Load etapa from URL on mount
+  useEffect(() => {
+    const etapa = searchParams.get("etapa");
+    if (etapa && ETAPAS_CONFIG[etapa]) {
+      setActiveEtapa(etapa);
+    }
+  }, [searchParams]);
 
   const { data: contracts, isLoading } = useQuery({
     queryKey: ["contract_messages_list"],
