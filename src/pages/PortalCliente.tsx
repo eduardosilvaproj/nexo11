@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +17,11 @@ import {
   Camera, 
   Home, 
   User, 
-  ChevronDown 
+  ChevronDown,
+  X,
+  FileSignature,
+  Eraser,
+  Printer
 } from "lucide-react";
 import { LogoNexo } from "@/components/LogoNexo";
 import { pdf } from "@react-pdf/renderer";
@@ -43,6 +47,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import SignatureCanvas from "react-signature-canvas";
 
 const STAGE_LABELS: Record<string, string> = {
   comercial: "Comercial",
