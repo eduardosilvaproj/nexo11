@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MessageSquare, Search, Send, User } from "lucide-react";
+import { MessageSquare, Search, Send, User, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -106,9 +106,12 @@ export default function Mensagens() {
   const selectedContract = contracts?.find((c) => c.id === selectedContractId);
 
   return (
-    <div className="flex h-[calc(100vh-88px)] md:h-[calc(100vh-104px)] -m-4 md:-m-6 overflow-hidden bg-[#F8FAFC]">
+    <div className="flex h-[calc(100vh-88px)] md:h-[calc(100vh-104px)] -m-4 md:-m-6 overflow-hidden bg-[#F0F2F5] relative">
       {/* Sidebar - Lista de Conversas */}
-      <div className="w-80 md:w-96 border-r border-[#E2E8F0] bg-white flex flex-col shrink-0">
+      <div className={cn(
+        "w-full md:w-80 lg:w-96 border-r border-[#E2E8F0] bg-white flex flex-col shrink-0 absolute inset-0 z-20 md:relative md:z-auto transition-transform duration-300 ease-in-out",
+        selectedContractId ? "-translate-x-full md:translate-x-0" : "translate-x-0"
+      )}>
         <div className="p-4 border-b border-[#E2E8F0]">
           <h1 className="text-xl font-semibold text-[#1E293B] mb-4">Mensagens</h1>
           <div className="relative">
@@ -179,17 +182,25 @@ export default function Mensagens() {
       </div>
 
       {/* Área de Chat */}
-      <div className="flex-1 flex flex-col bg-white">
+      <div className="flex-1 flex flex-col bg-white h-full overflow-hidden">
         {selectedContractId ? (
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col h-full overflow-hidden">
             {/* Header do Chat */}
-            <div className="p-4 border-b border-[#E2E8F0] flex items-center justify-between bg-white shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-[#1E6FBF]/10 flex items-center justify-center text-[#1E6FBF]">
+            <div className="p-3 border-b border-[#E2E8F0] flex items-center justify-between bg-[#F0F2F5] shrink-0">
+              <div className="flex items-center gap-2 md:gap-3">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="md:hidden h-8 w-8 text-[#64748B]" 
+                  onClick={() => setSelectedContractId(null)}
+                >
+                  <ArrowLeft size={20} />
+                </Button>
+                <div className="h-10 w-10 rounded-full bg-[#1E6FBF] flex items-center justify-center text-white shrink-0">
                   <User size={20} />
                 </div>
-                <div>
-                  <h2 className="font-semibold text-[#1E293B] leading-none">
+                <div className="min-w-0">
+                  <h2 className="font-semibold text-[#1E293B] leading-none truncate">
                     {selectedContract?.cliente_nome}
                   </h2>
                   <p className="text-[11px] text-[#64748B] mt-1">
@@ -224,7 +235,7 @@ export default function Mensagens() {
 
       <style>{`
         /* Overriding some styles in ContratoChatTab to fit this page better */
-        .flex-1 > div > div[class*="h-[calc(100vh-450px)]"] {
+        .flex-1 > div > div[class*="h-full"] {
           height: 100% !important;
           min-height: 100% !important;
           border-radius: 0 !important;
