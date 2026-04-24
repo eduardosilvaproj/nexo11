@@ -111,9 +111,9 @@ export default function AuthPage() {
 
           <form onSubmit={handleSignIn} className="space-y-6">
             <div className="space-y-2">
-              <Label className="text-slate-700 text-sm font-medium">E-mail</Label>
+              <Label className="text-slate-300 text-sm font-medium">E-mail</Label>
               <div className="relative group">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-[#1a7fe8] transition-colors" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 group-focus-within:text-[#1a7fe8] transition-colors" />
                 <Input
                   type="email"
                   placeholder="exemplo@nexo.com"
@@ -127,13 +127,13 @@ export default function AuthPage() {
 
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label className="text-slate-700 text-sm font-medium">Senha</Label>
+                <Label className="text-slate-300 text-sm font-medium">Senha</Label>
                 <button type="button" className="text-xs text-[#1a7fe8] hover:underline transition-all">
                   Esqueceu a senha?
                 </button>
               </div>
               <div className="relative group">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-[#1a7fe8] transition-colors" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 group-focus-within:text-[#1a7fe8] transition-colors" />
                 <Input
                   type={showPwd ? "text" : "password"}
                   placeholder="Sua senha"
@@ -144,7 +144,7 @@ export default function AuthPage() {
                 <button
                   type="button"
                   onClick={() => setShowPwd(!showPwd)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
                 >
                   {showPwd ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -170,10 +170,10 @@ export default function AuthPage() {
 
           <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-slate-200"></span>
+              <span className="w-full border-t border-white/10"></span>
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-4 text-slate-400 font-medium tracking-wider">ou</span>
+              <span className="bg-[#0c1526] px-4 text-slate-500 font-medium tracking-wider">ou</span>
             </div>
           </div>
 
@@ -181,7 +181,7 @@ export default function AuthPage() {
             type="button"
             variant="outline"
             onClick={handleGoogleLogin}
-            className="w-full h-12 border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-lg flex items-center justify-center gap-3 transition-all"
+            className="w-full h-12 border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 rounded-lg flex items-center justify-center gap-3 transition-all"
           >
             <svg className="h-5 w-5" viewBox="0 0 24 24">
               <path
@@ -206,7 +206,7 @@ export default function AuthPage() {
         </div>
 
         <div className="text-center absolute bottom-8 left-0 w-full">
-          <p className="text-gray-500 text-[10px] tracking-wide uppercase">
+          <p className="text-slate-600 text-[10px] tracking-wide uppercase">
             © 2024 NEXO. Todos os direitos reservados.
           </p>
         </div>
