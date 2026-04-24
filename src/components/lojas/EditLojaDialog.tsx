@@ -124,6 +124,7 @@ export function EditLojaDialog({ open, onOpenChange, loja }: Props) {
           email: parsed.data.email,
           franqueado_id: parsed.data.franqueado_id,
           contrato_modelo: parsed.data.contrato_modelo,
+          desconto_maximo_sem_aprovacao: parsed.data.desconto_maximo_sem_aprovacao,
         })
         .eq("id", loja.id);
 
