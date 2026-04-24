@@ -29,8 +29,8 @@ export default function Mensagens() {
     queryFn: async () => {
       // First, get all unique contract_ids from messages
       const { data: messageData, error: messageError } = await supabase
-        .from("contract_messages")
-        .select("contract_id, message, created_at")
+        .from("chat_mensagens")
+        .select("contrato_id, mensagem, created_at")
         .order("created_at", { ascending: false });
 
       if (messageError) throw messageError;
@@ -38,8 +38,8 @@ export default function Mensagens() {
       // Group by contract_id and take the first (most recent) message
       const latestMessagesMap = new Map();
       messageData?.forEach((m) => {
-        if (!latestMessagesMap.has(m.contract_id)) {
-          latestMessagesMap.set(m.contract_id, m);
+        if (!latestMessagesMap.has(m.contrato_id)) {
+          latestMessagesMap.set(m.contrato_id, m);
         }
       });
 
@@ -57,23 +57,23 @@ export default function Mensagens() {
 
       // Get unread counts
       const { data: unreadData, error: unreadError } = await supabase
-        .from("contract_messages")
-        .select("contract_id")
-        .eq("is_read", false)
-        .eq("sender_type", "cliente");
+        .from("chat_mensagens")
+        .select("contrato_id")
+        .eq("lida", false)
+        .eq("remetente_tipo", "cliente");
 
       if (unreadError) throw unreadError;
 
       const unreadCountsMap = new Map();
       unreadData?.forEach((u) => {
-        unreadCountsMap.set(u.contract_id, (unreadCountsMap.get(u.contract_id) || 0) + 1);
+        unreadCountsMap.set(u.contrato_id, (unreadCountsMap.get(u.contrato_id) || 0) + 1);
       });
 
       // Combine data
       return contractData.map((c) => ({
         id: c.id,
         cliente_nome: c.cliente_nome,
-        last_message: latestMessagesMap.get(c.id)?.message || "",
+        last_message: latestMessagesMap.get(c.id)?.mensagem || "",
         last_message_time: latestMessagesMap.get(c.id)?.created_at || "",
         unread_count: unreadCountsMap.get(c.id) || 0,
       })).sort((a, b) => new Date(b.last_message_time).getTime() - new Date(a.last_message_time).getTime());
@@ -87,7 +87,7 @@ export default function Mensagens() {
       .channel("messages-list-updates")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "contract_messages" },
+        { event: "*", schema: "public", table: "chat_mensagens" },
         () => {
           queryClient.invalidateQueries({ queryKey: ["contract_messages_list"] });
         }

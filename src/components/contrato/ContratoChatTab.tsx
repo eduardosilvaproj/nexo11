@@ -11,12 +11,12 @@ import { cn } from "@/lib/utils";
 
 interface Message {
   id: string;
-  contract_id: string;
-  sender_type: "cliente" | "equipe";
-  sender_name: string;
-  message: string;
+  contrato_id: string;
+  remetente_tipo: "cliente" | "equipe";
+  remetente_nome: string;
+  mensagem: string;
   created_at: string;
-  is_read: boolean;
+  lida: boolean;
 }
 
 interface ContratoChatTabProps {
@@ -42,8 +42,8 @@ export function ContratoChatTab({ contratoId }: ContratoChatTabProps) {
         {
           event: "INSERT",
           schema: "public",
-          table: "contract_messages",
-          filter: `contract_id=eq.${contratoId}`,
+          table: "chat_mensagens",
+          filter: `contrato_id=eq.${contratoId}`,
         },
         (payload: any) => {
           setMessages((prev) => {
@@ -87,9 +87,9 @@ export function ContratoChatTab({ contratoId }: ContratoChatTabProps) {
   async function loadMessages() {
     try {
       const { data, error } = await supabase
-        .from("contract_messages")
+        .from("chat_mensagens")
         .select("*")
-        .eq("contract_id", contratoId)
+        .eq("contrato_id", contratoId)
         .order("created_at", { ascending: true });
 
       if (error) throw error;
@@ -97,11 +97,11 @@ export function ContratoChatTab({ contratoId }: ContratoChatTabProps) {
       
       // Mark as read
       await supabase
-        .from("contract_messages")
-        .update({ is_read: true })
-        .eq("contract_id", contratoId)
-        .eq("sender_type", "cliente")
-        .eq("is_read", false);
+        .from("chat_mensagens")
+        .update({ lida: true })
+        .eq("contrato_id", contratoId)
+        .eq("remetente_tipo", "cliente")
+        .eq("lida", false);
 
     } catch (e: any) {
       console.error("Erro ao carregar mensagens:", e);
@@ -114,11 +114,11 @@ export function ContratoChatTab({ contratoId }: ContratoChatTabProps) {
 
     setSending(true);
     try {
-      const { error } = await supabase.from("contract_messages").insert({
-        contract_id: contratoId,
-        sender_type: "equipe",
-        sender_name: userName,
-        message: newMessage.trim(),
+      const { error } = await supabase.from("chat_mensagens").insert({
+        contrato_id: contratoId,
+        remetente_tipo: "equipe",
+        remetente_nome: userName,
+        mensagem: newMessage.trim(),
       });
 
       if (error) throw error;
@@ -151,7 +151,7 @@ export function ContratoChatTab({ contratoId }: ContratoChatTabProps) {
             </div>
           ) : (
             messages.map((msg, index) => {
-              const isMine = msg.sender_type === "equipe";
+              const isMine = msg.remetente_tipo === "equipe";
               const showDate = index === 0 || 
                 format(new Date(messages[index-1].created_at), 'yyyy-MM-dd') !== format(new Date(msg.created_at), 'yyyy-MM-dd');
               
@@ -183,12 +183,12 @@ export function ContratoChatTab({ contratoId }: ContratoChatTabProps) {
 
                       {!isMine && (
                         <p className="text-[11px] font-bold text-[#1E6FBF] mb-0.5">
-                          {msg.sender_name}
+                          {msg.remetente_nome}
                         </p>
                       )}
                       <div className="flex flex-col">
                         <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words">
-                          {msg.message}
+                          {msg.mensagem}
                         </p>
                         <div className="flex items-center justify-end gap-1 mt-1">
                           <span className="text-[10px] text-[#64748B]">
@@ -196,7 +196,7 @@ export function ContratoChatTab({ contratoId }: ContratoChatTabProps) {
                           </span>
                           {isMine && (
                             <span className="text-[#34B7F1]">
-                              {msg.is_read ? <CheckCheck size={14} /> : <Check size={14} />}
+                              {msg.lida ? <CheckCheck size={14} /> : <Check size={14} />}
                             </span>
                           )}
                         </div>
