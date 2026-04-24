@@ -287,7 +287,22 @@ export default function PortalCliente() {
       const hash = await gerarHash(contrato.id, nomeAssinatura.trim(), timestamp);
 
       // 1. Upload da imagem da assinatura para o Storage
-...
+      const signatureFileName = `sig_${contrato.id}_${Date.now()}.png`;
+      const signatureFilePath = `assinaturas/${signatureFileName}`;
+      
+      // Converter base64 para blob
+      const res = await fetch(assinaturaBase64!);
+      const blobSig = await res.blob();
+
+      const { error: uploadSigError } = await supabase.storage
+        .from('contratos-assinados')
+        .upload(signatureFilePath, blobSig, {
+          contentType: 'image/png',
+          upsert: true
+        });
+
+      if (uploadSigError) throw uploadSigError;
+
       const { data: { publicUrl: signatureUrl } } = supabase.storage
         .from('contratos-assinados')
         .getPublicUrl(signatureFilePath);
