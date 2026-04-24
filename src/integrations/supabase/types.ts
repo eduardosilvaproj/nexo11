@@ -1289,6 +1289,7 @@ export type Database = {
           cnpj: string | null
           contrato_modelo: string | null
           created_at: string
+          desconto_maximo_sem_aprovacao: number | null
           email: string | null
           endereco: string | null
           estado: string | null
@@ -1303,6 +1304,7 @@ export type Database = {
           cnpj?: string | null
           contrato_modelo?: string | null
           created_at?: string
+          desconto_maximo_sem_aprovacao?: number | null
           email?: string | null
           endereco?: string | null
           estado?: string | null
@@ -1317,6 +1319,7 @@ export type Database = {
           cnpj?: string | null
           contrato_modelo?: string | null
           created_at?: string
+          desconto_maximo_sem_aprovacao?: number | null
           email?: string | null
           endereco?: string | null
           estado?: string | null
