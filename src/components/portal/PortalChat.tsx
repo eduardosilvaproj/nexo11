@@ -64,14 +64,22 @@ export function PortalChat({ contractId, clientName, portalClient }: PortalChatP
         (payload: any) => {
           const newMessage = payload.new as Message;
           setMessages((prev) => {
-            // Se a mensagem já existe (por causa do update otimista), não adiciona de novo
             if (prev.some(m => m.id === newMessage.id)) return prev;
             return [...prev, newMessage];
           });
-        }
 
+          // Marcar como lida se for da equipe
+          if (newMessage.remetente_tipo === "equipe") {
+            portalClient
+              .from("chat_mensagens")
+              .update({ lida: true })
+              .eq("id", newMessage.id)
+              .then();
+          }
+        }
       )
       .subscribe();
+
 
     return () => {
       portalClient.removeChannel(channel);
