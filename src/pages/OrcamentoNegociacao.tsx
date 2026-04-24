@@ -101,6 +101,8 @@ export default function OrcamentoNegociacao() {
   const [percParceiro, setPercParceiro] = useState(0);
   const [ocultarParceiro, setOcultarParceiro] = useState(false);
   const [descontoExtra, setDescontoExtra] = useState(0);
+  const [descontoBloqueado, setDescontoBloqueado] = useState(true);
+  const [modalLiberarOpen, setModalLiberarOpen] = useState(false);
   const [datasParcelas, setDatasParcelas] = useState<string[]>([]);
   const [ambientesSelecionados, setAmbientesSelecionados] = useState<string[]>([]);
 
