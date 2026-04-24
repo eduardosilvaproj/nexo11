@@ -802,16 +802,35 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
               <ChevronLeft className="mr-2 h-4 w-4" /> Voltar
             </Button>
             <div className="flex items-center gap-3">
-              <Button variant="outline" onClick={() => handleFinalize(true)} disabled={isSubmitting || ambientes.length === 0}>
-                {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
-                Liberar desconto
-              </Button>
+              {!descontoBloqueado ? (
+                <div className="flex items-center gap-1.5 text-emerald-600 font-semibold px-3 py-1.5 bg-emerald-50 rounded-lg border border-emerald-100 text-sm">
+                  <ShieldCheck className="h-4 w-4" />
+                  Liberado
+                </div>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setModalLiberarOpen(true)} 
+                  disabled={isSubmitting || ambientes.length === 0}
+                  className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                >
+                  <Lock className="mr-2 h-4 w-4" />
+                  Liberar desconto
+                </Button>
+              )}
               <Button onClick={() => handleFinalize(false)} disabled={isSubmitting || !condicaoSel} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
-                {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
                 Aprovar e gerar contrato
               </Button>
             </div>
           </div>
+
+          <ModalLiberarDesconto
+            open={modalLiberarOpen}
+            onOpenChange={setModalLiberarOpen}
+            onAprovado={() => setDescontoBloqueado(false)}
+            percentual={descontoGlobal}
+          />
         </div>
       )}
     </div>
