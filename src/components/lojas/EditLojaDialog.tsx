@@ -37,6 +37,7 @@ const schema = z.object({
   email: z.string().trim().email("E-mail inválido").max(255).optional().or(z.literal("")),
   franqueado_id: z.string().uuid("Selecione um responsável"),
   contrato_modelo: z.string().trim().optional().or(z.literal("")),
+  desconto_maximo_sem_aprovacao: z.number().min(0).max(100).default(10),
 });
 
 function maskCNPJ(v: string) {
@@ -66,6 +67,7 @@ export function EditLojaDialog({ open, onOpenChange, loja }: Props) {
     email: "",
     franqueado_id: "",
     contrato_modelo: "",
+    desconto_maximo_sem_aprovacao: 10,
   });
 
   useEffect(() => {
@@ -80,6 +82,7 @@ export function EditLojaDialog({ open, onOpenChange, loja }: Props) {
         email: loja.email || "",
         franqueado_id: loja.franqueado_id || "",
         contrato_modelo: loja.contrato_modelo || "",
+        desconto_maximo_sem_aprovacao: loja.desconto_maximo_sem_aprovacao ?? 10,
       });
     }
   }, [loja, open]);
@@ -121,6 +124,7 @@ export function EditLojaDialog({ open, onOpenChange, loja }: Props) {
           email: parsed.data.email,
           franqueado_id: parsed.data.franqueado_id,
           contrato_modelo: parsed.data.contrato_modelo,
+          desconto_maximo_sem_aprovacao: parsed.data.desconto_maximo_sem_aprovacao,
         })
         .eq("id", loja.id);
 
@@ -225,6 +229,23 @@ export function EditLojaDialog({ open, onOpenChange, loja }: Props) {
               </SelectContent>
             </Select>
           </div>
+          <div className="col-span-2 border-t pt-4 mt-2">
+            <h3 className="text-sm font-semibold mb-3">Políticas de Desconto</h3>
+            <div className="w-1/2">
+              <Label>Desconto máximo sem aprovação (%)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                value={form.desconto_maximo_sem_aprovacao}
+                onChange={(e) => setForm({ ...form, desconto_maximo_sem_aprovacao: Number(e.target.value) })}
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Descontos acima deste limite exigirão autorização de um gerente/admin.
+              </p>
+            </div>
+          </div>
+
           <div className="col-span-2 space-y-2">
             <Label>Modelo de Contrato (com variáveis dinâmicas)</Label>
             <p className="text-[10px] text-muted-foreground">

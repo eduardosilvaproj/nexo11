@@ -102,6 +102,7 @@ export default function OrcamentoNegociacao() {
   const [ocultarParceiro, setOcultarParceiro] = useState(false);
   const [descontoExtra, setDescontoExtra] = useState(0);
   const [descontoBloqueado, setDescontoBloqueado] = useState(true);
+  const [descontoMaximoSemAprovacao, setDescontoMaximoSemAprovacao] = useState(10);
   const [modalLiberarOpen, setModalLiberarOpen] = useState(false);
   const [datasParcelas, setDatasParcelas] = useState<string[]>([]);
   const [ambientesSelecionados, setAmbientesSelecionados] = useState<string[]>([]);
@@ -113,7 +114,7 @@ export default function OrcamentoNegociacao() {
       const { data: orc, error } = await supabase
         .from("orcamentos")
         .select(
-          "id,nome,loja_id,cliente_id,vendedor_id,valor_negociado,total_pedido,total_tabela,condicao_pagamento_id,taxa_financeira,parcelas,valor_parcela,percentual_parceiro,ocultar_parceiro,tipo_venda,parcelas_datas,desconto_global,status,frete_loja,montagem_loja,categorias",
+          "id,nome,loja_id,cliente_id,vendedor_id,valor_negociado,total_pedido,total_tabela,condicao_pagamento_id,taxa_financeira,parcelas,valor_parcela,percentual_parceiro,ocultar_parceiro,tipo_venda,parcelas_datas,desconto_global,status,frete_loja,montagem_loja,categorias,lojas(desconto_maximo_sem_aprovacao)",
         )
         .eq("id", id)
         .maybeSingle();
@@ -122,7 +123,15 @@ export default function OrcamentoNegociacao() {
         setLoading(false);
         return;
       }
-      setOrcamento(orc as Orcamento);
+      setOrcamento(orc as any);
+      
+      const storeLimit = (orc as any).lojas?.desconto_maximo_sem_aprovacao ?? 10;
+      setDescontoMaximoSemAprovacao(storeLimit);
+      
+      const currentDesconto = Number(orc.desconto_global || 0);
+      if (currentDesconto <= storeLimit) {
+        setDescontoBloqueado(false);
+      }
 
       const { data: cli } = await supabase
         .from("clientes")
@@ -226,6 +235,11 @@ export default function OrcamentoNegociacao() {
 
   const handleAprovar = async () => {
     if (!orcamento) return;
+    if (descontoBloqueado && descontoExtra > descontoMaximoSemAprovacao) {
+      toast.error("O desconto aplicado exige autorização de um gerente.");
+      setModalLiberarOpen(true);
+      return;
+    }
     if (!condicaoSel) {
       toast.error("Selecione uma condição de pagamento");
       return;
@@ -381,13 +395,21 @@ export default function OrcamentoNegociacao() {
                     type="number"
                     step="0.1"
                     value={descontoExtra}
-                    onChange={(e) => setDescontoExtra(Number(e.target.value || 0))}
-                    disabled={descontoBloqueado}
-                    className={cn("h-10", descontoBloqueado && "bg-slate-100 cursor-not-allowed opacity-70")}
+                    onChange={(e) => {
+                      const val = Number(e.target.value || 0);
+                      setDescontoExtra(val);
+                      if (val > descontoMaximoSemAprovacao && descontoBloqueado) {
+                        setModalLiberarOpen(true);
+                      }
+                    }}
+                    className="h-10"
                   />
-                  {descontoBloqueado && (
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    Limite sem aprovação: {descontoMaximoSemAprovacao}%
+                  </p>
+                  {descontoBloqueado && descontoExtra > descontoMaximoSemAprovacao && (
                     <p className="text-[10px] text-amber-600 font-medium flex items-center gap-1 mt-1">
-                      <Lock className="h-3 w-3" /> Bloqueado
+                      <Lock className="h-3 w-3" /> Requer autorização
                     </p>
                   )}
                 </div>
@@ -565,7 +587,7 @@ export default function OrcamentoNegociacao() {
         </div>
 
         <div className="flex justify-center">
-          {!descontoBloqueado ? (
+          {(!descontoBloqueado || descontoExtra <= descontoMaximoSemAprovacao) ? (
             <div className="flex items-center gap-2 text-emerald-600 font-semibold px-4 py-2 bg-emerald-50 rounded-full border border-emerald-100">
               <ShieldCheck className="h-5 w-5" />
               Desconto Liberado
