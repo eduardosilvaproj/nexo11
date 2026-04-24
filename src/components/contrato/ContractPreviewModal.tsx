@@ -8,7 +8,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { pdf } from "@react-pdf/renderer";
 import { ContractPDF } from "./ContractPDF";
-import { Printer, Download, Send, Loader2, X } from "lucide-react";
+import { ContractHTMLPreview } from "./ContractHTMLPreview";
+import { Printer, Download, Send, Loader2, X, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -31,30 +33,35 @@ export function ContractPreviewModal({
 }: ContractPreviewModalProps) {
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [iframeLoaded, setIframeLoaded] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [fullContrato, setFullContrato] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (open) {
-      generatePdf();
+      loadData();
     } else {
       if (url) {
         URL.revokeObjectURL(url);
         setUrl(null);
-        setIframeLoaded(false);
       }
+      setFullContrato(null);
+      setError(null);
     }
   }, [open]);
 
-  async function generatePdf() {
+  async function loadData() {
     setLoading(true);
+    setError(null);
     try {
-      // 1. Fetch full contract and client data for PDF
-      const { data: realContrato } = await supabase
+      // 1. Fetch full contract and client data
+      const { data: realContrato, error: contractError } = await supabase
         .from("contratos")
-        .select("cliente_id, assinatura_nome, data_assinatura, assinatura_ip, assinatura_hash")
+        .select("*")
         .eq("id", contrato.id)
         .single();
+
+      if (contractError) throw contractError;
 
       let clienteData = null;
       if (realContrato?.cliente_id) {
@@ -66,16 +73,48 @@ export function ContractPreviewModal({
         clienteData = cli;
       }
 
-      const fullContrato = { 
+      const mergedContrato = { 
         ...contrato, 
         ...realContrato, 
         cliente: clienteData 
       };
 
-      // 2. Generate PDF
+      // Check for required fields as requested by user
+      const missingFields = [];
+      if (!loja?.nome) missingFields.push("Nome da Loja");
+      if (!loja?.cnpj) missingFields.push("CNPJ da Loja");
+      if (!mergedContrato.cliente_nome) missingFields.push("Nome do Cliente");
+      
+      const valorTotal = mergedContrato.valor_venda || mergedContrato.valor_negociado || orcamentos?.[0]?.valor_negociado;
+      if (!valorTotal) missingFields.push("Valor do Contrato");
+
+      const parcelas = mergedContrato.parcelas_datas || orcamentos?.[0]?.parcelas_datas;
+      if (!parcelas || !Array.isArray(parcelas) || parcelas.length === 0) {
+        missingFields.push("Dados de Parcelamento");
+      }
+
+      if (missingFields.length > 0) {
+        setError(`Os seguintes campos são necessários para gerar o contrato: ${missingFields.join(", ")}`);
+      }
+
+      setFullContrato(mergedContrato);
+
+      // Generate PDF in background for download
+      generatePdfBlob(mergedContrato);
+    } catch (err: any) {
+      console.error("Erro ao carregar dados do contrato:", err);
+      setError("Não foi possível carregar os dados para a prévia do contrato.");
+      toast.error("Erro ao carregar dados do contrato.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function generatePdfBlob(data: any) {
+    try {
       const doc = (
         <ContractPDF
-          contrato={fullContrato}
+          contrato={data}
           loja={loja}
           ambientes={ambientes}
           orcamentos={orcamentos}
@@ -83,35 +122,28 @@ export function ContractPreviewModal({
       );
       const blob = await pdf(doc).toBlob();
       const newUrl = URL.createObjectURL(blob);
-      setIframeLoaded(false);
       setUrl(newUrl);
-    } catch (error) {
-      console.error("Erro ao gerar PDF:", error);
-      toast.error("Não foi possível gerar a prévia do contrato.");
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error("Erro ao gerar PDF blob:", err);
+      // We don't set error state here because we still have HTML preview
     }
   }
 
-
   const handlePrint = () => {
-    if (iframeRef.current && iframeLoaded) {
-      const contentWindow = iframeRef.current.contentWindow;
-      if (contentWindow) {
-        contentWindow.focus();
-        contentWindow.print();
-      }
-    } else {
-      toast.info("Aguarde o carregamento do documento para imprimir.");
-    }
+    window.print();
   };
 
   const handleDownload = () => {
     if (url) {
       const link = document.createElement("a");
       link.href = url;
-      link.download = `contrato_${contrato.cliente_nome.replace(/\s+/g, "_")}_${contrato.id.slice(0, 8)}.pdf`;
+      const name = fullContrato?.cliente_nome || contrato.cliente_nome || "cliente";
+      link.download = `contrato_${name.replace(/\s+/g, "_")}_${contrato.id.slice(0, 8)}.pdf`;
       link.click();
+    } else {
+      toast.error("PDF ainda está sendo gerado. Tente novamente em instantes.");
+      // Fallback: try generating again
+      if (fullContrato) generatePdfBlob(fullContrato);
     }
   };
 
@@ -150,36 +182,63 @@ export function ContractPreviewModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[1000px] w-[90vw] h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
-        <DialogHeader className="p-4 border-b flex flex-row items-center justify-between space-y-0">
+        <style dangerouslySetInnerHTML={{ __html: `
+          @media print {
+            body * { visibility: hidden; }
+            .printable-content, .printable-content * { visibility: visible; }
+            .printable-content { 
+              position: absolute; 
+              left: 0; 
+              top: 0; 
+              width: 100%;
+              padding: 0;
+              margin: 0;
+            }
+            .no-print { display: none !important; }
+          }
+        `}} />
+        
+        <DialogHeader className="p-4 border-b flex flex-row items-center justify-between space-y-0 no-print">
           <DialogTitle className="text-lg font-semibold flex items-center gap-2">
             📄 Preview do Contrato
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 bg-slate-100 flex items-center justify-center overflow-hidden">
+        <div className="flex-1 bg-slate-100 flex flex-col items-center overflow-y-auto p-4 md:p-8">
           {loading ? (
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex-1 flex flex-col items-center justify-center gap-2">
               <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-              <span className="text-sm text-slate-500 font-medium">Gerando contrato...</span>
+              <span className="text-sm text-slate-500 font-medium">Carregando contrato...</span>
             </div>
-          ) : url ? (
-            <iframe
-              ref={iframeRef}
-              src={url}
-              className="w-full h-full border-none"
-              title="Preview do Contrato"
-              onLoad={() => setIframeLoaded(true)}
-            />
+          ) : error ? (
+            <div className="flex-1 flex items-center justify-center p-6">
+              <Alert variant="destructive" className="max-w-md">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Erro na prévia</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            </div>
+          ) : fullContrato ? (
+            <div ref={contentRef} className="w-full max-w-[800px]">
+              <ContractHTMLPreview
+                contrato={fullContrato}
+                loja={loja}
+                ambientes={ambientes}
+                orcamentos={orcamentos}
+              />
+            </div>
           ) : (
-            <div className="text-slate-400">Falha ao carregar prévia</div>
+            <div className="flex-1 flex items-center justify-center text-slate-400">
+              Falha ao carregar prévia
+            </div>
           )}
         </div>
 
-        <div className="p-4 border-t flex items-center justify-center gap-3 bg-white">
+        <div className="p-4 border-t flex items-center justify-center gap-3 bg-white no-print">
           <Button
             variant="outline"
             onClick={handlePrint}
-            disabled={!url || loading || !iframeLoaded}
+            disabled={loading || !!error || !fullContrato}
             className="flex items-center gap-2"
           >
             <Printer className="h-4 w-4" />
@@ -188,7 +247,7 @@ export function ContractPreviewModal({
           <Button
             variant="outline"
             onClick={handleDownload}
-            disabled={!url || loading}
+            disabled={loading || !!error}
             className="flex items-center gap-2"
           >
             <Download className="h-4 w-4" />
@@ -196,7 +255,7 @@ export function ContractPreviewModal({
           </Button>
           <Button
             onClick={handleSendForSignature}
-            disabled={!url || loading}
+            disabled={loading || !!error}
             className="flex items-center gap-2"
           >
             <Send className="h-4 w-4" />

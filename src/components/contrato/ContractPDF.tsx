@@ -157,11 +157,12 @@ interface ContractPDFProps {
 
 export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractPDFProps) => {
   const cliente = contrato.cliente;
+  const valorTotal = contrato.valor_venda || contrato.valor_negociado || orcamentos?.[0]?.valor_negociado || 0;
   
   const getParcelasDesc = () => {
     const p = contrato.parcelas_datas || orcamentos?.[0]?.parcelas_datas;
     if (!Array.isArray(p)) return "A definir";
-    return p.map((item: any) => `${item.label || 'Parcela'}: ${formatCurrency(item.valor)} (${new Date(item.data).toLocaleDateString('pt-BR')})`).join(', ');
+    return p.map((item: any) => `${item.label || 'Parcela'}: ${formatCurrency(item.valor)} (${item.data ? new Date(item.data).toLocaleDateString('pt-BR') : '—'})`).join(', ');
   };
 
   const ambientesNomes = ambientes?.map(a => a.nome).join(', ') || orcamentos?.map(o => o.nome).join(', ') || '—';
@@ -239,7 +240,7 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
 
           <Text style={[styles.clauseTitle, { marginTop: 10 }]}>CLÁUSULA SÉTIMA - DO PREÇO E DO PAGAMENTO</Text>
           <Text style={styles.clauseContent}>
-            Pelo objeto deste contrato, o CONTRATANTE pagará o valor total de {formatCurrency(contrato.valor_venda)}, sendo parcelado da seguinte forma: {getParcelasDesc()}.
+            Pelo objeto deste contrato, o CONTRATANTE pagará o valor total de {formatCurrency(valorTotal)}, sendo parcelado da seguinte forma: {getParcelasDesc()}.
           </Text>
 
           <Text style={[styles.clauseTitle, { marginTop: 10 }]}>CLÁUSULA OITAVA - DAS GARANTIAS</Text>
@@ -360,7 +361,7 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.colLabel}>Valor Total:</Text>
-            <Text style={styles.colValue}>{formatCurrency(contrato.valor_venda)}</Text>
+            <Text style={styles.colValue}>{formatCurrency(valorTotal)}</Text>
           </View>
           <View style={[styles.summaryRow, { minHeight: parcelasStyles.minHeight, paddingVertical: parcelasStyles.paddingVertical }]}>
             <Text style={styles.colLabel}>Pagamento:</Text>

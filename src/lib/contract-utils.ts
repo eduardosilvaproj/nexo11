@@ -40,7 +40,7 @@ export function substituteContractVariables(text: string, data: {
     '{{cliente.nome}}': cliente?.nome || contrato?.cliente_nome || '—',
     '{{cliente.email}}': cliente?.email || '—',
     '{{cliente.telefone}}': cliente?.telefone || contrato?.cliente_contato || '—',
-    '{{contrato.valor_total}}': formatBRL(contrato?.valor_venda),
+    '{{contrato.valor_total}}': formatBRL(contrato?.valor_venda || contrato?.valor_negociado || orcamentos?.[0]?.valor_negociado),
     '{{contrato.parcelas}}': generateParcelasDescription(parcelasDatas),
     '{{contrato.ambientes}}': ambientes?.map((a: any) => a.nome).join(', ') || orcamentos?.map(o => o.nome).join(', ') || '—',
     '{{assinatura.nome}}': contrato?.assinatura_nome || '—',
