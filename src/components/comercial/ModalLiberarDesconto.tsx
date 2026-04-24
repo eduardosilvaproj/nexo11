@@ -1,11 +1,11 @@
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { KeyRound, Send, Loader2 } from "lucide-react";
+import { KeyRound, Send, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,24 +14,27 @@ interface ModalLiberarDescontoProps {
   onOpenChange: (open: boolean) => void;
   onAprovado: () => void;
   orcamentoId?: string;
+  percentual?: number;
 }
 
 export function ModalLiberarDesconto({ 
   open, 
   onOpenChange, 
   onAprovado,
-  orcamentoId 
+  orcamentoId,
+  percentual = 0
 }: ModalLiberarDescontoProps) {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusRemoto, setStatusRemoto] = useState<"idle" | "enviado" | "aprovado">("idle");
 
   const handleConfirmarSenha = () => {
-    // Por enquanto, uma senha padrão para o gerente (pode ser configurada depois)
+    // Por enquanto, uma senha padrão para o gerente
     if (password === "gerente123") {
       toast.success("Desconto liberado com sucesso!");
       onAprovado();
       onOpenChange(false);
+      setPassword("");
     } else {
       toast.error("Senha incorreta");
     }
@@ -40,25 +43,35 @@ export function ModalLiberarDesconto({
   const handleSolicitarRemoto = async () => {
     setIsSubmitting(true);
     try {
-      // Registrar solicitação (precisaremos da tabela, mas simulamos por enquanto se não existir)
-      // Se tiver orcamentoId, podemos salvar no banco
-      if (orcamentoId) {
-        const { error } = await supabase
-          .from("notificacoes")
-          .insert({
-            user_id: null, // para todos os gerentes? ou um específico
-            titulo: "Solicitação de Desconto",
-            mensagem: `O vendedor solicitou liberação de desconto para o orçamento ${orcamentoId}`,
-            link: `/orcamentos/${orcamentoId}`,
-          });
-        
-        if (error) throw error;
-      }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Usuário não autenticado");
+
+      // Registrar solicitação na nova tabela
+      const { error } = await supabase
+        .from("solicitacoes_desconto" as any)
+        .insert({
+          orcamento_id: orcamentoId,
+          vendedor_id: user.id,
+          percentual_solicitado: percentual,
+          status: 'pendente'
+        });
+      
+      if (error) throw error;
+
+      // Também enviar notificação se possível (opcional, já que registramos a solicitação)
+      await supabase.from("notificacoes").insert({
+        user_id: user.id, // Notifica o próprio usuário que a solicitação foi enviada? 
+        // Em um cenário real, deveríamos buscar o gerente da loja.
+        tipo: "solicitacao_desconto",
+        mensagem: `Solicitação de desconto de ${percentual}% enviada para aprovação.`,
+        link: orcamentoId ? `/orcamentos/${orcamentoId}` : undefined
+      });
 
       setStatusRemoto("enviado");
       toast.success("Solicitação enviada ao gerente");
-    } catch (e) {
-      toast.error("Erro ao enviar solicitação");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.message || "Erro ao enviar solicitação");
     } finally {
       setIsSubmitting(false);
     }
@@ -89,6 +102,7 @@ export function ModalLiberarDesconto({
                   className="pl-9"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleConfirmarSenha()}
                 />
               </div>
             </div>
@@ -105,7 +119,7 @@ export function ModalLiberarDesconto({
                     Clique abaixo para enviar uma solicitação de liberação para o gerente responsável.
                   </p>
                   <Button 
-                    className="w-full bg-amber-600 hover:bg-amber-700" 
+                    className="w-full bg-amber-600 hover:bg-amber-700 text-white" 
                     onClick={handleSolicitarRemoto}
                     disabled={isSubmitting}
                   >
@@ -114,11 +128,14 @@ export function ModalLiberarDesconto({
                   </Button>
                 </>
               ) : (
-                <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
-                  <p className="text-amber-800 font-medium">Solicitação enviada!</p>
-                  <p className="text-xs text-amber-700 mt-1">
-                    Aguardando aprovação do gerente. Você será notificado assim que for liberado.
-                  </p>
+                <div className="p-4 bg-amber-50 rounded-lg border border-amber-200 flex flex-col items-center gap-2">
+                  <CheckCircle2 className="h-8 w-8 text-amber-600" />
+                  <div className="text-center">
+                    <p className="text-amber-800 font-medium">Solicitação enviada!</p>
+                    <p className="text-xs text-amber-700 mt-1">
+                      Aguardando aprovação do gerente. O desconto ficará bloqueado até a resposta.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
