@@ -88,7 +88,11 @@ export default function PortalCliente() {
   const [signing, setSigning] = useState(false);
   const [nomeAssinatura, setNomeAssinatura] = useState("");
   const [isModalAssinaturaOpen, setIsModalAssinaturaOpen] = useState(false);
+  const [assinaturaPasso, setAssinaturaPasso] = useState<1 | 2 | 3>(1);
   const [aceitouTermos, setAceitouTermos] = useState(false);
+  const [dadosAssinaturaFinal, setDadosAssinaturaFinal] = useState<any>(null);
+  const [mostrandoContratoCompleto, setMostrandoContratoCompleto] = useState(false);
+  const sigCanvas = useRef<SignatureCanvas>(null);
 
   const portalClient = useMemo(() => createClient(
     import.meta.env.VITE_SUPABASE_URL,
