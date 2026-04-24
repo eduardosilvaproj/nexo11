@@ -17,11 +17,22 @@ interface ContractListItem {
   last_message: string;
   last_message_time: string;
   unread_count: number;
+  etapa_atual: string;
 }
+
+const ETAPAS_CONFIG: Record<string, { label: string, bg: string, text: string, pillBg: string }> = {
+  "comercial": { label: "Comercial", bg: "#E6F1FB", text: "#0C447C", pillBg: "bg-blue-100 text-blue-800" },
+  "revisao_tecnica": { label: "Revisão Técnica", bg: "#EEEDFE", text: "#3C3489", pillBg: "bg-purple-100 text-purple-800" },
+  "producao": { label: "Produção", bg: "#FAEEDA", text: "#633806", pillBg: "bg-amber-100 text-amber-800" },
+  "logistica": { label: "Logística", bg: "#EAF3DE", text: "#27500A", pillBg: "bg-green-100 text-green-800" },
+  "montagem": { label: "Montagem", bg: "#E1F5EE", text: "#085041", pillBg: "bg-teal-100 text-teal-800" },
+  "finalizado": { label: "Finalizado", bg: "#F1EFE8", text: "#444441", pillBg: "bg-gray-100 text-gray-800" },
+};
 
 export default function Mensagens() {
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeEtapa, setActiveEtapa] = useState<string>("Todas");
   const queryClient = useQueryClient();
 
   const { data: contracts, isLoading } = useQuery({
@@ -50,7 +61,7 @@ export default function Mensagens() {
       // Get contract details
       const { data: contractData, error: contractError } = await supabase
         .from("contratos")
-        .select("id, cliente_nome")
+        .select("id, cliente_nome, etapa_atual")
         .in("id", contractIds);
 
       if (contractError) throw contractError;
@@ -73,6 +84,7 @@ export default function Mensagens() {
       return contractData.map((c) => ({
         id: c.id,
         cliente_nome: c.cliente_nome,
+        etapa_atual: c.etapa_atual || "comercial",
         last_message: latestMessagesMap.get(c.id)?.mensagem || "",
         last_message_time: latestMessagesMap.get(c.id)?.created_at || "",
         unread_count: unreadCountsMap.get(c.id) || 0,
@@ -99,9 +111,17 @@ export default function Mensagens() {
     };
   }, [queryClient]);
 
-  const filteredContracts = contracts?.filter((c) =>
-    c.cliente_nome.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredContracts = contracts?.filter((c) => {
+    const matchesSearch = c.cliente_nome.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesEtapa = activeEtapa === "Todas" || c.etapa_atual === activeEtapa;
+    return matchesSearch && matchesEtapa;
+  });
+
+  const getCountForEtapa = (etapa: string) => {
+    if (!contracts) return 0;
+    if (etapa === "Todas") return contracts.length;
+    return contracts.filter(c => c.etapa_atual === etapa).length;
+  };
 
   const selectedContract = contracts?.find((c) => c.id === selectedContractId);
 
@@ -122,6 +142,38 @@ export default function Mensagens() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+          </div>
+          
+          <div className="flex gap-2 mt-4 overflow-x-auto pb-2 scrollbar-none no-scrollbar">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setActiveEtapa("Todas")}
+              className={cn(
+                "rounded-full px-4 h-8 text-xs shrink-0",
+                activeEtapa === "Todas" 
+                  ? "bg-[#1E6FBF] text-white border-[#1E6FBF] hover:bg-[#1E6FBF] hover:text-white" 
+                  : "bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100"
+              )}
+            >
+              Todas ({getCountForEtapa("Todas")})
+            </Button>
+            {Object.entries(ETAPAS_CONFIG).filter(([key]) => key !== 'finalizado').map(([key, config]) => (
+              <Button
+                key={key}
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveEtapa(key)}
+                className={cn(
+                  "rounded-full px-4 h-8 text-xs shrink-0 border-transparent",
+                  activeEtapa === key 
+                    ? "bg-[#1E6FBF] text-white border-[#1E6FBF] hover:bg-[#1E6FBF] hover:text-white" 
+                    : config.pillBg
+                )}
+              >
+                {config.label} ({getCountForEtapa(key)})
+              </Button>
+            ))}
           </div>
         </div>
 
@@ -171,9 +223,23 @@ export default function Mensagens() {
                       </Badge>
                     )}
                   </div>
-                  <span className="text-[10px] text-[#94A3B8] mt-1">
-                    Contrato: #{contract.id.slice(0, 8)}
-                  </span>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-[10px] text-[#94A3B8]">
+                      Contrato: #{contract.id.slice(0, 8)}
+                    </span>
+                    {contract.etapa_atual && ETAPAS_CONFIG[contract.etapa_atual] && (
+                      <Badge 
+                        variant="secondary"
+                        className="text-[9px] px-1.5 h-4 border-none font-medium"
+                        style={{ 
+                          backgroundColor: ETAPAS_CONFIG[contract.etapa_atual].bg,
+                          color: ETAPAS_CONFIG[contract.etapa_atual].text
+                        }}
+                      >
+                        {ETAPAS_CONFIG[contract.etapa_atual].label}
+                      </Badge>
+                    )}
+                  </div>
                 </button>
               ))
             )}
