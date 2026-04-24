@@ -75,8 +75,7 @@ export default function Dashboard() {
           supabase
             .from("contratos")
             .select("valor_venda")
-            .eq("status", "finalizado")
-            .gte("data_finalizacao", inicioMes.toISOString()),
+            .gte("created_at", inicioMes.toISOString()),
           supabase.from("dre_contrato").select("margem_realizada"),
           supabase
             .from("leads")
