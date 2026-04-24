@@ -550,7 +550,27 @@ export default function PortalCliente() {
 
             {/* Card de Status Verde */}
             <div className="bg-[#00d4aa] rounded-3xl p-6 text-white shadow-lg shadow-[#00d4aa]/20 relative overflow-hidden">
-...
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                  <span className="text-xs font-bold uppercase tracking-wider opacity-90">Etapa Atual</span>
+                </div>
+                <h2 className="text-2xl font-black">{stageLabel}</h2>
+                {entregaPrevista && (
+                  <div className="mt-4 pt-4 border-t border-white/20">
+                    <p className="text-xs font-bold uppercase opacity-80">Previsão de Entrega</p>
+                    <p className="text-lg font-bold">
+                      {new Date(entregaPrevista).toLocaleDateString("pt-BR", { day: '2-digit', month: 'long' })}
+                    </p>
+                  </div>
+                )}
+              </div>
+              <div className="absolute -right-4 -bottom-4 opacity-10">
+                <CheckCircle2 size={120} />
+              </div>
+            </div>
+
+            {/* Grid 2x2 de Botões */}
             <div className="space-y-3">
               <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest px-1">O que você precisa?</h3>
               <div className="grid grid-cols-2 gap-3">
