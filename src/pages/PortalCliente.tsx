@@ -248,11 +248,22 @@ export default function PortalCliente() {
   }
 
   async function handleAssinarContrato() {
-    if (!token) return;
-    if (!nomeAssinatura.trim()) {
-      toast.error("Por favor, informe seu nome completo para assinar.");
+    if (!token || !contrato) return;
+    
+    // Validar nome
+    const nomeDigitado = nomeAssinatura.trim().toLowerCase();
+    const nomeCliente = contrato.cliente_nome.trim().toLowerCase();
+    
+    if (nomeDigitado !== nomeCliente) {
+      toast.error(`O nome digitado deve ser idêntico ao cadastrado: ${contrato.cliente_nome}`);
       return;
     }
+    
+    if (!aceitouTermos) {
+      toast.error("Você deve aceitar os termos do contrato.");
+      return;
+    }
+
     setSigning(true);
     try {
       // 1. Obter IP
@@ -265,26 +276,75 @@ export default function PortalCliente() {
         console.warn("Não foi possível obter IP:", err);
       }
 
-      // 2. O hash agora é gerado e verificado no backend para maior segurança
+      // 2. Assinar no Banco
       const { data, error } = await supabase.rpc(
         "portal_assinar_contrato" as any,
         { 
           _token: token,
           _nome: nomeAssinatura.trim(),
-          _ip: ip
+          _ip: ip,
+          _user_agent: navigator.userAgent
         }
       );
       if (error) throw error;
-      const r = data as { ok: boolean; erro?: string };
+      const r = data as { ok: boolean; erro?: string; hash: string; data_assinatura: string; contrato_id: string };
       if (!r?.ok) throw new Error(r?.erro ?? "Erro ao assinar");
-      toast.success("Contrato assinado com sucesso!");
+
+      // 3. Gerar PDF Assinado com Carimbo (usando os dados retornados do banco)
+      const contratoComAssinatura = {
+        ...contrato,
+        assinado: true,
+        data_assinatura: r.data_assinatura,
+        assinatura_nome: nomeAssinatura.trim(),
+        assinatura_ip: ip,
+        assinatura_hash: r.hash
+      };
+
+      const doc = (
+        <ContractPDF
+          contrato={contratoComAssinatura}
+          loja={contrato.lojas}
+          ambientes={ambientes}
+          orcamentos={orcamentos}
+        />
+      );
+      
+      const blob = await pdf(doc).toBlob();
+      const fileName = `contrato_${r.contrato_id}_assinado.pdf`;
+      const filePath = `${r.contrato_id}/${fileName}`;
+
+      // 4. Upload para Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('contratos-assinados')
+        .upload(filePath, blob, {
+          contentType: 'application/pdf',
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      // 5. Obter URL pública
+      const { data: { publicUrl } } = supabase.storage
+        .from('contratos-assinados')
+        .getPublicUrl(filePath);
+
+      // 6. Atualizar contrato com a URL do PDF assinado
+      await portalClient
+        .from('contratos')
+        .update({ url_contrato_assinado: publicUrl })
+        .eq('id', r.contrato_id);
+
+      toast.success("Contrato assinado e autenticado com sucesso!");
+      setIsModalAssinaturaOpen(false);
       load();
     } catch (e: any) {
+      console.error(e);
       toast.error(e.message ?? "Não foi possível assinar o contrato");
     } finally {
       setSigning(false);
     }
   }
+
 
   async function handleDownloadContrato() {
     try {
