@@ -913,7 +913,16 @@ export default function PortalCliente() {
               submitting={npsSubmitting}
             />
           )
-        )}
+          </TabsContent>
+
+          <TabsContent value="mensagens" className="mt-0">
+            <PortalChat 
+              contractId={contrato.id} 
+              clientName={contrato.cliente_nome}
+              portalClient={portalClient}
+            />
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* 7. Rodapé */}
