@@ -666,74 +666,75 @@ export default function PortalCliente() {
             </div>
 
             {!contrato.assinado ? (
-              <div className="space-y-4 pt-4 border-t" style={{ borderColor: "#E8ECF2" }}>
-                <div className="space-y-2">
-                  <label style={{ fontSize: 13, fontWeight: 500, color: "#374151" }}>
-                    Nome completo para assinatura *
-                  </label>
-                  <input
-                    type="text"
-                    value={nomeAssinatura}
-                    onChange={(e) => setNomeAssinatura(e.target.value)}
-                    placeholder="Digite seu nome completo como no documento"
-                    className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    style={{ fontSize: 14 }}
-                  />
+              <div className="pt-4 border-t" style={{ borderColor: "#E8ECF2" }}>
+                <div className="flex flex-col items-center gap-4 py-6 text-center">
+                  <div className="w-16 h-16 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
+                    <ShieldCheck size={32} />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-slate-900">Aguardando Assinatura</h4>
+                    <p className="text-sm text-slate-500 max-w-xs mx-auto mt-1">
+                      Este documento precisa ser assinado digitalmente para prosseguir com o pedido.
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => setIsModalAssinaturaOpen(true)}
+                    className="bg-[#F59E0B] hover:bg-[#D97706] text-white px-8"
+                  >
+                    Assinar Agora
+                  </Button>
                 </div>
-                
-                <Button
-                  onClick={handleAssinarContrato}
-                  disabled={signing || !nomeAssinatura.trim()}
-                  className="w-full bg-[#1E6FBF] hover:bg-[#155ca1] text-white py-6"
-                >
-                  {signing ? "Processando..." : (
-                    <>
-                      <CheckCircle2 className="w-5 h-5 mr-2" />
-                      Assinar contrato eletronicamente
-                    </>
-                  )}
-                </Button>
-                
-                <p style={{ fontSize: 11, color: "#6B7A90", textAlign: "center" }}>
-                  Ao clicar em assinar, você concorda com os termos do contrato e registra sua assinatura eletrônica com IP, data e hash de verificação.
-                </p>
               </div>
             ) : (
-              <div 
-                className="p-6 rounded-xl border flex flex-col gap-4" 
-                style={{ backgroundColor: "#F0FDF4", borderColor: "#05873C", color: "#05873C" }}
-              >
-                <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-sm border-b pb-3" style={{ borderColor: "#05873C40" }}>
-                  <CheckCircle2 size={18} />
-                  <span>Documento Assinado Eletronicamente</span>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6 text-[13px]">
-                  <div>
-                    <div className="opacity-70 text-[11px] uppercase font-semibold mb-0.5">Signatário</div>
-                    <div className="font-medium text-slate-900">{contrato.assinatura_nome || "—"}</div>
+              <div className="space-y-4 pt-4 border-t" style={{ borderColor: "#E8ECF2" }}>
+                <div 
+                  className="p-6 rounded-xl border flex flex-col gap-4" 
+                  style={{ backgroundColor: "#F0FDF4", borderColor: "#05873C", color: "#05873C" }}
+                >
+                  <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-sm border-b pb-3" style={{ borderColor: "#05873C40" }}>
+                    <CheckCircle2 size={18} />
+                    <span>Documento Assinado Eletronicamente</span>
                   </div>
-                  <div>
-                    <div className="opacity-70 text-[11px] uppercase font-semibold mb-0.5">Data e Hora</div>
-                    <div className="font-medium text-slate-900">{formatDateTime(contrato.data_assinatura)}</div>
-                  </div>
-                  <div>
-                    <div className="opacity-70 text-[11px] uppercase font-semibold mb-0.5">IP de Origem</div>
-                    <div className="font-medium text-slate-900">{contrato.assinatura_ip || "—"}</div>
-                  </div>
-                  <div>
-                    <div className="opacity-70 text-[11px] uppercase font-semibold mb-0.5">Hash de Verificação</div>
-                    <div className="font-mono text-[10px] break-all text-slate-900 bg-white/50 p-1.5 rounded border border-slate-200 mt-1">
-                      {contrato.assinatura_hash || "—"}
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6 text-[13px]">
+                    <div>
+                      <div className="opacity-70 text-[11px] uppercase font-semibold mb-0.5">Signatário</div>
+                      <div className="font-medium text-slate-900">{contrato.assinatura_nome || "—"}</div>
+                    </div>
+                    <div>
+                      <div className="opacity-70 text-[11px] uppercase font-semibold mb-0.5">Data e Hora</div>
+                      <div className="font-medium text-slate-900">{formatDateTime(contrato.data_assinatura)}</div>
+                    </div>
+                    <div>
+                      <div className="opacity-70 text-[11px] uppercase font-semibold mb-0.5">IP de Origem</div>
+                      <div className="font-medium text-slate-900">{contrato.assinatura_ip || "—"}</div>
+                    </div>
+                    <div>
+                      <div className="opacity-70 text-[11px] uppercase font-semibold mb-0.5">Hash de Verificação</div>
+                      <div className="font-mono text-[10px] break-all text-slate-900 bg-white/50 p-1.5 rounded border border-slate-200 mt-1">
+                        {contrato.assinatura_hash || "—"}
+                      </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="text-[11px] pt-2 border-t mt-1 opacity-70 italic" style={{ borderColor: "#05873C40" }}>
-                  Este registro comprova a assinatura eletrônica com validade jurídica (MP nº 2.200-2/2001).
+                  
+                  {contrato.url_contrato_assinado && (
+                    <Button
+                      variant="outline"
+                      className="mt-2 bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800"
+                      onClick={() => window.open(contrato.url_contrato_assinado, '_blank')}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Baixar contrato assinado (PDF)
+                    </Button>
+                  )}
+                  
+                  <div className="text-[11px] pt-2 border-t mt-1 opacity-70 italic" style={{ borderColor: "#05873C40" }}>
+                    Este registro comprova a assinatura eletrônica com validade jurídica (MP nº 2.200-2/2001).
+                  </div>
                 </div>
               </div>
             )}
+
           </section>
         )}
 
