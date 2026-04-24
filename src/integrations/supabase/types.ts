@@ -554,6 +554,51 @@ export type Database = {
           },
         ]
       }
+      contract_messages: {
+        Row: {
+          contract_id: string
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          sender_name: string
+          sender_type: string
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          sender_name: string
+          sender_type: string
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          sender_name?: string
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_messages_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_messages_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contrato_ambientes: {
         Row: {
           aprovacao_solicitada_em: string | null

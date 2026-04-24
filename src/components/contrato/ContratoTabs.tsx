@@ -8,7 +8,8 @@ export type ContratoTabKey =
   | "montagem"
   | "ambientes"
   | "pos_venda"
-  | "dre";
+  | "dre"
+  | "mensagens";
 
 const TABS: { key: ContratoTabKey; label: string }[] = [
   { key: "comercial", label: "Comercial" },
@@ -19,6 +20,7 @@ const TABS: { key: ContratoTabKey; label: string }[] = [
   { key: "ambientes", label: "Ambientes" },
   { key: "pos_venda", label: "Pós-venda" },
   { key: "dre", label: "DRE" },
+  { key: "mensagens", label: "Mensagens" },
 ];
 
 interface ContratoTabsProps {

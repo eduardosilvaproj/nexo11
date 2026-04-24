@@ -9,6 +9,9 @@ import { ContratoStepper } from "@/components/contrato/ContratoStepper";
 import { pdf } from "@react-pdf/renderer";
 import { ContractPDF } from "@/components/contrato/ContractPDF";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PortalChat } from "@/components/portal/PortalChat";
+import { MessageSquare } from "lucide-react";
 
 const PUBLIC_EVENTS: Record<
   string,
@@ -455,7 +458,25 @@ export default function PortalCliente() {
           </div>
         </section>
 
-        {/* 3. Barra de progresso das etapas — reutiliza componente interno */}
+        <Tabs defaultValue="acompanhamento" className="w-full max-w-[680px] mx-auto">
+          <TabsList className="grid w-full grid-cols-2 mb-8 bg-white border border-[#E8ECF2] p-1 h-auto">
+            <TabsTrigger 
+              value="acompanhamento" 
+              className="py-3 data-[state=active]:bg-[#1E6FBF] data-[state=active]:text-white"
+            >
+              Acompanhamento
+            </TabsTrigger>
+            <TabsTrigger 
+              value="mensagens" 
+              className="py-3 data-[state=active]:bg-[#1E6FBF] data-[state=active]:text-white flex items-center gap-2"
+            >
+              <MessageSquare size={16} />
+              Mensagens
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="acompanhamento" className="space-y-6 mt-0">
+            {/* 3. Barra de progresso das etapas — reutiliza componente interno */}
         <section className="portal-stepper mx-auto w-full" style={{ maxWidth: 680 }}>
           <ContratoStepper current={contrato.status} />
           <div
@@ -892,7 +913,17 @@ export default function PortalCliente() {
               submitting={npsSubmitting}
             />
           )
-        )}
+            )}
+          </TabsContent>
+
+          <TabsContent value="mensagens" className="mt-0">
+            <PortalChat 
+              contractId={contrato.id} 
+              clientName={contrato.cliente_nome}
+              portalClient={portalClient}
+            />
+          </TabsContent>
+        </Tabs>
       </main>
 
       {/* 7. Rodapé */}

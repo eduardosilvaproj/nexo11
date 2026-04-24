@@ -17,6 +17,7 @@ import { ContratoMontagemTab } from "@/components/contrato/ContratoMontagemTab";
 import { ContratoAmbientesTab } from "@/components/contrato/ContratoAmbientesTab";
 import { ContratoPosVendaTab } from "@/components/contrato/ContratoPosVendaTab";
 import { ContratoDreTab } from "@/components/contrato/ContratoDreTab";
+import { ContratoChatTab } from "@/components/contrato/ContratoChatTab";
 import { ReadOnlyContext } from "@/components/contrato/ReadOnlyContext";
 
 const STAGE_TO_TAB: Record<string, ContratoTabKey> = {
@@ -402,6 +403,8 @@ export default function ContratoDetail() {
                 contratoNumero={contrato.id.slice(0, 8)}
                 contratoStatus={contrato.status}
               />
+            ) : active === "mensagens" ? (
+              <ContratoChatTab contratoId={contrato.id} />
             ) : (
               <div className="text-sm text-muted-foreground">
                 Conteúdo da aba “{active}” em construção.
