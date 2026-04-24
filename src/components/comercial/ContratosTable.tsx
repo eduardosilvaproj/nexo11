@@ -63,7 +63,10 @@ export function ContratosTable({ onCreate }: Props) {
         status: ContratoStatus;
         valor_venda: number;
         data_criacao: string;
+        assinado: boolean;
+        data_assinatura: string | null;
         dre_contrato: { margem_prevista: number | null } | { margem_prevista: number | null }[] | null;
+
       }>;
     },
   });
