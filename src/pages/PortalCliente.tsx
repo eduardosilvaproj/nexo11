@@ -373,7 +373,7 @@ export default function PortalCliente() {
     }
   }
 
-  async function handleDownloadContrato() {
+  const handleDownloadContrato = async () => {
     try {
       const doc = (
         <ContractPDF
@@ -392,7 +392,7 @@ export default function PortalCliente() {
     } catch (e: any) {
       toast.error("Erro ao gerar PDF");
     }
-  }
+  };
 
   if (loading) {
     return (
