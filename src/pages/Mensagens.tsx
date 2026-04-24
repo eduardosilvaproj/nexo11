@@ -157,7 +157,18 @@ export default function Mensagens() {
               />
             </div>
             <div className="w-[140px] shrink-0">
-              <Select value={activeEtapa} onValueChange={setActiveEtapa}>
+              <Select 
+                value={activeEtapa} 
+                onValueChange={(val) => {
+                  setActiveEtapa(val);
+                  if (val === "Todas") {
+                    searchParams.delete("etapa");
+                  } else {
+                    searchParams.set("etapa", val);
+                  }
+                  setSearchParams(searchParams);
+                }}
+              >
                 <SelectTrigger className="bg-[#F1F5F9] border-none text-xs h-10 focus:ring-1 focus:ring-[#1E6FBF]">
                   <SelectValue placeholder="Etapa" />
                 </SelectTrigger>
