@@ -114,7 +114,7 @@ export default function OrcamentoNegociacao() {
       const { data: orc, error } = await supabase
         .from("orcamentos")
         .select(
-          "id,nome,loja_id,cliente_id,vendedor_id,valor_negociado,total_pedido,total_tabela,condicao_pagamento_id,taxa_financeira,parcelas,valor_parcela,percentual_parceiro,ocultar_parceiro,tipo_venda,parcelas_datas,desconto_global,status,frete_loja,montagem_loja,categorias",
+          "id,nome,loja_id,cliente_id,vendedor_id,valor_negociado,total_pedido,total_tabela,condicao_pagamento_id,taxa_financeira,parcelas,valor_parcela,percentual_parceiro,ocultar_parceiro,tipo_venda,parcelas_datas,desconto_global,status,frete_loja,montagem_loja,categorias,lojas(desconto_maximo_sem_aprovacao)",
         )
         .eq("id", id)
         .maybeSingle();
