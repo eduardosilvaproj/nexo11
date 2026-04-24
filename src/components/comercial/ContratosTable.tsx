@@ -168,19 +168,40 @@ export function ContratosTable({ onCreate }: Props) {
                     {c.vendedor_nome}
                   </td>
                   <td className="px-4 py-3">
-                    <span
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 600,
-                        background: etapa.bg,
-                        color: etapa.color,
-                        padding: "3px 10px",
-                        borderRadius: 999,
-                      }}
-                    >
-                      {etapa.label}
-                    </span>
+                    <div className="flex flex-col gap-1">
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 600,
+                          background: etapa.bg,
+                          color: etapa.color,
+                          padding: "3px 10px",
+                          borderRadius: 999,
+                          width: "fit-content"
+                        }}
+                      >
+                        {etapa.label}
+                      </span>
+                      {c.assinado && (
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 600,
+                            background: "#D1FAE5",
+                            color: "#05873C",
+                            padding: "1px 8px",
+                            borderRadius: 4,
+                            width: "fit-content",
+                            border: "0.5px solid #05873C40"
+                          }}
+                          title={`Assinado em ${new Date(c.data_assinatura!).toLocaleString()}`}
+                        >
+                          ✓ ASSINADO
+                        </span>
+                      )}
+                    </div>
                   </td>
+
                   <td className="px-4 py-3" style={{ fontSize: 13, fontWeight: 500, color: "#0D1117" }}>
                     {formatBRL(Number(c.valor_venda || 0))}
                   </td>
