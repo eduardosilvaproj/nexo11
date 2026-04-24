@@ -21,7 +21,7 @@ interface ContractListItem {
 }
 
 const ETAPAS_CONFIG: Record<string, { label: string, bg: string, text: string, pillBg: string }> = {
-  "comercial": { label: "Comercial", bg: "#E6F1FB", text: "#0C447C", pillBg: "bg-blue-100 text-blue-800" },
+  "comercial": { label: "Comercial", bg: "#E6F1FB", text: "#0C447C", pillBg: "bg-[#E6F1FB] text-[#0C447C]" },
   "tecnico": { label: "Revisão Técnica", bg: "#EEEDFE", text: "#3C3489", pillBg: "bg-[#EEEDFE] text-[#3C3489]" },
   "producao": { label: "Produção", bg: "#FAEEDA", text: "#633806", pillBg: "bg-[#FAEEDA] text-[#633806]" },
   "logistica": { label: "Logística", bg: "#EAF3DE", text: "#27500A", pillBg: "bg-[#EAF3DE] text-[#27500A]" },
