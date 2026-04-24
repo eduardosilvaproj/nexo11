@@ -533,6 +533,54 @@ export default function PortalCliente() {
           </div>
         </section>
 
+        {/* Contract Signature Action Card */}
+        <section className="portal-card mx-auto w-full" style={{ maxWidth: 680 }}>
+          <div 
+            className="rounded-xl p-6 flex items-center justify-between gap-4 border-2"
+            style={{ 
+              backgroundColor: contrato.assinado ? "#F0FDF4" : "#FFFBEB", 
+              borderColor: contrato.assinado ? "#22C55E" : "#F59E0B" 
+            }}
+          >
+            <div className="flex items-center gap-4">
+              <div 
+                className="w-12 h-12 rounded-full flex items-center justify-center"
+                style={{ 
+                  backgroundColor: contrato.assinado ? "#DCFCE7" : "#FEF3C7",
+                  color: contrato.assinado ? "#16A34A" : "#D97706"
+                }}
+              >
+                {contrato.assinado ? <ShieldCheck size={28} /> : <AlertCircle size={28} />}
+              </div>
+              <div>
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#0D1117", margin: 0 }}>
+                  {contrato.assinado ? "Contrato Assinado" : "Assinatura do Contrato"}
+                </h3>
+                <p style={{ fontSize: 13, color: "#6B7A90", margin: 0 }}>
+                  {contrato.assinado 
+                    ? `Finalizado em ${formatDateTime(contrato.data_assinatura)}` 
+                    : "O contrato aguarda sua assinatura digital"}
+                </p>
+              </div>
+            </div>
+            
+            {!contrato.assinado ? (
+              <Button 
+                onClick={() => setIsModalAssinaturaOpen(true)}
+                className="bg-[#F59E0B] hover:bg-[#D97706] text-white font-semibold"
+              >
+                Assinar Contrato
+              </Button>
+            ) : (
+              <div className="flex items-center gap-2 text-[#16A34A] font-bold text-sm">
+                <Check size={18} />
+                ASSINADO
+              </div>
+            )}
+          </div>
+        </section>
+
+
         <Tabs defaultValue="acompanhamento" className="w-full max-w-[680px] mx-auto">
           <TabsList className="grid w-full grid-cols-2 mb-8 bg-white border border-[#E8ECF2] p-1 h-auto">
             <TabsTrigger 
