@@ -70,12 +70,8 @@ export default function Dashboard() {
       inicioMes.setDate(1);
       inicioMes.setHours(0, 0, 0, 0);
 
-      const [contratosAtivos, faturamentoMes, dre, leadsAtivos, contratosByStatus, mensagensNaoLidas] =
+      const [faturamentoMes, dre, leadsAtivos, contratosData, mensagensNaoLidas] =
         await Promise.all([
-          supabase
-            .from("contratos")
-            .select("id", { count: "exact", head: true })
-            .not("status", "in", "(cancelado,finalizado)"),
           supabase
             .from("contratos")
             .select("valor_venda")
@@ -89,7 +85,6 @@ export default function Dashboard() {
           supabase
             .from("contratos")
             .select("id, status, valor_venda")
-            .not("status", "is", null)
             .not("status", "is", null),
           supabase
             .from("chat_mensagens")
@@ -114,14 +109,14 @@ export default function Dashboard() {
       });
 
       let totalAtivos = 0;
-      contratosByStatus.data?.forEach((c: any) => {
+      contratosData.data?.forEach((c: any) => {
         const etapa = c.status;
         if (pipeline[etapa]) {
           pipeline[etapa].count += 1;
           pipeline[etapa].total += Number(c.valor_venda || 0);
-          pipeline[etapa].noPrazo += 1; // Fallback
+          pipeline[etapa].noPrazo += 1;
           
-          if (etapa !== 'finalizado') {
+          if (etapa !== 'finalizado' && etapa !== 'cancelado') {
             totalAtivos += 1;
           }
         }
