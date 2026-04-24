@@ -159,7 +159,7 @@ export default function Mensagens() {
             >
               Todas ({getCountForEtapa("Todas")})
             </Button>
-            {Object.entries(ETAPAS_CONFIG).filter(([key]) => key !== 'finalizado').map(([key, config]) => (
+            {Object.entries(ETAPAS_CONFIG).filter(([key]) => key !== 'finalizado' && key !== 'pos_venda').map(([key, config]) => (
               <Button
                 key={key}
                 variant="outline"
