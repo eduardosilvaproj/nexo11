@@ -106,7 +106,7 @@ export default function Mensagens() {
   const selectedContract = contracts?.find((c) => c.id === selectedContractId);
 
   return (
-    <div className="flex h-[calc(100vh-112px)] md:h-[calc(100vh-128px)] -m-4 md:-m-6 overflow-hidden bg-[#F8FAFC]">
+    <div className="flex h-[calc(100vh-88px)] md:h-[calc(100vh-104px)] -m-4 md:-m-6 overflow-hidden bg-[#F8FAFC]">
       {/* Sidebar - Lista de Conversas */}
       <div className="w-80 md:w-96 border-r border-[#E2E8F0] bg-white flex flex-col shrink-0">
         <div className="p-4 border-b border-[#E2E8F0]">
