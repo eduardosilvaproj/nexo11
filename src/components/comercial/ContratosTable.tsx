@@ -44,7 +44,8 @@ export function ContratosTable({ onCreate }: Props) {
       const [contratosRes, usuariosRes] = await Promise.all([
         supabase
           .from("contratos")
-          .select("id, cliente_nome, vendedor_id, status, valor_venda, data_criacao, dre_contrato(margem_prevista)")
+          .select("id, cliente_nome, vendedor_id, status, valor_venda, data_criacao, assinado, data_assinatura, dre_contrato(margem_prevista)")
+
           .order("data_criacao", { ascending: false }),
         supabase.from("usuarios").select("id, nome").eq("loja_id", perfil!.loja_id!),
       ]);
