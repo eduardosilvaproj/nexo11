@@ -378,7 +378,20 @@ export default function PortalCliente() {
       setAssinaturaPasso(3);
       
       // Update local state
-      setContracts(prev => prev.map(c => c.id === r.contrato_id ? { ...c, assinado: true, data_assinatura: r.data_assinatura, url_contrato_assinado: publicUrl } : c));
+      setContracts(prev => prev.map(c => c.id === r.contrato_id ? { 
+        ...c, 
+        assinado: true, 
+        data_assinatura: r.data_assinatura, 
+        assinado_em: r.data_assinatura,
+        assinado_nome: nomeAssinatura.trim(),
+        assinatura_hash: r.hash,
+        assinatura_imagem_url: signatureUrl,
+        url_contrato_assinado: publicUrl,
+        status: 'tecnico'
+      } : c));
+      
+      // Force refresh logs
+      loadContractDetails(r.contrato_id);
     } catch (e: any) {
       console.error(e);
       toast.error(e.message ?? "Não foi possível assinar o contrato");

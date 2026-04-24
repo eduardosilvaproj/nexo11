@@ -830,7 +830,7 @@ export type Database = {
           usuario_nome: string | null
         }
         Insert: {
-          acao: string
+          acao?: string
           autor_id?: string | null
           autor_nome?: string | null
           contrato_id: string
