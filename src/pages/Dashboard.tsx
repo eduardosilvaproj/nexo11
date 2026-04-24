@@ -113,14 +113,17 @@ export default function Dashboard() {
         mensagens[e.key] = { totalConversas: 0, unreadCount: 0 };
       });
 
-      const contratosMap: Record<string, string> = {};
+      let totalAtivos = 0;
       contratosByStatus.data?.forEach((c: any) => {
         const etapa = c.status;
-        contratosMap[c.id] = etapa;
         if (pipeline[etapa]) {
           pipeline[etapa].count += 1;
           pipeline[etapa].total += Number(c.valor_venda || 0);
           pipeline[etapa].noPrazo += 1; // Fallback
+          
+          if (etapa !== 'finalizado') {
+            totalAtivos += 1;
+          }
         }
         if (mensagens[etapa]) {
           mensagens[etapa].totalConversas += 1;
@@ -137,7 +140,7 @@ export default function Dashboard() {
       });
 
       return {
-        contratosAtivos: contratosAtivos.count ?? 0,
+        contratosAtivos: totalAtivos,
         faturamento,
         margemMedia,
         leadsAtivos: leadsAtivos.count ?? 0,
