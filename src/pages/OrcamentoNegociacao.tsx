@@ -235,6 +235,11 @@ export default function OrcamentoNegociacao() {
 
   const handleAprovar = async () => {
     if (!orcamento) return;
+    if (descontoBloqueado && descontoExtra > descontoMaximoSemAprovacao) {
+      toast.error("O desconto aplicado exige autorização de um gerente.");
+      setModalLiberarOpen(true);
+      return;
+    }
     if (!condicaoSel) {
       toast.error("Selecione uma condição de pagamento");
       return;
