@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ContratoChatTab } from "@/components/contrato/ContratoChatTab";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 interface ContractListItem {
@@ -135,46 +136,31 @@ export default function Mensagens() {
       )}>
         <div className="p-4 border-b border-[#E2E8F0]">
           <h1 className="text-xl font-semibold text-[#1E293B] mb-4">Mensagens</h1>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
-            <Input
-              placeholder="Buscar cliente..."
-              className="pl-9 bg-[#F1F5F9] border-none focus-visible:ring-1 focus-visible:ring-[#1E6FBF]"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          
-          <div className="flex gap-2 mt-4 overflow-x-auto pb-2 scrollbar-none no-scrollbar">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setActiveEtapa("Todas")}
-              className={cn(
-                "rounded-full px-4 h-8 text-xs shrink-0",
-                activeEtapa === "Todas" 
-                  ? "bg-[#1E6FBF] text-white border-[#1E6FBF] hover:bg-[#1E6FBF] hover:text-white" 
-                  : "bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100"
-              )}
-            >
-              Todas ({getCountForEtapa("Todas")})
-            </Button>
-            {Object.entries(ETAPAS_CONFIG).filter(([key]) => key !== 'finalizado' && key !== 'pos_venda').map(([key, config]) => (
-              <Button
-                key={key}
-                variant="outline"
-                size="sm"
-                onClick={() => setActiveEtapa(key)}
-                className={cn(
-                  "rounded-full px-4 h-8 text-xs shrink-0 border-transparent",
-                  activeEtapa === key 
-                    ? "bg-[#1E6FBF] text-white border-[#1E6FBF] hover:bg-[#1E6FBF] hover:text-white" 
-                    : config.pillBg
-                )}
-              >
-                {config.label} ({getCountForEtapa(key)})
-              </Button>
-            ))}
+          <div className="flex gap-2 items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
+              <Input
+                placeholder="Buscar..."
+                className="pl-9 bg-[#F1F5F9] border-none focus-visible:ring-1 focus-visible:ring-[#1E6FBF] w-full"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="w-[140px] shrink-0">
+              <Select value={activeEtapa} onValueChange={setActiveEtapa}>
+                <SelectTrigger className="bg-[#F1F5F9] border-none text-xs h-10 focus:ring-1 focus:ring-[#1E6FBF]">
+                  <SelectValue placeholder="Etapa" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Todas" className="text-xs">Todas as etapas ({getCountForEtapa("Todas")})</SelectItem>
+                  {Object.entries(ETAPAS_CONFIG).map(([key, config]) => (
+                    <SelectItem key={key} value={key} className="text-xs">
+                      {config.label} ({getCountForEtapa(key)})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
