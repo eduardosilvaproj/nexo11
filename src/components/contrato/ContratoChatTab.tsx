@@ -92,7 +92,7 @@ export function ContratoChatTab({ contratoId }: ContratoChatTabProps) {
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      setMessages(data || []);
+      setMessages((data as any[]) || []);
       
       // Mark as read
       await supabase
