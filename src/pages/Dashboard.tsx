@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Folder,
   TrendingUp,
@@ -11,14 +11,14 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-const ETAPAS: { key: string; label: string; color: string }[] = [
-  { key: "comercial", label: "Comercial", color: "#1E6FBF" },
-  { key: "tecnico", label: "Técnico", color: "#7F77DD" },
-  { key: "producao", label: "Produção", color: "#D85A30" },
-  { key: "logistica", label: "Logística", color: "#12B76A" },
-  { key: "montagem", label: "Montagem", color: "#1D9E75" },
-  { key: "pos_venda", label: "Pós-venda", color: "#E8A020" },
-  { key: "finalizado", label: "Finalizado", color: "#05873C" },
+const ETAPAS_CONFIG: { key: string; label: string; bg: string; text: string }[] = [
+  { key: "comercial", label: "Comercial", bg: "#E6F1FB", text: "#0C447C" },
+  { key: "tecnico", label: "Revisão Técnica", bg: "#EEEDFE", text: "#3C3489" },
+  { key: "producao", label: "Produção", bg: "#FAEEDA", text: "#633806" },
+  { key: "logistica", label: "Logística", bg: "#EAF3DE", text: "#27500A" },
+  { key: "montagem", label: "Montagem", bg: "#E1F5EE", text: "#085041" },
+  { key: "pos_venda", label: "Pós-Venda", bg: "#FBEAF0", text: "#72243E" },
+  { key: "finalizado", label: "Finalizado", bg: "#F1EFE8", text: "#444441" },
 ];
 
 interface MetricCardProps {
@@ -57,6 +57,7 @@ function MetricCard({ label, value, icon: Icon, color, valueColor = "#0D1117" }:
 
 export default function Dashboard() {
   const { perfil, user } = useAuth();
+  const navigate = useNavigate();
 
   const { data: stats } = useQuery({
     queryKey: ["dashboard-stats", user?.id],
@@ -71,7 +72,7 @@ export default function Dashboard() {
           supabase
             .from("contratos")
             .select("id", { count: "exact", head: true })
-            .not("status", "in", "(finalizado)"),
+            .not("status", "in", "(cancelado,finalizado)"),
           supabase
             .from("contratos")
             .select("valor_venda")
@@ -82,7 +83,10 @@ export default function Dashboard() {
             .from("leads")
             .select("id", { count: "exact", head: true })
             .not("status", "in", "(convertido,perdido)"),
-          supabase.from("contratos").select("status"),
+          supabase
+            .from("contratos")
+            .select("id, status, valor_venda")
+            .not("status", "eq", "cancelado"),
         ]);
 
       const faturamento =
@@ -92,10 +96,20 @@ export default function Dashboard() {
       const margemMedia =
         margens.length > 0 ? margens.reduce((a, b) => a + b, 0) / margens.length : null;
 
-      const porEtapa: Record<string, number> = {};
-      ETAPAS.forEach((e) => (porEtapa[e.key] = 0));
-      contratosByStatus.data?.forEach((c) => {
-        if (porEtapa[c.status] != null) porEtapa[c.status] += 1;
+      const pipeline: Record<string, { count: number; total: number; noPrazo: number; emAlerta: number; emAtraso: number }> = {};
+      ETAPAS_CONFIG.forEach((e) => {
+        pipeline[e.key] = { count: 0, total: 0, noPrazo: 0, emAlerta: 0, emAtraso: 0 };
+      });
+
+      contratosByStatus.data?.forEach((c: any) => {
+        const etapa = c.status || "comercial";
+        if (pipeline[etapa]) {
+          pipeline[etapa].count += 1;
+          pipeline[etapa].total += Number(c.valor_venda || 0);
+          
+          // Fallback para status de prazo já que a coluna não existe em contratos
+          pipeline[etapa].noPrazo += 1;
+        }
       });
 
       return {
@@ -103,7 +117,7 @@ export default function Dashboard() {
         faturamento,
         margemMedia,
         leadsAtivos: leadsAtivos.count ?? 0,
-        porEtapa,
+        pipeline,
       };
     },
   });
@@ -111,7 +125,6 @@ export default function Dashboard() {
   const formatBRL = (n: number) =>
     n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
-  // Ponto de equilíbrio (placeholder até existir tabela de custos fixos)
   const custoFixo = 0;
   const margemMediaPct = stats?.margemMedia ?? 0;
   const pe = margemMediaPct > 0 ? (custoFixo / margemMediaPct) * 100 : 0;
@@ -159,50 +172,70 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-        {/* Contratos por etapa */}
-        <div className="bg-white p-5" style={cardStyle}>
-          <h2
-            className="mb-4"
-            style={{ fontSize: 14, fontWeight: 600, color: "#0D1117" }}
-          >
-            Contratos por etapa
-          </h2>
-          <ul className="space-y-2">
-            {ETAPAS.map((e) => {
-              const count = stats?.porEtapa?.[e.key] ?? 0;
-              return (
-                <li
-                  key={e.key}
-                  className="flex items-center justify-between rounded-md px-2 py-2 hover:bg-[#F5F7FA]"
-                >
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="inline-block rounded-full"
-                      style={{ width: 8, height: 8, background: e.color }}
-                    />
-                    <span style={{ fontSize: 13, color: "#0D1117" }}>{e.label}</span>
-                  </div>
-                  <span
-                    className="inline-flex items-center justify-center"
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 600,
-                      color: "#6B7A90",
-                      background: "#F5F7FA",
-                      borderRadius: 20,
-                      padding: "2px 10px",
-                      minWidth: 28,
-                    }}
-                  >
-                    {count}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
+      {/* Pipeline de contratos */}
+      <div className="bg-white p-6" style={cardStyle}>
+        <div className="mb-6 flex items-center justify-between">
+          <h2 style={{ fontSize: 18, fontWeight: 600, color: "#0D1117" }}> Pipeline de contratos </h2>
+          <span style={{ fontSize: 14, color: "#6B7A90" }}>
+            {stats?.contratosAtivos ?? 0} contratos em andamento
+          </span>
         </div>
 
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+          {ETAPAS_CONFIG.map((etapa) => {
+            const data = stats?.pipeline?.[etapa.key] || { count: 0, total: 0, noPrazo: 0, emAlerta: 0, emAtraso: 0 };
+            return (
+              <button
+                key={etapa.key}
+                onClick={() => navigate(`/comercial?etapa=${etapa.key}`)}
+                className="flex flex-col rounded-xl p-4 text-left transition-all hover:brightness-95 active:scale-[0.98]"
+                style={{ backgroundColor: etapa.bg }}
+              >
+                <span className="mb-1 block truncate font-semibold" style={{ color: etapa.text, fontSize: 14 }}>
+                  {etapa.label}
+                </span>
+                <span className="mb-1 block font-bold" style={{ color: etapa.text, fontSize: 18 }}>
+                  {data.count} {data.count === 1 ? 'contrato' : 'contratos'}
+                </span>
+                <span className="mb-3 block font-medium opacity-80" style={{ color: etapa.text, fontSize: 13 }}>
+                  {formatBRL(data.total)}
+                </span>
+                
+                <div className="mt-auto flex gap-1.5">
+                  <div className="flex h-5 w-7 items-center justify-center rounded bg-green-500/10 text-[10px] font-bold text-green-700" title="No prazo">
+                    🟢 {data.noPrazo}
+                  </div>
+                  <div className="flex h-5 w-7 items-center justify-center rounded bg-amber-500/10 text-[10px] font-bold text-amber-700" title="Em alerta">
+                    🟡 {data.emAlerta}
+                  </div>
+                  <div className="flex h-5 w-7 items-center justify-center rounded bg-red-500/10 text-[10px] font-bold text-red-700" title="Em atraso">
+                    🔴 {data.emAtraso}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-6 flex flex-wrap items-center justify-between border-t pt-4">
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1.5 text-[11px] text-[#6B7A90]">
+              <span className="h-2 w-2 rounded-full bg-green-500" /> no prazo
+            </span>
+            <span className="flex items-center gap-1.5 text-[11px] text-[#6B7A90]">
+              <span className="h-2 w-2 rounded-full bg-amber-500" /> em alerta
+            </span>
+            <span className="flex items-center gap-1.5 text-[11px] text-[#6B7A90]">
+              <span className="h-2 w-2 rounded-full bg-red-500" /> em atraso
+            </span>
+          </div>
+          <span className="text-[11px] text-[#6B7A90]">
+            Clique em uma etapa para ver os contratos
+          </span>
+        </div>
+      </div>
+
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
         {/* Ponto de equilíbrio */}
         <div className="flex flex-col bg-white p-5" style={cardStyle}>
           <h2
