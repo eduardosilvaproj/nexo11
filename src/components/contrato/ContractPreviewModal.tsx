@@ -39,25 +39,29 @@ export function ContractPreviewModal({
 
   useEffect(() => {
     if (open) {
-      generatePdf();
+      loadData();
     } else {
       if (url) {
         URL.revokeObjectURL(url);
         setUrl(null);
-        setIframeLoaded(false);
       }
+      setFullContrato(null);
+      setError(null);
     }
   }, [open]);
 
-  async function generatePdf() {
+  async function loadData() {
     setLoading(true);
+    setError(null);
     try {
-      // 1. Fetch full contract and client data for PDF
-      const { data: realContrato } = await supabase
+      // 1. Fetch full contract and client data
+      const { data: realContrato, error: contractError } = await supabase
         .from("contratos")
-        .select("cliente_id, assinatura_nome, data_assinatura, assinatura_ip, assinatura_hash")
+        .select("*")
         .eq("id", contrato.id)
         .single();
+
+      if (contractError) throw contractError;
 
       let clienteData = null;
       if (realContrato?.cliente_id) {
@@ -69,16 +73,48 @@ export function ContractPreviewModal({
         clienteData = cli;
       }
 
-      const fullContrato = { 
+      const mergedContrato = { 
         ...contrato, 
         ...realContrato, 
         cliente: clienteData 
       };
 
-      // 2. Generate PDF
+      // Check for required fields as requested by user
+      const missingFields = [];
+      if (!loja?.nome) missingFields.push("Nome da Loja");
+      if (!loja?.cnpj) missingFields.push("CNPJ da Loja");
+      if (!mergedContrato.cliente_nome) missingFields.push("Nome do Cliente");
+      
+      const valorTotal = mergedContrato.valor_venda || mergedContrato.valor_negociado || orcamentos?.[0]?.valor_negociado;
+      if (!valorTotal) missingFields.push("Valor do Contrato");
+
+      const parcelas = mergedContrato.parcelas_datas || orcamentos?.[0]?.parcelas_datas;
+      if (!parcelas || !Array.isArray(parcelas) || parcelas.length === 0) {
+        missingFields.push("Dados de Parcelamento");
+      }
+
+      if (missingFields.length > 0) {
+        setError(`Os seguintes campos são necessários para gerar o contrato: ${missingFields.join(", ")}`);
+      }
+
+      setFullContrato(mergedContrato);
+
+      // Generate PDF in background for download
+      generatePdfBlob(mergedContrato);
+    } catch (err: any) {
+      console.error("Erro ao carregar dados do contrato:", err);
+      setError("Não foi possível carregar os dados para a prévia do contrato.");
+      toast.error("Erro ao carregar dados do contrato.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function generatePdfBlob(data: any) {
+    try {
       const doc = (
         <ContractPDF
-          contrato={fullContrato}
+          contrato={data}
           loja={loja}
           ambientes={ambientes}
           orcamentos={orcamentos}
@@ -86,35 +122,28 @@ export function ContractPreviewModal({
       );
       const blob = await pdf(doc).toBlob();
       const newUrl = URL.createObjectURL(blob);
-      setIframeLoaded(false);
       setUrl(newUrl);
-    } catch (error) {
-      console.error("Erro ao gerar PDF:", error);
-      toast.error("Não foi possível gerar a prévia do contrato.");
-    } finally {
-      setLoading(false);
+    } catch (err) {
+      console.error("Erro ao gerar PDF blob:", err);
+      // We don't set error state here because we still have HTML preview
     }
   }
 
-
   const handlePrint = () => {
-    if (iframeRef.current && iframeLoaded) {
-      const contentWindow = iframeRef.current.contentWindow;
-      if (contentWindow) {
-        contentWindow.focus();
-        contentWindow.print();
-      }
-    } else {
-      toast.info("Aguarde o carregamento do documento para imprimir.");
-    }
+    window.print();
   };
 
   const handleDownload = () => {
     if (url) {
       const link = document.createElement("a");
       link.href = url;
-      link.download = `contrato_${contrato.cliente_nome.replace(/\s+/g, "_")}_${contrato.id.slice(0, 8)}.pdf`;
+      const name = fullContrato?.cliente_nome || contrato.cliente_nome || "cliente";
+      link.download = `contrato_${name.replace(/\s+/g, "_")}_${contrato.id.slice(0, 8)}.pdf`;
       link.click();
+    } else {
+      toast.error("PDF ainda está sendo gerado. Tente novamente em instantes.");
+      // Fallback: try generating again
+      if (fullContrato) generatePdfBlob(fullContrato);
     }
   };
 
