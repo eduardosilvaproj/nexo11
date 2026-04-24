@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Send, User, ShieldCheck } from "lucide-react";
+import { Send, User, ShieldCheck, Check, CheckCheck } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -98,59 +99,90 @@ export function PortalChat({ contractId, clientName, portalClient }: PortalChatP
   }
 
   return (
-    <div className="flex flex-col h-[600px] bg-white rounded-xl border border-[#E8ECF2] overflow-hidden">
+    <div className="flex flex-col h-[600px] md:h-[700px] bg-[#E5DDD5] rounded-xl border border-[#E8ECF2] overflow-hidden relative shadow-sm">
+      {/* Background Pattern */}
+      <div 
+        className="absolute inset-0 opacity-[0.05] pointer-events-none" 
+        style={{ 
+          backgroundImage: `url("https://www.transparenttextures.com/patterns/cubes.png")`,
+        }} 
+      />
+
       {/* Header do Chat */}
-      <div className="p-4 border-b border-[#E8ECF2] bg-slate-50 flex items-center justify-between">
+      <div className="p-4 border-b border-[#E8ECF2] bg-[#F0F2F5] flex items-center justify-between relative z-10 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#1E6FBF] flex items-center justify-center text-white">
+          <div className="w-10 h-10 rounded-full bg-[#1E6FBF] flex items-center justify-center text-white shadow-sm">
             <ShieldCheck size={20} />
           </div>
           <div>
             <h3 className="text-sm font-semibold text-[#0D1117]">Suporte Nexo</h3>
-            <p className="text-xs text-[#6B7A90]">Equipe Interna</p>
+            <p className="text-[11px] text-[#6B7A90]">Equipe Interna</p>
           </div>
         </div>
       </div>
-
+ 
       {/* Área de Mensagens */}
-      <ScrollArea className="flex-1 p-4 bg-[#F5F7FA]">
-        <div className="space-y-4">
+      <ScrollArea className="flex-1 p-4 relative z-10">
+        <div className="space-y-2 pb-4">
           {messages.length === 0 ? (
             <div className="text-center py-10">
-              <p className="text-sm text-[#6B7A90]">
+              <span className="bg-[#D1E4F3] text-[#4A5568] text-xs px-3 py-1 rounded-lg shadow-sm">
                 Nenhuma mensagem ainda. Inicie a conversa abaixo.
-              </p>
+              </span>
             </div>
           ) : (
-            messages.map((msg) => {
+            messages.map((msg, index) => {
               const isMine = msg.sender_type === "cliente";
+              const showDate = index === 0 || 
+                format(new Date(messages[index-1].created_at), 'yyyy-MM-dd') !== format(new Date(msg.created_at), 'yyyy-MM-dd');
+
               return (
-                <div
-                  key={msg.id}
-                  className={`flex ${isMine ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-2 shadow-sm ${
-                      isMine
-                        ? "bg-[#1E6FBF] text-white rounded-tr-none"
-                        : "bg-white text-[#0D1117] border border-[#E8ECF2] rounded-tl-none"
-                    }`}
-                  >
-                    {!isMine && (
-                      <p className="text-[10px] font-bold uppercase tracking-wider mb-1 opacity-70">
-                        {msg.sender_name}
-                      </p>
-                    )}
-                    <p className="text-sm whitespace-pre-wrap break-words">
-                      {msg.message}
-                    </p>
-                    <p
-                      className={`text-[10px] mt-1 text-right ${
-                        isMine ? "text-white/70" : "text-[#6B7A90]"
-                      }`}
+                <div key={msg.id}>
+                  {showDate && (
+                    <div className="flex justify-center my-4">
+                      <span className="bg-[#D1E4F3] text-[#4A5568] text-[11px] font-medium px-3 py-1 rounded-lg shadow-sm uppercase">
+                        {format(new Date(msg.created_at), "d 'de' MMMM", { locale: ptBR })}
+                      </span>
+                    </div>
+                  )}
+                  <div className={`flex ${isMine ? "justify-end" : "justify-start"} mb-1`}>
+                    <div
+                      className={cn(
+                        "max-w-[85%] md:max-w-[70%] px-3 py-1.5 shadow-sm relative",
+                        isMine
+                          ? "bg-[#DCF8C6] text-[#0D1117] rounded-l-lg rounded-br-lg"
+                          : "bg-white text-[#0D1117] rounded-r-lg rounded-bl-lg"
+                      )}
                     >
-                      {format(new Date(msg.created_at), "HH:mm", { locale: ptBR })}
-                    </p>
+                      {/* Bubble Tail */}
+                      <div className={cn(
+                        "absolute top-0 w-2 h-2",
+                        isMine 
+                          ? "right-[-8px] border-l-[8px] border-l-[#DCF8C6] border-b-[8px] border-b-transparent" 
+                          : "left-[-8px] border-r-[8px] border-r-white border-b-[8px] border-b-transparent"
+                      )} />
+
+                      {!isMine && (
+                        <p className="text-[11px] font-bold text-[#1E6FBF] mb-0.5">
+                          {msg.sender_name}
+                        </p>
+                      )}
+                      <div className="flex flex-col">
+                        <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words">
+                          {msg.message}
+                        </p>
+                        <div className="flex items-center justify-end gap-1 mt-1">
+                          <span className="text-[10px] text-[#64748B]">
+                            {format(new Date(msg.created_at), "HH:mm")}
+                          </span>
+                          {isMine && (
+                            <span className="text-[#34B7F1]">
+                              {msg.is_read ? <CheckCheck size={14} /> : <Check size={14} />}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               );
@@ -163,26 +195,28 @@ export function PortalChat({ contractId, clientName, portalClient }: PortalChatP
       {/* Input de Mensagem */}
       <form
         onSubmit={handleSendMessage}
-        className="p-4 border-t border-[#E8ECF2] bg-white flex gap-2 items-end"
+        className="p-3 bg-[#F0F2F5] flex gap-2 items-center relative z-10 shrink-0"
       >
-        <Textarea
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Digite sua mensagem..."
-          className="min-h-[44px] max-h-[120px] resize-none border-[#E8ECF2] focus-visible:ring-[#1E6FBF]"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              handleSendMessage(e);
-            }
-          }}
-        />
+        <div className="flex-1 bg-white rounded-lg flex items-center px-3 py-1 shadow-sm">
+          <Textarea
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Digite sua mensagem..."
+            className="min-h-[40px] max-h-[120px] resize-none border-none focus-visible:ring-0 p-0 shadow-none bg-transparent text-sm"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage(e);
+              }
+            }}
+          />
+        </div>
         <Button
           type="submit"
           disabled={!newMessage.trim() || sending}
-          className="bg-[#1E6FBF] hover:bg-[#155ca1] h-11 w-11 shrink-0 p-0 rounded-full"
+          className="bg-[#00A884] hover:bg-[#008F6F] h-10 w-10 shrink-0 p-0 rounded-full shadow-sm"
         >
-          <Send size={18} />
+          <Send size={18} className="text-white" />
         </Button>
       </form>
     </div>
