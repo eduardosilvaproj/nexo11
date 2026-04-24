@@ -666,8 +666,10 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
                           type="number" 
                           value={descontoGlobal} 
                           onChange={e => setDescontoGlobal(Number(e.target.value))}
-                          className="h-8 w-16"
+                          disabled={descontoBloqueado}
+                          className={cn("h-8 w-16", descontoBloqueado && "bg-slate-50 cursor-not-allowed")}
                         />
+                        {descontoBloqueado && <Lock className="h-3 w-3 text-amber-500" />}
                       </div>
                     </div>
                     <div className="pt-2 flex justify-between items-center">
