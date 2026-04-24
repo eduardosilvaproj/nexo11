@@ -17,6 +17,7 @@ import { ContratoMontagemTab } from "@/components/contrato/ContratoMontagemTab";
 import { ContratoAmbientesTab } from "@/components/contrato/ContratoAmbientesTab";
 import { ContratoPosVendaTab } from "@/components/contrato/ContratoPosVendaTab";
 import { ContratoDreTab } from "@/components/contrato/ContratoDreTab";
+import { ContratoChatTab } from "@/components/contrato/ContratoChatTab";
 import { ReadOnlyContext } from "@/components/contrato/ReadOnlyContext";
 
 const STAGE_TO_TAB: Record<string, ContratoTabKey> = {
