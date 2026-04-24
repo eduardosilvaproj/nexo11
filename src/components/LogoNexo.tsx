@@ -1,6 +1,7 @@
 interface LogoNexoProps {
   size?: "sm" | "md" | "lg";
   className?: string;
+  xColor?: string;
 }
 
 const SIZE_PX: Record<NonNullable<LogoNexoProps["size"]>, number> = {
@@ -9,7 +10,7 @@ const SIZE_PX: Record<NonNullable<LogoNexoProps["size"]>, number> = {
   lg: 32,
 };
 
-export function LogoNexo({ size = "md", className = "" }: LogoNexoProps) {
+export function LogoNexo({ size = "md", className = "", xColor }: LogoNexoProps) {
   const fontSize = SIZE_PX[size];
 
   return (
@@ -22,20 +23,19 @@ export function LogoNexo({ size = "md", className = "" }: LogoNexoProps) {
         lineHeight: 1,
       }}
     >
-      <span style={{ color: "#FFFFFF" }}>NE</span>
+      <span style={{ color: "currentColor" }}>NE</span>
       <span
         style={{
-          background:
-            "linear-gradient(135deg, #00AAFF 0%, #1E6FBF 50%, #12B76A 100%)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          backgroundClip: "text",
-          color: "transparent",
+          color: xColor || "transparent",
+          background: xColor ? "none" : "linear-gradient(135deg, #00AAFF 0%, #1E6FBF 50%, #12B76A 100%)",
+          WebkitBackgroundClip: xColor ? "none" : "text",
+          WebkitTextFillColor: xColor ? "currentColor" : "transparent",
+          backgroundClip: xColor ? "none" : "text",
         }}
       >
         X
       </span>
-      <span style={{ color: "#FFFFFF" }}>O</span>
+      <span style={{ color: "currentColor" }}>O</span>
     </span>
   );
 }
