@@ -8,7 +8,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { pdf } from "@react-pdf/renderer";
 import { ContractPDF } from "./ContractPDF";
-import { Printer, Download, Send, Loader2, X } from "lucide-react";
+import { ContractHTMLPreview } from "./ContractHTMLPreview";
+import { Printer, Download, Send, Loader2, X, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
