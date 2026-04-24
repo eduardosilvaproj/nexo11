@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard,
@@ -68,9 +69,31 @@ const inteligencia = [
 ];
 
 export function AppSidebar() {
+  const queryClient = useQueryClient();
   const { state } = useSidebar();
   const { perfil, roles, signOut } = useAuth();
   const collapsed = state === "collapsed";
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("sidebar_messages_realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "contract_messages",
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["total_unread_messages"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const { data: totalUnread } = useQuery({
     queryKey: ["total_unread_messages"],
@@ -83,7 +106,7 @@ export function AppSidebar() {
       if (error) return 0;
       return count || 0;
     },
-    refetchInterval: 10000,
+    staleTime: 1000 * 60, // Keep data fresh for 1 minute as we have realtime
   });
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -138,12 +161,12 @@ export function AppSidebar() {
                           {!collapsed && <span>{item.title}</span>}
                         </div>
                         {!collapsed && item.url === "/mensagens" && totalUnread !== undefined && totalUnread > 0 && (
-                          <span className="bg-[#1a9be8] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                          <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
                             {totalUnread}
                           </span>
                         )}
                         {collapsed && item.url === "/mensagens" && totalUnread !== undefined && totalUnread > 0 && (
-                          <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#1a9be8] rounded-full" />
+                          <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
                         )}
                       </div>
                     </NavLink>
