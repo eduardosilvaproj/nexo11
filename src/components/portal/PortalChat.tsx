@@ -35,14 +35,14 @@ export function PortalChat({ contractId, clientName, portalClient }: PortalChatP
     
     // Subscribe to real-time updates
     const channel = portalClient
-      .channel("contract_messages")
+      .channel("chat_mensagens")
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
-          table: "contract_messages",
-          filter: `contract_id=eq.${contractId}`,
+          table: "chat_mensagens",
+          filter: `contrato_id=eq.${contractId}`,
         },
         (payload: any) => {
           setMessages((prev) => [...prev, payload.new as Message]);
@@ -64,9 +64,9 @@ export function PortalChat({ contractId, clientName, portalClient }: PortalChatP
   async function loadMessages() {
     try {
       const { data, error } = await portalClient
-        .from("contract_messages")
+        .from("chat_mensagens")
         .select("*")
-        .eq("contract_id", contractId)
+        .eq("contrato_id", contractId)
         .order("created_at", { ascending: true });
 
       if (error) throw error;
@@ -86,7 +86,7 @@ export function PortalChat({ contractId, clientName, portalClient }: PortalChatP
         contract_id: contractId,
         sender_type: "cliente",
         sender_name: clientName,
-        message: newMessage.trim(),
+        mensagem: newMessage.trim(),
       });
 
       if (error) throw error;

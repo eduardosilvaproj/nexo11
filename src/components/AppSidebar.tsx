@@ -82,7 +82,7 @@ export function AppSidebar() {
         {
           event: "*",
           schema: "public",
-          table: "contract_messages",
+          table: "chat_mensagens",
         },
         () => {
           queryClient.invalidateQueries({ queryKey: ["total_unread_messages"] });
@@ -99,10 +99,10 @@ export function AppSidebar() {
     queryKey: ["total_unread_messages"],
     queryFn: async () => {
       const { count, error } = await supabase
-        .from("contract_messages")
+        .from("chat_mensagens")
         .select("*", { count: "exact", head: true })
-        .eq("is_read", false)
-        .eq("sender_type", "cliente");
+        .eq("lida", false)
+        .eq("remetente_tipo", "cliente");
       if (error) return 0;
       return count || 0;
     },
