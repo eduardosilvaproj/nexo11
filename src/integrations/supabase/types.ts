@@ -2752,6 +2752,18 @@ export type Database = {
           }
         | {
             Args: {
+              _assinatura_imagem_url: string
+              _data_assinatura?: string
+              _hash?: string
+              _ip: string
+              _nome: string
+              _token: string
+              _user_agent: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
               _ip: string
               _nome: string
               _token: string
