@@ -39,16 +39,22 @@ export default function Mensagens() {
   const [activeEtapa, setActiveEtapa] = useState<string>("Todas");
   const queryClient = useQueryClient();
 
-  // Load etapa from URL on mount
+  // Load etapa from localStorage or URL on mount
   useEffect(() => {
+    const storedEtapa = localStorage.getItem('mensagens_filtro_etapa');
     const etapaParam = searchParams.get("etapa");
-    if (etapaParam) {
+    const targetEtapa = storedEtapa || etapaParam;
+
+    if (targetEtapa) {
       // Find matching key case-insensitively or exactly
       const matchingKey = Object.keys(ETAPAS_CONFIG).find(
-        key => key.toLowerCase() === etapaParam.toLowerCase()
+        key => key.toLowerCase() === targetEtapa.toLowerCase()
       );
       if (matchingKey) {
         setActiveEtapa(matchingKey);
+      }
+      if (storedEtapa) {
+        localStorage.removeItem('mensagens_filtro_etapa');
       }
     }
   }, [searchParams]);
