@@ -19,8 +19,10 @@ import {
   Trash2,
   AlertCircle,
   Eye,
-  EyeOff
+  EyeOff,
+  ShieldCheck
 } from "lucide-react";
+import { ModalLiberarDesconto } from "./ModalLiberarDesconto";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -84,6 +86,8 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
   const [step, setStep] = useState<Step>(initialStep);
   const [descontoGlobal, setDescontoGlobal] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [descontoBloqueado, setDescontoBloqueado] = useState(true);
+  const [modalLiberarOpen, setModalLiberarOpen] = useState(false);
 
   // STEP 1: Cliente
   const [clientOption, setClientOption] = useState<"lead" | "new" | "fixed">(clienteId ? "fixed" : "lead");
@@ -626,9 +630,11 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
                                 type="number" 
                                 value={amb.desconto} 
                                 onChange={e => setAmbientes(prev => prev.map(x => x.id === amb.id ? { ...x, desconto: Number(e.target.value) } : x))}
-                                className="h-6 w-12 text-[10px] px-1"
+                                disabled={descontoBloqueado}
+                                className={cn("h-6 w-12 text-[10px] px-1", descontoBloqueado && "bg-slate-50 cursor-not-allowed")}
                               />
                               <span className="text-[10px] text-slate-400">%</span>
+                              {descontoBloqueado && <Lock className="h-2.5 w-2.5 text-amber-500" />}
                             </div>
                             <span className="text-[10px] text-slate-400">→ {formatBRL(amb.valorFinal)}</span>
                           </div>
@@ -660,8 +666,10 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
                           type="number" 
                           value={descontoGlobal} 
                           onChange={e => setDescontoGlobal(Number(e.target.value))}
-                          className="h-8 w-16"
+                          disabled={descontoBloqueado}
+                          className={cn("h-8 w-16", descontoBloqueado && "bg-slate-50 cursor-not-allowed")}
                         />
+                        {descontoBloqueado && <Lock className="h-3 w-3 text-amber-500" />}
                       </div>
                     </div>
                     <div className="pt-2 flex justify-between items-center">
@@ -794,16 +802,35 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
               <ChevronLeft className="mr-2 h-4 w-4" /> Voltar
             </Button>
             <div className="flex items-center gap-3">
-              <Button variant="outline" onClick={() => handleFinalize(true)} disabled={isSubmitting || ambientes.length === 0}>
-                {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}
-                Liberar desconto
-              </Button>
+              {!descontoBloqueado ? (
+                <div className="flex items-center gap-1.5 text-emerald-600 font-semibold px-3 py-1.5 bg-emerald-50 rounded-lg border border-emerald-100 text-sm">
+                  <ShieldCheck className="h-4 w-4" />
+                  Liberado
+                </div>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setModalLiberarOpen(true)} 
+                  disabled={isSubmitting || ambientes.length === 0}
+                  className="text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                >
+                  <Lock className="mr-2 h-4 w-4" />
+                  Liberar desconto
+                </Button>
+              )}
               <Button onClick={() => handleFinalize(false)} disabled={isSubmitting || !condicaoSel} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
-                {isSubmitting ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
                 Aprovar e gerar contrato
               </Button>
             </div>
           </div>
+
+          <ModalLiberarDesconto
+            open={modalLiberarOpen}
+            onOpenChange={setModalLiberarOpen}
+            onAprovado={() => setDescontoBloqueado(false)}
+            percentual={descontoGlobal}
+          />
         </div>
       )}
     </div>

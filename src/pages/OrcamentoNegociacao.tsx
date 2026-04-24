@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { format, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowLeft, CalendarIcon, Eye, EyeOff, Lock, Unlock } from "lucide-react";
+import { ArrowLeft, CalendarIcon, Eye, EyeOff, Lock, Unlock, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { ModalLiberarDesconto } from "@/components/comercial/ModalLiberarDesconto";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -100,6 +101,8 @@ export default function OrcamentoNegociacao() {
   const [percParceiro, setPercParceiro] = useState(0);
   const [ocultarParceiro, setOcultarParceiro] = useState(false);
   const [descontoExtra, setDescontoExtra] = useState(0);
+  const [descontoBloqueado, setDescontoBloqueado] = useState(true);
+  const [modalLiberarOpen, setModalLiberarOpen] = useState(false);
   const [datasParcelas, setDatasParcelas] = useState<string[]>([]);
   const [ambientesSelecionados, setAmbientesSelecionados] = useState<string[]>([]);
 
@@ -409,8 +412,14 @@ export default function OrcamentoNegociacao() {
                     step="0.1"
                     value={descontoExtra}
                     onChange={(e) => setDescontoExtra(Number(e.target.value || 0))}
-                    className="h-10"
+                    disabled={descontoBloqueado}
+                    className={cn("h-10", descontoBloqueado && "bg-slate-100 cursor-not-allowed opacity-70")}
                   />
+                  {descontoBloqueado && (
+                    <p className="text-[10px] text-amber-600 font-medium flex items-center gap-1 mt-1">
+                      <Lock className="h-3 w-3" /> Bloqueado
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">Total Geral (sem taxa)</p>
@@ -586,14 +595,22 @@ export default function OrcamentoNegociacao() {
         </div>
 
         <div className="flex justify-center">
-          <Button
-            variant="ghost"
-            onClick={handleSalvarRascunho}
-            disabled={saving}
-            className="text-muted-foreground hover:text-amber-600 hover:bg-amber-50 h-11 px-6"
-          >
-            Liberar desconto
-          </Button>
+          {!descontoBloqueado ? (
+            <div className="flex items-center gap-2 text-emerald-600 font-semibold px-4 py-2 bg-emerald-50 rounded-full border border-emerald-100">
+              <ShieldCheck className="h-5 w-5" />
+              Desconto Liberado
+            </div>
+          ) : (
+            <Button
+              variant="ghost"
+              onClick={() => setModalLiberarOpen(true)}
+              disabled={saving}
+              className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 h-11 px-6 font-semibold flex items-center gap-2"
+            >
+              <Lock className="h-4 w-4" />
+              Liberar desconto
+            </Button>
+          )}
         </div>
 
         <div className="flex justify-end">
@@ -606,6 +623,14 @@ export default function OrcamentoNegociacao() {
           </Button>
         </div>
       </div>
+
+      <ModalLiberarDesconto
+        open={modalLiberarOpen}
+        onOpenChange={setModalLiberarOpen}
+        onAprovado={() => setDescontoBloqueado(false)}
+        orcamentoId={id}
+        percentual={descontoExtra}
+      />
     </div>
   );
 }
