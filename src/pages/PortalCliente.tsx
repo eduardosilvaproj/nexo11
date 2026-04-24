@@ -310,8 +310,9 @@ export default function PortalCliente() {
 
     setSigning(true);
     try {
-      const assinaturaBase64 = sigCanvas.current?.getTrimmedCanvas().toDataURL('image/png');
-      
+      const rawCanvas = sigCanvas.current?.getCanvas();
+      const assinaturaBase64 = rawCanvas ? trimCanvas(rawCanvas).toDataURL('image/png') : null;
+
       let ip = "0.0.0.0";
       try {
         const resp = await fetch("https://api.ipify.org?format=json");
