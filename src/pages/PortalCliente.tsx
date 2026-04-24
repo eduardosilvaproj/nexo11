@@ -330,6 +330,60 @@ export default function PortalCliente() {
         />
       );
       const blob = await pdf(doc).toBlob();
+      const fileName = `contrato_${r.contrato_id}_assinado.pdf`;
+      const filePath = `${r.contrato_id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('contratos-assinados')
+        .upload(filePath, blob, {
+          contentType: 'application/pdf',
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('contratos-assinados')
+        .getPublicUrl(filePath);
+
+      await portalClient
+        .from('contratos')
+        .update({ url_contrato_assinado: publicUrl })
+        .eq('id', r.contrato_id);
+
+      toast.success("Contrato assinado com sucesso!");
+      
+      setDadosAssinaturaFinal({
+        hash: r.hash,
+        data: r.data_assinatura,
+        ip: ip,
+        nome: nomeAssinatura.trim(),
+        url_pdf: publicUrl
+      });
+      
+      setAssinaturaPasso(3);
+      
+      // Update local state
+      setContracts(prev => prev.map(c => c.id === r.contrato_id ? { ...c, assinado: true, data_assinatura: r.data_assinatura, url_contrato_assinado: publicUrl } : c));
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.message ?? "Não foi possível assinar o contrato");
+    } finally {
+      setSigning(false);
+    }
+  }
+
+  async function handleDownloadContrato() {
+    try {
+      const doc = (
+        <ContractPDF
+          contrato={contrato}
+          loja={contrato.lojas}
+          ambientes={ambientes}
+          orcamentos={orcamentos}
+        />
+      );
+      const blob = await pdf(doc).toBlob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
