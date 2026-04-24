@@ -360,11 +360,12 @@ export default function PortalCliente() {
         .from('contrato_logs')
         .insert({
           contrato_id: contrato.id,
+          titulo: 'Assinatura Digital',
           acao: 'assinatura_digital',
           etapa: 'assinatura',
           descricao: 'Contrato assinado digitalmente pelo portal',
           usuario_nome: nomeAssinatura.trim()
-        });
+        } as any);
 
       toast.success("Contrato assinado com sucesso!");
       
@@ -391,7 +392,7 @@ export default function PortalCliente() {
       } : c));
       
       // Force refresh logs
-      loadContractDetails(r.contrato_id);
+      loadContractDetails(contrato.id);
     } catch (e: any) {
       console.error(e);
       toast.error(e.message ?? "Não foi possível assinar o contrato");
