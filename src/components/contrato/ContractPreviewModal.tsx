@@ -33,8 +33,9 @@ export function ContractPreviewModal({
 }: ContractPreviewModalProps) {
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [iframeLoaded, setIframeLoaded] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [fullContrato, setFullContrato] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (open) {
