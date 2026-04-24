@@ -1062,9 +1062,82 @@ export default function PortalCliente() {
           Este link é exclusivo para acompanhamento do seu pedido
         </div>
       </footer>
+
+      {/* Signature Modal */}
+      <Dialog open={isModalAssinaturaOpen} onOpenChange={setIsModalAssinaturaOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-blue-600" />
+              Assinatura Digital do Contrato
+            </DialogTitle>
+            <DialogDescription>
+              Resumo: Contrato {numero} para {contrato.cliente_nome}.
+              Valor: {Number(contrato.valor_venda).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-sm text-slate-600 italic">
+              "Ao assinar, você declara que leu e concorda com todos os termos do contrato, projeto e orçamentos anexos."
+            </div>
+
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="nome_assinatura" className="text-sm font-medium">
+                  Confirme seu nome completo
+                </Label>
+                <Input
+                  id="nome_assinatura"
+                  placeholder="Ex: João da Silva"
+                  value={nomeAssinatura}
+                  onChange={(e) => setNomeAssinatura(e.target.value)}
+                  className="w-full"
+                />
+                <p className="text-[11px] text-slate-500">
+                  O nome deve ser idêntico ao cadastrado: <span className="font-semibold">{contrato.cliente_nome}</span>
+                </p>
+              </div>
+
+              <div className="flex items-start space-x-3 pt-2">
+                <Checkbox 
+                  id="termos" 
+                  checked={aceitouTermos} 
+                  onCheckedChange={(checked) => setAceitouTermos(!!checked)} 
+                  className="mt-1"
+                />
+                <Label 
+                  htmlFor="termos" 
+                  className="text-sm leading-relaxed text-slate-600 cursor-pointer select-none"
+                >
+                  Li e aceito os termos do contrato e estou ciente da validade jurídica desta assinatura eletrônica.
+                </Label>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsModalAssinaturaOpen(false)}
+              className="flex-1"
+            >
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleAssinarContrato}
+              disabled={signing || !nomeAssinatura.trim() || !aceitouTermos || nomeAssinatura.trim().toLowerCase() !== contrato.cliente_nome.trim().toLowerCase()}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {signing ? "Processando..." : "Assinar digitalmente"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
 
 function rangeColors(n: number) {
   if (n <= 6) return { bg: "#FDECEA", border: "#E53935", text: "#E53935", fill: "#E53935" };
