@@ -17,15 +17,16 @@ interface ContractListItem {
   last_message: string;
   last_message_time: string;
   unread_count: number;
-  etapa_atual: string;
+  status: string;
 }
 
 const ETAPAS_CONFIG: Record<string, { label: string, bg: string, text: string, pillBg: string }> = {
   "comercial": { label: "Comercial", bg: "#E6F1FB", text: "#0C447C", pillBg: "bg-blue-100 text-blue-800" },
-  "revisao_tecnica": { label: "Revisão Técnica", bg: "#EEEDFE", text: "#3C3489", pillBg: "bg-purple-100 text-purple-800" },
+  "tecnico": { label: "Revisão Técnica", bg: "#EEEDFE", text: "#3C3489", pillBg: "bg-purple-100 text-purple-800" },
   "producao": { label: "Produção", bg: "#FAEEDA", text: "#633806", pillBg: "bg-amber-100 text-amber-800" },
   "logistica": { label: "Logística", bg: "#EAF3DE", text: "#27500A", pillBg: "bg-green-100 text-green-800" },
   "montagem": { label: "Montagem", bg: "#E1F5EE", text: "#085041", pillBg: "bg-teal-100 text-teal-800" },
+  "pos_venda": { label: "Pós-Venda", bg: "#E1F5EE", text: "#085041", pillBg: "bg-teal-100 text-teal-800" },
   "finalizado": { label: "Finalizado", bg: "#F1EFE8", text: "#444441", pillBg: "bg-gray-100 text-gray-800" },
 };
 
@@ -61,7 +62,7 @@ export default function Mensagens() {
       // Get contract details
       const { data: contractData, error: contractError } = await supabase
         .from("contratos")
-        .select("id, cliente_nome, etapa_atual")
+        .select("id, cliente_nome, status")
         .in("id", contractIds);
 
       if (contractError) throw contractError;
@@ -84,7 +85,7 @@ export default function Mensagens() {
       return contractData.map((c) => ({
         id: c.id,
         cliente_nome: c.cliente_nome,
-        etapa_atual: c.etapa_atual || "comercial",
+        status: c.status || "comercial",
         last_message: latestMessagesMap.get(c.id)?.mensagem || "",
         last_message_time: latestMessagesMap.get(c.id)?.created_at || "",
         unread_count: unreadCountsMap.get(c.id) || 0,
@@ -113,14 +114,14 @@ export default function Mensagens() {
 
   const filteredContracts = contracts?.filter((c) => {
     const matchesSearch = c.cliente_nome.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesEtapa = activeEtapa === "Todas" || c.etapa_atual === activeEtapa;
+    const matchesEtapa = activeEtapa === "Todas" || c.status === activeEtapa;
     return matchesSearch && matchesEtapa;
   });
 
   const getCountForEtapa = (etapa: string) => {
     if (!contracts) return 0;
     if (etapa === "Todas") return contracts.length;
-    return contracts.filter(c => c.etapa_atual === etapa).length;
+    return contracts.filter(c => c.status === etapa).length;
   };
 
   const selectedContract = contracts?.find((c) => c.id === selectedContractId);
@@ -227,16 +228,16 @@ export default function Mensagens() {
                     <span className="text-[10px] text-[#94A3B8]">
                       Contrato: #{contract.id.slice(0, 8)}
                     </span>
-                    {contract.etapa_atual && ETAPAS_CONFIG[contract.etapa_atual] && (
+                    {contract.status && ETAPAS_CONFIG[contract.status] && (
                       <Badge 
                         variant="secondary"
                         className="text-[9px] px-1.5 h-4 border-none font-medium"
                         style={{ 
-                          backgroundColor: ETAPAS_CONFIG[contract.etapa_atual].bg,
-                          color: ETAPAS_CONFIG[contract.etapa_atual].text
+                          backgroundColor: ETAPAS_CONFIG[contract.status].bg,
+                          color: ETAPAS_CONFIG[contract.status].text
                         }}
                       >
-                        {ETAPAS_CONFIG[contract.etapa_atual].label}
+                        {ETAPAS_CONFIG[contract.status].label}
                       </Badge>
                     )}
                   </div>
