@@ -25,7 +25,7 @@ export default function AuthPage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50">
+      <div className="flex h-screen items-center justify-center bg-[#060d1a]">
         <Loader2 className="h-6 w-6 animate-spin text-[#1a7fe8]" />
       </div>
     );
