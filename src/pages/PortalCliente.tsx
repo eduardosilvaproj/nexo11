@@ -109,7 +109,7 @@ export default function PortalCliente() {
 
       const { data: c, error: cErr } = await portalClient
         .from("contratos")
-        .select("*, lojas(*)")
+        .select("*, lojas(*), contrato_ambientes(nome)")
         .order("created_at", { ascending: false });
 
       if (cErr || !c || c.length === 0) {
@@ -589,7 +589,12 @@ export default function PortalCliente() {
                     onClick={() => setSelectedContractId(c.id)}
                   >
                     <span className="font-bold text-sm">Contrato #{c.id.slice(0, 8).toUpperCase()}</span>
-                    <span className="text-[10px] text-slate-400 uppercase tracking-wider">{STAGE_LABELS[c.status] || c.status}</span>
+                    <span className="text-[10px] text-slate-300 font-medium">
+                      {(c.contrato_ambientes || []).map((a: any) => a.nome).join(' + ') || 'Sem ambientes'} · criado em {new Date(c.created_at).toLocaleDateString("pt-BR")}
+                    </span>
+                    <Badge variant="outline" className="text-[9px] uppercase tracking-tighter h-4 px-1.5 border-white/20 text-slate-400 font-bold mt-1">
+                      {STAGE_LABELS[c.status] || c.status}
+                    </Badge>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
