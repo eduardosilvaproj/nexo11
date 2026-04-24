@@ -86,6 +86,8 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
   const [step, setStep] = useState<Step>(initialStep);
   const [descontoGlobal, setDescontoGlobal] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [descontoBloqueado, setDescontoBloqueado] = useState(true);
+  const [modalLiberarOpen, setModalLiberarOpen] = useState(false);
 
   // STEP 1: Cliente
   const [clientOption, setClientOption] = useState<"lead" | "new" | "fixed">(clienteId ? "fixed" : "lead");
