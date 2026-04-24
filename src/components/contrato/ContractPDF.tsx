@@ -1,4 +1,4 @@
-import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Font, Image } from '@react-pdf/renderer';
 import { substituteContractVariables } from '@/lib/contract-utils';
 
 
@@ -319,7 +319,14 @@ export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractP
             <Text style={[styles.signatureText, { fontWeight: 'bold' }]}>{loja?.nome || 'DIAS & DIAS'}</Text>
           </View>
           <View style={styles.signatureBlock}>
-            <View style={styles.signatureLine} />
+            {contrato.assinatura_imagem_url ? (
+              <Image 
+                src={contrato.assinatura_imagem_url} 
+                style={{ width: 100, height: 40, marginBottom: 5 }} 
+              />
+            ) : (
+              <View style={styles.signatureLine} />
+            )}
             <Text style={styles.signatureText}>CONTRATANTE</Text>
             <Text style={[styles.signatureText, { fontWeight: 'bold' }]}>{contrato.cliente_nome}</Text>
           </View>

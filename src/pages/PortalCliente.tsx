@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +17,11 @@ import {
   Camera, 
   Home, 
   User, 
-  ChevronDown 
+  ChevronDown,
+  X,
+  FileSignature,
+  Eraser,
+  Printer
 } from "lucide-react";
 import { LogoNexo } from "@/components/LogoNexo";
 import { pdf } from "@react-pdf/renderer";
@@ -43,6 +47,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import SignatureCanvas from "react-signature-canvas";
 
 const STAGE_LABELS: Record<string, string> = {
   comercial: "Comercial",
@@ -83,7 +88,11 @@ export default function PortalCliente() {
   const [signing, setSigning] = useState(false);
   const [nomeAssinatura, setNomeAssinatura] = useState("");
   const [isModalAssinaturaOpen, setIsModalAssinaturaOpen] = useState(false);
+  const [assinaturaPasso, setAssinaturaPasso] = useState<1 | 2 | 3>(1);
   const [aceitouTermos, setAceitouTermos] = useState(false);
+  const [dadosAssinaturaFinal, setDadosAssinaturaFinal] = useState<any>(null);
+  const [mostrandoContratoCompleto, setMostrandoContratoCompleto] = useState(false);
+  const sigCanvas = useRef<SignatureCanvas>(null);
 
   const portalClient = useMemo(() => createClient(
     import.meta.env.VITE_SUPABASE_URL,
@@ -247,8 +256,15 @@ export default function PortalCliente() {
       return;
     }
 
+    if (sigCanvas.current?.isEmpty()) {
+      toast.error("Por favor, faça sua assinatura no campo indicado.");
+      return;
+    }
+
     setSigning(true);
     try {
+      const assinaturaBase64 = sigCanvas.current?.getTrimmedCanvas().toDataURL('image/png');
+      
       let ip = "0.0.0.0";
       try {
         const resp = await fetch("https://api.ipify.org?format=json");
@@ -258,13 +274,36 @@ export default function PortalCliente() {
         console.warn("Não foi possível obter IP:", err);
       }
 
+      // 1. Upload da imagem da assinatura para o Storage
+      const signatureFileName = `sig_${contrato.id}_${Date.now()}.png`;
+      const signatureFilePath = `assinaturas/${signatureFileName}`;
+      
+      // Converter base64 para blob
+      const res = await fetch(assinaturaBase64!);
+      const blobSig = await res.blob();
+
+      const { error: uploadSigError } = await supabase.storage
+        .from('contratos-assinados')
+        .upload(signatureFilePath, blobSig, {
+          contentType: 'image/png',
+          upsert: true
+        });
+
+      if (uploadSigError) throw uploadSigError;
+
+      const { data: { publicUrl: signatureUrl } } = supabase.storage
+        .from('contratos-assinados')
+        .getPublicUrl(signatureFilePath);
+
+      // 2. Chamar RPC para registrar assinatura (agora recebendo URL da imagem)
       const { data, error } = await supabase.rpc(
         "portal_assinar_contrato" as any,
         { 
           _token: token,
           _nome: nomeAssinatura.trim(),
           _ip: ip,
-          _user_agent: navigator.userAgent
+          _user_agent: navigator.userAgent,
+          _assinatura_imagem_url: signatureUrl
         }
       );
       if (error) throw error;
@@ -277,9 +316,11 @@ export default function PortalCliente() {
         data_assinatura: r.data_assinatura,
         assinatura_nome: nomeAssinatura.trim(),
         assinatura_ip: ip,
-        assinatura_hash: r.hash
+        assinatura_hash: r.hash,
+        assinatura_imagem_url: signatureUrl
       };
 
+      // 3. Gerar PDF e fazer upload
       const doc = (
         <ContractPDF
           contrato={contratoComAssinatura}
@@ -288,7 +329,6 @@ export default function PortalCliente() {
           orcamentos={orcamentos}
         />
       );
-      
       const blob = await pdf(doc).toBlob();
       const fileName = `contrato_${r.contrato_id}_assinado.pdf`;
       const filePath = `${r.contrato_id}/${fileName}`;
@@ -312,7 +352,16 @@ export default function PortalCliente() {
         .eq('id', r.contrato_id);
 
       toast.success("Contrato assinado com sucesso!");
-      setIsModalAssinaturaOpen(false);
+      
+      setDadosAssinaturaFinal({
+        hash: r.hash,
+        data: r.data_assinatura,
+        ip: ip,
+        nome: nomeAssinatura.trim(),
+        url_pdf: publicUrl
+      });
+      
+      setAssinaturaPasso(3);
       
       // Update local state
       setContracts(prev => prev.map(c => c.id === r.contrato_id ? { ...c, assinado: true, data_assinatura: r.data_assinatura, url_contrato_assinado: publicUrl } : c));
@@ -324,7 +373,7 @@ export default function PortalCliente() {
     }
   }
 
-  async function handleDownloadContrato() {
+  const handleDownloadContrato = async () => {
     try {
       const doc = (
         <ContractPDF
@@ -343,7 +392,7 @@ export default function PortalCliente() {
     } catch (e: any) {
       toast.error("Erro ao gerar PDF");
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -454,8 +503,8 @@ export default function PortalCliente() {
               <p className="text-slate-500 font-medium">Seu pedido está em andamento</p>
             </div>
 
-            {/* Banner Amarelo de Assinatura */}
-            {!contrato.assinado && (
+            {/* Banner Amarelo de Assinatura ou Card Verde de Sucesso */}
+            {!contrato.assinado ? (
               <div className="bg-[#fff9e6] border border-[#ffe082] rounded-2xl p-4 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
                 <div className="flex items-center gap-3">
                   <div className="bg-[#ffd700] p-2 rounded-full">
@@ -465,10 +514,35 @@ export default function PortalCliente() {
                 </div>
                 <Button 
                   size="sm"
-                  onClick={() => setIsModalAssinaturaOpen(true)}
+                  onClick={() => {
+                    setAssinaturaPasso(1);
+                    setIsModalAssinaturaOpen(true);
+                  }}
                   className="bg-[#ff8c00] hover:bg-[#e67e00] text-white font-bold rounded-xl px-4"
                 >
                   Assinar
+                </Button>
+              </div>
+            ) : (
+              <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+                <div className="flex items-center gap-3">
+                  <div className="bg-emerald-500 p-2 rounded-full">
+                    <Check size={18} className="text-white" />
+                  </div>
+                  <div>
+                    <span className="text-sm font-bold text-emerald-800 block">Contrato Assinado ✓</span>
+                    <span className="text-[10px] text-emerald-600 font-medium">
+                      Assinado em {new Date(contrato.data_assinatura).toLocaleDateString("pt-BR")}
+                    </span>
+                  </div>
+                </div>
+                <Button 
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleDownloadContrato}
+                  className="text-emerald-700 hover:bg-emerald-100 font-bold rounded-xl"
+                >
+                  <Download size={16} className="mr-1" /> PDF
                 </Button>
               </div>
             )}
@@ -639,60 +713,261 @@ export default function PortalCliente() {
           ))}
         </nav>
 
-        {/* Modal de Assinatura */}
-        <Dialog open={isModalAssinaturaOpen} onOpenChange={setIsModalAssinaturaOpen}>
-          <DialogContent className="max-w-[350px] rounded-3xl p-6">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold">Assinatura Digital</DialogTitle>
-              <DialogDescription className="text-sm">
-                Para prosseguir com o seu pedido, por favor assine o contrato eletronicamente.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 my-4">
-              <div className="space-y-2">
-                <Label htmlFor="nome" className="text-xs font-bold uppercase text-slate-500">Digite seu nome completo</Label>
-                <Input
-                  id="nome"
-                  placeholder={contrato.cliente_nome}
-                  value={nomeAssinatura}
-                  onChange={(e) => setNomeAssinatura(e.target.value)}
-                  className="rounded-xl border-slate-200 focus:ring-[#00d4aa]"
-                />
-                <p className="text-[10px] text-slate-400 italic">
-                  * O nome deve ser exatamente: <span className="font-bold">{contrato.cliente_nome}</span>
-                </p>
+        {/* Modal de Assinatura Redesenhado (Fluxo de 3 Telas) */}
+        <Dialog open={isModalAssinaturaOpen} onOpenChange={(open) => {
+          if (!open) {
+            setIsModalAssinaturaOpen(false);
+            setMostrandoContratoCompleto(false);
+          }
+        }}>
+          <DialogContent className={cn(
+            "rounded-t-[32px] sm:rounded-3xl p-0 overflow-hidden border-none gap-0",
+            mostrandoContratoCompleto ? "max-w-[100vw] h-[100vh] sm:max-w-[800px] sm:h-[90vh]" : "max-w-[100vw] sm:max-w-[400px]"
+          )}>
+            {mostrandoContratoCompleto ? (
+              <div className="flex flex-col h-full bg-white">
+                <header className="bg-[#0a1628] p-4 flex items-center justify-between text-white">
+                  <h3 className="font-bold">Contrato Completo</h3>
+                  <button onClick={() => setMostrandoContratoCompleto(false)} className="p-2">
+                    <X size={24} />
+                  </button>
+                </header>
+                <div className="flex-1 overflow-y-auto p-6 space-y-4 text-[13px] leading-relaxed text-slate-800 font-serif bg-slate-50">
+                  <div className="bg-white p-8 shadow-sm rounded-sm max-w-2xl mx-auto border border-slate-200">
+                    <h1 className="text-center font-bold text-base mb-6">CONTRATO DE PRESTAÇÃO DE SERVIÇOS E FORNECIMENTO DE MÓVEIS PLANEJADOS SOB MEDIDA</h1>
+                    <p className="mb-4 text-justify">
+                      Pelo presente instrumento particular, de um lado, <strong>{contrato.lojas?.nome || 'DIAS & DIAS'}</strong>... doravante denominada CONTRATADA; e de outro lado, <strong>{contrato.cliente_nome}</strong>... doravante denominado(a) CONTRATANTE...
+                    </p>
+                    <div className="space-y-6">
+                      <div>
+                        <p className="font-bold">CLÁUSULA PRIMEIRA - DO OBJETO</p>
+                        <p>O presente contrato tem por objeto a prestação de serviços de projeto, fabricação e instalação de móveis planejados sob medida...</p>
+                      </div>
+                      <div>
+                        <p className="font-bold">CLÁUSULA SÉTIMA - DO PREÇO E DO PAGAMENTO</p>
+                        <p>Pelo objeto deste contrato, o CONTRATANTE pagará o valor total de {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(contrato.valor_venda || 0)}...</p>
+                      </div>
+                      <p className="text-center italic mt-12 opacity-50 text-[10px]">As demais 17 cláusulas estão disponíveis no documento PDF para download.</p>
+                    </div>
+                  </div>
+                </div>
+                <footer className="p-4 bg-white border-t border-slate-100">
+                  <Button 
+                    className="w-full bg-[#0a1628] rounded-2xl h-12"
+                    onClick={() => setMostrandoContratoCompleto(false)}
+                  >
+                    Voltar para Assinatura
+                  </Button>
+                </footer>
               </div>
-              <div className="flex items-start space-x-2 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <Checkbox 
-                  id="terms" 
-                  checked={aceitouTermos} 
-                  onCheckedChange={(val) => setAceitouTermos(!!val)}
-                  className="mt-0.5"
-                />
-                <label
-                  htmlFor="terms"
-                  className="text-xs leading-relaxed text-slate-600 cursor-pointer"
-                >
-                  Eu li e concordo com os termos do contrato e autorizo a assinatura digital com validade jurídica.
-                </label>
-              </div>
-            </div>
-            <DialogFooter className="gap-2">
-              <Button 
-                variant="ghost" 
-                onClick={() => setIsModalAssinaturaOpen(false)}
-                className="rounded-xl"
-              >
-                Cancelar
-              </Button>
-              <Button 
-                onClick={handleAssinarContrato}
-                disabled={signing || !aceitouTermos || !nomeAssinatura}
-                className="bg-[#ff8c00] hover:bg-[#e67e00] text-white font-bold rounded-xl px-8"
-              >
-                {signing ? "Assinando..." : "Confirmar Assinatura"}
-              </Button>
-            </DialogFooter>
+            ) : (
+              <>
+                {/* TELA 1: REVISÃO */}
+                {assinaturaPasso === 1 && (
+                  <div className="flex flex-col bg-white">
+                    <header className="bg-[#0a1628] p-6 text-white">
+                      <div className="flex items-center gap-3 mb-1">
+                        <FileSignature className="text-[#00d4aa]" size={20} />
+                        <h3 className="text-xl font-bold">Assinatura de Contrato</h3>
+                      </div>
+                      <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">Passo 1 de 3: Revisão</p>
+                    </header>
+                    
+                    <div className="p-6 space-y-6">
+                      <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase">Contrato</p>
+                            <p className="font-bold text-slate-900">#{contrato.id.slice(0, 8).toUpperCase()}</p>
+                          </div>
+                          <Badge className="bg-[#00d4aa] text-[#0a1628] border-none font-bold">Aguardando</Badge>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 gap-3 pt-2">
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase">Cliente</p>
+                            <p className="text-sm font-semibold text-slate-700">{contrato.cliente_nome}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase">Ambientes</p>
+                            <p className="text-sm font-semibold text-slate-700">
+                              {(contrato.contrato_ambientes || []).map((a: any) => a.nome).join(' + ')}
+                            </p>
+                          </div>
+                          <div className="flex justify-between border-t border-slate-200 pt-3 mt-1">
+                            <div>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase">Valor Total</p>
+                              <p className="text-lg font-black text-[#00d4aa]">
+                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(contrato.valor_venda || 0)}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase">Parcelas</p>
+                              <p className="text-sm font-bold text-slate-700">
+                                {Array.isArray(contrato.parcelas_datas) ? contrato.parcelas_datas.length : 0}x
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <Button 
+                          variant="outline" 
+                          className="w-full h-12 rounded-2xl border-slate-200 text-slate-600 font-bold flex items-center justify-between px-6 group"
+                          onClick={() => setMostrandoContratoCompleto(true)}
+                        >
+                          Ler contrato completo
+                          <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+                        </Button>
+                        
+                        <Button 
+                          className="w-full h-14 bg-[#00d4aa] hover:bg-[#00c29b] text-[#0a1628] font-black text-base rounded-2xl shadow-lg shadow-[#00d4aa]/20"
+                          onClick={() => setAssinaturaPasso(2)}
+                        >
+                          Avançar para assinar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TELA 2: ASSINATURA */}
+                {assinaturaPasso === 2 && (
+                  <div className="flex flex-col bg-white">
+                    <header className="bg-[#0a1628] p-6 text-white">
+                      <div className="flex items-center gap-3 mb-1">
+                        <ShieldCheck className="text-[#00d4aa]" size={20} />
+                        <h3 className="text-xl font-bold">Assinar digitalmente</h3>
+                      </div>
+                      <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">Passo 2 de 3: Assinatura Manuscrítica</p>
+                    </header>
+                    
+                    <div className="p-6 space-y-5">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-bold text-slate-400 uppercase">Seu nome completo</Label>
+                        <Input 
+                          placeholder={contrato.cliente_nome}
+                          value={nomeAssinatura}
+                          onChange={(e) => setNomeAssinatura(e.target.value)}
+                          className="h-12 rounded-xl border-slate-200 focus:ring-[#00d4aa]"
+                        />
+                        <p className="text-[9px] text-slate-400 italic">Deve ser exatamente como no contrato</p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <Label className="text-[10px] font-bold text-slate-400 uppercase">Assine no quadro abaixo</Label>
+                          <button 
+                            onClick={() => sigCanvas.current?.clear()}
+                            className="text-[10px] font-bold text-red-400 uppercase flex items-center gap-1"
+                          >
+                            <Eraser size={12} /> Limpar
+                          </button>
+                        </div>
+                        <div className="border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 relative h-40 overflow-hidden">
+                          <SignatureCanvas 
+                            ref={sigCanvas}
+                            penColor="#0a1628"
+                            canvasProps={{
+                              className: "w-full h-full cursor-crosshair"
+                            }}
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+                            <span className="text-xs font-medium text-slate-400">Toque aqui para assinar</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <Checkbox 
+                          id="terms-check" 
+                          checked={aceitouTermos}
+                          onCheckedChange={(v) => setAceitouTermos(!!v)}
+                          className="mt-0.5"
+                        />
+                        <label htmlFor="terms-check" className="text-[11px] leading-relaxed text-slate-500 font-medium">
+                          Li e aceito todos os termos do contrato e estou ciente da validade jurídica desta assinatura.
+                        </label>
+                      </div>
+                      
+                      <div className="flex flex-col gap-2 pt-2">
+                        <Button 
+                          className="w-full h-14 bg-[#00d4aa] hover:bg-[#00c29b] text-[#0a1628] font-black text-base rounded-2xl shadow-lg shadow-[#00d4aa]/20 disabled:opacity-50 disabled:bg-slate-200 disabled:shadow-none"
+                          onClick={handleAssinarContrato}
+                          disabled={signing || !aceitouTermos || !nomeAssinatura || nomeAssinatura.trim().toLowerCase() !== contrato.cliente_nome.trim().toLowerCase()}
+                        >
+                          {signing ? "Registrando assinatura..." : "Assinar digitalmente"}
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          className="w-full h-12 rounded-2xl text-slate-400 font-bold"
+                          onClick={() => setAssinaturaPasso(1)}
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TELA 3: CONFIRMAÇÃO */}
+                {assinaturaPasso === 3 && dadosAssinaturaFinal && (
+                  <div className="flex flex-col bg-white">
+                    <div className="flex-1 p-8 text-center flex flex-col items-center">
+                      <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-6 animate-in zoom-in-50 duration-500">
+                        <CheckCircle2 className="text-emerald-500" size={48} />
+                      </div>
+                      
+                      <h3 className="text-2xl font-black text-slate-900 mb-1">Contrato assinado!</h3>
+                      <p className="text-sm font-medium text-slate-500 mb-8">Documento com validade jurídica</p>
+                      
+                      <div className="w-full bg-slate-50 rounded-2xl p-5 border border-slate-100 mb-6 text-left space-y-4">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">Código de Autenticidade</p>
+                          <div className="bg-white px-3 py-2 rounded-lg border border-slate-200 font-mono text-[11px] text-slate-600 break-all">
+                            {dadosAssinaturaFinal.hash.slice(0, 32)}...
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase">Assinado por</p>
+                            <p className="text-xs font-bold text-slate-700">{dadosAssinaturaFinal.nome}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase">Data/Hora</p>
+                            <p className="text-xs font-bold text-slate-700">{formatDateTime(dadosAssinaturaFinal.data)}</p>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">IP Registrado</p>
+                          <p className="text-xs font-bold text-slate-700">{dadosAssinaturaFinal.ip}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="w-full space-y-3">
+                        <Button 
+                          variant="outline"
+                          className="w-full h-14 rounded-2xl border-slate-200 text-[#0a1628] font-black group"
+                          onClick={() => window.open(dadosAssinaturaFinal.url_pdf, '_blank')}
+                        >
+                          <Download size={18} className="mr-2" /> Baixar PDF assinado
+                        </Button>
+                        
+                        <Button 
+                          className="w-full h-14 bg-[#0a1628] hover:bg-[#112240] text-white font-black text-base rounded-2xl"
+                          onClick={() => setIsModalAssinaturaOpen(false)}
+                        >
+                          Voltar ao início
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </DialogContent>
         </Dialog>
 

@@ -1,0 +1,1 @@
+ALTER FUNCTION public.portal_assinar_contrato(text, text, text, text, text) SET search_path = public;
