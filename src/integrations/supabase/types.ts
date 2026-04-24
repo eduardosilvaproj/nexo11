@@ -2261,6 +2261,44 @@ export type Database = {
           },
         ]
       }
+      solicitacoes_desconto: {
+        Row: {
+          created_at: string
+          id: string
+          orcamento_id: string | null
+          percentual_solicitado: number | null
+          status: Database["public"]["Enums"]["status_solicitacao"]
+          updated_at: string
+          vendedor_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          orcamento_id?: string | null
+          percentual_solicitado?: number | null
+          status?: Database["public"]["Enums"]["status_solicitacao"]
+          updated_at?: string
+          vendedor_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          orcamento_id?: string | null
+          percentual_solicitado?: number | null
+          status?: Database["public"]["Enums"]["status_solicitacao"]
+          updated_at?: string
+          vendedor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solicitacoes_desconto_orcamento_id_fkey"
+            columns: ["orcamento_id"]
+            isOneToOne: false
+            referencedRelation: "orcamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tecnicos_montadores: {
         Row: {
           ativo: boolean
@@ -2677,6 +2715,7 @@ export type Database = {
         | "em_producao"
         | "pronto_retirada"
         | "atrasado"
+      status_solicitacao: "pendente" | "aprovado" | "reprovado"
       transacao_status: "pendente" | "pago" | "cancelado"
       transacao_tipo: "receita" | "despesa"
     }
@@ -2874,6 +2913,7 @@ export const Constants = {
         "pronto_retirada",
         "atrasado",
       ],
+      status_solicitacao: ["pendente", "aprovado", "reprovado"],
       transacao_status: ["pendente", "pago", "cancelado"],
       transacao_tipo: ["receita", "despesa"],
     },
