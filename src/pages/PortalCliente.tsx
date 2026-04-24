@@ -46,7 +46,7 @@ import { cn } from "@/lib/utils";
 
 const STAGE_LABELS: Record<string, string> = {
   comercial: "Comercial",
-  tecnico: "Técnico",
+  tecnico: "Revisão Técnica",
   producao: "Produção",
   logistica: "Logística",
   montagem: "Montagem",
