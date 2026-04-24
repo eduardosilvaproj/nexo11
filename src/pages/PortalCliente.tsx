@@ -256,8 +256,15 @@ export default function PortalCliente() {
       return;
     }
 
+    if (sigCanvas.current?.isEmpty()) {
+      toast.error("Por favor, faça sua assinatura no campo indicado.");
+      return;
+    }
+
     setSigning(true);
     try {
+      const assinaturaBase64 = sigCanvas.current?.getTrimmedCanvas().toDataURL('image/png');
+      
       let ip = "0.0.0.0";
       try {
         const resp = await fetch("https://api.ipify.org?format=json");
@@ -267,13 +274,36 @@ export default function PortalCliente() {
         console.warn("Não foi possível obter IP:", err);
       }
 
+      // 1. Upload da imagem da assinatura para o Storage
+      const signatureFileName = `sig_${contrato.id}_${Date.now()}.png`;
+      const signatureFilePath = `assinaturas/${signatureFileName}`;
+      
+      // Converter base64 para blob
+      const res = await fetch(assinaturaBase64!);
+      const blobSig = await res.blob();
+
+      const { error: uploadSigError } = await supabase.storage
+        .from('contratos-assinados')
+        .upload(signatureFilePath, blobSig, {
+          contentType: 'image/png',
+          upsert: true
+        });
+
+      if (uploadSigError) throw uploadSigError;
+
+      const { data: { publicUrl: signatureUrl } } = supabase.storage
+        .from('contratos-assinados')
+        .getPublicUrl(signatureFilePath);
+
+      // 2. Chamar RPC para registrar assinatura (agora recebendo URL da imagem)
       const { data, error } = await supabase.rpc(
         "portal_assinar_contrato" as any,
         { 
           _token: token,
           _nome: nomeAssinatura.trim(),
           _ip: ip,
-          _user_agent: navigator.userAgent
+          _user_agent: navigator.userAgent,
+          _assinatura_imagem_url: signatureUrl
         }
       );
       if (error) throw error;
@@ -286,9 +316,11 @@ export default function PortalCliente() {
         data_assinatura: r.data_assinatura,
         assinatura_nome: nomeAssinatura.trim(),
         assinatura_ip: ip,
-        assinatura_hash: r.hash
+        assinatura_hash: r.hash,
+        assinatura_imagem_url: signatureUrl
       };
 
+      // 3. Gerar PDF e fazer upload
       const doc = (
         <ContractPDF
           contrato={contratoComAssinatura}
@@ -321,7 +353,16 @@ export default function PortalCliente() {
         .eq('id', r.contrato_id);
 
       toast.success("Contrato assinado com sucesso!");
-      setIsModalAssinaturaOpen(false);
+      
+      setDadosAssinaturaFinal({
+        hash: r.hash,
+        data: r.data_assinatura,
+        ip: ip,
+        nome: nomeAssinatura.trim(),
+        url_pdf: publicUrl
+      });
+      
+      setAssinaturaPasso(3);
       
       // Update local state
       setContracts(prev => prev.map(c => c.id === r.contrato_id ? { ...c, assinado: true, data_assinatura: r.data_assinatura, url_contrato_assinado: publicUrl } : c));
