@@ -9,6 +9,9 @@ import { ContratoStepper } from "@/components/contrato/ContratoStepper";
 import { pdf } from "@react-pdf/renderer";
 import { ContractPDF } from "@/components/contrato/ContractPDF";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PortalChat } from "@/components/portal/PortalChat";
+import { MessageSquare } from "lucide-react";
 
 const PUBLIC_EVENTS: Record<
   string,
