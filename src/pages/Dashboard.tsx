@@ -217,7 +217,7 @@ export default function Dashboard() {
                 <span className="mb-0.5 block font-bold text-[#212529]" style={{ fontSize: 24, lineHeight: 1.1 }}>
                   {data.count}
                 </span>
-                <span className="mb-2 block truncate font-medium text-[#6B7A90]" style={{ fontSize: 12 }}>
+                <span className="mb-2 block truncate font-semibold" style={{ fontSize: 13, color: etapa.border }}>
                   {etapa.label}
                 </span>
                 <span className="mb-3 block font-semibold text-[#495057]" style={{ fontSize: 13 }}>
@@ -338,7 +338,10 @@ export default function Dashboard() {
               return (
                 <button
                   key={etapa.key}
-                  onClick={() => navigate(`/mensagens?etapa=${etapa.key}`)}
+                  onClick={() => {
+                    localStorage.setItem('mensagens_filtro_etapa', etapa.key);
+                    navigate('/mensagens');
+                  }}
                   className="group flex items-center gap-3 rounded-lg border border-transparent bg-[#F8F9FA] p-3 transition-all hover:border-[#E2E8F0] hover:bg-white"
                 >
                   <div 
