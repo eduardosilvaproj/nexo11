@@ -338,8 +338,9 @@ export default function PortalCliente() {
       const res = await fetch(assinaturaBase64!);
       const blobSig = await res.blob();
 
+      // Corrigindo para usar o bucket correto 'assinaturas' conforme a estrutura do portal
       const { error: uploadSigError } = await portalClient.storage
-        .from('contratos-assinados')
+        .from('assinaturas')
         .upload(signatureFilePath, blobSig, {
           contentType: 'image/png',
           upsert: true
@@ -348,7 +349,7 @@ export default function PortalCliente() {
       if (uploadSigError) throw uploadSigError;
 
       const { data: { publicUrl: signatureUrl } } = portalClient.storage
-        .from('contratos-assinados')
+        .from('assinaturas')
         .getPublicUrl(signatureFilePath);
 
       // 2. Chamar RPC para registrar assinatura
