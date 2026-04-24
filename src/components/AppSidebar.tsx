@@ -19,6 +19,7 @@ import {
   Plug,
   Settings,
   LogOut,
+  MessageSquare,
 } from "lucide-react";
 import {
   Sidebar,
@@ -45,6 +46,7 @@ const operacao = [
   { title: "Logística", url: "/logistica", icon: Truck, roles: ["admin", "gerente", "franqueador"] },
   { title: "Montagem", url: "/montagem", icon: Wrench, roles: ["admin", "gerente", "montador", "franqueador"] },
   { title: "Pós-venda", url: "/pos-venda", icon: HeadphonesIcon },
+  { title: "Mensagens", url: "/mensagens", icon: MessageSquare },
   { title: "DRE", url: "/dre", icon: TrendingUp, roles: ["admin", "gerente", "franqueador"] },
 ];
 
