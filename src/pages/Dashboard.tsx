@@ -115,7 +115,7 @@ export default function Dashboard() {
 
       const contratosMap: Record<string, string> = {};
       contratosByStatus.data?.forEach((c: any) => {
-        const etapa = c.status || "comercial";
+        const etapa = c.status;
         contratosMap[c.id] = etapa;
         if (pipeline[etapa]) {
           pipeline[etapa].count += 1;
