@@ -71,11 +71,16 @@ export default function AuthPage() {
     }`;
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-[#060d1a]">
       {/* Painel Esquerdo (60%) */}
-      <div className="hidden lg:flex lg:w-[60%] relative flex flex-col items-center justify-center h-screen overflow-hidden bg-slate-50">
-        {/* Radial Gradient */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(26,155,232,0.08)_0%,_transparent_70%)]" />
+      <div className="hidden lg:flex lg:w-[60%] relative flex flex-col items-center justify-center h-screen overflow-hidden bg-[#050c18]">
+        {/* Efeitos de Luz */}
+        <div 
+          className="absolute inset-0 pointer-events-none" 
+          style={{ 
+            background: 'radial-gradient(ellipse at 30% 40%, rgba(26,155,232,0.12) 0%, transparent 55%), radial-gradient(ellipse at 70% 70%, rgba(34,201,122,0.08) 0%, transparent 50%)' 
+          }} 
+        />
         
         {/* Logo Centralizada */}
         <div className="z-10 flex flex-col items-center animate-fade-up">
@@ -93,13 +98,13 @@ export default function AuthPage() {
       </div>
 
       {/* Painel Direito (40%) */}
-      <div className="w-full lg:w-[40%] min-h-screen bg-white flex flex-col justify-center p-11 relative border-l border-slate-100 animate-fade-up">
+      <div className="w-full lg:w-[40%] min-h-screen bg-[#0c1526] flex flex-col justify-center p-11 relative border-l border-white/5 animate-fade-up">
         <div className="flex flex-col w-full">
           <div className="mb-10">
-            <h1 className="text-[26px] font-bold text-slate-900 mb-2 leading-tight">
+            <h1 className="text-[26px] font-bold text-white mb-2 leading-tight">
               Bem-vindo de volta!
             </h1>
-            <p className="text-slate-500 text-sm">
+            <p className="text-slate-400 text-sm">
               Acesse sua conta para continuar gerenciando sua rede.
             </p>
           </div>
