@@ -214,13 +214,13 @@ export default function Dashboard() {
                 className="flex flex-col rounded-xl border-l-[4px] bg-[#F8F9FA] p-4 text-left transition-all hover:bg-[#F1F3F5] active:scale-[0.98]"
                 style={{ borderLeftColor: etapa.border }}
               >
-                <span className="mb-1 block truncate font-semibold text-[#495057]" style={{ fontSize: 13 }}>
+                <span className="mb-0.5 block font-bold text-[#212529]" style={{ fontSize: 24, lineHeight: 1.1 }}>
+                  {data.count}
+                </span>
+                <span className="mb-2 block truncate font-medium text-[#6B7A90]" style={{ fontSize: 12 }}>
                   {etapa.label}
                 </span>
-                <span className="mb-1 block font-bold text-[#212529]" style={{ fontSize: 17 }}>
-                  {data.count} {data.count === 1 ? 'contrato' : 'contratos'}
-                </span>
-                <span className="mb-3 block font-medium text-[#6C757D]" style={{ fontSize: 12 }}>
+                <span className="mb-3 block font-semibold text-[#495057]" style={{ fontSize: 13 }}>
                   {formatBRL(data.total)}
                 </span>
                 
