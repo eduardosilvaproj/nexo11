@@ -94,10 +94,21 @@ export function PortalChat({ contractId, clientName, portalClient }: PortalChatP
 
       if (error) throw error;
       setMessages((data as any[]) || []);
+
+      // Marcar mensagens da equipe como lidas
+      const unreadEquipe = (data as any[])?.filter(m => m.remetente_tipo === "equipe" && !m.lida);
+      if (unreadEquipe && unreadEquipe.length > 0) {
+        await portalClient
+          .from("chat_mensagens")
+          .update({ lida: true })
+          .eq("contrato_id", contractId)
+          .eq("remetente_tipo", "equipe");
+      }
     } catch (e: any) {
       console.error("Erro ao carregar mensagens:", e);
     }
   }
+
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, accept?: string) => {
     const file = e.target.files?.[0];
