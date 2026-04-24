@@ -332,9 +332,14 @@ export default function PortalCliente() {
       }
 
       const timestamp = new Date().toISOString();
-      const hash = await gerarHash(contrato.id, nomeAssinatura.trim(), timestamp);
+      // Gerando o hash 100% no JavaScript para evitar erros de digest() no SQL
+      const hash = Array.from(
+        new Uint8Array(
+          await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${contrato.id}-${nomeAssinatura.trim()}-${timestamp}`))
+        )
+      ).map(b => b.toString(16).padStart(2, '0')).join('');
 
-      // 1. Chamar RPC para registrar assinatura (Enviando base64 direto para evitar dependência de Storage/Auth)
+      // 1. Chamar RPC para registrar assinatura (Enviando base64 e hash gerado no JS)
       const { data, error } = await portalClient.rpc(
         "portal_assinar_contrato" as any,
         { 
@@ -342,7 +347,7 @@ export default function PortalCliente() {
           _nome: nomeAssinatura.trim(),
           _ip: ip,
           _user_agent: navigator.userAgent,
-          _assinatura_imagem_url: assinaturaBase64, // Base64 direto
+          _assinatura_imagem_url: assinaturaBase64,
           _hash: hash,
           _data_assinatura: timestamp
         }
