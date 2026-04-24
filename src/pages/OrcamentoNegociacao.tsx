@@ -123,7 +123,15 @@ export default function OrcamentoNegociacao() {
         setLoading(false);
         return;
       }
-      setOrcamento(orc as Orcamento);
+      setOrcamento(orc as any);
+      
+      const storeLimit = (orc as any).lojas?.desconto_maximo_sem_aprovacao ?? 10;
+      setDescontoMaximoSemAprovacao(storeLimit);
+      
+      const currentDesconto = Number(orc.desconto_global || 0);
+      if (currentDesconto <= storeLimit) {
+        setDescontoBloqueado(false);
+      }
 
       const { data: cli } = await supabase
         .from("clientes")
