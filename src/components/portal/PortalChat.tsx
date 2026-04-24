@@ -62,10 +62,24 @@ export function PortalChat({ contractId, clientName, portalClient }: PortalChatP
           filter: `contrato_id=eq.${contractId}`,
         },
         (payload: any) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
+          const newMessage = payload.new as Message;
+          setMessages((prev) => {
+            if (prev.some(m => m.id === newMessage.id)) return prev;
+            return [...prev, newMessage];
+          });
+
+          // Marcar como lida se for da equipe
+          if (newMessage.remetente_tipo === "equipe") {
+            portalClient
+              .from("chat_mensagens")
+              .update({ lida: true })
+              .eq("id", newMessage.id)
+              .then();
+          }
         }
       )
       .subscribe();
+
 
     return () => {
       portalClient.removeChannel(channel);
@@ -88,10 +102,21 @@ export function PortalChat({ contractId, clientName, portalClient }: PortalChatP
 
       if (error) throw error;
       setMessages((data as any[]) || []);
+
+      // Marcar mensagens da equipe como lidas
+      const unreadEquipe = (data as any[])?.filter(m => m.remetente_tipo === "equipe" && !m.lida);
+      if (unreadEquipe && unreadEquipe.length > 0) {
+        await portalClient
+          .from("chat_mensagens")
+          .update({ lida: true })
+          .eq("contrato_id", contractId)
+          .eq("remetente_tipo", "equipe");
+      }
     } catch (e: any) {
       console.error("Erro ao carregar mensagens:", e);
     }
   }
+
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, accept?: string) => {
     const file = e.target.files?.[0];
@@ -147,25 +172,49 @@ export function PortalChat({ contractId, clientName, portalClient }: PortalChatP
         anexo_tipo = selectedFile.type;
       }
 
-      const { error } = await portalClient.from("chat_mensagens").insert({
+      const messageContent = newMessage.trim();
+      const messageData = {
         contrato_id: contractId,
-        remetente_tipo: "cliente",
+        remetente_tipo: "cliente" as const,
         remetente_nome: clientName,
-        mensagem: newMessage.trim(),
+        mensagem: messageContent,
         anexo_url,
         anexo_nome,
         anexo_tipo,
-      });
+      };
 
-      if (error) throw error;
+      // Optimistic update
+      const tempId = crypto.randomUUID();
+      const optimisticMsg: Message = {
+        id: tempId,
+        ...messageData,
+        created_at: new Date().toISOString(),
+        lida: false
+      };
+      
+      setMessages((prev) => [...prev, optimisticMsg]);
       setNewMessage("");
       removeFile();
+
+      const { data, error } = await portalClient.from("chat_mensagens").insert(messageData).select().single();
+
+      if (error) {
+        // Rollback optimistic update on error
+        setMessages((prev) => prev.filter(m => m.id !== tempId));
+        throw error;
+      }
+
+      // Update the optimistic message with the real one from DB (to get the real ID and exact timestamp)
+      if (data) {
+        setMessages((prev) => prev.map(m => m.id === tempId ? (data as Message) : m));
+      }
     } catch (e: any) {
       console.error(e);
       toast.error("Erro ao enviar mensagem");
     } finally {
       setSending(false);
     }
+
   }
 
   return (
