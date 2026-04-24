@@ -148,6 +148,11 @@ export default function PortalCliente() {
       global: {
         headers: token ? { "x-portal-token": token } : {},
       },
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false
+      }
     },
   ), [token]);
 
