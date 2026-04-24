@@ -182,36 +182,63 @@ export function ContractPreviewModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[1000px] w-[90vw] h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
-        <DialogHeader className="p-4 border-b flex flex-row items-center justify-between space-y-0">
+        <style dangerouslySetInnerHTML={{ __html: `
+          @media print {
+            body * { visibility: hidden; }
+            .printable-content, .printable-content * { visibility: visible; }
+            .printable-content { 
+              position: absolute; 
+              left: 0; 
+              top: 0; 
+              width: 100%;
+              padding: 0;
+              margin: 0;
+            }
+            .no-print { display: none !important; }
+          }
+        `}} />
+        
+        <DialogHeader className="p-4 border-b flex flex-row items-center justify-between space-y-0 no-print">
           <DialogTitle className="text-lg font-semibold flex items-center gap-2">
             📄 Preview do Contrato
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 bg-slate-100 flex items-center justify-center overflow-hidden">
+        <div className="flex-1 bg-slate-100 flex flex-col items-center overflow-y-auto p-4 md:p-8">
           {loading ? (
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex-1 flex flex-col items-center justify-center gap-2">
               <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-              <span className="text-sm text-slate-500 font-medium">Gerando contrato...</span>
+              <span className="text-sm text-slate-500 font-medium">Carregando contrato...</span>
             </div>
-          ) : url ? (
-            <iframe
-              ref={iframeRef}
-              src={url}
-              className="w-full h-full border-none"
-              title="Preview do Contrato"
-              onLoad={() => setIframeLoaded(true)}
-            />
+          ) : error ? (
+            <div className="flex-1 flex items-center justify-center p-6">
+              <Alert variant="destructive" className="max-w-md">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Erro na prévia</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            </div>
+          ) : fullContrato ? (
+            <div ref={contentRef} className="w-full max-w-[800px]">
+              <ContractHTMLPreview
+                contrato={fullContrato}
+                loja={loja}
+                ambientes={ambientes}
+                orcamentos={orcamentos}
+              />
+            </div>
           ) : (
-            <div className="text-slate-400">Falha ao carregar prévia</div>
+            <div className="flex-1 flex items-center justify-center text-slate-400">
+              Falha ao carregar prévia
+            </div>
           )}
         </div>
 
-        <div className="p-4 border-t flex items-center justify-center gap-3 bg-white">
+        <div className="p-4 border-t flex items-center justify-center gap-3 bg-white no-print">
           <Button
             variant="outline"
             onClick={handlePrint}
-            disabled={!url || loading || !iframeLoaded}
+            disabled={loading || !!error || !fullContrato}
             className="flex items-center gap-2"
           >
             <Printer className="h-4 w-4" />
@@ -220,7 +247,7 @@ export function ContractPreviewModal({
           <Button
             variant="outline"
             onClick={handleDownload}
-            disabled={!url || loading}
+            disabled={loading || !!error}
             className="flex items-center gap-2"
           >
             <Download className="h-4 w-4" />
@@ -228,7 +255,7 @@ export function ContractPreviewModal({
           </Button>
           <Button
             onClick={handleSendForSignature}
-            disabled={!url || loading}
+            disabled={loading || !!error}
             className="flex items-center gap-2"
           >
             <Send className="h-4 w-4" />
