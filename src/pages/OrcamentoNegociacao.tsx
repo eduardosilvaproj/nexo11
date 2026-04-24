@@ -299,36 +299,6 @@ export default function OrcamentoNegociacao() {
     }
   };
 
-  const handleSalvarRascunho = async () => {
-    if (!orcamento) return;
-    setSaving(true);
-    const parcelasJson = parcelas.map((p) => ({
-      label: p.label,
-      data: p.data,
-      valor: Number(p.valor.toFixed(2)),
-    }));
-    const { error } = await supabase
-      .from("orcamentos")
-      .update({
-        condicao_pagamento_id: condicaoSel?.id || null,
-        taxa_financeira: condicaoSel?.taxa || 0,
-        valor_com_taxa: Number(calc.comParceiro.toFixed(2)),
-        parcelas: condicaoSel?.parcelas || 1,
-        valor_parcela: Number(calc.valorParcela.toFixed(2)),
-        percentual_parceiro: percParceiro,
-        ocultar_parceiro: ocultarParceiro,
-        tipo_venda: tipoVenda,
-        parcelas_datas: parcelasJson,
-        desconto_global: descontoExtra,
-      })
-      .eq("id", orcamento.id);
-    setSaving(false);
-    if (error) {
-      toast.error("Erro ao salvar: " + error.message);
-      return;
-    }
-    toast.success("Desconto liberado/salvo");
-  };
 
   if (loading) return <div className="p-8 text-muted-foreground">Carregando...</div>;
   if (!orcamento) return <div className="p-8">Orçamento não encontrado</div>;
