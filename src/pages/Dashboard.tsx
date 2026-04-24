@@ -89,7 +89,8 @@ export default function Dashboard() {
           supabase
             .from("contratos")
             .select("id, status, valor_venda")
-            .not("status", "eq", "cancelado"),
+            .not("status", "is", null)
+            .neq("status", "cancelado"),
           supabase
             .from("chat_mensagens")
             .select("id, contrato_id, lida, contratos(status)")
