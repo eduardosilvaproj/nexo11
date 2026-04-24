@@ -824,8 +824,10 @@ export type Database = {
           contrato_id: string
           created_at: string
           descricao: string | null
+          etapa: string | null
           id: string
           titulo: string
+          usuario_nome: string | null
         }
         Insert: {
           acao: string
@@ -834,8 +836,10 @@ export type Database = {
           contrato_id: string
           created_at?: string
           descricao?: string | null
+          etapa?: string | null
           id?: string
           titulo: string
+          usuario_nome?: string | null
         }
         Update: {
           acao?: string
@@ -844,8 +848,10 @@ export type Database = {
           contrato_id?: string
           created_at?: string
           descricao?: string | null
+          etapa?: string | null
           id?: string
           titulo?: string
+          usuario_nome?: string | null
         }
         Relationships: [
           {
