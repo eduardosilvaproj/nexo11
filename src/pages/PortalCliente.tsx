@@ -70,6 +70,15 @@ const formatDateTime = (date: any) => {
   return `${day}/${month}/${year} ${hours}:${minutes}`;
 };
 
+async function gerarHash(contratoId: string, nome: string, timestamp: string) {
+  const dados = `${contratoId}-${nome}-${timestamp}`;
+  const encoder = new TextEncoder();
+  const dataBuffer = encoder.encode(dados);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 export default function PortalCliente() {
   const { token } = useParams<{ token: string }>();
   const [loading, setLoading] = useState(true);
