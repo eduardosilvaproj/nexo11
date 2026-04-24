@@ -229,6 +229,23 @@ export function EditLojaDialog({ open, onOpenChange, loja }: Props) {
               </SelectContent>
             </Select>
           </div>
+          <div className="col-span-2 border-t pt-4 mt-2">
+            <h3 className="text-sm font-semibold mb-3">Políticas de Desconto</h3>
+            <div className="w-1/2">
+              <Label>Desconto máximo sem aprovação (%)</Label>
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                value={form.desconto_maximo_sem_aprovacao}
+                onChange={(e) => setForm({ ...form, desconto_maximo_sem_aprovacao: Number(e.target.value) })}
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">
+                Descontos acima deste limite exigirão autorização de um gerente/admin.
+              </p>
+            </div>
+          </div>
+
           <div className="col-span-2 space-y-2">
             <Label>Modelo de Contrato (com variáveis dinâmicas)</Label>
             <p className="text-[10px] text-muted-foreground">
