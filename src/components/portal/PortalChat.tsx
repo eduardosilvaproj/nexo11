@@ -62,8 +62,14 @@ export function PortalChat({ contractId, clientName, portalClient }: PortalChatP
           filter: `contrato_id=eq.${contractId}`,
         },
         (payload: any) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
+          const newMessage = payload.new as Message;
+          setMessages((prev) => {
+            // Se a mensagem já existe (por causa do update otimista), não adiciona de novo
+            if (prev.some(m => m.id === newMessage.id)) return prev;
+            return [...prev, newMessage];
+          });
         }
+
       )
       .subscribe();
 
