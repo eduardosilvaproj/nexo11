@@ -69,7 +69,7 @@ export function PortalChat({ contractId, clientName, portalClient }: PortalChatP
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      setMessages(data || []);
+      setMessages((data as any[]) || []);
     } catch (e: any) {
       console.error("Erro ao carregar mensagens:", e);
     }
