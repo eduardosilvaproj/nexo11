@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { MessageSquare, Search, Send, User, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -32,10 +33,19 @@ const ETAPAS_CONFIG: Record<string, { label: string, bg: string, text: string, p
 };
 
 export default function Mensagens() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeEtapa, setActiveEtapa] = useState<string>("Todas");
   const queryClient = useQueryClient();
+
+  // Load etapa from URL on mount
+  useEffect(() => {
+    const etapa = searchParams.get("etapa");
+    if (etapa && ETAPAS_CONFIG[etapa]) {
+      setActiveEtapa(etapa);
+    }
+  }, [searchParams]);
 
   const { data: contracts, isLoading } = useQuery({
     queryKey: ["contract_messages_list"],
@@ -147,7 +157,18 @@ export default function Mensagens() {
               />
             </div>
             <div className="w-[140px] shrink-0">
-              <Select value={activeEtapa} onValueChange={setActiveEtapa}>
+              <Select 
+                value={activeEtapa} 
+                onValueChange={(val) => {
+                  setActiveEtapa(val);
+                  if (val === "Todas") {
+                    searchParams.delete("etapa");
+                  } else {
+                    searchParams.set("etapa", val);
+                  }
+                  setSearchParams(searchParams);
+                }}
+              >
                 <SelectTrigger className="bg-[#F1F5F9] border-none text-xs h-10 focus:ring-1 focus:ring-[#1E6FBF]">
                   <SelectValue placeholder="Etapa" />
                 </SelectTrigger>

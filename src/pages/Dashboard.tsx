@@ -12,14 +12,14 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-const ETAPAS_CONFIG: { key: string; label: string; border: string; text: string }[] = [
-  { key: "comercial", label: "Comercial", border: "#378ADD", text: "#0C447C" },
-  { key: "tecnico", label: "Revisão Técnica", border: "#7F77DD", text: "#3C3489" },
-  { key: "producao", label: "Produção", border: "#EF9F27", text: "#633806" },
-  { key: "logistica", label: "Logística", border: "#1D9E75", text: "#27500A" },
-  { key: "montagem", label: "Montagem", border: "#5DCAA5", text: "#085041" },
-  { key: "pos_venda", label: "Pós-Venda", border: "#D4537E", text: "#72243E" },
-  { key: "finalizado", label: "Finalizado", border: "#888780", text: "#444441" },
+const ETAPAS_CONFIG: { key: string; label: string; border: string; text: string; iconBg: string }[] = [
+  { key: "comercial", label: "Comercial", border: "#378ADD", text: "#0C447C", iconBg: "#E6F1FB" },
+  { key: "tecnico", label: "Revisão Técnica", border: "#7F77DD", text: "#3C3489", iconBg: "#EEEDFE" },
+  { key: "producao", label: "Produção", border: "#EF9F27", text: "#633806", iconBg: "#FAEEDA" },
+  { key: "logistica", label: "Logística", border: "#1D9E75", text: "#27500A", iconBg: "#EAF3DE" },
+  { key: "montagem", label: "Montagem", border: "#5DCAA5", text: "#085041", iconBg: "#E1F5EE" },
+  { key: "pos_venda", label: "Pós-Venda", border: "#D4537E", text: "#72243E", iconBg: "#FBEAF0" },
+  { key: "finalizado", label: "Finalizado", border: "#888780", text: "#444441", iconBg: "#F1EFE8" },
 ];
 
 interface MetricCardProps {
@@ -332,26 +332,27 @@ export default function Dashboard() {
             )}
           </div>
 
-          <div className="flex flex-col flex-1 justify-between">
-            {ETAPAS_CONFIG.map((etapa) => {
+          <div className="grid grid-cols-2 gap-3 flex-1 overflow-y-auto">
+            {ETAPAS_CONFIG.filter(e => e.key !== 'finalizado').map((etapa) => {
               const data = stats?.mensagens?.[etapa.key] || { totalConversas: 0, unreadCount: 0 };
               return (
                 <button
                   key={etapa.key}
                   onClick={() => navigate(`/mensagens?etapa=${etapa.key}`)}
-                  className="group flex w-full items-center justify-between rounded-lg p-2.5 transition-colors hover:bg-gray-50"
+                  className="group flex items-center gap-3 rounded-lg border border-transparent bg-[#F8F9FA] p-3 transition-all hover:border-[#E2E8F0] hover:bg-white"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white" style={{ color: etapa.border }}>
-                      <MessageSquare className="h-5 w-5" />
-                    </div>
-                    <div className="flex flex-col items-start">
-                      <span className="text-sm font-semibold text-gray-700">{etapa.label}</span>
-                      <span className="text-xs text-gray-500">{data.totalConversas} {data.totalConversas === 1 ? 'conversa' : 'conversas'}</span>
-                    </div>
+                  <div 
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm" 
+                    style={{ backgroundColor: etapa.iconBg, color: etapa.border }}
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                  </div>
+                  <div className="flex flex-col items-start min-w-0 flex-1">
+                    <span className="truncate text-[13px] font-semibold text-gray-700">{etapa.label}</span>
+                    <span className="text-[11px] text-gray-500">{data.totalConversas} {data.totalConversas === 1 ? 'conversa' : 'conv.'}</span>
                   </div>
                   {data.unreadCount > 0 && (
-                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
                       {data.unreadCount}
                     </span>
                   )}
