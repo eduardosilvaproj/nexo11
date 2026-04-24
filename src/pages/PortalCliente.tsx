@@ -78,6 +78,44 @@ async function gerarHash(contratoId: string, nome: string, timestamp: string) {
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
+function trimCanvas(canvas: HTMLCanvasElement) {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return canvas;
+  
+  const { width, height } = canvas;
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const { data } = imageData;
+  let top = height, bottom = 0, left = width, right = 0;
+  
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const alpha = data[(y * width + x) * 4 + 3];
+      if (alpha > 0) {
+        if (y < top) top = y;
+        if (y > bottom) bottom = y;
+        if (x < left) left = x;
+        if (x > right) right = x;
+      }
+    }
+  }
+
+  // Se não houver nada desenhado, retorna o original ou um canvas vazio de 1x1
+  if (bottom < top || right < left) {
+    return canvas;
+  }
+
+  const trimmed = document.createElement('canvas');
+  trimmed.width = right - left + 1;
+  trimmed.height = bottom - top + 1;
+  const trimmedCtx = trimmed.getContext('2d');
+  if (trimmedCtx) {
+    trimmedCtx.putImageData(
+      ctx.getImageData(left, top, trimmed.width, trimmed.height), 0, 0
+    );
+  }
+  return trimmed;
+}
+
 
 export default function PortalCliente() {
   const { token } = useParams<{ token: string }>();
