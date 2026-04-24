@@ -630,9 +630,11 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
                                 type="number" 
                                 value={amb.desconto} 
                                 onChange={e => setAmbientes(prev => prev.map(x => x.id === amb.id ? { ...x, desconto: Number(e.target.value) } : x))}
-                                className="h-6 w-12 text-[10px] px-1"
+                                disabled={descontoBloqueado}
+                                className={cn("h-6 w-12 text-[10px] px-1", descontoBloqueado && "bg-slate-50 cursor-not-allowed")}
                               />
                               <span className="text-[10px] text-slate-400">%</span>
+                              {descontoBloqueado && <Lock className="h-2.5 w-2.5 text-amber-500" />}
                             </div>
                             <span className="text-[10px] text-slate-400">→ {formatBRL(amb.valorFinal)}</span>
                           </div>
