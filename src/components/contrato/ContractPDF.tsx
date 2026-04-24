@@ -157,11 +157,12 @@ interface ContractPDFProps {
 
 export const ContractPDF = ({ contrato, loja, ambientes, orcamentos }: ContractPDFProps) => {
   const cliente = contrato.cliente;
+  const valorTotal = contrato.valor_venda || contrato.valor_negociado || orcamentos?.[0]?.valor_negociado || 0;
   
   const getParcelasDesc = () => {
     const p = contrato.parcelas_datas || orcamentos?.[0]?.parcelas_datas;
     if (!Array.isArray(p)) return "A definir";
-    return p.map((item: any) => `${item.label || 'Parcela'}: ${formatCurrency(item.valor)} (${new Date(item.data).toLocaleDateString('pt-BR')})`).join(', ');
+    return p.map((item: any) => `${item.label || 'Parcela'}: ${formatCurrency(item.valor)} (${item.data ? new Date(item.data).toLocaleDateString('pt-BR') : '—'})`).join(', ');
   };
 
   const ambientesNomes = ambientes?.map(a => a.nome).join(', ') || orcamentos?.map(o => o.nome).join(', ') || '—';
