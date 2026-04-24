@@ -867,7 +867,12 @@ export type Database = {
       contratos: {
         Row: {
           assinado: boolean
+          assinado_em: string | null
+          assinado_ip: string | null
+          assinado_nome: string | null
+          assinado_user_agent: string | null
           assinatura_hash: string | null
+          assinatura_imagem_url: string | null
           assinatura_ip: string | null
           assinatura_nome: string | null
           assinatura_user_agent: string | null
@@ -883,6 +888,7 @@ export type Database = {
           id: string
           loja_id: string
           medicao_responsavel_id: string | null
+          pdf_assinado_url: string | null
           projetista_id: string | null
           status: Database["public"]["Enums"]["contrato_status"]
           sub_etapa_tecnico: string
@@ -896,7 +902,12 @@ export type Database = {
         }
         Insert: {
           assinado?: boolean
+          assinado_em?: string | null
+          assinado_ip?: string | null
+          assinado_nome?: string | null
+          assinado_user_agent?: string | null
           assinatura_hash?: string | null
+          assinatura_imagem_url?: string | null
           assinatura_ip?: string | null
           assinatura_nome?: string | null
           assinatura_user_agent?: string | null
@@ -912,6 +923,7 @@ export type Database = {
           id?: string
           loja_id: string
           medicao_responsavel_id?: string | null
+          pdf_assinado_url?: string | null
           projetista_id?: string | null
           status?: Database["public"]["Enums"]["contrato_status"]
           sub_etapa_tecnico?: string
@@ -925,7 +937,12 @@ export type Database = {
         }
         Update: {
           assinado?: boolean
+          assinado_em?: string | null
+          assinado_ip?: string | null
+          assinado_nome?: string | null
+          assinado_user_agent?: string | null
           assinatura_hash?: string | null
+          assinatura_imagem_url?: string | null
           assinatura_ip?: string | null
           assinatura_nome?: string | null
           assinatura_user_agent?: string | null
@@ -941,6 +958,7 @@ export type Database = {
           id?: string
           loja_id?: string
           medicao_responsavel_id?: string | null
+          pdf_assinado_url?: string | null
           projetista_id?: string | null
           status?: Database["public"]["Enums"]["contrato_status"]
           sub_etapa_tecnico?: string
