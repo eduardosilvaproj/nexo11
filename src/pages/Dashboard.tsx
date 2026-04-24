@@ -1,5 +1,6 @@
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -60,6 +61,7 @@ export default function Dashboard() {
   const { perfil, user } = useAuth();
   const navigate = useNavigate();
 
+  const queryClient = useQueryClient();
   const { data: stats } = useQuery({
     queryKey: ["dashboard-stats", user?.id],
     enabled: !!user,
@@ -90,7 +92,7 @@ export default function Dashboard() {
             .not("status", "eq", "cancelado"),
           supabase
             .from("chat_mensagens")
-            .select("id, contrato_id")
+            .select("id, contrato_id, lida, contratos(status)")
             .eq("lida", false)
             .eq("remetente_tipo", "cliente"),
         ]);
@@ -126,7 +128,7 @@ export default function Dashboard() {
 
       let totalUnread = 0;
       mensagensNaoLidas.data?.forEach((m: any) => {
-        const etapa = contratosMap[m.contrato_id];
+        const etapa = m.contratos?.status;
         if (etapa && mensagens[etapa]) {
           mensagens[etapa].unreadCount += 1;
           totalUnread += 1;
@@ -153,6 +155,24 @@ export default function Dashboard() {
   const pe = margemMediaPct > 0 ? (custoFixo / margemMediaPct) * 100 : 0;
   const faturamentoAtual = stats?.faturamento ?? 0;
   const peProgress = pe > 0 ? Math.min(100, (faturamentoAtual / pe) * 100) : 0;
+
+  // Realtime updates for messages
+  useEffect(() => {
+    const channel = supabase
+      .channel("dashboard-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "chat_mensagens" },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   return (
     <div className="space-y-6">
@@ -217,7 +237,7 @@ export default function Dashboard() {
                 <span className="mb-0.5 block font-bold text-[#212529]" style={{ fontSize: 24, lineHeight: 1.1 }}>
                   {data.count}
                 </span>
-                <span className="mb-2 block truncate font-semibold" style={{ fontSize: 13, color: etapa.border }}>
+                <span className="mb-2 block truncate font-semibold text-[#6B7A90]" style={{ fontSize: 13 }}>
                   {etapa.label}
                 </span>
                 <span className="mb-3 block font-semibold text-[#495057]" style={{ fontSize: 13 }}>
