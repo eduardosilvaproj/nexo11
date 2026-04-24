@@ -333,7 +333,7 @@ export default function PortalCliente() {
       const res = await fetch(assinaturaBase64!);
       const blobSig = await res.blob();
 
-      const { error: uploadSigError } = await supabase.storage
+      const { error: uploadSigError } = await portalClient.storage
         .from('contratos-assinados')
         .upload(signatureFilePath, blobSig, {
           contentType: 'image/png',
@@ -342,12 +342,12 @@ export default function PortalCliente() {
 
       if (uploadSigError) throw uploadSigError;
 
-      const { data: { publicUrl: signatureUrl } } = supabase.storage
+      const { data: { publicUrl: signatureUrl } } = portalClient.storage
         .from('contratos-assinados')
         .getPublicUrl(signatureFilePath);
 
       // 2. Chamar RPC para registrar assinatura
-      const { data, error } = await supabase.rpc(
+      const { data, error } = await portalClient.rpc(
         "portal_assinar_contrato" as any,
         { 
           _token: token,
@@ -386,7 +386,7 @@ export default function PortalCliente() {
       const fileName = `contrato_${r.contrato_id}_assinado.pdf`;
       const filePath = `${r.contrato_id}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await portalClient.storage
         .from('contratos-assinados')
         .upload(filePath, blob, {
           contentType: 'application/pdf',
@@ -395,7 +395,7 @@ export default function PortalCliente() {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
+      const { data: { publicUrl } } = portalClient.storage
         .from('contratos-assinados')
         .getPublicUrl(filePath);
 
