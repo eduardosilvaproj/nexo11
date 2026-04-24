@@ -103,6 +103,10 @@ export default function PortalCliente() {
     if (!token) return;
     setLoading(true);
     try {
+      // Obter o ID do contrato original vinculado ao token
+      const { data: originalIdData } = await portalClient.rpc('portal_token_contrato_id');
+      const originalId = typeof originalIdData === 'string' ? originalIdData : null;
+
       const { data: c, error: cErr } = await portalClient
         .from("contratos")
         .select("*, lojas(*)")
@@ -114,10 +118,11 @@ export default function PortalCliente() {
       }
 
       setContracts(c);
-      setSelectedContractId(c[0].id);
       
-      // Load unread count for all contracts or just the current one?
-      // Usually just for the current one, but let's fetch total unread if possible.
+      // Define o contrato selecionado: o original do token ou o mais recente
+      const initialContract = c.find(item => item.id === originalId) || c[0];
+      setSelectedContractId(initialContract.id);
+      
       const { count } = await portalClient
         .from("chat_mensagens")
         .select("*", { count: 'exact', head: true })
@@ -125,7 +130,6 @@ export default function PortalCliente() {
         .eq("lida", false);
       
       setUnreadMessages(count || 0);
-
     } catch (e: any) {
       setError(e.message ?? "Erro ao carregar");
     } finally {
