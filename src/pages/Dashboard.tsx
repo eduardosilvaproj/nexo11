@@ -13,7 +13,7 @@ import {
 
 const ETAPAS_CONFIG: { key: string; label: string; bg: string; text: string }[] = [
   { key: "comercial", label: "Comercial", bg: "#E6F1FB", text: "#0C447C" },
-  { key: "revisao_tecnica", label: "Revisão Técnica", bg: "#EEEDFE", text: "#3C3489" },
+  { key: "tecnico", label: "Revisão Técnica", bg: "#EEEDFE", text: "#3C3489" },
   { key: "producao", label: "Produção", bg: "#FAEEDA", text: "#633806" },
   { key: "logistica", label: "Logística", bg: "#EAF3DE", text: "#27500A" },
   { key: "montagem", label: "Montagem", bg: "#E1F5EE", text: "#085041" },
@@ -67,7 +67,7 @@ export default function Dashboard() {
       inicioMes.setDate(1);
       inicioMes.setHours(0, 0, 0, 0);
 
-      const [contratosAtivos, faturamentoMes, dre, leadsAtivos, contratosByEtapa] =
+      const [contratosAtivos, faturamentoMes, dre, leadsAtivos, contratosByStatus] =
         await Promise.all([
           supabase
             .from("contratos")
@@ -85,7 +85,7 @@ export default function Dashboard() {
             .not("status", "in", "(convertido,perdido)"),
           supabase
             .from("contratos")
-            .select("id, etapa_atual, valor_venda, previsao_entrega")
+            .select("id, status, valor_venda")
             .not("status", "eq", "cancelado"),
         ]);
 
@@ -101,28 +101,14 @@ export default function Dashboard() {
         pipeline[e.key] = { count: 0, total: 0, noPrazo: 0, emAlerta: 0, emAtraso: 0 };
       });
 
-      const hoje = new Date();
-      const emUmaSemana = new Date();
-      emUmaSemana.setDate(hoje.getDate() + 7);
-
-      contratosByEtapa.data?.forEach((c) => {
-        const etapa = c.etapa_atual || "comercial";
+      contratosByStatus.data?.forEach((c: any) => {
+        const etapa = c.status || "comercial";
         if (pipeline[etapa]) {
           pipeline[etapa].count += 1;
           pipeline[etapa].total += Number(c.valor_venda || 0);
-
-          if (c.previsao_entrega) {
-            const previsao = new Date(c.previsao_entrega);
-            if (previsao < hoje) {
-              pipeline[etapa].emAtraso += 1;
-            } else if (previsao <= emUmaSemana) {
-              pipeline[etapa].emAlerta += 1;
-            } else {
-              pipeline[etapa].noPrazo += 1;
-            }
-          } else {
-            pipeline[etapa].noPrazo += 1; // Default
-          }
+          
+          // Fallback para status de prazo já que a coluna não existe em contratos
+          pipeline[etapa].noPrazo += 1;
         }
       });
 
@@ -139,7 +125,6 @@ export default function Dashboard() {
   const formatBRL = (n: number) =>
     n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
-  // Ponto de equilíbrio (placeholder até existir tabela de custos fixos)
   const custoFixo = 0;
   const margemMediaPct = stats?.margemMedia ?? 0;
   const pe = margemMediaPct > 0 ? (custoFixo / margemMediaPct) * 100 : 0;
@@ -251,49 +236,6 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-        {/* Contratos por etapa */}
-        <div className="bg-white p-5" style={cardStyle}>
-          <h2
-            className="mb-4"
-            style={{ fontSize: 14, fontWeight: 600, color: "#0D1117" }}
-          >
-            Contratos por etapa
-          </h2>
-          <ul className="space-y-2">
-            {ETAPAS.map((e) => {
-              const count = stats?.porEtapa?.[e.key] ?? 0;
-              return (
-                <li
-                  key={e.key}
-                  className="flex items-center justify-between rounded-md px-2 py-2 hover:bg-[#F5F7FA]"
-                >
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="inline-block rounded-full"
-                      style={{ width: 8, height: 8, background: e.color }}
-                    />
-                    <span style={{ fontSize: 13, color: "#0D1117" }}>{e.label}</span>
-                  </div>
-                  <span
-                    className="inline-flex items-center justify-center"
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 600,
-                      color: "#6B7A90",
-                      background: "#F5F7FA",
-                      borderRadius: 20,
-                      padding: "2px 10px",
-                      minWidth: 28,
-                    }}
-                  >
-                    {count}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-
         {/* Ponto de equilíbrio */}
         <div className="flex flex-col bg-white p-5" style={cardStyle}>
           <h2
