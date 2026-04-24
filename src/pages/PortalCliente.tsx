@@ -343,6 +343,7 @@ export default function PortalCliente() {
       const { error: updateError } = await supabase
         .from('contratos')
         .update({
+          assinado: true, // Garante que o campo booleano também seja atualizado
           assinado_em: timestamp,
           assinado_nome: nomeAssinatura.trim(),
           assinado_ip: ip,
