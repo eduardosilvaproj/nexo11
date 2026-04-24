@@ -100,6 +100,9 @@ export default function PortalCliente() {
   const [npsSubmitting, setNpsSubmitting] = useState(false);
   const [signing, setSigning] = useState(false);
   const [nomeAssinatura, setNomeAssinatura] = useState("");
+  const [isModalAssinaturaOpen, setIsModalAssinaturaOpen] = useState(false);
+  const [aceitouTermos, setAceitouTermos] = useState(false);
+
 
   const portalClient = createClient(
     import.meta.env.VITE_SUPABASE_URL,
