@@ -258,9 +258,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 items-stretch">
         {/* Ponto de equilíbrio */}
-        <div className="flex flex-col bg-white p-6 shadow-sm" style={cardStyle}>
+        <div className="flex flex-col bg-white p-6 shadow-sm h-full" style={cardStyle}>
           <h2
             className="mb-4"
             style={{ fontSize: 16, fontWeight: 600, color: "#0D1117" }}
@@ -313,7 +313,7 @@ export default function Dashboard() {
 
           <Link
             to="/financeiro"
-            className="mt-6 inline-flex items-center gap-1 self-start text-[#1E6FBF] transition-colors hover:text-[#00AAFF]"
+            className="mt-auto pt-6 inline-flex items-center gap-1 self-start text-[#1E6FBF] transition-colors hover:text-[#00AAFF]"
             style={{ fontSize: 13, fontWeight: 500 }}
           >
             Configurar custos fixos
@@ -322,7 +322,7 @@ export default function Dashboard() {
         </div>
 
         {/* Mensagens por etapa */}
-        <div className="flex flex-col bg-white p-6 shadow-sm" style={cardStyle}>
+        <div className="flex flex-col bg-white p-6 shadow-sm h-full" style={cardStyle}>
           <div className="mb-4 flex items-center justify-between">
             <h2 style={{ fontSize: 16, fontWeight: 600, color: "#0D1117" }}>Mensagens por etapa</h2>
             {(stats?.totalUnread ?? 0) > 0 && (
@@ -332,7 +332,7 @@ export default function Dashboard() {
             )}
           </div>
 
-          <div className="space-y-1">
+          <div className="flex flex-col flex-1 justify-between">
             {ETAPAS_CONFIG.map((etapa) => {
               const data = stats?.mensagens?.[etapa.key] || { totalConversas: 0, unreadCount: 0 };
               return (
@@ -362,7 +362,7 @@ export default function Dashboard() {
           
           <Link
             to="/mensagens"
-            className="mt-auto pt-4 text-[11px] text-[#6B7A90] hover:text-[#1E6FBF]"
+            className="mt-4 text-[11px] text-[#6B7A90] hover:text-[#1E6FBF]"
           >
             Ver todas as mensagens
           </Link>
