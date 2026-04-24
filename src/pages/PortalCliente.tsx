@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Link2Off, ArrowRight, CheckCircle2, FileText, Download, Check } from "lucide-react";
+import { Link2Off, ArrowRight, CheckCircle2, FileText, Download, Check, AlertCircle, ShieldCheck } from "lucide-react";
 import { LogoNexo } from "@/components/LogoNexo";
 import { ContratoStepper } from "@/components/contrato/ContratoStepper";
 import { pdf } from "@react-pdf/renderer";
@@ -12,6 +12,18 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PortalChat } from "@/components/portal/PortalChat";
 import { MessageSquare } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+
 
 const PUBLIC_EVENTS: Record<
   string,
