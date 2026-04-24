@@ -403,6 +403,8 @@ export default function ContratoDetail() {
                 contratoNumero={contrato.id.slice(0, 8)}
                 contratoStatus={contrato.status}
               />
+            ) : active === "mensagens" ? (
+              <ContratoChatTab contratoId={contrato.id} />
             ) : (
               <div className="text-sm text-muted-foreground">
                 Conteúdo da aba “{active}” em construção.
