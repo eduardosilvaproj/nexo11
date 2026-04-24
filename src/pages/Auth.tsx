@@ -66,7 +66,7 @@ export default function AuthPage() {
   };
 
   const inputClass = (hasError?: string) =>
-    `h-12 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-[#1a7fe8] focus:ring-1 focus:ring-[#1a7fe8] transition-all pl-11 rounded-lg ${
+    `h-12 bg-[#131d2e] border-slate-700 text-white placeholder:text-slate-500 focus:border-[#1a7fe8] focus:ring-1 focus:ring-[#1a7fe8] transition-all pl-11 rounded-lg ${
       hasError ? "border-red-500 focus:ring-red-500" : ""
     }`;
 
