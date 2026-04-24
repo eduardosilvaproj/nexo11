@@ -22,12 +22,12 @@ interface ContractListItem {
 
 const ETAPAS_CONFIG: Record<string, { label: string, bg: string, text: string, pillBg: string }> = {
   "comercial": { label: "Comercial", bg: "#E6F1FB", text: "#0C447C", pillBg: "bg-blue-100 text-blue-800" },
-  "tecnico": { label: "Revisão Técnica", bg: "#EEEDFE", text: "#3C3489", pillBg: "bg-purple-100 text-purple-800" },
-  "producao": { label: "Produção", bg: "#FAEEDA", text: "#633806", pillBg: "bg-amber-100 text-amber-800" },
-  "logistica": { label: "Logística", bg: "#EAF3DE", text: "#27500A", pillBg: "bg-green-100 text-green-800" },
-  "montagem": { label: "Montagem", bg: "#E1F5EE", text: "#085041", pillBg: "bg-teal-100 text-teal-800" },
-  "pos_venda": { label: "Pós-Venda", bg: "#E1F5EE", text: "#085041", pillBg: "bg-teal-100 text-teal-800" },
-  "finalizado": { label: "Finalizado", bg: "#F1EFE8", text: "#444441", pillBg: "bg-gray-100 text-gray-800" },
+  "tecnico": { label: "Revisão Técnica", bg: "#EEEDFE", text: "#3C3489", pillBg: "bg-[#EEEDFE] text-[#3C3489]" },
+  "producao": { label: "Produção", bg: "#FAEEDA", text: "#633806", pillBg: "bg-[#FAEEDA] text-[#633806]" },
+  "logistica": { label: "Logística", bg: "#EAF3DE", text: "#27500A", pillBg: "bg-[#EAF3DE] text-[#27500A]" },
+  "montagem": { label: "Montagem", bg: "#E1F5EE", text: "#085041", pillBg: "bg-[#E1F5EE] text-[#085041]" },
+  "pos_venda": { label: "Pós-Venda", bg: "#E1F5EE", text: "#085041", pillBg: "bg-[#E1F5EE] text-[#085041]" },
+  "finalizado": { label: "Finalizado", bg: "#F1EFE8", text: "#444441", pillBg: "bg-[#F1EFE8] text-[#444441]" },
 };
 
 export default function Mensagens() {
