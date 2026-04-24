@@ -1,17 +1,29 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Link2Off, ArrowRight, CheckCircle2, FileText, Download, Check, AlertCircle, ShieldCheck } from "lucide-react";
+import { 
+  Link2Off, 
+  ArrowRight, 
+  CheckCircle2, 
+  FileText, 
+  Download, 
+  Check, 
+  AlertCircle, 
+  ShieldCheck, 
+  MessageCircle, 
+  Calendar, 
+  Camera, 
+  Home, 
+  User, 
+  ChevronDown 
+} from "lucide-react";
 import { LogoNexo } from "@/components/LogoNexo";
-import { ContratoStepper } from "@/components/contrato/ContratoStepper";
 import { pdf } from "@react-pdf/renderer";
 import { ContractPDF } from "@/components/contrato/ContractPDF";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PortalChat } from "@/components/portal/PortalChat";
-import { MessageSquare } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -23,40 +35,14 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-
-
-const PUBLIC_EVENTS: Record<
-  string,
-  { mensagem: (log: any) => string; tipo: "avancado" | "concluido" }
-> = {
-  status_avancado: {
-    tipo: "avancado",
-    mensagem: (log) =>
-      `Seu pedido avançou para ${log.descricao || log.titulo || "a próxima etapa"}`,
-  },
-  producao_concluida: {
-    tipo: "concluido",
-    mensagem: () => "Seu pedido saiu para produção",
-  },
-  logistica_confirmada: {
-    tipo: "concluido",
-    mensagem: () => "Entrega realizada com sucesso",
-  },
-  checklist_tecnico_completo: {
-    tipo: "concluido",
-    mensagem: () => "Projeto validado pela equipe técnica",
-  },
-};
-
-const fmtDateLong = (d?: string | null) => {
-  if (!d) return "—";
-  return new Date(d).toLocaleString("pt-BR", {
-    day: "numeric",
-    month: "long",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const STAGE_LABELS: Record<string, string> = {
   comercial: "Comercial",
@@ -68,8 +54,6 @@ const STAGE_LABELS: Record<string, string> = {
   finalizado: "Finalizado",
 };
 
-const fmtDate = (d?: string | null) =>
-  d ? new Date(d).toLocaleDateString("pt-BR") : "—";
 const formatDateTime = (date: any) => {
   if (!date) return '—';
   const d = new Date(date);
@@ -81,30 +65,27 @@ const formatDateTime = (date: any) => {
   return `${day}/${month}/${year} ${hours}:${minutes}`;
 };
 
-const fmtDateTime = (d?: string | null) => d ? formatDateTime(d) : "—";
-
 export default function PortalCliente() {
   const { token } = useParams<{ token: string }>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [contrato, setContrato] = useState<any>(null);
+  
+  const [contracts, setContracts] = useState<any[]>([]);
+  const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
+  const [currentTab, setCurrentTab] = useState<"inicio" | "chat" | "agenda" | "conta">("inicio");
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  // States for the selected contract
   const [logs, setLogs] = useState<any[]>([]);
-  const [orcamentos, setOrcamentos] = useState<any[]>([]);
-  const [parcelas, setParcelas] = useState<any[]>([]);
-  const [vendedorNome, setVendedorNome] = useState<string | null>(null);
-  const [entregaPrevista, setEntregaPrevista] = useState<string | null>(null);
   const [ambientes, setAmbientes] = useState<any[]>([]);
-  const [npsRespondido, setNpsRespondido] = useState(false);
-  const [npsNota, setNpsNota] = useState<number | null>(null);
-  const [npsComentario, setNpsComentario] = useState("");
-  const [npsSubmitting, setNpsSubmitting] = useState(false);
+  const [orcamentos, setOrcamentos] = useState<any[]>([]);
+  const [entregaPrevista, setEntregaPrevista] = useState<string | null>(null);
   const [signing, setSigning] = useState(false);
   const [nomeAssinatura, setNomeAssinatura] = useState("");
   const [isModalAssinaturaOpen, setIsModalAssinaturaOpen] = useState(false);
   const [aceitouTermos, setAceitouTermos] = useState(false);
 
-
-  const portalClient = createClient(
+  const portalClient = useMemo(() => createClient(
     import.meta.env.VITE_SUPABASE_URL,
     import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
     {
@@ -112,91 +93,43 @@ export default function PortalCliente() {
         headers: token ? { "x-portal-token": token } : {},
       },
     },
-  );
+  ), [token]);
 
-  async function load() {
+  const contrato = useMemo(() => 
+    contracts.find(c => c.id === selectedContractId) || contracts[0]
+  , [contracts, selectedContractId]);
+
+  async function loadInitial() {
     if (!token) return;
     setLoading(true);
-    setError(null);
     try {
-      const [{ data: c, error: cErr }, { data: l }, { data: chs }, { data: ents }, { data: orcs }, { data: trs }, { data: ambs }] =
-        await Promise.all([
-          portalClient
-            .from("contratos")
-            .select("*, lojas(*)")
-            .limit(1)
-            .maybeSingle(),
-          portalClient
-            .from("contrato_logs")
-            .select("*")
-            .order("created_at", { ascending: false }),
-          portalClient
-            .from("chamados_pos_venda")
-            .select("nps")
-            .not("nps", "is", null)
-            .limit(1),
-          portalClient
-            .from("entregas")
-            .select("data_prevista")
-            .not("data_prevista", "is", null)
-            .order("data_prevista", { ascending: true })
-            .limit(1),
-          portalClient
-            .from("orcamentos")
-            .select("id, nome, status, valor_negociado, total_pedido, parcelas, parcelas_datas, created_at")
-            .order("created_at", { ascending: false }),
-          portalClient
-            .from("transacoes")
-            .select("id, descricao, valor, data_vencimento, data_pagamento, status, tipo")
-            .eq("tipo", "receita")
-            .order("data_vencimento", { ascending: true }),
-          portalClient
-            .from("contrato_ambientes")
-            .select("*"),
-        ]);
+      // Obter o ID do contrato original vinculado ao token
+      const { data: originalIdData } = await portalClient.rpc('portal_token_contrato_id');
+      const originalId = typeof originalIdData === 'string' ? originalIdData : null;
 
-      if (cErr || !c) {
+      const { data: c, error: cErr } = await portalClient
+        .from("contratos")
+        .select("*, lojas(*)")
+        .order("created_at", { ascending: false });
+
+      if (cErr || !c || c.length === 0) {
         setError("Link inválido ou expirado.");
         return;
       }
 
-      setContrato(c);
-      setLogs(l ?? []);
-      setOrcamentos(orcs ?? []);
-      setAmbientes(ambs ?? []);
-
-      // Parcelas: prioridade transações → orcamento.parcelas_datas → orcamento.parcelas+valor
-      let parcelasFinal: any[] = trs ?? [];
-      if (parcelasFinal.length === 0 && orcs && orcs.length > 0) {
-        const orc: any = orcs[0];
-        const datas = Array.isArray(orc.parcelas_datas) ? orc.parcelas_datas : [];
-        if (datas.length > 0) {
-          parcelasFinal = datas.map((d: any, i: number) => ({
-            id: `pd-${i}`,
-            data_vencimento: d.data ?? d.vencimento ?? d,
-            valor: Number(d.valor ?? 0),
-            status: d.pago ? "pago" : "pendente",
-          }));
-        } else if (orc.parcelas && Number(orc.parcelas) > 0) {
-          const n = Number(orc.parcelas);
-          const total = Number(orc.valor_negociado ?? orc.total_pedido ?? 0);
-          const valorParc = total > 0 ? total / n : 0;
-          const base = new Date();
-          parcelasFinal = Array.from({ length: n }, (_, i) => {
-            const d = new Date(base);
-            d.setMonth(d.getMonth() + i);
-            return {
-              id: `calc-${i}`,
-              data_vencimento: d.toISOString().slice(0, 10),
-              valor: valorParc,
-              status: "pendente",
-            };
-          });
-        }
-      }
-      setParcelas(parcelasFinal);
-      setNpsRespondido((chs ?? []).length > 0);
-      setEntregaPrevista((ents?.[0] as any)?.data_prevista ?? null);
+      setContracts(c);
+      
+      // Define o contrato selecionado: o original do token ou o mais recente
+      const initialContract = c.find(item => item.id === originalId) || c[0];
+      setSelectedContractId(initialContract.id);
+      
+      const { count } = await portalClient
+        .from("chat_mensagens")
+        .select("*", { count: 'exact', head: true })
+        .eq("remetente_tipo", "equipe")
+        .eq("lida", false);
+      
+      setUnreadMessages(count || 0);
     } catch (e: any) {
       setError(e.message ?? "Erro ao carregar");
     } finally {
@@ -204,53 +137,103 @@ export default function PortalCliente() {
     }
   }
 
-  async function handleOrcamentoStatus(orcId: string, novoStatus: "aprovado" | "recusado") {
+  async function loadContractDetails(contractId: string) {
+    if (!contractId) return;
     try {
-      const { error } = await portalClient
-        .from("orcamentos")
-        .update({ status: novoStatus })
-        .eq("id", orcId);
-      if (error) throw error;
-      toast.success(novoStatus === "aprovado" ? "Orçamento aprovado!" : "Orçamento recusado");
-      load();
+      const [
+        { data: l }, 
+        { data: ents }, 
+        { data: orcs }, 
+        { data: ambs }
+      ] = await Promise.all([
+        portalClient
+          .from("contrato_logs")
+          .select("*")
+          .eq("contrato_id", contractId)
+          .order("created_at", { ascending: false }),
+        portalClient
+          .from("entregas")
+          .select("data_prevista")
+          .eq("contrato_id", contractId)
+          .not("data_prevista", "is", null)
+          .order("data_prevista", { ascending: true })
+          .limit(1),
+        portalClient
+          .from("orcamentos")
+          .select("*")
+          .eq("contrato_id", contractId)
+          .order("created_at", { ascending: false }),
+        portalClient
+          .from("contrato_ambientes")
+          .select("*")
+          .eq("contrato_id", contractId),
+      ]);
+
+      setLogs(l ?? []);
+      setOrcamentos(orcs ?? []);
+      setAmbientes(ambs ?? []);
+      setEntregaPrevista((ents?.[0] as any)?.data_prevista ?? null);
     } catch (e: any) {
-      toast.error(e.message ?? "Não foi possível atualizar");
+      console.error("Erro ao carregar detalhes do contrato:", e);
     }
   }
 
   useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    loadInitial();
   }, [token]);
 
-  async function handleSubmitNps() {
-    if (npsNota === null || !token) return;
-    setNpsSubmitting(true);
-    try {
-      const { data, error } = await supabase.rpc(
-        "portal_registrar_nps" as any,
-        {
-          _token: token,
-          _nota: npsNota,
-          _comentario: npsComentario || null,
-        }
-      );
-      if (error) throw error;
-      const r = data as { ok: boolean; erro?: string };
-      if (!r?.ok) throw new Error(r?.erro ?? "Erro ao enviar");
-      toast.success("Obrigado pela sua avaliação!");
-      setNpsRespondido(true);
-    } catch (e: any) {
-      toast.error(e.message ?? "Não foi possível enviar");
-    } finally {
-      setNpsSubmitting(false);
+  useEffect(() => {
+    if (selectedContractId) {
+      loadContractDetails(selectedContractId);
     }
-  }
+  }, [selectedContractId]);
+
+  // Real-time for unread messages
+  useEffect(() => {
+    if (!token) return;
+    const channel = portalClient
+      .channel("portal_unread_global")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "chat_mensagens",
+        },
+        (payload: any) => {
+          const msg = payload.new;
+          if (msg.remetente_tipo === "equipe") {
+            setUnreadMessages(prev => prev + 1);
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "chat_mensagens",
+        },
+        () => {
+          // Re-fetch count on update (read)
+          portalClient
+            .from("chat_mensagens")
+            .select("*", { count: 'exact', head: true })
+            .eq("remetente_tipo", "equipe")
+            .eq("lida", false)
+            .then(({ count }) => setUnreadMessages(count || 0));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      portalClient.removeChannel(channel);
+    };
+  }, [token, portalClient]);
 
   async function handleAssinarContrato() {
     if (!token || !contrato) return;
     
-    // Validar nome
     const nomeDigitado = nomeAssinatura.trim().toLowerCase();
     const nomeCliente = contrato.cliente_nome.trim().toLowerCase();
     
@@ -266,7 +249,6 @@ export default function PortalCliente() {
 
     setSigning(true);
     try {
-      // 1. Obter IP
       let ip = "0.0.0.0";
       try {
         const resp = await fetch("https://api.ipify.org?format=json");
@@ -276,7 +258,6 @@ export default function PortalCliente() {
         console.warn("Não foi possível obter IP:", err);
       }
 
-      // 2. Assinar no Banco
       const { data, error } = await supabase.rpc(
         "portal_assinar_contrato" as any,
         { 
@@ -290,7 +271,6 @@ export default function PortalCliente() {
       const r = data as { ok: boolean; erro?: string; hash: string; data_assinatura: string; contrato_id: string };
       if (!r?.ok) throw new Error(r?.erro ?? "Erro ao assinar");
 
-      // 3. Gerar PDF Assinado com Carimbo (usando os dados retornados do banco)
       const contratoComAssinatura = {
         ...contrato,
         assinado: true,
@@ -313,8 +293,7 @@ export default function PortalCliente() {
       const fileName = `contrato_${r.contrato_id}_assinado.pdf`;
       const filePath = `${r.contrato_id}/${fileName}`;
 
-      // 4. Upload para Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('contratos-assinados')
         .upload(filePath, blob, {
           contentType: 'application/pdf',
@@ -323,20 +302,20 @@ export default function PortalCliente() {
 
       if (uploadError) throw uploadError;
 
-      // 5. Obter URL pública
       const { data: { publicUrl } } = supabase.storage
         .from('contratos-assinados')
         .getPublicUrl(filePath);
 
-      // 6. Atualizar contrato com a URL do PDF assinado
       await portalClient
         .from('contratos')
         .update({ url_contrato_assinado: publicUrl })
         .eq('id', r.contrato_id);
 
-      toast.success("Contrato assinado e autenticado com sucesso!");
+      toast.success("Contrato assinado com sucesso!");
       setIsModalAssinaturaOpen(false);
-      load();
+      
+      // Update local state
+      setContracts(prev => prev.map(c => c.id === r.contrato_id ? { ...c, assinado: true, data_assinatura: r.data_assinatura, url_contrato_assinado: publicUrl } : c));
     } catch (e: any) {
       console.error(e);
       toast.error(e.message ?? "Não foi possível assinar o contrato");
@@ -344,7 +323,6 @@ export default function PortalCliente() {
       setSigning(false);
     }
   }
-
 
   async function handleDownloadContrato() {
     try {
@@ -363,18 +341,16 @@ export default function PortalCliente() {
       link.download = `contrato_${contrato.id.slice(0, 8)}_${contrato.cliente_nome.replace(/\s+/g, '_')}.pdf`;
       link.click();
     } catch (e: any) {
-      toast.error("Erro ao gerar PDF do contrato");
+      toast.error("Erro ao gerar PDF");
     }
   }
 
   if (loading) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: "#F5F7FA" }}
-      >
-        <div className="text-sm" style={{ color: "#6B7A90" }}>
-          Carregando…
+      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-[#00d4aa] border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-sm font-medium text-slate-500">Carregando portal...</span>
         </div>
       </div>
     );
@@ -382,881 +358,347 @@ export default function PortalCliente() {
 
   if (error || !contrato) {
     return (
-      <div
-        className="min-h-screen flex flex-col items-center"
-        style={{ backgroundColor: "#F5F7FA" }}
-      >
-        <div
-          className="w-full flex justify-center py-8"
-          style={{ backgroundColor: "#0D1117" }}
-        >
-          <LogoNexo size="lg" />
-        </div>
-        <div className="flex-1 w-full flex items-center justify-center px-6">
-          <div
-            className="bg-white rounded-xl shadow-sm p-8 text-center"
-            style={{ width: 400, maxWidth: "100%" }}
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] px-6">
+        <LogoNexo size="lg" xColor="#00d4aa" className="mb-8" />
+        <div className="bg-white rounded-2xl shadow-sm p-8 text-center w-full max-w-[400px]">
+          <Link2Off className="mx-auto mb-4 text-slate-300" size={48} />
+          <h1 className="text-xl font-bold text-slate-900">Link expirado</h1>
+          <p className="text-sm text-slate-500 mt-2">
+            Este link de acesso não é mais válido. Entre em contato com a equipe NEXO para receber um novo código.
+          </p>
+          <Button 
+            className="w-full mt-6 bg-[#0a1628] hover:bg-[#112240]"
+            onClick={() => window.location.href = '/portal'}
           >
-            <Link2Off className="mx-auto mb-4" size={24} color="#B0BAC9" />
-            <h1 style={{ fontSize: 18, fontWeight: 500, color: "#0D1117" }}>
-              Link inválido ou expirado
-            </h1>
-            <p
-              style={{
-                fontSize: 14,
-                color: "#6B7A90",
-                marginTop: 12,
-                lineHeight: 1.5,
-              }}
-            >
-              Este link de acompanhamento não é mais válido.
-              <br />
-              Entre em contato com a loja para obter um novo link.
-            </p>
-          </div>
+            Voltar ao Início
+          </Button>
         </div>
-        <footer className="py-6" style={{ fontSize: 12, color: "#B0BAC9" }}>
-          NEXO · Gestão de Planejados
-        </footer>
       </div>
     );
   }
 
-  const numero = "#" + contrato.id.slice(0, 8).toUpperCase();
-  const isFinalizado = contrato.status === "finalizado";
   const stageLabel = STAGE_LABELS[contrato.status] ?? contrato.status;
 
-  return (
-    <div
-      className="portal-root min-h-screen flex flex-col"
-      style={{ backgroundColor: "#F5F7FA" }}
-    >
-      <style>{`
-        .portal-current-stage { display: none; }
-        @media (max-width: 480px) {
-          .portal-root .portal-header { padding: 16px !important; }
-          .portal-root .portal-header-inner {
-            flex-direction: column !important;
-            align-items: center !important;
-            text-align: center !important;
-            gap: 8px !important;
-          }
-          .portal-root .portal-header-right { text-align: center !important; align-items: center !important; }
-          .portal-root .portal-main { padding-left: 12px !important; padding-right: 12px !important; }
-          .portal-root .portal-card { padding: 16px !important; max-width: 100% !important; margin-top: 16px !important; }
-          .portal-root .portal-status-card { flex-direction: column !important; align-items: stretch !important; }
-          .portal-root .portal-status-right { text-align: left !important; }
-          .portal-root .portal-stepper > div { padding: 12px 8px !important; }
-          .portal-root .portal-stepper .h-8.w-8 { height: 24px !important; width: 24px !important; }
-          .portal-root .portal-stepper .h-8.w-8 svg { width: 12px !important; height: 12px !important; }
-          .portal-root .portal-stepper span.mt-2 { display: none !important; }
-          .portal-root .portal-current-stage { display: block !important; }
-          .portal-root .portal-nps-grid { display: grid !important; grid-template-columns: repeat(5, 1fr) !important; gap: 6px !important; }
-          .portal-root .portal-nps-grid > button { width: 100% !important; height: 44px !important; }
-        }
-      `}</style>
-
-      {/* 1. Header público */}
-      <header className="portal-header" style={{ backgroundColor: "#0D1117", padding: "20px 32px" }}>
-        <div className="portal-header-inner max-w-3xl mx-auto flex items-center justify-between">
-          <div className="flex flex-col gap-1 items-start">
-            <LogoNexo size="lg" />
-            <div style={{ fontSize: 12, color: "#6B7A90" }}>
-              Acompanhamento de pedido
-            </div>
+  const renderContent = () => {
+    switch (currentTab) {
+      case "chat":
+        return (
+          <div className="flex-1 flex flex-col">
+            <PortalChat 
+              contractId={contrato.id} 
+              clientName={contrato.cliente_nome} 
+              portalClient={portalClient} 
+            />
           </div>
-          <div className="portal-header-right text-right flex flex-col gap-1">
-            <div style={{ color: "#fff", fontSize: 13, fontWeight: 500 }}>
-              {contrato.lojas?.nome ?? numero}
-            </div>
-            <div style={{ fontSize: 12, color: "#6B7A90" }}>
-              {contrato.lojas?.cidade && contrato.lojas?.estado
-                ? `${contrato.lojas.cidade} · ${contrato.lojas.estado}`
-                : numero}
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="portal-main flex-1 max-w-3xl w-full mx-auto px-6 py-8 space-y-6">
-        {/* 2. Status atual — card de destaque */}
-        <section
-          className="portal-card portal-status-card bg-white rounded-xl mx-auto flex items-center justify-between gap-6 flex-wrap"
-          style={{
-            border: "0.5px solid #E8ECF2",
-            padding: 24,
-            marginTop: 32,
-            maxWidth: 680,
-          }}
-        >
-          <div className="flex flex-col gap-2">
-            <div style={{ fontSize: 20, fontWeight: 500, color: "#0D1117" }}>
-              Olá, {contrato.cliente_nome}
-            </div>
-            <div style={{ fontSize: 14, color: "#6B7A90" }}>
-              {isFinalizado
-                ? "Seu pedido foi finalizado"
-                : "Seu pedido está em andamento"}
-            </div>
-            <div className="mt-2">
-              <span
-                className="inline-block rounded-full"
-                style={{
-                  padding: "8px 20px",
-                  fontSize: 14,
-                  fontWeight: 500,
-                  backgroundColor: isFinalizado ? "#E8F8EF" : "#E8F0FB",
-                  color: isFinalizado ? "#05873C" : "#1E6FBF",
-                }}
-              >
-                {isFinalizado ? "Finalizado" : stageLabel}
-              </span>
-            </div>
-            {entregaPrevista && !isFinalizado && (
-              <div style={{ fontSize: 13, color: "#6B7A90", marginTop: 4 }}>
-                Previsão:{" "}
-                {new Date(entregaPrevista).toLocaleDateString("pt-BR", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
+        );
+      case "agenda":
+        return (
+          <div className="flex-1 p-6 flex flex-col items-center justify-center text-center">
+            <Calendar size={64} className="text-slate-200 mb-4" />
+            <h2 className="text-lg font-bold text-slate-900">Agenda de Serviços</h2>
+            <p className="text-sm text-slate-500 mt-2">
+              Aqui você poderá acompanhar as datas de medição, entrega e montagem.
+            </p>
+            {entregaPrevista && (
+              <div className="mt-6 p-4 bg-amber-50 rounded-xl border border-amber-100 w-full">
+                <p className="text-xs font-bold text-amber-600 uppercase">Previsão de Entrega</p>
+                <p className="text-lg font-bold text-slate-900 mt-1">
+                  {new Date(entregaPrevista).toLocaleDateString("pt-BR", { day: '2-digit', month: 'long', year: 'numeric' })}
+                </p>
               </div>
             )}
           </div>
-          <div className="portal-status-right flex flex-col gap-1 text-right">
-            <div style={{ fontSize: 12, color: "#6B7A90" }}>
-              Contrato
-            </div>
-            <div style={{ fontSize: 16, fontWeight: 500, color: "#0D1117" }}>
-              {numero}
-            </div>
-          </div>
-        </section>
-
-        {/* Contract Signature Action Card */}
-        <section className="portal-card mx-auto w-full" style={{ maxWidth: 680 }}>
-          <div 
-            className="rounded-xl p-6 flex items-center justify-between gap-4 border-2"
-            style={{ 
-              backgroundColor: contrato.assinado ? "#F0FDF4" : "#FFFBEB", 
-              borderColor: contrato.assinado ? "#22C55E" : "#F59E0B" 
-            }}
-          >
-            <div className="flex items-center gap-4">
-              <div 
-                className="w-12 h-12 rounded-full flex items-center justify-center"
-                style={{ 
-                  backgroundColor: contrato.assinado ? "#DCFCE7" : "#FEF3C7",
-                  color: contrato.assinado ? "#16A34A" : "#D97706"
-                }}
-              >
-                {contrato.assinado ? <ShieldCheck size={28} /> : <AlertCircle size={28} />}
+        );
+      case "conta":
+        return (
+          <div className="flex-1 p-6 space-y-6">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                  <User size={32} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">{contrato.cliente_nome}</h2>
+                  <p className="text-sm text-slate-500">{contrato.cliente_contato || 'NEXO Cliente'}</p>
+                </div>
               </div>
-              <div>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: "#0D1117", margin: 0 }}>
-                  {contrato.assinado ? "Contrato Assinado" : "Assinatura do Contrato"}
-                </h3>
-                <p style={{ fontSize: 13, color: "#6B7A90", margin: 0 }}>
-                  {contrato.assinado 
-                    ? `Finalizado em ${formatDateTime(contrato.data_assinatura)}` 
-                    : "O contrato aguarda sua assinatura digital"}
-                </p>
+              <div className="space-y-4 pt-4 border-t border-slate-50">
+                <div>
+                  <label className="text-xs font-bold text-slate-400 uppercase">Loja de Origem</label>
+                  <p className="text-sm font-medium text-slate-900">{contrato.lojas?.nome || 'NEXO Centro'}</p>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-400 uppercase">Endereço da Loja</label>
+                  <p className="text-sm font-medium text-slate-900">
+                    {contrato.lojas?.cidade ? `${contrato.lojas.cidade} - ${contrato.lojas.estado || ''}` : 'NEXO Centro'}
+                  </p>
+                </div>
               </div>
             </div>
             
-            {!contrato.assinado ? (
-              <Button 
-                onClick={() => setIsModalAssinaturaOpen(true)}
-                className="bg-[#F59E0B] hover:bg-[#D97706] text-white font-semibold"
-              >
-                Assinar Contrato
-              </Button>
-            ) : (
-              <div className="flex items-center gap-2 text-[#16A34A] font-bold text-sm">
-                <Check size={18} />
-                ASSINADO
-              </div>
-            )}
-          </div>
-        </section>
-
-
-        <Tabs defaultValue="acompanhamento" className="w-full max-w-[680px] mx-auto">
-          <TabsList className="grid w-full grid-cols-2 mb-8 bg-white border border-[#E8ECF2] p-1 h-auto">
-            <TabsTrigger 
-              value="acompanhamento" 
-              className="py-3 data-[state=active]:bg-[#1E6FBF] data-[state=active]:text-white"
-            >
-              Acompanhamento
-            </TabsTrigger>
-            <TabsTrigger 
-              value="mensagens" 
-              className="py-3 data-[state=active]:bg-[#1E6FBF] data-[state=active]:text-white flex items-center gap-2"
-            >
-              <MessageSquare size={16} />
-              Mensagens
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="acompanhamento" className="space-y-6 mt-0">
-            {/* 3. Barra de progresso das etapas — reutiliza componente interno */}
-        <section className="portal-stepper mx-auto w-full" style={{ maxWidth: 680 }}>
-          <ContratoStepper current={contrato.status} />
-          <div
-            className="portal-current-stage text-center"
-            style={{ fontSize: 13, fontWeight: 500, color: "#1E6FBF", marginTop: 8 }}
-          >
-            Etapa atual: {stageLabel}
-          </div>
-        </section>
-
-        {/* 3.5 Seção Contrato */}
-        {contrato.contrato_gerado && (
-          <section
-            className="portal-card bg-white rounded-xl mx-auto w-full"
-            style={{ 
-              maxWidth: 680, 
-              border: "1px solid #E8ECF2", 
-              padding: 24,
-            }}
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <div 
-                className="w-10 h-10 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: "#F0F7FF", color: "#1E6FBF" }}
-              >
-                <FileText size={20} />
-              </div>
-              <div>
-                <h2 style={{ fontSize: 16, fontWeight: 600, color: "#0D1117", margin: 0 }}>
-                  Contrato
-                </h2>
-                <p style={{ fontSize: 13, color: "#6B7A90", margin: 0 }}>
-                  {contrato.assinado 
-                    ? "Contrato assinado eletronicamente" 
-                    : "Visualize e assine seu contrato eletronicamente"}
-                </p>
-              </div>
-            </div>
-
-            <div 
-              className="p-4 rounded-lg bg-slate-50 mb-6 flex items-center justify-between"
-              style={{ border: "1px solid #E8ECF2" }}
-            >
-              <div className="flex items-center gap-3">
-                <FileText size={24} color="#6B7A90" />
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: "#0D1117" }}>
-                    Contrato de Prestação de Serviços
-                  </div>
-                  <div style={{ fontSize: 12, color: "#6B7A90" }}>
-                    {numero}.pdf
-                  </div>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDownloadContrato}
-                className="bg-white"
-              >
-                <FileText className="w-4 h-4 mr-2" />
-                Visualizar contrato
-              </Button>
-            </div>
-
-            {!contrato.assinado ? (
-              <div className="pt-4 border-t" style={{ borderColor: "#E8ECF2" }}>
-                <div className="flex flex-col items-center gap-4 py-6 text-center">
-                  <div className="w-16 h-16 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
-                    <ShieldCheck size={32} />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-900">Aguardando Assinatura</h4>
-                    <p className="text-sm text-slate-500 max-w-xs mx-auto mt-1">
-                      Este documento precisa ser assinado digitalmente para prosseguir com o pedido.
-                    </p>
-                  </div>
-                  <Button 
-                    onClick={() => setIsModalAssinaturaOpen(true)}
-                    className="bg-[#F59E0B] hover:bg-[#D97706] text-white px-8"
-                  >
-                    Assinar Agora
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4 pt-4 border-t" style={{ borderColor: "#E8ECF2" }}>
-                <div 
-                  className="p-6 rounded-xl border flex flex-col gap-4" 
-                  style={{ backgroundColor: "#F0FDF4", borderColor: "#05873C", color: "#05873C" }}
-                >
-                  <div className="flex items-center gap-2 font-bold uppercase tracking-wider text-sm border-b pb-3" style={{ borderColor: "#05873C40" }}>
-                    <CheckCircle2 size={18} />
-                    <span>Documento Assinado Eletronicamente</span>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6 text-[13px]">
-                    <div>
-                      <div className="opacity-70 text-[11px] uppercase font-semibold mb-0.5">Signatário</div>
-                      <div className="font-medium text-slate-900">{contrato.assinatura_nome || "—"}</div>
-                    </div>
-                    <div>
-                      <div className="opacity-70 text-[11px] uppercase font-semibold mb-0.5">Data e Hora</div>
-                      <div className="font-medium text-slate-900">{formatDateTime(contrato.data_assinatura)}</div>
-                    </div>
-                    <div>
-                      <div className="opacity-70 text-[11px] uppercase font-semibold mb-0.5">IP de Origem</div>
-                      <div className="font-medium text-slate-900">{contrato.assinatura_ip || "—"}</div>
-                    </div>
-                    <div>
-                      <div className="opacity-70 text-[11px] uppercase font-semibold mb-0.5">Hash de Verificação</div>
-                      <div className="font-mono text-[10px] break-all text-slate-900 bg-white/50 p-1.5 rounded border border-slate-200 mt-1">
-                        {contrato.assinatura_hash || "—"}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {contrato.url_contrato_assinado && (
-                    <Button
-                      variant="outline"
-                      className="mt-2 bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800"
-                      onClick={() => window.open(contrato.url_contrato_assinado, '_blank')}
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Baixar contrato assinado (PDF)
-                    </Button>
-                  )}
-                  
-                  <div className="text-[11px] pt-2 border-t mt-1 opacity-70 italic" style={{ borderColor: "#05873C40" }}>
-                    Este registro comprova a assinatura eletrônica com validade jurídica (MP nº 2.200-2/2001).
-                  </div>
-                </div>
-              </div>
-            )}
-
-          </section>
-        )}
-
-        {/* 4. Detalhes do pedido */}
-        <section
-          className="portal-card bg-white rounded-xl mx-auto w-full"
-          style={{ maxWidth: 680, border: "0.5px solid #E8ECF2", padding: 24 }}
-        >
-
-          <h2 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117", marginBottom: 16 }}>
-            Detalhes do pedido
-          </h2>
-          <dl className="divide-y" style={{ borderColor: "#E8ECF2" }}>
-            {[
-              { label: "Cliente", value: contrato.cliente_nome },
-              {
-                label: "Contrato assinado em",
-                value: contrato.assinado && contrato.data_assinatura 
-                  ? fmtDate(contrato.data_assinatura)
-                  : contrato.assinado 
-                    ? fmtDate(contrato.data_criacao)
-                    : "Pendente",
-              },
-              {
-                label: "Previsão de entrega",
-                value: entregaPrevista ? fmtDate(entregaPrevista) : "A definir",
-              },
-              {
-                label: "Loja",
-                value: contrato.lojas?.nome
-                  ? `${contrato.lojas.nome}${contrato.lojas.cidade ? " — " + contrato.lojas.cidade : ""}`
-                  : "—",
-              },
-            ].map((row) => (
-              <div
-                key={row.label}
-                className="flex items-center justify-between py-3"
-              >
-                <dt style={{ fontSize: 13, color: "#6B7A90" }}>{row.label}</dt>
-                <dd
-                  style={{ fontSize: 13, fontWeight: 500, color: "#0D1117" }}
-                  className="text-right"
-                >
-                  {row.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-
-        {/* 4.5 Orçamentos do cliente */}
-        {orcamentos.length > 0 && (
-          <section
-            className="portal-card bg-white rounded-xl mx-auto w-full"
-            style={{ maxWidth: 680, border: "0.5px solid #E8ECF2", padding: 24 }}
-          >
-            <h2 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117", marginBottom: 16 }}>
-              Orçamentos
-            </h2>
-            <div className="space-y-3">
-              {orcamentos.map((o) => {
-                const valor = Number(o.valor_negociado || o.total_pedido || 0);
-                const status = (o.status as string) || "rascunho";
-                const sMap: Record<string, { label: string; bg: string; fg: string }> = {
-                  rascunho: { label: "Rascunho", bg: "#E8ECF2", fg: "#6B7A90" },
-                  enviado: { label: "Enviado", bg: "#E6F3FF", fg: "#1E6FBF" },
-                  aprovado: { label: "Aprovado", bg: "#D1FAE5", fg: "#05873C" },
-                  recusado: { label: "Recusado", bg: "#FDECEA", fg: "#E53935" },
-                };
-                const s = sMap[status] ?? sMap.rascunho;
-                const podeAcao = status === "enviado";
-                return (
-                  <div
-                    key={o.id}
-                    className="rounded-lg flex items-center justify-between gap-3 flex-wrap"
-                    style={{ border: "1px solid #E8ECF2", padding: 16 }}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div style={{ fontSize: 14, fontWeight: 500, color: "#0D1117" }}>
-                        {o.nome || "Orçamento"}
-                      </div>
-                      <div style={{ fontSize: 13, color: "#6B7A90", marginTop: 2 }}>
-                        {valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
-                      </div>
-                    </div>
-                    <span
-                      className="rounded-full"
-                      style={{
-                        padding: "4px 12px",
-                        fontSize: 12,
-                        fontWeight: 500,
-                        backgroundColor: s.bg,
-                        color: s.fg,
-                      }}
-                    >
-                      {s.label}
-                    </span>
-                    {podeAcao && (
-                      <div className="flex gap-2 w-full sm:w-auto">
-                        <button
-                          onClick={() => handleOrcamentoStatus(o.id, "aprovado")}
-                          className="rounded-md flex-1 sm:flex-none"
-                          style={{
-                            backgroundColor: "#12B76A",
-                            color: "#fff",
-                            fontSize: 13,
-                            fontWeight: 500,
-                            padding: "8px 14px",
-                          }}
-                        >
-                          ✅ Aprovar
-                        </button>
-                        <button
-                          onClick={() => handleOrcamentoStatus(o.id, "recusado")}
-                          className="rounded-md flex-1 sm:flex-none"
-                          style={{
-                            backgroundColor: "#fff",
-                            color: "#E53935",
-                            border: "1px solid #E53935",
-                            fontSize: 13,
-                            fontWeight: 500,
-                            padding: "8px 14px",
-                          }}
-                        >
-                          ❌ Recusar
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
-
-        {/* 5. Timeline de atividades — eventos públicos */}
-        <section
-          className="portal-card bg-white rounded-xl mx-auto w-full"
-          style={{ maxWidth: 680, border: "0.5px solid #E8ECF2", padding: 24 }}
-        >
-          <h2 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117", marginBottom: 16 }}>
-            Histórico do pedido
-          </h2>
-          {(() => {
-            const publicLogs = logs.filter((l) => PUBLIC_EVENTS[l.acao]);
-            if (publicLogs.length === 0) {
-              return (
-                <div style={{ fontSize: 14, color: "#6B7A90" }}>
-                  Seu pedido foi registrado. Em breve teremos atualizações.
-                </div>
-              );
-            }
-            return (
-              <ol className="space-y-4">
-                {publicLogs.map((log) => {
-                  const cfg = PUBLIC_EVENTS[log.acao];
-                  const isConcluido = cfg.tipo === "concluido";
-                  const Icon = isConcluido ? CheckCircle2 : ArrowRight;
-                  const color = isConcluido ? "#12B76A" : "#1E6FBF";
-                  return (
-                    <li key={log.id} className="flex items-start gap-3">
-                      <div
-                        className="rounded-full flex items-center justify-center shrink-0"
-                        style={{
-                          width: 32,
-                          height: 32,
-                          backgroundColor: `${color}1A`,
-                          color,
-                        }}
-                      >
-                        <Icon size={16} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div style={{ fontSize: 14, fontWeight: 500, color: "#0D1117" }}>
-                          {cfg.mensagem(log)}
-                          {isConcluido && " ✓"}
-                        </div>
-                        <div style={{ fontSize: 12, color: "#6B7A90", marginTop: 2 }}>
-                          {fmtDateLong(log.created_at)}
-                        </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ol>
-            );
-          })()}
-        </section>
-
-        {/* 5.5 Pagamentos / parcelas */}
-        {(() => {
-          const today = new Date(); today.setHours(0,0,0,0);
-          const totalPago = parcelas
-            .filter((p) => p.status === "pago")
-            .reduce((s, p) => s + Number(p.valor || 0), 0);
-          const totalAberto = parcelas
-            .filter((p) => p.status !== "pago" && p.status !== "cancelado")
-            .reduce((s, p) => s + Number(p.valor || 0), 0);
-          const fmtBRL = (n: number) =>
-            n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-          if (parcelas.length === 0) {
-            return (
-              <section
-                className="portal-card bg-white rounded-xl mx-auto w-full"
-                style={{ maxWidth: 680, border: "0.5px solid #E8ECF2", padding: 24 }}
-              >
-                <h2 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117", marginBottom: 16 }}>
-                  Pagamentos
-                </h2>
-                <p style={{ fontSize: 13, color: "#6B7A90", textAlign: "center", padding: "16px 0" }}>
-                  Nenhuma parcela cadastrada para este contrato
-                </p>
-              </section>
-            );
-          }
-          return (
-            <section
-              className="portal-card bg-white rounded-xl mx-auto w-full"
-              style={{ maxWidth: 680, border: "0.5px solid #E8ECF2", padding: 24 }}
-            >
-              <h2 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117", marginBottom: 16 }}>
-                Pagamentos
-              </h2>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr style={{ borderBottom: "1px solid #E8ECF2" }}>
-                      <th className="text-left py-2" style={{ fontSize: 12, color: "#6B7A90", fontWeight: 500 }}>Nº</th>
-                      <th className="text-left py-2" style={{ fontSize: 12, color: "#6B7A90", fontWeight: 500 }}>Vencimento</th>
-                      <th className="text-right py-2" style={{ fontSize: 12, color: "#6B7A90", fontWeight: 500 }}>Valor</th>
-                      <th className="text-right py-2" style={{ fontSize: 12, color: "#6B7A90", fontWeight: 500 }}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {parcelas.map((p, i) => {
-                      const venc = p.data_vencimento ? new Date(p.data_vencimento) : null;
-                      const isPago = p.status === "pago";
-                      const isAtrasado = !isPago && venc && venc < today;
-                      const label = isPago ? "Pago ✅" : isAtrasado ? "Atrasado 🔴" : "Pendente ⏳";
-                      const color = isPago ? "#05873C" : isAtrasado ? "#E53935" : "#E8A020";
-                      return (
-                        <tr key={p.id} style={{ borderBottom: "1px solid #F1F4F8" }}>
-                          <td className="py-3" style={{ fontSize: 13, color: "#0D1117" }}>{i + 1}</td>
-                          <td className="py-3" style={{ fontSize: 13, color: "#0D1117" }}>
-                            {venc ? venc.toLocaleDateString("pt-BR") : "—"}
-                          </td>
-                          <td className="py-3 text-right tabular-nums" style={{ fontSize: 13, color: "#0D1117", fontWeight: 500 }}>
-                            {fmtBRL(Number(p.valor || 0))}
-                          </td>
-                          <td className="py-3 text-right" style={{ fontSize: 13, color, fontWeight: 500 }}>
-                            {label}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-              <div
-                className="flex items-center justify-between mt-4 pt-4"
-                style={{ borderTop: "1px solid #E8ECF2", flexWrap: "wrap", gap: 12 }}
-              >
-                <div>
-                  <div style={{ fontSize: 12, color: "#6B7A90" }}>Total pago</div>
-                  <div style={{ fontSize: 16, fontWeight: 500, color: "#05873C" }}>{fmtBRL(totalPago)}</div>
-                </div>
-                <div className="text-right">
-                  <div style={{ fontSize: 12, color: "#6B7A90" }}>Total em aberto</div>
-                  <div style={{ fontSize: 16, fontWeight: 500, color: "#E8A020" }}>{fmtBRL(totalAberto)}</div>
-                </div>
-              </div>
-            </section>
-          );
-        })()}
-
-        {/* 6. NPS — coleta pública (somente pos_venda ou finalizado) */}
-        {(contrato.status === "pos_venda" || contrato.status === "finalizado") && (
-          npsRespondido ? (
-            <section
-              className="portal-card rounded-xl mx-auto w-full text-center"
-              style={{
-                maxWidth: 680,
-                backgroundColor: "#F0FDF9",
-                border: "1px solid #12B76A",
-                padding: 20,
-                fontSize: 14,
-                fontWeight: 500,
-                color: "#05873C",
-              }}
-            >
-              Avaliação registrada — obrigado! ★
-            </section>
-          ) : (
-            <NpsCard
-              nota={npsNota}
-              setNota={setNpsNota}
-              comentario={npsComentario}
-              setComentario={setNpsComentario}
-              onSubmit={handleSubmitNps}
-              submitting={npsSubmitting}
-            />
-          )
-            )}
-          </TabsContent>
-
-          <TabsContent value="mensagens" className="mt-0">
-            <PortalChat 
-              contractId={contrato.id} 
-              clientName={contrato.cliente_nome}
-              portalClient={portalClient}
-            />
-          </TabsContent>
-        </Tabs>
-      </main>
-
-      {/* 7. Rodapé */}
-      <footer
-        className="text-center"
-        style={{ backgroundColor: "#0D1117", padding: "20px 32px", marginTop: 32 }}
-      >
-        <div style={{ fontSize: 13, color: "#fff" }}>
-          NEXO · Gestão de Planejados
-        </div>
-        <div style={{ fontSize: 11, color: "#6B7A90", marginTop: 4 }}>
-          Este link é exclusivo para acompanhamento do seu pedido
-        </div>
-      </footer>
-
-      {/* Signature Modal */}
-      <Dialog open={isModalAssinaturaOpen} onOpenChange={setIsModalAssinaturaOpen}>
-        <DialogContent className="sm:max-w-[450px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-blue-600" />
-              Assinatura Digital do Contrato
-            </DialogTitle>
-            <DialogDescription>
-              Resumo: Contrato {numero} para {contrato.cliente_nome}.
-              Valor: {Number(contrato.valor_venda).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-6 py-4">
-            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 text-sm text-slate-600 italic">
-              "Ao assinar, você declara que leu e concorda com todos os termos do contrato, projeto e orçamentos anexos."
-            </div>
-
-            <div className="space-y-3">
-              <div className="space-y-2">
-                <Label htmlFor="nome_assinatura" className="text-sm font-medium">
-                  Confirme seu nome completo
-                </Label>
-                <Input
-                  id="nome_assinatura"
-                  placeholder="Ex: João da Silva"
-                  value={nomeAssinatura}
-                  onChange={(e) => setNomeAssinatura(e.target.value)}
-                  className="w-full"
-                />
-                <p className="text-[11px] text-slate-500">
-                  O nome deve ser idêntico ao cadastrado: <span className="font-semibold">{contrato.cliente_nome}</span>
-                </p>
-              </div>
-
-              <div className="flex items-start space-x-3 pt-2">
-                <Checkbox 
-                  id="termos" 
-                  checked={aceitouTermos} 
-                  onCheckedChange={(checked) => setAceitouTermos(!!checked)} 
-                  className="mt-1"
-                />
-                <Label 
-                  htmlFor="termos" 
-                  className="text-sm leading-relaxed text-slate-600 cursor-pointer select-none"
-                >
-                  Li e aceito os termos do contrato e estou ciente da validade jurídica desta assinatura eletrônica.
-                </Label>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="flex flex-col sm:flex-row gap-2">
             <Button 
               variant="outline" 
-              onClick={() => setIsModalAssinaturaOpen(false)}
-              className="flex-1"
+              className="w-full py-6 text-red-500 border-red-100 hover:bg-red-50 hover:text-red-600 rounded-2xl"
+              onClick={() => window.location.href = '/portal'}
             >
-              Cancelar
+              Sair do Portal
             </Button>
-            <Button 
-              onClick={handleAssinarContrato}
-              disabled={signing || !nomeAssinatura.trim() || !aceitouTermos || nomeAssinatura.trim().toLowerCase() !== contrato.cliente_nome.trim().toLowerCase()}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              {signing ? "Processando..." : "Assinar digitalmente"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
+          </div>
+        );
+      default:
+        return (
+          <div className="flex-1 p-5 space-y-5 pb-24">
+            {/* Saudação */}
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Olá, {contrato.cliente_nome.split(' ')[0]} 👋</h1>
+              <p className="text-slate-500 font-medium">Seu pedido está em andamento</p>
+            </div>
 
+            {/* Banner Amarelo de Assinatura */}
+            {!contrato.assinado && (
+              <div className="bg-[#fff9e6] border border-[#ffe082] rounded-2xl p-4 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+                <div className="flex items-center gap-3">
+                  <div className="bg-[#ffd700] p-2 rounded-full">
+                    <FileText size={18} className="text-[#856404]" />
+                  </div>
+                  <span className="text-sm font-bold text-[#856404]">Contrato aguardando sua assinatura</span>
+                </div>
+                <Button 
+                  size="sm"
+                  onClick={() => setIsModalAssinaturaOpen(true)}
+                  className="bg-[#ff8c00] hover:bg-[#e67e00] text-white font-bold rounded-xl px-4"
+                >
+                  Assinar
+                </Button>
+              </div>
+            )}
 
-function rangeColors(n: number) {
-  if (n <= 6) return { bg: "#FDECEA", border: "#E53935", text: "#E53935", fill: "#E53935" };
-  if (n <= 8) return { bg: "#FEF3C7", border: "#E8A020", text: "#E8A020", fill: "#E8A020" };
-  return { bg: "#D1FAE5", border: "#12B76A", text: "#05873C", fill: "#12B76A" };
-}
+            {/* Card de Status Verde */}
+            <div className="bg-[#00d4aa] rounded-3xl p-6 text-white shadow-lg shadow-[#00d4aa]/20 relative overflow-hidden">
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                  <span className="text-xs font-bold uppercase tracking-wider opacity-90">Etapa Atual</span>
+                </div>
+                <h2 className="text-2xl font-black">{stageLabel}</h2>
+                {entregaPrevista && (
+                  <div className="mt-4 pt-4 border-t border-white/20">
+                    <p className="text-xs font-bold uppercase opacity-80">Previsão de Entrega</p>
+                    <p className="text-lg font-bold">
+                      {new Date(entregaPrevista).toLocaleDateString("pt-BR", { day: '2-digit', month: 'long' })}
+                    </p>
+                  </div>
+                )}
+              </div>
+              <div className="absolute -right-4 -bottom-4 opacity-10">
+                <CheckCircle2 size={120} />
+              </div>
+            </div>
 
-function NpsCard({
-  nota,
-  setNota,
-  comentario,
-  setComentario,
-  onSubmit,
-  submitting,
-}: {
-  nota: number | null;
-  setNota: (n: number) => void;
-  comentario: string;
-  setComentario: (c: string) => void;
-  onSubmit: () => void;
-  submitting: boolean;
-}) {
-  const [hover, setHover] = useState<number | null>(null);
+            {/* Grid 2x2 de Botões */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest px-1">O que você precisa?</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <button 
+                  onClick={() => setCurrentTab("chat")}
+                  className="bg-[#0a1628] rounded-3xl p-5 text-left flex flex-col gap-3 relative overflow-hidden transition-transform active:scale-95 shadow-md h-32"
+                >
+                  <MessageCircle size={28} className="text-[#00d4aa]" />
+                  <span className="text-white font-bold text-sm leading-tight">Chat com a equipe</span>
+                  {unreadMessages > 0 && (
+                    <Badge className="absolute top-4 right-4 bg-red-500 hover:bg-red-500 text-white border-none px-2 min-w-[20px] h-5 flex items-center justify-center font-bold">
+                      {unreadMessages}
+                    </Badge>
+                  )}
+                </button>
+                
+                <button 
+                  onClick={() => setCurrentTab("agenda")}
+                  className="bg-[#fff4e6] rounded-3xl p-5 text-left flex flex-col gap-3 transition-transform active:scale-95 shadow-sm border border-[#ffe8cc] h-32"
+                >
+                  <Calendar size={28} className="text-[#ff922b]" />
+                  <span className="text-[#862e08] font-bold text-sm leading-tight">Agenda</span>
+                </button>
+                
+                <button 
+                  onClick={() => toast.info("Em breve!")}
+                  className="bg-[#e6fcf5] rounded-3xl p-5 text-left flex flex-col gap-3 transition-transform active:scale-95 shadow-sm border border-[#c3fae8] h-32"
+                >
+                  <Camera size={28} className="text-[#099268]" />
+                  <span className="text-[#084c3e] font-bold text-sm leading-tight">Fotos da montagem</span>
+                </button>
+                
+                <button 
+                  onClick={handleDownloadContrato}
+                  className="bg-[#f3f0ff] rounded-3xl p-5 text-left flex flex-col gap-3 transition-transform active:scale-95 shadow-sm border border-[#e5dbff] h-32"
+                >
+                  <FileText size={28} className="text-[#7950f2]" />
+                  <span className="text-[#3b1c9b] font-bold text-sm leading-tight">2ª via do contrato</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+    }
+  };
 
   return (
-    <section
-      className="portal-card rounded-xl mx-auto w-full"
-      style={{
-        maxWidth: 680,
-        backgroundColor: "#F0FDF9",
-        border: "1px solid #12B76A",
-        padding: 24,
-      }}
-    >
-      <h2 style={{ fontSize: 16, fontWeight: 500, color: "#0D1117" }}>
-        Como foi a sua experiência?
-      </h2>
-      <p style={{ fontSize: 13, color: "#6B7A90", marginTop: 4, marginBottom: 20 }}>
-        Sua opinião ajuda a melhorarmos o atendimento
-      </p>
+    <div className="bg-[#f8fafc] min-h-screen flex flex-col items-center">
+      {/* Container mobile-first */}
+      <div className="w-full max-w-[390px] min-h-screen bg-white shadow-xl flex flex-col relative">
+        
+        {/* Header Escuro */}
+        <header className="bg-[#0a1628] p-5 pt-8 shrink-0">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col">
+              <LogoNexo size="md" xColor="#00d4aa" className="text-white" />
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">
+                Portal do Cliente · NEXO Centro
+              </span>
+            </div>
+            
+            {/* Seletor de Contrato */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="bg-white/5 hover:bg-white/10 text-white p-2 px-3 rounded-2xl flex items-center gap-2 border border-white/10 transition-colors">
+                  <div className="text-left leading-tight">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase">Ambiente</p>
+                    <p className="text-xs font-bold truncate max-w-[100px]">
+                      {ambientes[0]?.nome || contrato.lojas?.nome || 'Principal'}
+                    </p>
+                  </div>
+                  <div className="relative">
+                    <ChevronDown size={16} className="text-slate-400" />
+                    {contracts.length > 1 && (
+                      <Badge className="absolute -top-4 -right-2 bg-[#00d4aa] text-[#0a1628] border-none text-[10px] h-4 w-4 p-0 flex items-center justify-center font-black">
+                        {contracts.length}
+                      </Badge>
+                    )}
+                  </div>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-[200px] bg-[#0a1628] border-white/10 p-2 text-white">
+                <p className="text-[10px] font-bold text-slate-400 uppercase p-2 border-b border-white/5 mb-1">Seus Contratos</p>
+                {contracts.map((c) => (
+                  <DropdownMenuItem 
+                    key={c.id} 
+                    className={cn(
+                      "flex flex-col items-start gap-1 p-3 rounded-xl cursor-pointer focus:bg-white/5 focus:text-white",
+                      selectedContractId === c.id && "bg-white/10"
+                    )}
+                    onClick={() => setSelectedContractId(c.id)}
+                  >
+                    <span className="font-bold text-sm">Contrato #{c.id.slice(0, 8).toUpperCase()}</span>
+                    <span className="text-[10px] text-slate-400 uppercase tracking-wider">{STAGE_LABELS[c.status] || c.status}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
 
-      <div className="portal-nps-grid flex gap-2 flex-wrap">
-        {Array.from({ length: 11 }, (_, i) => i).map((n) => {
-          const selected = nota === n;
-          const isHover = hover === n;
-          const c = rangeColors(n);
-          let bg = "#F5F7FA";
-          let border = "#E8ECF2";
-          let text = "#6B7A90";
-          if (selected) {
-            bg = c.fill;
-            border = c.fill;
-            text = "#fff";
-          } else if (isHover) {
-            bg = c.bg;
-            border = c.border;
-            text = c.text;
-          }
-          return (
+        {/* Conteúdo Principal */}
+        <main className="flex-1 flex flex-col bg-[#f8fafc]">
+          {renderContent()}
+        </main>
+
+        {/* Bottom Nav */}
+        <nav className="fixed bottom-0 w-full max-w-[390px] bg-white border-t border-slate-100 flex items-center justify-around p-3 pb-6 z-50">
+          {[
+            { id: "inicio", icon: Home, label: "Início" },
+            { id: "chat", icon: MessageCircle, label: "Chat", badge: unreadMessages },
+            { id: "agenda", icon: Calendar, label: "Agenda" },
+            { id: "conta", icon: User, label: "Conta" }
+          ].map((item) => (
             <button
-              key={n}
-              onClick={() => setNota(n)}
-              onMouseEnter={() => setHover(n)}
-              onMouseLeave={() => setHover(null)}
-              className="rounded-md transition-colors"
-              style={{
-                width: 40,
-                height: 40,
-                fontSize: 14,
-                fontWeight: 500,
-                backgroundColor: bg,
-                border: `1px solid ${border}`,
-                color: text,
-              }}
+              key={item.id}
+              onClick={() => setCurrentTab(item.id as any)}
+              className={cn(
+                "flex flex-col items-center gap-1 p-2 min-w-[64px] transition-all rounded-2xl relative",
+                currentTab === item.id ? "text-[#0a1628]" : "text-slate-400"
+              )}
             >
-              {n}
+              <div className={cn(
+                "p-2 rounded-xl transition-colors",
+                currentTab === item.id ? "bg-slate-50" : "bg-transparent"
+              )}>
+                <item.icon size={22} strokeWidth={currentTab === item.id ? 2.5 : 2} />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider">{item.label}</span>
+              {item.badge ? (
+                <Badge className="absolute top-2 right-4 bg-red-500 text-white border-none h-4 min-w-[16px] p-0 flex items-center justify-center text-[9px] font-black">
+                  {item.badge}
+                </Badge>
+              ) : null}
             </button>
-          );
-        })}
-      </div>
+          ))}
+        </nav>
 
-      <div className="flex justify-between mt-2" style={{ fontSize: 12, color: "#B0BAC9" }}>
-        <span>Muito insatisfeito</span>
-        <span>Muito satisfeito</span>
-      </div>
+        {/* Modal de Assinatura */}
+        <Dialog open={isModalAssinaturaOpen} onOpenChange={setIsModalAssinaturaOpen}>
+          <DialogContent className="max-w-[350px] rounded-3xl p-6">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold">Assinatura Digital</DialogTitle>
+              <DialogDescription className="text-sm">
+                Para prosseguir com o seu pedido, por favor assine o contrato eletronicamente.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 my-4">
+              <div className="space-y-2">
+                <Label htmlFor="nome" className="text-xs font-bold uppercase text-slate-500">Digite seu nome completo</Label>
+                <Input
+                  id="nome"
+                  placeholder={contrato.cliente_nome}
+                  value={nomeAssinatura}
+                  onChange={(e) => setNomeAssinatura(e.target.value)}
+                  className="rounded-xl border-slate-200 focus:ring-[#00d4aa]"
+                />
+                <p className="text-[10px] text-slate-400 italic">
+                  * O nome deve ser exatamente: <span className="font-bold">{contrato.cliente_nome}</span>
+                </p>
+              </div>
+              <div className="flex items-start space-x-2 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <Checkbox 
+                  id="terms" 
+                  checked={aceitouTermos} 
+                  onCheckedChange={(val) => setAceitouTermos(!!val)}
+                  className="mt-0.5"
+                />
+                <label
+                  htmlFor="terms"
+                  className="text-xs leading-relaxed text-slate-600 cursor-pointer"
+                >
+                  Eu li e concordo com os termos do contrato e autorizo a assinatura digital com validade jurídica.
+                </label>
+              </div>
+            </div>
+            <DialogFooter className="gap-2">
+              <Button 
+                variant="ghost" 
+                onClick={() => setIsModalAssinaturaOpen(false)}
+                className="rounded-xl"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleAssinarContrato}
+                disabled={signing || !aceitouTermos || !nomeAssinatura}
+                className="bg-[#ff8c00] hover:bg-[#e67e00] text-white font-bold rounded-xl px-8"
+              >
+                {signing ? "Assinando..." : "Confirmar Assinatura"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-      {nota !== null && (
-        <div className="mt-5" style={{ animation: "fadeIn 0.3s ease-in-out" }}>
-          <textarea
-            value={comentario}
-            onChange={(e) => setComentario(e.target.value)}
-            placeholder="Conte mais sobre sua experiência (opcional)"
-            rows={3}
-            className="w-full rounded-md p-3"
-            style={{
-              fontSize: 13,
-              border: "1px solid #E8ECF2",
-              backgroundColor: "#fff",
-              color: "#0D1117",
-              resize: "vertical",
-            }}
-          />
-          <button
-            onClick={onSubmit}
-            disabled={submitting}
-            className="rounded-md transition-opacity disabled:opacity-50 mt-4"
-            style={{
-              backgroundColor: "#12B76A",
-              color: "#fff",
-              fontSize: 14,
-              fontWeight: 500,
-              padding: "10px 20px",
-            }}
-          >
-            {submitting ? "Enviando…" : "Enviar avaliação"}
-          </button>
-        </div>
-      )}
-      <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }`}</style>
-    </section>
+      </div>
+      
+      {/* Footer minimalista fora do container mobile para desktop */}
+      <footer className="py-8 text-center hidden md:block">
+        <p className="text-slate-400 text-xs font-medium uppercase tracking-[0.2em]">
+          NEXO · Gestão de Planejados
+        </p>
+      </footer>
+    </div>
   );
 }

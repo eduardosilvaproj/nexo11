@@ -2752,6 +2752,7 @@ export type Database = {
         Args: { _comentario?: string; _nota: number; _token: string }
         Returns: Json
       }
+      portal_token_cliente_id: { Args: never; Returns: string }
       portal_token_contrato_id: { Args: never; Returns: string }
       portal_validar_codigo: { Args: { _codigo: string }; Returns: Json }
       realtime_canal_contrato_permitido: {
