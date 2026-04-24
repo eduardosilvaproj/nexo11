@@ -197,6 +197,54 @@ export type Database = {
           },
         ]
       }
+      chat_mensagens: {
+        Row: {
+          contrato_id: string
+          created_at: string
+          id: string
+          lida: boolean
+          mensagem: string
+          remetente_id: string | null
+          remetente_nome: string
+          remetente_tipo: string
+        }
+        Insert: {
+          contrato_id: string
+          created_at?: string
+          id?: string
+          lida?: boolean
+          mensagem: string
+          remetente_id?: string | null
+          remetente_nome: string
+          remetente_tipo: string
+        }
+        Update: {
+          contrato_id?: string
+          created_at?: string
+          id?: string
+          lida?: boolean
+          mensagem?: string
+          remetente_id?: string | null
+          remetente_nome?: string
+          remetente_tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_mensagens_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_mensagens_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checklist_templates: {
         Row: {
           ativo: boolean
