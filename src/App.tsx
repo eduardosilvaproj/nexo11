@@ -17,7 +17,7 @@ import Producao from "./pages/Producao";
 import Logistica from "./pages/Logistica";
 import Montagem from "./pages/Montagem";
 import Equipe from "./pages/Equipe";
-
+import Mensagens from "./pages/Mensagens";
 import PosVenda from "./pages/PosVenda";
 import Dre from "./pages/Dre";
 import Financeiro from "./pages/Financeiro";
@@ -65,6 +65,7 @@ const App = () => (
               <Route path="/comercial" element={<Comercial />} />
               <Route path="/clientes" element={<Clientes />} />
               <Route path="/clientes/:id" element={<ClienteDetail />} />
+              <Route path="/mensagens" element={<Mensagens />} />
               <Route path="/orcamentos/:id/negociacao" element={
                 <ProtectedRoute roles={["admin","gerente","vendedor"]}>
                   <OrcamentoNegociacao />
