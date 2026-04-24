@@ -393,7 +393,7 @@ export default function PortalCliente() {
       const filePath = `${r.contrato_id}/${fileName}`;
 
       const { error: uploadError } = await portalClient.storage
-        .from('contratos-assinados')
+        .from('assinaturas')
         .upload(filePath, blob, {
           contentType: 'application/pdf',
           upsert: true
@@ -402,7 +402,7 @@ export default function PortalCliente() {
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = portalClient.storage
-        .from('contratos-assinados')
+        .from('assinaturas')
         .getPublicUrl(filePath);
 
       await portalClient
