@@ -913,6 +913,7 @@ export default function PortalCliente() {
               submitting={npsSubmitting}
             />
           )
+            )}
           </TabsContent>
 
           <TabsContent value="mensagens" className="mt-0">
