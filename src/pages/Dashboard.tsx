@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Folder,
   TrendingUp,
@@ -11,14 +11,14 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-const ETAPAS: { key: string; label: string; color: string }[] = [
-  { key: "comercial", label: "Comercial", color: "#1E6FBF" },
-  { key: "tecnico", label: "Técnico", color: "#7F77DD" },
-  { key: "producao", label: "Produção", color: "#D85A30" },
-  { key: "logistica", label: "Logística", color: "#12B76A" },
-  { key: "montagem", label: "Montagem", color: "#1D9E75" },
-  { key: "pos_venda", label: "Pós-venda", color: "#E8A020" },
-  { key: "finalizado", label: "Finalizado", color: "#05873C" },
+const ETAPAS_CONFIG: { key: string; label: string; bg: string; text: string }[] = [
+  { key: "comercial", label: "Comercial", bg: "#E6F1FB", text: "#0C447C" },
+  { key: "revisao_tecnica", label: "Revisão Técnica", bg: "#EEEDFE", text: "#3C3489" },
+  { key: "producao", label: "Produção", bg: "#FAEEDA", text: "#633806" },
+  { key: "logistica", label: "Logística", bg: "#EAF3DE", text: "#27500A" },
+  { key: "montagem", label: "Montagem", bg: "#E1F5EE", text: "#085041" },
+  { key: "pos_venda", label: "Pós-Venda", bg: "#FBEAF0", text: "#72243E" },
+  { key: "finalizado", label: "Finalizado", bg: "#F1EFE8", text: "#444441" },
 ];
 
 interface MetricCardProps {
@@ -57,6 +57,7 @@ function MetricCard({ label, value, icon: Icon, color, valueColor = "#0D1117" }:
 
 export default function Dashboard() {
   const { perfil, user } = useAuth();
+  const navigate = useNavigate();
 
   const { data: stats } = useQuery({
     queryKey: ["dashboard-stats", user?.id],
@@ -66,12 +67,12 @@ export default function Dashboard() {
       inicioMes.setDate(1);
       inicioMes.setHours(0, 0, 0, 0);
 
-      const [contratosAtivos, faturamentoMes, dre, leadsAtivos, contratosByStatus] =
+      const [contratosAtivos, faturamentoMes, dre, leadsAtivos, contratosByEtapa] =
         await Promise.all([
           supabase
             .from("contratos")
             .select("id", { count: "exact", head: true })
-            .not("status", "in", "(finalizado)"),
+            .not("status", "in", "(cancelado,finalizado)"),
           supabase
             .from("contratos")
             .select("valor_venda")
@@ -82,7 +83,10 @@ export default function Dashboard() {
             .from("leads")
             .select("id", { count: "exact", head: true })
             .not("status", "in", "(convertido,perdido)"),
-          supabase.from("contratos").select("status"),
+          supabase
+            .from("contratos")
+            .select("id, etapa_atual, valor_venda, previsao_entrega")
+            .not("status", "eq", "cancelado"),
         ]);
 
       const faturamento =
@@ -92,10 +96,34 @@ export default function Dashboard() {
       const margemMedia =
         margens.length > 0 ? margens.reduce((a, b) => a + b, 0) / margens.length : null;
 
-      const porEtapa: Record<string, number> = {};
-      ETAPAS.forEach((e) => (porEtapa[e.key] = 0));
-      contratosByStatus.data?.forEach((c) => {
-        if (porEtapa[c.status] != null) porEtapa[c.status] += 1;
+      const pipeline: Record<string, { count: number; total: number; noPrazo: number; emAlerta: number; emAtraso: number }> = {};
+      ETAPAS_CONFIG.forEach((e) => {
+        pipeline[e.key] = { count: 0, total: 0, noPrazo: 0, emAlerta: 0, emAtraso: 0 };
+      });
+
+      const hoje = new Date();
+      const emUmaSemana = new Date();
+      emUmaSemana.setDate(hoje.getDate() + 7);
+
+      contratosByEtapa.data?.forEach((c) => {
+        const etapa = c.etapa_atual || "comercial";
+        if (pipeline[etapa]) {
+          pipeline[etapa].count += 1;
+          pipeline[etapa].total += Number(c.valor_venda || 0);
+
+          if (c.previsao_entrega) {
+            const previsao = new Date(c.previsao_entrega);
+            if (previsao < hoje) {
+              pipeline[etapa].emAtraso += 1;
+            } else if (previsao <= emUmaSemana) {
+              pipeline[etapa].emAlerta += 1;
+            } else {
+              pipeline[etapa].noPrazo += 1;
+            }
+          } else {
+            pipeline[etapa].noPrazo += 1; // Default
+          }
+        }
       });
 
       return {
@@ -103,7 +131,7 @@ export default function Dashboard() {
         faturamento,
         margemMedia,
         leadsAtivos: leadsAtivos.count ?? 0,
-        porEtapa,
+        pipeline,
       };
     },
   });
@@ -157,6 +185,69 @@ export default function Dashboard() {
           icon={Users}
           color="#E8A020"
         />
+      </div>
+
+      {/* Pipeline de contratos */}
+      <div className="bg-white p-6" style={cardStyle}>
+        <div className="mb-6 flex items-center justify-between">
+          <h2 style={{ fontSize: 18, fontWeight: 600, color: "#0D1117" }}> Pipeline de contratos </h2>
+          <span style={{ fontSize: 14, color: "#6B7A90" }}>
+            {stats?.contratosAtivos ?? 0} contratos em andamento
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+          {ETAPAS_CONFIG.map((etapa) => {
+            const data = stats?.pipeline?.[etapa.key] || { count: 0, total: 0, noPrazo: 0, emAlerta: 0, emAtraso: 0 };
+            return (
+              <button
+                key={etapa.key}
+                onClick={() => navigate(`/comercial?etapa=${etapa.key}`)}
+                className="flex flex-col rounded-xl p-4 text-left transition-all hover:brightness-95 active:scale-[0.98]"
+                style={{ backgroundColor: etapa.bg }}
+              >
+                <span className="mb-1 block truncate font-semibold" style={{ color: etapa.text, fontSize: 14 }}>
+                  {etapa.label}
+                </span>
+                <span className="mb-1 block font-bold" style={{ color: etapa.text, fontSize: 18 }}>
+                  {data.count} {data.count === 1 ? 'contrato' : 'contratos'}
+                </span>
+                <span className="mb-3 block font-medium opacity-80" style={{ color: etapa.text, fontSize: 13 }}>
+                  {formatBRL(data.total)}
+                </span>
+                
+                <div className="mt-auto flex gap-1.5">
+                  <div className="flex h-5 w-7 items-center justify-center rounded bg-green-500/10 text-[10px] font-bold text-green-700" title="No prazo">
+                    🟢 {data.noPrazo}
+                  </div>
+                  <div className="flex h-5 w-7 items-center justify-center rounded bg-amber-500/10 text-[10px] font-bold text-amber-700" title="Em alerta">
+                    🟡 {data.emAlerta}
+                  </div>
+                  <div className="flex h-5 w-7 items-center justify-center rounded bg-red-500/10 text-[10px] font-bold text-red-700" title="Em atraso">
+                    🔴 {data.emAtraso}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-6 flex flex-wrap items-center justify-between border-t pt-4">
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1.5 text-[11px] text-[#6B7A90]">
+              <span className="h-2 w-2 rounded-full bg-green-500" /> no prazo
+            </span>
+            <span className="flex items-center gap-1.5 text-[11px] text-[#6B7A90]">
+              <span className="h-2 w-2 rounded-full bg-amber-500" /> em alerta
+            </span>
+            <span className="flex items-center gap-1.5 text-[11px] text-[#6B7A90]">
+              <span className="h-2 w-2 rounded-full bg-red-500" /> em atraso
+            </span>
+          </div>
+          <span className="text-[11px] text-[#6B7A90]">
+            Clique em uma etapa para ver os contratos
+          </span>
+        </div>
       </div>
 
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
