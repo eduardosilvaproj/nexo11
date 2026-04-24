@@ -318,6 +318,10 @@ export default function PortalCliente() {
       const rawCanvas = sigCanvas.current?.getCanvas();
       const assinaturaBase64 = rawCanvas ? trimCanvas(rawCanvas).toDataURL('image/png') : null;
 
+      if (!assinaturaBase64) {
+        throw new Error("Não foi possível gerar a imagem da assinatura.");
+      }
+
       let ip = "0.0.0.0";
       try {
         const resp = await fetch("https://api.ipify.org?format=json");
@@ -330,29 +334,7 @@ export default function PortalCliente() {
       const timestamp = new Date().toISOString();
       const hash = await gerarHash(contrato.id, nomeAssinatura.trim(), timestamp);
 
-      // 1. Upload da imagem da assinatura para o Storage
-      const signatureFileName = `sig_${contrato.id}_${Date.now()}.png`;
-      const signatureFilePath = `assinaturas/${signatureFileName}`;
-      
-      // Converter base64 para blob
-      const res = await fetch(assinaturaBase64!);
-      const blobSig = await res.blob();
-
-      // Corrigindo para usar o bucket correto 'assinaturas' conforme a estrutura do portal
-      const { error: uploadSigError } = await portalClient.storage
-        .from('assinaturas')
-        .upload(signatureFilePath, blobSig, {
-          contentType: 'image/png',
-          upsert: true
-        });
-
-      if (uploadSigError) throw uploadSigError;
-
-      const { data: { publicUrl: signatureUrl } } = portalClient.storage
-        .from('assinaturas')
-        .getPublicUrl(signatureFilePath);
-
-      // 2. Chamar RPC para registrar assinatura
+      // 1. Chamar RPC para registrar assinatura (Enviando base64 direto para evitar dependência de Storage/Auth)
       const { data, error } = await portalClient.rpc(
         "portal_assinar_contrato" as any,
         { 
@@ -360,55 +342,15 @@ export default function PortalCliente() {
           _nome: nomeAssinatura.trim(),
           _ip: ip,
           _user_agent: navigator.userAgent,
-          _assinatura_imagem_url: signatureUrl,
+          _assinatura_imagem_url: assinaturaBase64, // Base64 direto
           _hash: hash,
           _data_assinatura: timestamp
         }
       );
+
       if (error) throw error;
       const r = data as { ok: boolean; erro?: string; hash: string; data_assinatura: string; contrato_id: string };
       if (!r?.ok) throw new Error(r?.erro ?? "Erro ao assinar");
-
-      const contratoComAssinatura = {
-        ...contrato,
-        assinado: true,
-        data_assinatura: r.data_assinatura,
-        assinatura_nome: nomeAssinatura.trim(),
-        assinatura_ip: ip,
-        assinatura_hash: r.hash,
-        assinatura_imagem_url: signatureUrl
-      };
-
-      // 3. Gerar PDF e fazer upload
-      const doc = (
-        <ContractPDF
-          contrato={contratoComAssinatura}
-          loja={contrato.lojas}
-          ambientes={ambientes}
-          orcamentos={orcamentos}
-        />
-      );
-      const blob = await pdf(doc).toBlob();
-      const fileName = `contrato_${r.contrato_id}_assinado.pdf`;
-      const filePath = `${r.contrato_id}/${fileName}`;
-
-      const { error: uploadError } = await portalClient.storage
-        .from('assinaturas')
-        .upload(filePath, blob, {
-          contentType: 'application/pdf',
-          upsert: true
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = portalClient.storage
-        .from('assinaturas')
-        .getPublicUrl(filePath);
-
-      await portalClient
-        .from('contratos')
-        .update({ url_contrato_assinado: publicUrl })
-        .eq('id', r.contrato_id);
 
       toast.success("Contrato assinado com sucesso!");
       
@@ -417,7 +359,7 @@ export default function PortalCliente() {
         data: r.data_assinatura,
         ip: ip,
         nome: nomeAssinatura.trim(),
-        url_pdf: publicUrl
+        url_pdf: null // PDF será gerado sob demanda ou em segundo plano
       });
       
       setAssinaturaPasso(3);
@@ -430,8 +372,7 @@ export default function PortalCliente() {
         assinado_em: r.data_assinatura,
         assinado_nome: nomeAssinatura.trim(),
         assinatura_hash: r.hash,
-        assinatura_imagem_url: signatureUrl,
-        url_contrato_assinado: publicUrl,
+        assinatura_imagem_url: assinaturaBase64,
         status: 'tecnico'
       } : c));
       
