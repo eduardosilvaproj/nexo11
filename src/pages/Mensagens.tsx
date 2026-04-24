@@ -41,9 +41,15 @@ export default function Mensagens() {
 
   // Load etapa from URL on mount
   useEffect(() => {
-    const etapa = searchParams.get("etapa");
-    if (etapa && ETAPAS_CONFIG[etapa]) {
-      setActiveEtapa(etapa);
+    const etapaParam = searchParams.get("etapa");
+    if (etapaParam) {
+      // Find matching key case-insensitively or exactly
+      const matchingKey = Object.keys(ETAPAS_CONFIG).find(
+        key => key.toLowerCase() === etapaParam.toLowerCase()
+      );
+      if (matchingKey) {
+        setActiveEtapa(matchingKey);
+      }
     }
   }, [searchParams]);
 
