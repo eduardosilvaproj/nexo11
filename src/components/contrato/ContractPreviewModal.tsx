@@ -181,30 +181,35 @@ export function ContractPreviewModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[1000px] w-[90vw] h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+      <DialogContent className="max-w-[1000px] w-[95vw] h-[95vh] flex flex-col p-0 gap-0 overflow-hidden bg-white">
         <style dangerouslySetInnerHTML={{ __html: `
           @media print {
+            @page {
+              margin: 15mm;
+              size: A4;
+            }
             body * { visibility: hidden; }
-            .printable-content, .printable-content * { visibility: visible; }
-            .printable-content { 
+            #contract-printable-area, #contract-printable-area * { visibility: visible; }
+            #contract-printable-area { 
               position: absolute; 
               left: 0; 
               top: 0; 
               width: 100%;
               padding: 0;
               margin: 0;
+              box-shadow: none !important;
             }
             .no-print { display: none !important; }
           }
         `}} />
         
-        <DialogHeader className="p-4 border-b flex flex-row items-center justify-between space-y-0 no-print">
+        <DialogHeader className="p-4 border-b flex flex-row items-center justify-between space-y-0 no-print bg-white z-10">
           <DialogTitle className="text-lg font-semibold flex items-center gap-2">
             📄 Preview do Contrato
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 bg-slate-100 flex flex-col items-center overflow-y-auto p-4 md:p-8">
+        <div className="flex-1 bg-slate-100 flex flex-col items-center overflow-y-auto p-4 md:p-8 no-print">
           {loading ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-2">
               <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
@@ -219,7 +224,7 @@ export function ContractPreviewModal({
               </Alert>
             </div>
           ) : fullContrato ? (
-            <div ref={contentRef} className="w-full max-w-[800px]">
+            <div id="contract-printable-area" className="w-full max-w-[800px] shadow-2xl mb-8 bg-white">
               <ContractHTMLPreview
                 contrato={fullContrato}
                 loja={loja}
@@ -234,7 +239,7 @@ export function ContractPreviewModal({
           )}
         </div>
 
-        <div className="p-4 border-t flex items-center justify-center gap-3 bg-white no-print">
+        <div className="p-4 border-t flex items-center justify-center gap-3 bg-white no-print z-10">
           <Button
             variant="outline"
             onClick={handlePrint}
@@ -266,4 +271,3 @@ export function ContractPreviewModal({
     </Dialog>
   );
 }
-
