@@ -184,9 +184,10 @@ export function ComissoesRelatorioTab({
       await supabase.from("contrato_logs").insert({
         contrato_id: alvoPagar.contrato_id,
         acao: "comissao_paga",
+        etapa: "comercial",
         titulo: "Comissão paga",
         descricao: `${alvoPagar.pessoa} (${alvoPagar.papel}) — ${fmtBRL(alvoPagar.valor)} pago em ${dataPagamento}.`,
-        autor_id: userData.user?.id ?? null,
+        usuario_nome: userData.user?.user_metadata?.nome || userData.user?.email || "Sistema",
       });
 
       toast.success("Comissão marcada como paga");
@@ -214,9 +215,10 @@ export function ComissoesRelatorioTab({
       await supabase.from("contrato_logs").insert({
         contrato_id: alvoCancelar.contrato_id,
         acao: "comissao_cancelada",
+        etapa: "comercial",
         titulo: "Comissão cancelada",
         descricao: `${alvoCancelar.pessoa} (${alvoCancelar.papel}) — ${fmtBRL(alvoCancelar.valor)} cancelada.`,
-        autor_id: userData.user?.id ?? null,
+        usuario_nome: userData.user?.user_metadata?.nome || userData.user?.email || "Sistema",
       });
 
       toast.success("Comissão cancelada");

@@ -175,10 +175,10 @@ export function TerceirizadaTab() {
       await supabase.from("contrato_logs").insert({
         contrato_id: p.contrato_id,
         acao: "producao_terceirizada_concluida",
+        etapa: "producao",
         titulo: "Produção terceirizada concluída",
         descricao: `Pedido #${p.numero_pedido} pronto para retirada`,
-        autor_id: userData.user?.id ?? null,
-        autor_nome: userData.user?.user_metadata?.nome || userData.user?.email || null,
+        usuario_nome: userData.user?.user_metadata?.nome || userData.user?.email || "Sistema",
       });
       toast.success("Produção marcada como pronta! Logística liberada.");
     } else {

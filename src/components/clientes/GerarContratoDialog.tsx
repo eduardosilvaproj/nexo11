@@ -207,9 +207,10 @@ export function GerarContratoDialog({
         await supabase.from("contrato_logs").insert({
           contrato_id: contrato.id,
           acao: "contrato_gerado",
+          etapa: "comercial",
           titulo: "Contrato gerado a partir do orçamento",
           descricao: nomes,
-          autor_id: auth.user.id,
+          usuario_nome: auth.user.user_metadata?.nome || auth.user.email || "Sistema",
         });
       }
 

@@ -235,10 +235,10 @@ export function ImportPromobXlsDialog({ open, onOpenChange, lojaId }: Props) {
         await supabase.from("contrato_logs").insert({
           contrato_id: p.contratoId,
           acao: "promob_sincronizado",
+          etapa: "logistica",
           titulo: "Importação Promob XLS",
           descricao: `Pedido #${p.numeroPedido || "—"} · Previsão: ${p.dataPrevista} · ${p.transportadora || "—"}`,
-          autor_id: uid,
-          autor_nome: autorNome,
+          usuario_nome: autorNome || "Sistema",
         });
         atualizados++;
       }
