@@ -10,12 +10,12 @@ import { toast } from "sonner";
 
 interface Message {
   id: string;
-  contract_id: string;
-  sender_type: "cliente" | "equipe";
-  sender_name: string;
-  message: string;
+  contrato_id: string;
+  remetente_tipo: "cliente" | "equipe";
+  remetente_nome: string;
+  mensagem: string;
   created_at: string;
-  is_read: boolean;
+  lida: boolean;
 }
 
 interface PortalChatProps {
@@ -82,10 +82,10 @@ export function PortalChat({ contractId, clientName, portalClient }: PortalChatP
 
     setSending(true);
     try {
-      const { error } = await portalClient.from("contract_messages").insert({
-        contract_id: contractId,
-        sender_type: "cliente",
-        sender_name: clientName,
+      const { error } = await portalClient.from("chat_mensagens").insert({
+        contrato_id: contractId,
+        remetente_tipo: "cliente",
+        remetente_nome: clientName,
         mensagem: newMessage.trim(),
       });
 
@@ -132,7 +132,7 @@ export function PortalChat({ contractId, clientName, portalClient }: PortalChatP
             </div>
           ) : (
             messages.map((msg, index) => {
-              const isMine = msg.sender_type === "cliente";
+              const isMine = msg.remetente_tipo === "cliente";
               const showDate = index === 0 || 
                 format(new Date(messages[index-1].created_at), 'yyyy-MM-dd') !== format(new Date(msg.created_at), 'yyyy-MM-dd');
 
@@ -164,12 +164,12 @@ export function PortalChat({ contractId, clientName, portalClient }: PortalChatP
 
                       {!isMine && (
                         <p className="text-[11px] font-bold text-[#1E6FBF] mb-0.5">
-                          {msg.sender_name}
+                          {msg.remetente_nome}
                         </p>
                       )}
                       <div className="flex flex-col">
                         <p className="text-[14px] leading-relaxed whitespace-pre-wrap break-words">
-                          {msg.message}
+                          {msg.mensagem}
                         </p>
                         <div className="flex items-center justify-end gap-1 mt-1">
                           <span className="text-[10px] text-[#64748B]">
@@ -177,7 +177,7 @@ export function PortalChat({ contractId, clientName, portalClient }: PortalChatP
                           </span>
                           {isMine && (
                             <span className="text-[#34B7F1]">
-                              {msg.is_read ? <CheckCheck size={14} /> : <Check size={14} />}
+                              {msg.lida ? <CheckCheck size={14} /> : <Check size={14} />}
                             </span>
                           )}
                         </div>
