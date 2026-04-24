@@ -29,8 +29,7 @@ export function ModalLiberarDesconto({
   const [statusRemoto, setStatusRemoto] = useState<"idle" | "enviado" | "aprovado">("idle");
 
   const handleConfirmarSenha = () => {
-    // Por enquanto, uma senha padrão para o gerente
-    if (password === "gerente123") {
+    if (password === "1234") {
       toast.success("Desconto liberado com sucesso!");
       onAprovado();
       onOpenChange(false);
@@ -86,13 +85,13 @@ export function ModalLiberarDesconto({
 
         <Tabs defaultValue="local" className="w-full mt-4">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="local">Senha Local</TabsTrigger>
-            <TabsTrigger value="remoto">Aprovação Remota</TabsTrigger>
+            <TabsTrigger value="local">Senha</TabsTrigger>
+            <TabsTrigger value="remoto">Aprovar remotamente</TabsTrigger>
           </TabsList>
           
           <TabsContent value="local" className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="password">Senha do Gerente</Label>
+              <Label htmlFor="password">Senha</Label>
               <div className="relative">
                 <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -124,16 +123,16 @@ export function ModalLiberarDesconto({
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                    Enviar para gerente aprovar
+                    Enviar solicitação para o gerente
                   </Button>
                 </>
               ) : (
-                <div className="p-4 bg-amber-50 rounded-lg border border-amber-200 flex flex-col items-center gap-2">
-                  <CheckCircle2 className="h-8 w-8 text-amber-600" />
+                <div className="p-8 bg-amber-50 rounded-lg border border-amber-200 flex flex-col items-center gap-4">
+                  <Loader2 className="h-8 w-8 text-amber-600 animate-spin" />
                   <div className="text-center">
-                    <p className="text-amber-800 font-medium">Solicitação enviada!</p>
+                    <p className="text-amber-800 font-medium">Aguardando aprovação do gerente...</p>
                     <p className="text-xs text-amber-700 mt-1">
-                      Aguardando aprovação do gerente. O desconto ficará bloqueado até a resposta.
+                      O desconto ficará bloqueado até a resposta.
                     </p>
                   </div>
                 </div>
