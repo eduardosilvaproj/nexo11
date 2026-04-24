@@ -504,8 +504,8 @@ export default function PortalCliente() {
               <p className="text-slate-500 font-medium">Seu pedido está em andamento</p>
             </div>
 
-            {/* Banner Amarelo de Assinatura */}
-            {!contrato.assinado && (
+            {/* Banner Amarelo de Assinatura ou Card Verde de Sucesso */}
+            {!contrato.assinado ? (
               <div className="bg-[#fff9e6] border border-[#ffe082] rounded-2xl p-4 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
                 <div className="flex items-center gap-3">
                   <div className="bg-[#ffd700] p-2 rounded-full">
@@ -515,37 +515,42 @@ export default function PortalCliente() {
                 </div>
                 <Button 
                   size="sm"
-                  onClick={() => setIsModalAssinaturaOpen(true)}
+                  onClick={() => {
+                    setAssinaturaPasso(1);
+                    setIsModalAssinaturaOpen(true);
+                  }}
                   className="bg-[#ff8c00] hover:bg-[#e67e00] text-white font-bold rounded-xl px-4"
                 >
                   Assinar
+                </Button>
+              </div>
+            ) : (
+              <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-4 duration-500">
+                <div className="flex items-center gap-3">
+                  <div className="bg-emerald-500 p-2 rounded-full">
+                    <Check size={18} className="text-white" />
+                  </div>
+                  <div>
+                    <span className="text-sm font-bold text-emerald-800 block">Contrato Assinado ✓</span>
+                    <span className="text-[10px] text-emerald-600 font-medium">
+                      Assinado em {new Date(contrato.data_assinatura).toLocaleDateString("pt-BR")}
+                    </span>
+                  </div>
+                </div>
+                <Button 
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleDownloadContrato}
+                  className="text-emerald-700 hover:bg-emerald-100 font-bold rounded-xl"
+                >
+                  <Download size={16} className="mr-1" /> PDF
                 </Button>
               </div>
             )}
 
             {/* Card de Status Verde */}
             <div className="bg-[#00d4aa] rounded-3xl p-6 text-white shadow-lg shadow-[#00d4aa]/20 relative overflow-hidden">
-              <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                  <span className="text-xs font-bold uppercase tracking-wider opacity-90">Etapa Atual</span>
-                </div>
-                <h2 className="text-2xl font-black">{stageLabel}</h2>
-                {entregaPrevista && (
-                  <div className="mt-4 pt-4 border-t border-white/20">
-                    <p className="text-xs font-bold uppercase opacity-80">Previsão de Entrega</p>
-                    <p className="text-lg font-bold">
-                      {new Date(entregaPrevista).toLocaleDateString("pt-BR", { day: '2-digit', month: 'long' })}
-                    </p>
-                  </div>
-                )}
-              </div>
-              <div className="absolute -right-4 -bottom-4 opacity-10">
-                <CheckCircle2 size={120} />
-              </div>
-            </div>
-
-            {/* Grid 2x2 de Botões */}
+...
             <div className="space-y-3">
               <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest px-1">O que você precisa?</h3>
               <div className="grid grid-cols-2 gap-3">
