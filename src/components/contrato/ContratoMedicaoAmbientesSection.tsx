@@ -194,18 +194,27 @@ export function ContratoMedicaoAmbientesSection({
       className="rounded-xl bg-white"
       style={{ border: "0.5px solid #E8ECF2", overflow: "hidden" }}
     >
-      <div className="flex items-center justify-between px-5 py-4">
-        <div>
+      <div className="flex flex-col gap-1 px-5 py-4">
+        <div className="flex items-center justify-between">
           <h3 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117" }}>{tituloSec}</h3>
-          {funcao === "medidor" && (
-            <p style={{ fontSize: 12, color: "#6B7A90", marginTop: 2 }}>
-              Medição e visita técnica por ambiente
-            </p>
-          )}
+          <span style={{ fontSize: 12, color: "#6B7A90" }}>
+            {ambientes?.length ?? 0} ambiente{(ambientes?.length ?? 0) === 1 ? "" : "s"}
+          </span>
         </div>
-        <span style={{ fontSize: 12, color: "#6B7A90" }}>
-          {ambientes?.length ?? 0} ambiente{(ambientes?.length ?? 0) === 1 ? "" : "s"}
-        </span>
+        {funcao === "medidor" && ambientes && ambientes.length > 0 && (
+          <div className="mt-4 space-y-2">
+            <div className="flex items-center justify-between text-xs text-[#6B7A90] font-medium">
+              <span>Progresso da medição</span>
+              <span>{ambientes.filter(a => a.medicao_concluido).length} de {ambientes.length} ambientes concluídos</span>
+            </div>
+            <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-green-500 transition-all duration-500" 
+                style={{ width: `${(ambientes.filter(a => a.medicao_concluido).length / ambientes.length) * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {funcao !== "medidor" && (
