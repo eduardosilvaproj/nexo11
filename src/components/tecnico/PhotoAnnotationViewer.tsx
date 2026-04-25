@@ -77,24 +77,24 @@ export function PhotoAnnotationViewer({
 
   const saveToHistory = (newAnns: Annotation[]) => {
     const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(newAnns);
+    newHistory.push(JSON.parse(JSON.stringify(newAnns)));
     if (newHistory.length > 20) newHistory.shift();
     setHistory(newHistory);
     setHistoryIndex(newHistory.length - 1);
-    
-    // Autosave trigger
-    triggerAutosave(newAnns);
+    setHasUnsavedChanges(true);
   };
 
-  const triggerAutosave = async (anns: Annotation[]) => {
+  const handleManualSave = async () => {
     setIsSaving(true);
     try {
-      await onSave(anns);
+      await onSave(annotations);
+      setHasUnsavedChanges(false);
+      toast.success("Anotações salvas com sucesso!");
     } catch (error) {
-      console.error("Autosave failed", error);
+      console.error("Save failed", error);
+      toast.error("Erro ao salvar anotações");
     } finally {
-      // Small delay to show "Salvo" indicator
-      setTimeout(() => setIsSaving(false), 800);
+      setIsSaving(false);
     }
   };
 
