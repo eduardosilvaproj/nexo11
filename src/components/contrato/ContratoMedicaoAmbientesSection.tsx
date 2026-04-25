@@ -440,6 +440,7 @@ function AmbienteMedicaoPanel({
   const hasPhotos = photos.length > 0;
   const hasScan = !!ambiente.medicao_scan_url;
   const isConcluido = !!ambiente.medicao_concluido;
+  const inProgress = !isConcluido && (hasPhotos || hasScan || !!ambiente.observacoes);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'photos' | 'scan') => {
     const files = e.target.files;
