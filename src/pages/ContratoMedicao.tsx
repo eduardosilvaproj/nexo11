@@ -19,6 +19,8 @@ export default function ContratoMedicaoPage() {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
   const [newAmbienteNome, setNewAmbienteNome] = useState("");
+  const [newAmbienteValor, setNewAmbienteValor] = useState("");
+  const [newAmbienteObs, setNewAmbienteObs] = useState("");
   const [adding, setAdding] = useState(false);
 
   const canEdit = hasRole("admin") || hasRole("gerente") || hasRole("tecnico");
@@ -45,13 +47,17 @@ export default function ContratoMedicaoPage() {
         contrato_id: id!,
         loja_id: contrato.loja_id,
         nome: newAmbienteNome.trim(),
-        valor_liquido: 0,
-        status_medicao: "pendente"
+        valor_liquido: Number(newAmbienteValor.replace(",", ".")) || 0,
+        observacoes: newAmbienteObs.trim(),
+        status_medicao: "pendente",
+        origem: "manual"
       });
       if (error) throw error;
       toast.success("Ambiente adicionado!");
       setAddModalOpen(false);
       setNewAmbienteNome("");
+      setNewAmbienteValor("");
+      setNewAmbienteObs("");
       qc.invalidateQueries({ queryKey: ["ambientes_med_conf", id] });
     } catch (error: any) {
       toast.error("Erro ao adicionar: " + error.message);
@@ -125,18 +131,37 @@ export default function ContratoMedicaoPage() {
           <DialogHeader>
             <DialogTitle>Adicionar ambiente manualmente</DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <label className="text-sm font-medium text-[#6B7A90] mb-1.5 block">Nome do ambiente</label>
-            <Input 
-              value={newAmbienteNome}
-              onChange={(e) => setNewAmbienteNome(e.target.value)}
-              placeholder="Ex: Varanda Gourmet, Home Office..."
-              autoFocus
-            />
+          <div className="py-4 space-y-4">
+            <div>
+              <label className="text-sm font-medium text-[#6B7A90] mb-1.5 block">Nome do ambiente</label>
+              <Input 
+                value={newAmbienteNome}
+                onChange={(e) => setNewAmbienteNome(e.target.value)}
+                placeholder="Ex: Varanda Gourmet, Home Office..."
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-[#6B7A90] mb-1.5 block">Valor orçado (R$)</label>
+              <Input 
+                value={newAmbienteValor}
+                onChange={(e) => setNewAmbienteValor(e.target.value)}
+                placeholder="0,00"
+                type="text"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-[#6B7A90] mb-1.5 block">Observação (opcional)</label>
+              <Input 
+                value={newAmbienteObs}
+                onChange={(e) => setNewAmbienteObs(e.target.value)}
+                placeholder="Ex: Detalhes específicos da medição..."
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddModalOpen(false)} disabled={adding}>Cancelar</Button>
-            <Button onClick={handleAddAmbiente} disabled={adding || !newAmbienteNome.trim()}>
+            <Button onClick={handleAddAmbiente} disabled={adding || !newAmbienteNome.trim()} className="bg-[#1E6FBF] hover:bg-[#1759A0]">
               {adding ? <Loader2 size={16} className="animate-spin mr-2" /> : <Plus size={16} className="mr-2" />}
               Adicionar
             </Button>

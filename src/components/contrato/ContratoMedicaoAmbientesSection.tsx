@@ -14,6 +14,8 @@ import {
 import { Camera, Image as ImageIcon, FileText, CheckCircle2, AlertCircle, ChevronDown, ChevronUp, Trash2, Upload, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 import { PhotoAnnotationViewer } from "@/components/tecnico/PhotoAnnotationViewer";
 import { cn } from "@/lib/utils";
 
@@ -405,14 +407,32 @@ export function ContratoMedicaoAmbientesSection({
 
       {/* Footer com total a pagar */}
       <div
-        className="flex items-center justify-between gap-3 px-5 py-3"
+        className="flex flex-col sm:flex-row items-center justify-between gap-4 px-5 py-3"
         style={{ borderTop: "0.5px solid #E8ECF2", backgroundColor: "#FAFBFD" }}
       >
         <div className="flex items-center gap-2 text-[11px] text-[#6B7A90]">
           <Camera size={14} className="text-pink-500" />
           <span>Em breve: medição direta pela câmera no app para funcionários</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <span style={{ fontSize: 12, color: "#6B7A90" }}>{lblTotal}:</span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1.5 cursor-help">
+                    <span style={{ fontSize: 14, fontWeight: 600, color: "#0D1117" }}>
+                      {fmtBRL(0)}
+                    </span>
+                    <Info size={14} className="text-[#6B7A90]" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Configurado em Equipe → Comissões por função</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           {funcao === "medidor" && ambientes && ambientes.length > 0 && (
             <Button
               disabled={ambientes.some(a => !a.medicao_concluido)}
@@ -422,10 +442,6 @@ export function ContratoMedicaoAmbientesSection({
               Liberar para conferência
             </Button>
           )}
-          <span style={{ fontSize: 12, color: "#6B7A90" }}>{lblTotal}:</span>
-          <span style={{ fontSize: 14, fontWeight: 600, color: "#0D1117" }}>
-            {fmtBRL(totalPagar)}
-          </span>
         </div>
       </div>
     </div>
@@ -526,7 +542,12 @@ function AmbienteMedicaoPanel({
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 {expanded ? <ChevronUp size={16} className="text-[#6B7A90]" /> : <ChevronDown size={16} className="text-[#6B7A90]" />}
-                <span className="font-medium text-sm text-[#0D1117]">{ambiente.nome}</span>
+                <div className="flex flex-col">
+                  <span className="font-medium text-sm text-[#0D1117]">{ambiente.nome}</span>
+                  <span className={cn("text-[10px]", Number(ambiente.valor_liquido) > 0 ? "text-[#6B7A90]" : "text-neutral-400")}>
+                    {Number(ambiente.valor_liquido) > 0 ? `Valor orçado: ${fmtBRL(Number(ambiente.valor_liquido))}` : "Sem valor"}
+                  </span>
+                </div>
               </div>
               
               <div className="flex items-center gap-3">
