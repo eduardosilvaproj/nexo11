@@ -350,6 +350,37 @@ export function ContratoMedicaoAmbientesSection({
           </tbody>
         </table>
       </div>
+      )}
+
+      {funcao === "medidor" && (
+        <div className="flex flex-col" style={{ borderTop: "0.5px solid #E8ECF2" }}>
+          <table className="w-full">
+            <tbody>
+              {isLoading && (
+                <tr>
+                  <td className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    Carregando...
+                  </td>
+                </tr>
+              )}
+              {!isLoading && (ambientes?.length ?? 0) === 0 && (
+                <tr>
+                  <td className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    Nenhum ambiente cadastrado neste contrato.
+                  </td>
+                </tr>
+              )}
+              {ambientes?.map((a) => (
+                <AmbienteMedicaoPanel 
+                  key={a.id} 
+                  ambiente={a} 
+                  onUpdate={updateAmbiente} 
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Footer com total a pagar */}
       <div
