@@ -43,6 +43,7 @@ const STATUS_STYLE: Record<StatusMed, { bg: string; color: string; label: string
   pendente: { bg: "#F1F3F7", color: "#6B7A90", label: "Pendente" },
   agendado: { bg: "#E3F0FB", color: "#1E6FBF", label: "Agendado" },
   concluido: { bg: "#E6F4EA", color: "#05873C", label: "Concluído" },
+  liberado_conferencia: { bg: "#E0F2FE", color: "#0369A1", label: "Aguardando conferência" },
   pago: { bg: "#EFE5FB", color: "#6E3FBF", label: "Pago" },
 };
 
