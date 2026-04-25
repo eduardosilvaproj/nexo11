@@ -659,7 +659,17 @@ function AmbienteMedicaoPanel({
                       }
                     }}
                   />
+                <div className="flex justify-end pt-4">
+                  <Button 
+                    disabled={isConcluido || !hasPhotos || !hasScan}
+                    onClick={() => toggleConcluido()}
+                    className="bg-green-600 hover:bg-green-700 h-9 text-xs font-semibold"
+                  >
+                    <CheckCircle2 size={14} className="mr-2" />
+                    Concluir Ambiente
+                  </Button>
                 </div>
+              </div>
               </div>
             </div>
           )}
