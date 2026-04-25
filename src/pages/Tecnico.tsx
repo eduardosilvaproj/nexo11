@@ -413,13 +413,13 @@ export default function Tecnico() {
                         onClick={() => navigate(`/contratos/${c.id}?aba=tecnico`)}
                         className="text-white transition-opacity hover:opacity-90"
                         style={{
-                          backgroundColor: "#1E6FBF",
+                          backgroundColor: "#0D1117",
                           fontSize: 12,
                           borderRadius: 6,
                           padding: "6px 14px",
                         }}
                       >
-                        Abrir conferência
+                        {stats.done === stats.total && stats.total > 0 ? "Ver medição" : "Iniciar medição"}
                       </button>
                     </TableCell>
                   </TableRow>
