@@ -185,6 +185,9 @@ export function PhotoAnnotationViewer({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle global shortcuts if user is typing in the annotation input
+      if (document.activeElement instanceof HTMLInputElement) return;
+
       if (e.key === 'Delete' && editingId) {
         const newAnns = annotations.filter(a => a.id !== editingId);
         setAnnotations(newAnns);
@@ -301,7 +304,12 @@ export function PhotoAnnotationViewer({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(val) => {
+      // Only allow closing if val is false, and it's not triggered by Enter/Esc in the input
+      if (!val) {
+        onOpenChange(false);
+      }
+    }}>
       <DialogContent className="max-w-[95vw] w-full h-[95vh] flex flex-col p-0 overflow-hidden bg-neutral-900 border-none">
         <DialogHeader className="p-4 bg-neutral-900 border-b border-neutral-800 shrink-0 flex-row items-center justify-between space-y-0">
           <div className="flex items-center gap-4">
