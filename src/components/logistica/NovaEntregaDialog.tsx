@@ -50,6 +50,19 @@ export function NovaEntregaDialog({ open, onOpenChange, defaultDate, defaultTurn
     },
   });
 
+  const { data: motoristas } = useQuery({
+    queryKey: ["usuarios-motoristas"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("usuarios")
+        .select("id, nome")
+        .contains("funcoes", ["motorista"])
+        .order("nome");
+      return data ?? [];
+    },
+    enabled: open,
+  });
+
   const onPickContrato = (id: string) => {
     setContratoId(id);
     if (id === "manual") return;
