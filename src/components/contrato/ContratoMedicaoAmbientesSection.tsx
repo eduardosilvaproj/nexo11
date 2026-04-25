@@ -17,7 +17,10 @@ interface AmbienteRow {
   id: string;
   nome: string;
   valor_liquido: number;
-  // dynamic fields read via key strings
+  medicao_fotos: any[];
+  medicao_scan_url: string;
+  medicao_concluido: boolean;
+  observacoes: string;
   [key: string]: any;
 }
 
