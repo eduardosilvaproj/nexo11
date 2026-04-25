@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -68,6 +69,7 @@ export function ContratoMedicaoAmbientesSection({
   labelTotal,
 }: Props) {
   const qc = useQueryClient();
+  const navigate = useNavigate();
 
   // Field name mapping per função
   const F =
@@ -195,6 +197,7 @@ export function ContratoMedicaoAmbientesSection({
       qc.invalidateQueries({ queryKey: ["contrato_dre_view", contratoId] });
       qc.invalidateQueries({ queryKey: ["contrato-tecnico", contratoId] });
       qc.invalidateQueries({ queryKey: ["contratos-tecnico-list", "medicao"] });
+      navigate(`/contratos/${contratoId}`);
     }
   };
 
