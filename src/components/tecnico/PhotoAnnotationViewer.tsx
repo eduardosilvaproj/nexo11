@@ -355,6 +355,9 @@ export function PhotoAnnotationViewer({
     <>
     <Dialog open={open} onOpenChange={(val) => {
       if (!val) {
+        // We prevent the Dialog from closing itself via overlay/Esc here 
+        // to handle the unsaved changes warning properly.
+        // Shadcn UI's Dialog onOpenChange only tells us it *wants* to close.
         handleCloseRequest();
       }
     }}>
