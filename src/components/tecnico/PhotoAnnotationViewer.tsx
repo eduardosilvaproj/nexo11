@@ -476,13 +476,15 @@ export function PhotoAnnotationViewer({
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
-                          e.preventDefault(); // Impede fechamento de modais pai se houver
+                          e.preventDefault();
+                          e.stopPropagation();
                           saveToHistory(annotations);
                           setEditingId(null);
                           setActiveTool('none');
                         }
                         if (e.key === 'Escape') {
                           e.preventDefault();
+                          e.stopPropagation();
                           setEditingId(null);
                           setActiveTool('none');
                         }
