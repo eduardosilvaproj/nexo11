@@ -33,7 +33,8 @@ const NONE = "__none__";
 const schema = z.object({
   nome: z.string().trim().min(1, "Nome obrigatório").max(120),
   email: z.string().trim().email("E-mail inválido").max(255),
-  role: z.enum(["vendedor", "tecnico", "montador", "gerente", "admin"]),
+  funcoes: z.array(z.string()).min(1, "Selecione ao menos uma função"),
+  funcoes_app_habilitadas: z.array(z.string()),
   equipe_id: z.string().uuid().optional().nullable(),
   papel_comissao_id: z.string().uuid().optional().nullable(),
   comissao_percentual: z.number().min(0).max(100).optional().nullable(),
