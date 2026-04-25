@@ -680,6 +680,7 @@ export type Database = {
           medicao_concluido: boolean | null
           medicao_fotos: Json | null
           medicao_scan_url: string | null
+          medicao_scans: Json | null
           medidor_id: string | null
           montador_id: string | null
           nome: string
@@ -722,6 +723,7 @@ export type Database = {
           medicao_concluido?: boolean | null
           medicao_fotos?: Json | null
           medicao_scan_url?: string | null
+          medicao_scans?: Json | null
           medidor_id?: string | null
           montador_id?: string | null
           nome: string
@@ -764,6 +766,7 @@ export type Database = {
           medicao_concluido?: boolean | null
           medicao_fotos?: Json | null
           medicao_scan_url?: string | null
+          medicao_scans?: Json | null
           medidor_id?: string | null
           montador_id?: string | null
           nome?: string

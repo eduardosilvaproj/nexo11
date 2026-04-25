@@ -27,7 +27,7 @@ interface AmbienteRow {
   nome: string;
   valor_liquido: number;
   medicao_fotos: any[];
-  medicao_scan_url: string;
+  medicao_scans: string[];
   medicao_concluido: boolean;
   observacoes: string;
   [key: string]: any;
@@ -98,7 +98,7 @@ export function ContratoMedicaoAmbientesSection({
       const { data, error } = await sb
         .from("contrato_ambientes")
         .select(
-          "id, nome, valor_liquido, medidor_id, percentual_medidor, valor_medidor, status_medicao, data_medicao, conferente_id, percentual_conferente, valor_conferente, status_conferencia, data_conferencia, montador_id, percentual_montador, valor_montador, status_montagem, data_montagem, medicao_fotos, medicao_scan_url, medicao_concluido, observacoes",
+          "id, nome, valor_liquido, medidor_id, percentual_medidor, valor_medidor, status_medicao, data_medicao, conferente_id, percentual_conferente, valor_conferente, status_conferencia, data_conferencia, montador_id, percentual_montador, valor_montador, status_montagem, data_montagem, medicao_fotos, medicao_scans, medicao_concluido, observacoes",
         )
         .eq("contrato_id", contratoId)
         .order("created_at", { ascending: true });
@@ -461,7 +461,8 @@ function AmbienteMedicaoPanel({
 
   const photos = Array.isArray(ambiente.medicao_fotos) ? ambiente.medicao_fotos : [];
   const hasPhotos = photos.length > 0;
-  const hasScan = !!ambiente.medicao_scan_url;
+  const scans = Array.isArray(ambiente.medicao_scans) ? ambiente.medicao_scans : [];
+  const hasScan = scans.length > 0;
   const isConcluido = !!ambiente.medicao_concluido;
   const inProgress = !isConcluido && (hasPhotos || hasScan || !!ambiente.observacoes);
 
@@ -496,7 +497,8 @@ function AmbienteMedicaoPanel({
         const newPhotos = [...photos, ...results.map(url => ({ url, annotations: [] }))];
         await onUpdate(ambiente.id, { medicao_fotos: newPhotos });
       } else {
-        await onUpdate(ambiente.id, { medicao_scan_url: results[0] });
+        const newScans = [...scans, ...results];
+        await onUpdate(ambiente.id, { medicao_scans: newScans });
       }
       toast.success("Arquivo enviado com sucesso!");
     } catch (error: any) {
@@ -511,9 +513,10 @@ function AmbienteMedicaoPanel({
     await onUpdate(ambiente.id, { medicao_fotos: newPhotos });
   };
 
-  const removeScan = async () => {
-    await onUpdate(ambiente.id, { medicao_scan_url: null });
-    toast.success("Folha de medição removida");
+  const removeScan = async (index: number) => {
+    const newScans = scans.filter((_, i) => i !== index);
+    await onUpdate(ambiente.id, { medicao_scans: newScans });
+    toast.success("Arquivo de medição removido");
   };
 
   const saveAnnotations = async (annotations: any[]) => {
@@ -660,35 +663,42 @@ function AmbienteMedicaoPanel({
                       <span className="text-[10px] text-[#6B7A90]">Foto, scan ou PDF da medição manuscrita</span>
                     </div>
                     <label className="cursor-pointer">
-                      <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => handleFileUpload(e, 'scan')} />
+                      <input type="file" multiple accept="image/*,.pdf" className="hidden" onChange={(e) => handleFileUpload(e, 'scan')} />
                       <div className="flex items-center gap-2 text-[#1E6FBF] hover:underline text-xs font-medium">
                         {uploading === 'scan' ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-                        {hasScan ? "Substituir" : "Enviar arquivo"}
+                        Adicionar arquivo
                       </div>
                     </label>
                   </div>
 
                   {hasScan ? (
-                    <div className="relative group rounded-lg border overflow-hidden bg-neutral-100 max-h-48 shadow-sm">
-                      {ambiente.medicao_scan_url.toLowerCase().endsWith('.pdf') ? (
-                        <div className="flex flex-col items-center justify-center py-8 gap-2 bg-white">
-                          <FileIcon size={32} className="text-red-500" />
-                          <span className="text-[10px] text-[#6B7A90] px-4 text-center break-all">
-                            {ambiente.medicao_scan_url.split('/').pop()}
-                          </span>
-                        </div>
-                      ) : (
-                        <img src={ambiente.medicao_scan_url} alt="Folha de medição" className="w-full h-full object-contain" />
-                      )}
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer" onClick={() => window.open(ambiente.medicao_scan_url, '_blank')}>
-                        <span className="text-white text-[10px] font-medium uppercase tracking-wider">Visualizar</span>
-                      </div>
-                      <button 
-                        className="absolute top-1 right-1 p-1 bg-white/90 rounded-md text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 z-10"
-                        onClick={(e) => { e.stopPropagation(); removeScan(); }}
-                      >
-                        <X size={14} />
-                      </button>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                      {scans.map((url, idx) => {
+                        const isPdf = url.toLowerCase().endsWith('.pdf');
+                        return (
+                          <div key={idx} className="group relative aspect-square rounded-lg border overflow-hidden bg-neutral-100 cursor-pointer shadow-sm hover:shadow-md transition-shadow" onClick={() => window.open(url, '_blank')}>
+                            {isPdf ? (
+                              <div className="flex flex-col items-center justify-center h-full gap-1 bg-white">
+                                <FileIcon size={24} className="text-red-500" />
+                                <span className="text-[9px] text-[#6B7A90] px-1 text-center truncate w-full">
+                                  {url.split('/').pop()}
+                                </span>
+                              </div>
+                            ) : (
+                              <img src={url} alt="Folha de medição" className="w-full h-full object-cover" />
+                            )}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <span className="text-white text-[10px] font-medium">Visualizar</span>
+                            </div>
+                            <button 
+                              className="absolute top-1 right-1 p-1 bg-white/90 rounded-md text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 z-10"
+                              onClick={(e) => { e.stopPropagation(); removeScan(idx); }}
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="h-32 rounded-lg border-2 border-dashed border-neutral-200 flex flex-col items-center justify-center gap-2 text-neutral-400">
