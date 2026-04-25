@@ -80,7 +80,8 @@ function MembroCard({
   podeEditar: boolean;
   onEditar: () => void;
 }) {
-  const role = ROLE_COLORS[membro.role];
+  const principalRole = membro.funcoes[0] || "vendedor";
+  const role = ROLE_COLORS[principalRole] || ROLE_COLORS.vendedor;
   return (
     <div className="rounded-xl bg-white p-4" style={{ border: "0.5px solid #E8ECF2" }}>
       <div className="flex items-start gap-3">
