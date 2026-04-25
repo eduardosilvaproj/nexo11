@@ -87,8 +87,13 @@ export function NovoMembroDialog({ open, onOpenChange }: Props) {
   }, [papelId, papeis]);
 
   function reset() {
-    setNome(""); setEmail(""); setRole("vendedor");
-    setEquipeId(""); setPapelId(NONE); setComissaoPct("");
+    setNome(""); 
+    setEmail(""); 
+    setFuncoes(["vendedor"]);
+    setFuncoesApp([]);
+    setEquipeId(""); 
+    setPapelId(NONE); 
+    setComissaoPct("");
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -97,8 +102,9 @@ export function NovoMembroDialog({ open, onOpenChange }: Props) {
     const parsed = schema.safeParse({
       nome,
       email,
-      role,
-      equipe_id: role === "montador" && equipeId ? equipeId : null,
+      funcoes,
+      funcoes_app_habilitadas: funcoesApp,
+      equipe_id: funcoes.includes("montador") && equipeId ? equipeId : null,
       papel_comissao_id: papelId === NONE ? null : papelId,
       comissao_percentual: pctNum,
     });
