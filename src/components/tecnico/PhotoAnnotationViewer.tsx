@@ -367,7 +367,17 @@ export function PhotoAnnotationViewer({
         handleCloseRequest();
       }
     }}>
-      <DialogContent className="max-w-[95vw] w-full h-[95vh] flex flex-col p-0 overflow-hidden bg-neutral-900 border-none">
+      <DialogContent 
+        className="max-w-[95vw] w-full h-[95vh] flex flex-col p-0 overflow-hidden bg-neutral-900 border-none"
+        onPointerDownOutside={(e) => {
+          e.preventDefault();
+          handleCloseRequest();
+        }}
+        onEscapeKeyDown={(e) => {
+          e.preventDefault();
+          handleCloseRequest();
+        }}
+      >
         <DialogHeader className="p-4 bg-neutral-900 border-b border-neutral-800 shrink-0 flex-row items-center justify-between space-y-0">
           <div className="flex items-center gap-4">
             <div className="flex flex-col">
