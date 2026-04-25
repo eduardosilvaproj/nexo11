@@ -1,14 +1,15 @@
 import { useState, useRef, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   X, Save, Download, ChevronLeft, ChevronRight, 
   MapPin, ArrowRight, Ruler, Circle, Square, Type, Eraser,
-  Undo2, Redo2, Loader2
+  Undo2, Redo2, Loader2, AlertTriangle
 } from "lucide-react";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface Annotation {
   id: string;
@@ -49,6 +50,8 @@ export function PhotoAnnotationViewer({
   const [history, setHistory] = useState<Annotation[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [isSaving, setIsSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
   const [activeTool, setActiveTool] = useState<Tool>('none');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [drawingStart, setDrawingStart] = useState<{ x: number, y: number } | null>(null);
@@ -62,53 +65,54 @@ export function PhotoAnnotationViewer({
   useEffect(() => {
     if (open) {
       const initialAnns = photo.annotations || [];
-      setAnnotations(initialAnns);
-      setHistory([initialAnns]);
+      setAnnotations(JSON.parse(JSON.stringify(initialAnns)));
+      setHistory([JSON.parse(JSON.stringify(initialAnns))]);
       setHistoryIndex(0);
       setEditingId(null);
       setDrawingStart(null);
       setTempDrawing(null);
+      setHasUnsavedChanges(false);
     }
-  }, [open, photo.url, photo.annotations]);
+  }, [open, photo.url]);
 
   const saveToHistory = (newAnns: Annotation[]) => {
     const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(newAnns);
+    newHistory.push(JSON.parse(JSON.stringify(newAnns)));
     if (newHistory.length > 20) newHistory.shift();
     setHistory(newHistory);
     setHistoryIndex(newHistory.length - 1);
-    
-    // Autosave trigger
-    triggerAutosave(newAnns);
+    setHasUnsavedChanges(true);
   };
 
-  const triggerAutosave = async (anns: Annotation[]) => {
+  const handleManualSave = async () => {
     setIsSaving(true);
     try {
-      await onSave(anns);
+      await onSave(annotations);
+      setHasUnsavedChanges(false);
+      toast.success("Anotações salvas com sucesso!");
     } catch (error) {
-      console.error("Autosave failed", error);
+      console.error("Save failed", error);
+      toast.error("Erro ao salvar anotações");
     } finally {
-      // Small delay to show "Salvo" indicator
-      setTimeout(() => setIsSaving(false), 800);
+      setIsSaving(false);
     }
   };
 
   const undo = () => {
     if (historyIndex > 0) {
       const prevAnns = history[historyIndex - 1];
-      setAnnotations(prevAnns);
+      setAnnotations(JSON.parse(JSON.stringify(prevAnns)));
       setHistoryIndex(historyIndex - 1);
-      triggerAutosave(prevAnns);
+      setHasUnsavedChanges(true);
     }
   };
 
   const redo = () => {
     if (historyIndex < history.length - 1) {
       const nextAnns = history[historyIndex + 1];
-      setAnnotations(nextAnns);
+      setAnnotations(JSON.parse(JSON.stringify(nextAnns)));
       setHistoryIndex(historyIndex + 1);
-      triggerAutosave(nextAnns);
+      setHasUnsavedChanges(true);
     }
   };
 
@@ -123,7 +127,6 @@ export function PhotoAnnotationViewer({
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (activeTool === 'eraser' || activeTool === 'none') {
-      // Se clicar no fundo em modo seleção, deseleciona o elemento atual
       if (activeTool === 'none' && editingId) {
         setEditingId(null);
       }
@@ -185,7 +188,6 @@ export function PhotoAnnotationViewer({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't handle global shortcuts if user is typing in the annotation input
       if (document.activeElement instanceof HTMLInputElement) return;
 
       if (e.key === 'Delete' && editingId) {
@@ -195,7 +197,11 @@ export function PhotoAnnotationViewer({
         setEditingId(null);
       }
       if (e.key === 'Escape') {
-        setEditingId(null);
+        if (editingId) {
+          setEditingId(null);
+        } else {
+          handleCloseRequest();
+        }
       }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
         e.preventDefault();
@@ -208,7 +214,7 @@ export function PhotoAnnotationViewer({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [editingId, annotations, history, historyIndex]);
+  }, [editingId, annotations, history, historyIndex, hasUnsavedChanges]);
 
   const handleAnnotationClick = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -227,7 +233,6 @@ export function PhotoAnnotationViewer({
       return;
     }
 
-    // Simple canvas rendering for download
     const canvas = document.createElement('canvas');
     const img = new Image();
     img.crossOrigin = "anonymous";
@@ -303,11 +308,25 @@ export function PhotoAnnotationViewer({
     onPhotoChange(allPhotos[nextIdx]);
   };
 
+  const handleCloseRequest = () => {
+    if (hasUnsavedChanges) {
+      setShowExitDialog(true);
+    } else {
+      onOpenChange(false);
+    }
+  };
+
+  const saveAndClose = async () => {
+    await handleManualSave();
+    onOpenChange(false);
+    setShowExitDialog(false);
+  };
+
   return (
+    <>
     <Dialog open={open} onOpenChange={(val) => {
-      // Only allow closing if val is false, and it's not triggered by Enter/Esc in the input
       if (!val) {
-        onOpenChange(false);
+        handleCloseRequest();
       }
     }}>
       <DialogContent className="max-w-[95vw] w-full h-[95vh] flex flex-col p-0 overflow-hidden bg-neutral-900 border-none">
@@ -319,6 +338,10 @@ export function PhotoAnnotationViewer({
                 {isSaving ? (
                   <span className="text-[10px] text-neutral-400 flex items-center gap-1">
                     <Loader2 className="h-3 w-3 animate-spin" /> Salvando...
+                  </span>
+                ) : hasUnsavedChanges ? (
+                  <span className="text-[10px] text-amber-500 flex items-center gap-1">
+                    Alterações não salvas
                   </span>
                 ) : (
                   <span className="text-[10px] text-green-500 flex items-center gap-1">
@@ -351,7 +374,7 @@ export function PhotoAnnotationViewer({
                 </div>
               </PopoverContent>
             </Popover>
-            <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="text-white hover:bg-neutral-800">
+            <Button variant="ghost" size="icon" onClick={handleCloseRequest} className="text-white hover:bg-neutral-800">
               <X className="h-5 w-5" />
             </Button>
           </div>
@@ -400,7 +423,6 @@ export function PhotoAnnotationViewer({
               preserveAspectRatio="none"
             >
               {annotations.map((ann) => {
-                const isSelected = editingId === ann.id;
                 const strokeWidth = 0.5;
                 
                 return (
@@ -443,7 +465,6 @@ export function PhotoAnnotationViewer({
                 );
               })}
 
-              {/* Temp drawing while dragging */}
               {drawingStart && tempDrawing && (
                 <g>
                   {(activeTool === 'line' || activeTool === 'arrow') && (
@@ -459,7 +480,6 @@ export function PhotoAnnotationViewer({
               )}
             </svg>
 
-            {/* Labels overlay */}
             {annotations.map((ann) => (
               <div
                 key={ann.id}
@@ -581,13 +601,63 @@ export function PhotoAnnotationViewer({
               {activeTool === 'eraser' ? 'Clique em um elemento para apagar' : 'Clique ou arraste na foto para anotar'}
             </p>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => onOpenChange(false)} className="border-neutral-700 text-neutral-400 hover:bg-neutral-800 px-8">
+              <Button 
+                variant="outline" 
+                onClick={handleCloseRequest} 
+                className="border-neutral-700 text-neutral-400 hover:bg-neutral-800 px-8"
+              >
                 Fechar
+              </Button>
+              <Button 
+                onClick={handleManualSave}
+                disabled={isSaving}
+                className="bg-primary hover:bg-primary/90 text-white px-8 flex items-center gap-2"
+              >
+                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                Salvar Anotações
               </Button>
             </div>
           </div>
         </div>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+      <AlertDialogContent className="bg-neutral-900 border-neutral-800 text-white">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-amber-500" />
+            Sair sem salvar?
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-neutral-400">
+            Você tem anotações não salvas. Deseja sair mesmo assim?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel className="bg-transparent border-neutral-700 text-neutral-400 hover:bg-neutral-800 hover:text-white">
+            Cancelar
+          </AlertDialogCancel>
+          <div className="flex gap-2">
+            <Button 
+              variant="ghost" 
+              className="text-red-500 hover:text-red-400 hover:bg-red-500/10"
+              onClick={() => {
+                setShowExitDialog(false);
+                onOpenChange(false);
+              }}
+            >
+              Sair sem salvar
+            </Button>
+            <Button 
+              className="bg-primary hover:bg-primary/90 text-white"
+              onClick={saveAndClose}
+            >
+              Salvar e fechar
+            </Button>
+          </div>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
