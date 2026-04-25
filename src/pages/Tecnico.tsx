@@ -45,20 +45,14 @@ export default function Tecnico() {
     },
   });
 
-  const papelAtual = aba === "medicao" ? "medidor" : "conferente";
+  const papelAtual = aba === "medicao" ? "tecnico" : "conferente";
   const { data: responsaveis = [] } = useQuery({
     queryKey: ["responsaveis-tecnico", papelAtual],
     queryFn: async () => {
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", papelAtual);
-      const ids = (roles ?? []).map((r) => r.user_id);
-      if (ids.length === 0) return [] as { id: string; nome: string }[];
       const { data } = await supabase
         .from("usuarios")
-        .select("id,nome")
-        .in("id", ids)
+        .select("id, nome")
+        .contains("funcoes", [papelAtual])
         .order("nome");
       return (data ?? []) as { id: string; nome: string }[];
     },
