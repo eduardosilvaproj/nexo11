@@ -366,8 +366,10 @@ export function ContratoMedicaoAmbientesSection({
               )}
               {!isLoading && (ambientes?.length ?? 0) === 0 && (
                 <tr>
-                  <td className="px-4 py-8 text-center text-sm text-muted-foreground">
-                    Nenhum ambiente cadastrado neste contrato.
+                  <td className="px-4 py-12 text-center">
+                    <AlertCircle size={32} className="mx-auto text-neutral-300 mb-3" />
+                    <p className="text-sm font-medium text-[#0D1117]">Nenhum ambiente encontrado</p>
+                    <p className="text-xs text-[#6B7A90] mt-1">Os ambientes são importados automaticamente do XML do contrato.</p>
                   </td>
                 </tr>
               )}
