@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   X, Save, Download, ChevronLeft, ChevronRight, 
-  MapPin, ArrowRight, Ruler, Circle, Square, Type, Eraser 
+  MapPin, ArrowRight, Ruler, Circle, Square, Type, Eraser,
+  Undo2, Redo2, Loader2
 } from "lucide-react";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -45,6 +46,9 @@ export function PhotoAnnotationViewer({
   onSave 
 }: PhotoAnnotationViewerProps) {
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
+  const [history, setHistory] = useState<Annotation[][]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [isSaving, setIsSaving] = useState(false);
   const [activeTool, setActiveTool] = useState<Tool>('none');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [drawingStart, setDrawingStart] = useState<{ x: number, y: number } | null>(null);
@@ -57,12 +61,56 @@ export function PhotoAnnotationViewer({
 
   useEffect(() => {
     if (open) {
-      setAnnotations(photo.annotations || []);
+      const initialAnns = photo.annotations || [];
+      setAnnotations(initialAnns);
+      setHistory([initialAnns]);
+      setHistoryIndex(0);
       setEditingId(null);
       setDrawingStart(null);
       setTempDrawing(null);
     }
   }, [open, photo.url, photo.annotations]);
+
+  const saveToHistory = (newAnns: Annotation[]) => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newAnns);
+    if (newHistory.length > 20) newHistory.shift();
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+    
+    // Autosave trigger
+    triggerAutosave(newAnns);
+  };
+
+  const triggerAutosave = async (anns: Annotation[]) => {
+    setIsSaving(true);
+    try {
+      await onSave(anns);
+    } catch (error) {
+      console.error("Autosave failed", error);
+    } finally {
+      // Small delay to show "Salvo" indicator
+      setTimeout(() => setIsSaving(false), 800);
+    }
+  };
+
+  const undo = () => {
+    if (historyIndex > 0) {
+      const prevAnns = history[historyIndex - 1];
+      setAnnotations(prevAnns);
+      setHistoryIndex(historyIndex - 1);
+      triggerAutosave(prevAnns);
+    }
+  };
+
+  const redo = () => {
+    if (historyIndex < history.length - 1) {
+      const nextAnns = history[historyIndex + 1];
+      setAnnotations(nextAnns);
+      setHistoryIndex(historyIndex + 1);
+      triggerAutosave(nextAnns);
+    }
+  };
 
   const getCoords = (e: React.MouseEvent | MouseEvent) => {
     if (!imgRef.current) return { x: 0, y: 0 };
@@ -90,9 +138,10 @@ export function PhotoAnnotationViewer({
         text: "",
         color: activeTool === 'point' ? '#e11d48' : '#eab308'
       };
-      setAnnotations([...annotations, newAnn]);
+      const newAnns = [...annotations, newAnn];
+      setAnnotations(newAnns);
+      saveToHistory(newAnns);
       setEditingId(id);
-      // Volta para modo seleção após criar ponto/texto
       setActiveTool('none');
     }
   };
@@ -118,11 +167,12 @@ export function PhotoAnnotationViewer({
         text: "",
         color: ['arrow', 'line'].includes(activeTool) ? '#e11d48' : '#eab308'
       };
-      setAnnotations([...annotations, newAnn]);
+      const newAnns = [...annotations, newAnn];
+      setAnnotations(newAnns);
+      saveToHistory(newAnns);
       setEditingId(id);
       setDrawingStart(null);
       setTempDrawing(null);
-      // Volta para modo seleção após desenhar
       setActiveTool('none');
     }
   };
@@ -130,21 +180,33 @@ export function PhotoAnnotationViewer({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Delete' && editingId) {
-        setAnnotations(annotations.filter(a => a.id !== editingId));
+        const newAnns = annotations.filter(a => a.id !== editingId);
+        setAnnotations(newAnns);
+        saveToHistory(newAnns);
         setEditingId(null);
       }
       if (e.key === 'Escape') {
         setEditingId(null);
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        undo();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        e.preventDefault();
+        redo();
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [editingId, annotations]);
+  }, [editingId, annotations, history, historyIndex]);
 
   const handleAnnotationClick = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     if (activeTool === 'eraser') {
-      setAnnotations(annotations.filter(a => a.id !== id));
+      const newAnns = annotations.filter(a => a.id !== id);
+      setAnnotations(newAnns);
+      saveToHistory(newAnns);
     } else {
       setEditingId(id);
     }
@@ -237,7 +299,20 @@ export function PhotoAnnotationViewer({
       <DialogContent className="max-w-[95vw] w-full h-[95vh] flex flex-col p-0 overflow-hidden bg-neutral-900 border-none">
         <DialogHeader className="p-4 bg-neutral-900 border-b border-neutral-800 shrink-0 flex-row items-center justify-between space-y-0">
           <div className="flex items-center gap-4">
-            <DialogTitle className="text-white text-lg">Anotar Medidas</DialogTitle>
+            <div className="flex flex-col">
+              <DialogTitle className="text-white text-lg">Anotar Medidas</DialogTitle>
+              <div className="flex items-center gap-2 mt-0.5">
+                {isSaving ? (
+                  <span className="text-[10px] text-neutral-400 animate-pulse flex items-center gap-1">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Salvando...
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-green-500 flex items-center gap-1">
+                    Salvo ✓
+                  </span>
+                )}
+              </div>
+            </div>
             {allPhotos.length > 0 && (
               <span className="text-neutral-400 text-sm">
                 {currentIndex + 1} de {allPhotos.length} fotos
@@ -401,6 +476,7 @@ export function PhotoAnnotationViewer({
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
+                          saveToHistory(annotations);
                           setEditingId(null);
                           setActiveTool('none');
                         }
@@ -431,7 +507,30 @@ export function PhotoAnnotationViewer({
         </div>
 
         <div className="p-4 bg-neutral-900 border-t border-neutral-800 shrink-0 flex flex-col items-center gap-4">
-          <div className="flex items-center gap-1 p-1 bg-neutral-800 rounded-lg">
+          <div className="flex items-center gap-2 p-1 bg-neutral-800 rounded-lg">
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={historyIndex <= 0}
+              onClick={undo}
+              className="text-neutral-400 hover:text-white h-9 px-3"
+              title="Desfazer (Ctrl+Z)"
+            >
+              <Undo2 className="h-4 w-4 mr-2" />
+              <span className="text-xs">Desfazer</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={historyIndex >= history.length - 1}
+              onClick={redo}
+              className="text-neutral-400 hover:text-white h-9 px-3"
+              title="Refazer (Ctrl+Y)"
+            >
+              <Redo2 className="h-4 w-4 mr-2" />
+              <span className="text-xs">Refazer</span>
+            </Button>
+            <div className="w-[1px] h-4 bg-neutral-700 mx-1" />
             {[
               { id: 'point', icon: MapPin, label: 'Ponto' },
               { id: 'arrow', icon: ArrowRight, label: 'Seta' },
@@ -459,12 +558,8 @@ export function PhotoAnnotationViewer({
               {activeTool === 'eraser' ? 'Clique em um elemento para apagar' : 'Clique ou arraste na foto para anotar'}
             </p>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => onOpenChange(false)} className="border-neutral-700 text-neutral-400 hover:bg-neutral-800">
-                Cancelar
-              </Button>
-              <Button onClick={() => { onSave(annotations); onOpenChange(false); }} className="bg-rose-600 hover:bg-rose-700 text-white">
-                <Save className="mr-2 h-4 w-4" />
-                Salvar Anotações
+              <Button variant="outline" onClick={() => onOpenChange(false)} className="border-neutral-700 text-neutral-400 hover:bg-neutral-800 px-8">
+                Fechar
               </Button>
             </div>
           </div>
