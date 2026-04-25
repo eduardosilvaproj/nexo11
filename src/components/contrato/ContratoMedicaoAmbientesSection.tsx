@@ -395,6 +395,26 @@ export function ContratoMedicaoAmbientesSection({
           <span>Em breve: medição direta pela câmera no app para funcionários</span>
         </div>
         <div className="flex items-center gap-3">
+          {funcao === "medidor" && ambientes && ambientes.length > 0 && (
+            <Button
+              disabled={ambientes.some(a => !a.medicao_concluido)}
+              onClick={async () => {
+                const { error } = await supabase.rpc('avancar_contrato', { 
+                  p_contrato_id: contratoId,
+                  p_usuario_id: (await supabase.auth.getUser()).data.user?.id
+                });
+                if (error) {
+                  toast.error("Erro ao liberar para conferência: " + error.message);
+                } else {
+                  toast.success("Contrato liberado para conferência!");
+                  qc.invalidateQueries({ queryKey: ["contrato_dre_view", contratoId] });
+                }
+              }}
+              className="bg-[#12B76A] hover:bg-[#0e9a58] h-9 text-xs font-semibold px-4"
+            >
+              Liberar para conferência
+            </Button>
+          )}
           <span style={{ fontSize: 12, color: "#6B7A90" }}>{lblTotal}:</span>
           <span style={{ fontSize: 14, fontWeight: 600, color: "#0D1117" }}>
             {fmtBRL(totalPagar)}
