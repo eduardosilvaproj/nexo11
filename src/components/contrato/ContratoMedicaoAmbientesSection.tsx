@@ -689,9 +689,17 @@ function AmbienteMedicaoPanel({
             <div className="flex items-center gap-4">
               <div className={cn(
                 "flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider",
-                isConcluido ? "bg-green-100 text-green-700" : inProgress ? "bg-blue-100 text-blue-700" : "bg-neutral-100 text-[#6B7A90]"
+                ambiente.status_medicao === 'liberado_conferencia' ? "bg-blue-100 text-blue-700" :
+                isConcluido ? "bg-green-100 text-green-700" : 
+                inProgress ? "bg-blue-100 text-blue-700" : 
+                "bg-neutral-100 text-[#6B7A90]"
               )}>
-                {isConcluido ? (
+                {ambiente.status_medicao === 'liberado_conferencia' ? (
+                  <>
+                    <CheckCircle2 size={13} />
+                    <span>Aguardando conferência</span>
+                  </>
+                ) : isConcluido ? (
                   <>
                     <CheckCircle2 size={13} />
                     <span>Concluído</span>
@@ -708,11 +716,32 @@ function AmbienteMedicaoPanel({
                   </>
                 )}
               </div>
-              <Button 
-                variant={isConcluido ? "outline" : "default"} 
-                size="sm" 
-                className={cn("h-8 text-xs", !isConcluido && "bg-[#0D1117] hover:bg-[#000000]")}
-                onClick={(e) => { e.stopPropagation(); if (isConcluido) toggleConcluido(); else setExpanded(true); }}
+              
+              <div className="flex gap-2">
+                {isConcluido && ambiente.status_medicao !== 'liberado_conferencia' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs border-[#1E6FBF] text-[#1E6FBF] hover:bg-[#E3F0FB]"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      await onUpdate(ambiente.id, { status_medicao: 'liberado_conferencia' });
+                      toast.success("Ambiente liberado para conferência!");
+                    }}
+                  >
+                    Liberar para conferir
+                  </Button>
+                )}
+                <Button 
+                  variant={isConcluido ? "outline" : "default"} 
+                  size="sm" 
+                  className={cn("h-8 text-xs", !isConcluido && "bg-[#0D1117] hover:bg-[#000000]")}
+                  onClick={(e) => { e.stopPropagation(); if (isConcluido) toggleConcluido(); else setExpanded(true); }}
+                >
+                  {isConcluido ? "Ver medição" : (inProgress || expanded) ? "Continuar" : "Preencher"}
+                </Button>
+              </div>
+            </div>
               >
                 {isConcluido ? "Ver medição" : (inProgress || expanded) ? "Continuar" : "Preencher"}
               </Button>
