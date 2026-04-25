@@ -79,7 +79,7 @@ export function PhotoAnnotationViewer({
     
     if (['arrow', 'line', 'circle', 'rect'].includes(activeTool)) {
       setDrawingStart(coords);
-      setTempDrawing(coords);
+      setTempDrawing({ x2: coords.x, y2: coords.y });
     } else if (activeTool === 'point' || activeTool === 'text') {
       const id = Math.random().toString(36).substr(2, 9);
       const newAnn: Annotation = {
@@ -97,7 +97,7 @@ export function PhotoAnnotationViewer({
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (drawingStart) {
-      setTempDrawing(getCoords(e));
+      setTempDrawing({ x2: coords.x, y2: coords.y });
     }
   };
 
