@@ -106,12 +106,20 @@ function MembroCard({
               </button>
             )}
           </div>
-          <span
-            className="mt-1 inline-flex items-center rounded-full px-2 py-0.5"
-            style={{ backgroundColor: role.bg, color: role.fg, fontSize: 11, fontWeight: 500 }}
-          >
-            {role.label}
-          </span>
+          <div className="mt-1 flex flex-wrap gap-1">
+            {membro.funcoes.map(f => {
+              const config = ROLE_COLORS[f] || ROLE_COLORS.vendedor;
+              return (
+                <span
+                  key={f}
+                  className="inline-flex items-center rounded-full px-2 py-0.5"
+                  style={{ backgroundColor: config.bg, color: config.fg, fontSize: 10, fontWeight: 500 }}
+                >
+                  {config.label}
+                </span>
+              );
+            })}
+          </div>
         </div>
       </div>
 
