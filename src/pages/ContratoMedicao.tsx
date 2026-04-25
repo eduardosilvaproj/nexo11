@@ -3,12 +3,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Plus, Loader2, AlertCircle } from "lucide-react";
+import { ChevronLeft, Plus, Loader2, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { ContratoMedicaoAmbientesSection } from "@/components/contrato/ContratoMedicaoAmbientesSection";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
+import { ChecklistTemplateDialog } from "@/components/tecnico/ChecklistTemplateDialog";
 
 export default function ContratoMedicaoPage() {
   const { id } = useParams<{ id: string }>();
@@ -16,6 +17,7 @@ export default function ContratoMedicaoPage() {
   const qc = useQueryClient();
   const { hasRole } = useAuth();
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(false);
   const [newAmbienteNome, setNewAmbienteNome] = useState("");
   const [adding, setAdding] = useState(false);
 
@@ -87,15 +89,28 @@ export default function ContratoMedicaoPage() {
         </div>
 
         {canEdit && (
-          <Button 
-            onClick={() => setAddModalOpen(true)}
-            className="bg-[#1E6FBF] hover:bg-[#1759A0] text-white"
-          >
-            <Plus size={18} className="mr-2" />
-            Adicionar ambiente manualmente
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setTemplateOpen(true)}
+              style={{ borderColor: "#1E6FBF", color: "#1E6FBF" }}
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              Configurar checklist
+            </Button>
+            <Button 
+              onClick={() => setAddModalOpen(true)}
+              className="bg-[#1E6FBF] hover:bg-[#1759A0] text-white"
+            >
+              <Plus size={18} className="mr-2" />
+              Adicionar ambiente manualmente
+            </Button>
+          </div>
         )}
       </div>
+
+      <ChecklistTemplateDialog open={templateOpen} onOpenChange={setTemplateOpen} />
 
       <ContratoMedicaoAmbientesSection 
         contratoId={id!}
