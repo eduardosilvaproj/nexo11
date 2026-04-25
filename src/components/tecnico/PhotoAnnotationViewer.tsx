@@ -122,7 +122,13 @@ export function PhotoAnnotationViewer({
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (activeTool === 'eraser' || activeTool === 'none') return;
+    if (activeTool === 'eraser' || activeTool === 'none') {
+      // Se clicar no fundo em modo seleção, deseleciona o elemento atual
+      if (activeTool === 'none' && editingId) {
+        setEditingId(null);
+      }
+      return;
+    }
     const coords = getCoords(e);
     
     if (['arrow', 'line', 'circle', 'rect'].includes(activeTool)) {
