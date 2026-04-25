@@ -742,10 +742,6 @@ function AmbienteMedicaoPanel({
                 </Button>
               </div>
             </div>
-              >
-                {isConcluido ? "Ver medição" : (inProgress || expanded) ? "Continuar" : "Preencher"}
-              </Button>
-            </div>
           </div>
 
           {expanded && (
