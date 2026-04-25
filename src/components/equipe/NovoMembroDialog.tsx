@@ -44,7 +44,8 @@ export function NovoMembroDialog({ open, onOpenChange }: Props) {
   const qc = useQueryClient();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<typeof ROLES[number]["value"]>("vendedor");
+  const [funcoes, setFuncoes] = useState<FuncaoUsuario[]>(["vendedor"]);
+  const [funcoesApp, setFuncoesApp] = useState<FuncaoUsuario[]>([]);
   const [equipeId, setEquipeId] = useState<string>("");
   const [papelId, setPapelId] = useState<string>(NONE);
   const [comissaoPct, setComissaoPct] = useState<string>("");
