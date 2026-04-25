@@ -2,13 +2,22 @@ import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Save, Plus } from "lucide-react";
+import { 
+  X, Save, Download, ChevronLeft, ChevronRight, 
+  MapPin, ArrowRight, Ruler, Circle, Square, Type, Eraser 
+} from "lucide-react";
 import { toast } from "sonner";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface Annotation {
+  id: string;
+  type: 'point' | 'arrow' | 'line' | 'circle' | 'rect' | 'text';
   x: number;
   y: number;
+  x2?: number;
+  y2?: number;
   text: string;
+  color: string;
 }
 
 interface PhotoWithAnnotations {
@@ -18,112 +27,373 @@ interface PhotoWithAnnotations {
 
 interface PhotoAnnotationViewerProps {
   photo: PhotoWithAnnotations;
+  allPhotos?: PhotoWithAnnotations[];
+  onPhotoChange?: (photo: PhotoWithAnnotations) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSave: (annotations: Annotation[]) => void;
 }
 
-export function PhotoAnnotationViewer({ photo, open, onOpenChange, onSave }: PhotoAnnotationViewerProps) {
+type Tool = 'point' | 'arrow' | 'line' | 'circle' | 'rect' | 'text' | 'eraser';
+
+export function PhotoAnnotationViewer({ 
+  photo, 
+  allPhotos = [], 
+  onPhotoChange,
+  open, 
+  onOpenChange, 
+  onSave 
+}: PhotoAnnotationViewerProps) {
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [activeTool, setActiveTool] = useState<Tool>('point');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [drawingStart, setDrawingStart] = useState<{ x: number, y: number } | null>(null);
+  const [tempDrawing, setTempDrawing] = useState<{ x2: number, y2: number } | null>(null);
+  
   const imgRef = useRef<HTMLImageElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const currentIndex = allPhotos.findIndex(p => p.url === photo.url);
 
   useEffect(() => {
     if (open) {
       setAnnotations(photo.annotations || []);
-      setEditingIndex(null);
+      setEditingId(null);
+      setDrawingStart(null);
+      setTempDrawing(null);
     }
-  }, [open, photo.annotations]);
+  }, [open, photo.url, photo.annotations]);
 
-  const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!imgRef.current) return;
+  const getCoords = (e: React.MouseEvent | MouseEvent) => {
+    if (!imgRef.current) return { x: 0, y: 0 };
     const rect = imgRef.current.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-
-    const newAnnotation: Annotation = { x, y, text: "" };
-    setAnnotations([...annotations, newAnnotation]);
-    setEditingIndex(annotations.length);
+    return {
+      x: ((e.clientX - rect.left) / rect.width) * 100,
+      y: ((e.clientY - rect.top) / rect.height) * 100
+    };
   };
 
-  const updateAnnotationText = (index: number, text: string) => {
-    const newAnnotations = [...annotations];
-    newAnnotations[index].text = text;
-    setAnnotations(newAnnotations);
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (activeTool === 'eraser') return;
+    const coords = getCoords(e);
+    
+    if (['arrow', 'line', 'circle', 'rect'].includes(activeTool)) {
+      setDrawingStart(coords);
+      setTempDrawing(coords);
+    } else if (activeTool === 'point' || activeTool === 'text') {
+      const id = Math.random().toString(36).substr(2, 9);
+      const newAnn: Annotation = {
+        id,
+        type: activeTool,
+        x: coords.x,
+        y: coords.y,
+        text: "",
+        color: activeTool === 'point' ? '#e11d48' : '#eab308' // rose-600 vs yellow-500
+      };
+      setAnnotations([...annotations, newAnn]);
+      setEditingId(id);
+    }
   };
 
-  const removeAnnotation = (index: number) => {
-    setAnnotations(annotations.filter((_, i) => i !== index));
-    setEditingIndex(null);
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (drawingStart) {
+      setTempDrawing(getCoords(e));
+    }
   };
 
-  const handleSave = () => {
-    onSave(annotations);
-    onOpenChange(false);
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (drawingStart && tempDrawing) {
+      const coords = getCoords(e);
+      const id = Math.random().toString(36).substr(2, 9);
+      const newAnn: Annotation = {
+        id,
+        type: activeTool as any,
+        x: drawingStart.x,
+        y: drawingStart.y,
+        x2: coords.x,
+        y2: coords.y,
+        text: "",
+        color: ['arrow', 'line'].includes(activeTool) ? '#e11d48' : '#eab308'
+      };
+      setAnnotations([...annotations, newAnn]);
+      setEditingId(id);
+      setDrawingStart(null);
+      setTempDrawing(null);
+    }
+  };
+
+  const handleAnnotationClick = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (activeTool === 'eraser') {
+      setAnnotations(annotations.filter(a => a.id !== id));
+    } else {
+      setEditingId(id);
+    }
+  };
+
+  const handleDownload = async (withAnnotations: boolean) => {
+    if (!withAnnotations) {
+      window.open(photo.url, '_blank');
+      return;
+    }
+
+    // Simple canvas rendering for download
+    const canvas = document.createElement('canvas');
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = photo.url;
+    
+    await new Promise(resolve => img.onload = resolve);
+    
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.drawImage(img, 0, 0);
+    
+    annotations.forEach(ann => {
+      const x = (ann.x / 100) * canvas.width;
+      const y = (ann.y / 100) * canvas.height;
+      const x2 = ann.x2 ? (ann.x2 / 100) * canvas.width : 0;
+      const y2 = ann.y2 ? (ann.y2 / 100) * canvas.height : 0;
+
+      ctx.strokeStyle = ann.color;
+      ctx.fillStyle = ann.color;
+      ctx.lineWidth = canvas.width / 200;
+      ctx.font = `${canvas.width / 50}px Arial`;
+
+      if (ann.type === 'point') {
+        ctx.beginPath();
+        ctx.arc(x, y, canvas.width / 150, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (ann.type === 'line' || ann.type === 'arrow') {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+        if (ann.type === 'arrow') {
+            const angle = Math.atan2(y2 - y, x2 - x);
+            ctx.beginPath();
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - 20 * Math.cos(angle - Math.PI / 6), y2 - 20 * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(x2 - 20 * Math.cos(angle + Math.PI / 6), y2 - 20 * Math.sin(angle + Math.PI / 6));
+            ctx.closePath();
+            ctx.fill();
+        }
+      } else if (ann.type === 'circle') {
+        const r = Math.sqrt(Math.pow(x2 - x, 2) + Math.pow(y2 - y, 2));
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (ann.type === 'rect') {
+        ctx.strokeRect(x, y, x2 - x, y2 - y);
+      }
+
+      if (ann.text) {
+        ctx.fillStyle = "black";
+        const textWidth = ctx.measureText(ann.text).width;
+        ctx.fillRect(x, y - (canvas.width / 40), textWidth + 10, canvas.width / 40);
+        ctx.fillStyle = "white";
+        ctx.fillText(ann.text, x + 5, y - 5);
+      }
+    });
+
+    const link = document.createElement('a');
+    link.download = `medicao-anotada-${Date.now()}.png`;
+    link.href = canvas.toDataURL();
+    link.click();
+  };
+
+  const navigatePhoto = (dir: 'prev' | 'next') => {
+    if (!onPhotoChange || !allPhotos.length) return;
+    const nextIdx = dir === 'next' 
+      ? (currentIndex + 1) % allPhotos.length 
+      : (currentIndex - 1 + allPhotos.length) % allPhotos.length;
+    onPhotoChange(allPhotos[nextIdx]);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 overflow-hidden">
-        <DialogHeader className="p-4 border-bottom bg-white shrink-0">
-          <DialogTitle>Anotar Medidas</DialogTitle>
+      <DialogContent className="max-w-[95vw] w-full h-[95vh] flex flex-col p-0 overflow-hidden bg-neutral-900 border-none">
+        <DialogHeader className="p-4 bg-neutral-900 border-b border-neutral-800 shrink-0 flex-row items-center justify-between space-y-0">
+          <div className="flex items-center gap-4">
+            <DialogTitle className="text-white text-lg">Anotar Medidas</DialogTitle>
+            {allPhotos.length > 0 && (
+              <span className="text-neutral-400 text-sm">
+                {currentIndex + 1} de {allPhotos.length} fotos
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-white hover:bg-neutral-800">
+                  <Download className="h-5 w-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-2 bg-neutral-800 border-neutral-700 text-white">
+                <div className="flex flex-col gap-1">
+                  <Button variant="ghost" className="justify-start text-xs h-8 text-white hover:bg-neutral-700" onClick={() => handleDownload(false)}>
+                    Baixar original
+                  </Button>
+                  <Button variant="ghost" className="justify-start text-xs h-8 text-white hover:bg-neutral-700" onClick={() => handleDownload(true)}>
+                    Baixar com anotações
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+            <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="text-white hover:bg-neutral-800">
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
         </DialogHeader>
         
-        <div className="relative flex-1 bg-neutral-100 overflow-auto flex items-center justify-center p-4">
+        <div className="relative flex-1 bg-black overflow-hidden flex items-center justify-center">
+          {allPhotos.length > 1 && (
+            <>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="absolute left-4 z-20 text-white bg-black/50 hover:bg-black/80 rounded-full w-12 h-12"
+                onClick={() => navigatePhoto('prev')}
+              >
+                <ChevronLeft className="h-8 w-8" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="absolute right-4 z-20 text-white bg-black/50 hover:bg-black/80 rounded-full w-12 h-12"
+                onClick={() => navigatePhoto('next')}
+              >
+                <ChevronRight className="h-8 w-8" />
+              </Button>
+            </>
+          )}
+
           <div 
-            className="relative cursor-crosshair inline-block shadow-lg"
-            onClick={handleImageClick}
+            ref={containerRef}
+            className="relative inline-block max-w-full max-h-full"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
           >
             <img 
               ref={imgRef}
               src={photo.url} 
               alt="Ambiente" 
-              className="max-w-full max-h-[70vh] block select-none"
+              className="max-w-full max-h-[75vh] block select-none object-contain"
               draggable={false}
             />
-            {annotations.map((ann, idx) => (
+            
+            <svg 
+              className="absolute inset-0 w-full h-full pointer-events-none"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+            >
+              {annotations.map((ann) => {
+                const isSelected = editingId === ann.id;
+                const strokeWidth = 0.5;
+                
+                return (
+                  <g key={ann.id} className="pointer-events-auto cursor-pointer" onClick={(e) => handleAnnotationClick(e, ann.id)}>
+                    {ann.type === 'point' && (
+                      <circle cx={ann.x} cy={ann.y} r="1" fill={ann.color} stroke="white" strokeWidth="0.2" />
+                    )}
+                    {(ann.type === 'line' || ann.type === 'arrow') && ann.x2 !== undefined && (
+                      <>
+                        <line x1={ann.x} y1={ann.y} x2={ann.x2} y2={ann.y2} stroke={ann.color} strokeWidth={strokeWidth} />
+                        {ann.type === 'arrow' && (
+                          <marker id={`arrowhead-${ann.id}`} markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill={ann.color} />
+                          </marker>
+                        )}
+                      </>
+                    )}
+                    {ann.type === 'circle' && ann.x2 !== undefined && (
+                      <circle 
+                        cx={ann.x} 
+                        cy={ann.y} 
+                        r={Math.sqrt(Math.pow(ann.x2 - ann.x, 2) + Math.pow(ann.y2 - ann.y, 2))} 
+                        fill="none" 
+                        stroke={ann.color} 
+                        strokeWidth={strokeWidth} 
+                      />
+                    )}
+                    {ann.type === 'rect' && ann.x2 !== undefined && (
+                      <rect 
+                        x={Math.min(ann.x, ann.x2)} 
+                        y={Math.min(ann.y, ann.y2)} 
+                        width={Math.abs(ann.x2 - ann.x)} 
+                        height={Math.abs(ann.y2 - ann.y)} 
+                        fill="none" 
+                        stroke={ann.color} 
+                        strokeWidth={strokeWidth} 
+                      />
+                    )}
+                  </g>
+                );
+              })}
+
+              {/* Temp drawing while dragging */}
+              {drawingStart && tempDrawing && (
+                <g>
+                  {(activeTool === 'line' || activeTool === 'arrow') && (
+                    <line x1={drawingStart.x} y1={drawingStart.y} x2={tempDrawing.x2} y2={tempDrawing.y2} stroke="#e11d48" strokeWidth="0.5" strokeDasharray="1,1" />
+                  )}
+                  {activeTool === 'circle' && (
+                    <circle cx={drawingStart.x} cy={drawingStart.y} r={Math.sqrt(Math.pow(tempDrawing.x2 - drawingStart.x, 2) + Math.pow(tempDrawing.y2 - drawingStart.y, 2))} fill="none" stroke="#eab308" strokeWidth="0.5" strokeDasharray="1,1" />
+                  )}
+                  {activeTool === 'rect' && (
+                    <rect x={Math.min(drawingStart.x, tempDrawing.x2)} y={Math.min(drawingStart.y, tempDrawing.y2)} width={Math.abs(tempDrawing.x2 - drawingStart.x)} height={Math.abs(tempDrawing.y2 - drawingStart.y)} fill="none" stroke="#eab308" strokeWidth="0.5" strokeDasharray="1,1" />
+                  )}
+                </g>
+              )}
+            </svg>
+
+            {/* Labels overlay */}
+            {annotations.map((ann) => (
               <div
-                key={idx}
-                className="absolute transform -translate-x-1/2 -translate-y-1/2 group"
+                key={ann.id}
+                className="absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"
                 style={{ left: `${ann.x}%`, top: `${ann.y}%` }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setEditingIndex(idx);
-                }}
               >
-                <div 
-                  className={`w-4 h-4 rounded-full border-2 border-white shadow-sm transition-transform hover:scale-125 ${
-                    editingIndex === idx ? 'bg-yellow-400' : 'bg-pink-500'
-                  }`}
-                />
-                {ann.text && editingIndex !== idx && (
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap z-10">
+                {ann.text && (
+                  <div className="bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap mb-8">
                     {ann.text}
                   </div>
                 )}
                 
-                {editingIndex === idx && (
+                {editingId === ann.id && (
                   <div 
-                    className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-white p-2 rounded-lg shadow-xl border flex items-center gap-2 z-20"
+                    className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-white p-2 rounded-lg shadow-xl border flex items-center gap-2 z-30 pointer-events-auto"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Input
                       autoFocus
-                      placeholder="Medida (ex: 2.70m)"
+                      placeholder={ann.type === 'text' ? "Anotação" : "Medida (ex: 2.70m)"}
                       value={ann.text}
-                      onChange={(e) => updateAnnotationText(idx, e.target.value)}
+                      onChange={(e) => {
+                        const newAnns = [...annotations];
+                        const a = newAnns.find(x => x.id === ann.id);
+                        if (a) a.text = e.target.value;
+                        setAnnotations(newAnns);
+                      }}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') setEditingIndex(null);
+                        if (e.key === 'Enter') setEditingId(null);
                       }}
                       className="h-8 w-32 text-xs"
                     />
                     <Button 
                       size="icon" 
                       variant="ghost" 
-                      className="h-7 w-7 text-red-500 hover:text-red-700"
-                      onClick={() => removeAnnotation(idx)}
+                      className="h-7 w-7 text-red-500 hover:bg-red-50"
+                      onClick={() => {
+                        setAnnotations(annotations.filter(a => a.id !== ann.id));
+                        setEditingId(null);
+                      }}
                     >
-                      <X className="h-4 w-4" />
+                      <Eraser className="h-4 w-4" />
                     </Button>
                   </div>
                 )}
@@ -132,16 +402,43 @@ export function PhotoAnnotationViewer({ photo, open, onOpenChange, onSave }: Pho
           </div>
         </div>
 
-        <div className="p-4 bg-white border-top flex justify-between items-center shrink-0">
-          <p className="text-xs text-muted-foreground italic">
-            Clique na foto para adicionar uma medida
-          </p>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-            <Button onClick={handleSave} className="bg-pink-600 hover:bg-pink-700">
-              <Save className="mr-2 h-4 w-4" />
-              Salvar Anotações
-            </Button>
+        <div className="p-4 bg-neutral-900 border-t border-neutral-800 shrink-0 flex flex-col items-center gap-4">
+          <div className="flex items-center gap-1 p-1 bg-neutral-800 rounded-lg">
+            {[
+              { id: 'point', icon: MapPin, label: 'Ponto' },
+              { id: 'arrow', icon: ArrowRight, label: 'Seta' },
+              { id: 'line', icon: Ruler, label: 'Linha' },
+              { id: 'circle', icon: Circle, label: 'Círculo' },
+              { id: 'rect', icon: Square, label: 'Retângulo' },
+              { id: 'text', icon: Type, label: 'Texto' },
+              { id: 'eraser', icon: Eraser, label: 'Borracha' },
+            ].map((tool) => (
+              <Button
+                key={tool.id}
+                variant={activeTool === tool.id ? 'secondary' : 'ghost'}
+                size="sm"
+                className={`flex items-center gap-2 h-9 px-3 ${activeTool === tool.id ? 'bg-neutral-700 text-white' : 'text-neutral-400 hover:text-white'}`}
+                onClick={() => setActiveTool(tool.id as Tool)}
+              >
+                <tool.icon className="h-4 w-4" />
+                <span className="text-xs">{tool.label}</span>
+              </Button>
+            ))}
+          </div>
+
+          <div className="w-full flex justify-between items-center">
+            <p className="text-[10px] text-neutral-500 uppercase tracking-widest font-medium">
+              {activeTool === 'eraser' ? 'Clique em um elemento para apagar' : 'Clique ou arraste na foto para anotar'}
+            </p>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)} className="border-neutral-700 text-neutral-400 hover:bg-neutral-800">
+                Cancelar
+              </Button>
+              <Button onClick={() => { onSave(annotations); onOpenChange(false); }} className="bg-rose-600 hover:bg-rose-700 text-white">
+                <Save className="mr-2 h-4 w-4" />
+                Salvar Anotações
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
