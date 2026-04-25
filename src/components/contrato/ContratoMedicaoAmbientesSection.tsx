@@ -183,6 +183,21 @@ export function ContratoMedicaoAmbientesSection({
     }
   };
 
+  const handleLiberarConferencia = async () => {
+    const { error } = await supabase.rpc('avancar_contrato', { 
+      p_contrato_id: contratoId,
+      p_usuario_id: (await supabase.auth.getUser()).data.user?.id
+    });
+    if (error) {
+      toast.error("Erro ao liberar para conferência: " + error.message);
+    } else {
+      toast.success("Contrato liberado para conferência!");
+      qc.invalidateQueries({ queryKey: ["contrato_dre_view", contratoId] });
+      qc.invalidateQueries({ queryKey: ["contrato-tecnico", contratoId] });
+      qc.invalidateQueries({ queryKey: ["contratos-tecnico-list", "medicao"] });
+    }
+  };
+
   // Total a pagar (somente desta função)
   const totalPagar = (ambientes ?? []).reduce(
     (acc, a) => acc + (Number(a[F.valor]) || 0),
@@ -398,18 +413,7 @@ export function ContratoMedicaoAmbientesSection({
           {funcao === "medidor" && ambientes && ambientes.length > 0 && (
             <Button
               disabled={ambientes.some(a => !a.medicao_concluido)}
-              onClick={async () => {
-                const { error } = await supabase.rpc('avancar_contrato', { 
-                  p_contrato_id: contratoId,
-                  p_usuario_id: (await supabase.auth.getUser()).data.user?.id
-                });
-                if (error) {
-                  toast.error("Erro ao liberar para conferência: " + error.message);
-                } else {
-                  toast.success("Contrato liberado para conferência!");
-                  qc.invalidateQueries({ queryKey: ["contrato_dre_view", contratoId] });
-                }
-              }}
+              onClick={handleLiberarConferencia}
               className="bg-[#12B76A] hover:bg-[#0e9a58] h-9 text-xs font-semibold px-4"
             >
               Liberar para conferência
@@ -559,10 +563,10 @@ function AmbienteMedicaoPanel({
               <Button 
                 variant={isConcluido ? "outline" : "default"} 
                 size="sm" 
-                className={cn("h-8 text-xs", !isConcluido && "bg-[#1E6FBF] hover:bg-[#165a9e]")}
+                className={cn("h-8 text-xs", !isConcluido && "bg-[#0D1117] hover:bg-[#000000]")}
                 onClick={(e) => { e.stopPropagation(); if (isConcluido) toggleConcluido(); else setExpanded(true); }}
               >
-                {isConcluido ? "Reabrir" : (inProgress || expanded) ? "Continuar medição" : "Iniciar medição"}
+                {isConcluido ? "Ver medição" : (inProgress || expanded) ? "Continuar" : "Preencher"}
               </Button>
             </div>
           </div>

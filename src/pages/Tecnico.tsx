@@ -302,8 +302,8 @@ export default function Tecnico() {
                   stats.total === 0
                     ? { label: "Aguardando", bg: "#E8ECF2", color: "#6B7A90" }
                     : stats.done === stats.total
-                    ? { label: "Liberado ✓", bg: "#D1FAE5", color: "#05873C" }
-                    : { label: "Pendente", bg: "#FDECEA", color: "#E53935" };
+                    ? { label: "Concluído ✓", bg: "#D1FAE5", color: "#05873C" }
+                    : { label: "Pendente", bg: "#FEF3C7", color: "#C7741A" };
 
                 return (
                   <TableRow key={c.id}>
@@ -345,33 +345,29 @@ export default function Tecnico() {
                       })()}
                     </TableCell>
                     <TableCell>
-                      {stats.total === 0 ? (
-                        <span style={{ fontSize: 12, color: "#B0BAC9" }}>Não iniciado</span>
-                      ) : (
-                        <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="overflow-hidden"
+                          style={{
+                            width: 140,
+                            height: 6,
+                            borderRadius: 3,
+                            backgroundColor: "#E8ECF2",
+                          }}
+                        >
                           <div
-                            className="overflow-hidden"
+                            className="h-full transition-all"
                             style={{
-                              width: 140,
-                              height: 6,
+                              width: `${pct}%`,
+                              backgroundColor: pct === 100 ? "#12B76A" : "#1E6FBF",
                               borderRadius: 3,
-                              backgroundColor: "#E8ECF2",
                             }}
-                          >
-                            <div
-                              className="h-full transition-all"
-                              style={{
-                                width: `${pct}%`,
-                                backgroundColor: pct === 100 ? "#12B76A" : "#1E6FBF",
-                                borderRadius: 3,
-                              }}
-                            />
-                          </div>
-                          <span style={{ fontSize: 12, color: "#6B7A90" }}>
-                            {stats.done}/{stats.total} itens
-                          </span>
+                          />
                         </div>
-                      )}
+                        <span style={{ fontSize: 12, color: "#6B7A90" }}>
+                          {stats.done}/{stats.total} ambientes
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell>
                       {arquivo ? (
@@ -417,13 +413,13 @@ export default function Tecnico() {
                         onClick={() => navigate(`/contratos/${c.id}?aba=tecnico`)}
                         className="text-white transition-opacity hover:opacity-90"
                         style={{
-                          backgroundColor: "#1E6FBF",
+                          backgroundColor: "#0D1117",
                           fontSize: 12,
                           borderRadius: 6,
                           padding: "6px 14px",
                         }}
                       >
-                        Abrir conferência
+                        {stats.done === stats.total && stats.total > 0 ? "Ver medição" : "Iniciar medição"}
                       </button>
                     </TableCell>
                   </TableRow>
