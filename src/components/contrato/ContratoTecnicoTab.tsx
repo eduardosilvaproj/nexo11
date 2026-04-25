@@ -92,41 +92,55 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
       <div 
         className={cn(
           "bg-white rounded-xl p-6 flex flex-col border border-[#E8ECF2] shadow-sm transition-all group",
-          !concluidoMedicao && "opacity-75"
+          !podeConferir && "opacity-75"
         )}
       >
         <div className="flex items-center gap-4 mb-4">
           <div className={cn(
             "w-12 h-12 rounded-full flex items-center justify-center",
-            concluidoMedicao ? "bg-green-50 text-[#12B76A]" : "bg-neutral-50 text-neutral-300"
+            podeConferir ? "bg-green-50 text-[#12B76A]" : "bg-neutral-50 text-neutral-300"
           )}>
             <CheckSquare size={24} />
           </div>
           <div>
             <h3 className="font-semibold text-lg text-[#0D1117]">Conferência técnica</h3>
-            <p className="text-sm text-[#6B7A90]">
-              {!concluidoMedicao 
-                ? "Aguardando medição" 
-                : totalConferenciaConcluida === totalAmbientes 
-                  ? "Tudo conferido" 
-                  : `${totalConferenciaConcluida} de ${totalAmbientes} conferidos`}
-            </p>
+            <div className="text-sm text-[#6B7A90]">
+              {!podeConferir ? (
+                "Aguardando liberação de ambientes"
+              ) : (
+                <div className="flex flex-col">
+                  <span>{ambientesLiberados.length} ambiente(s) disponível(is)</span>
+                  {aindaEmMedicao > 0 && (
+                    <span className="text-[11px] text-[#1E6FBF] font-medium">{aindaEmMedicao} ainda aguardando medição</span>
+                  )}
+                  {totalConferenciaConcluida > 0 && (
+                    <span className="text-[11px] text-green-600 font-medium">{totalConferenciaConcluida} de {totalAmbientes} conferidos</span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
         
         <div className="mt-auto pt-6">
           <button
-            disabled={!concluidoMedicao}
+            disabled={!podeConferir}
             onClick={() => navigate(`/contratos/${contratoId}/conferencia`)}
             className={cn(
               "w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
-              concluidoMedicao 
+              podeConferir 
                 ? "bg-[#0D1117] text-white hover:bg-black" 
                 : "bg-neutral-100 text-neutral-400 cursor-not-allowed"
             )}
           >
-            {concluidoMedicao ? "Abrir conferência" : <span className="flex items-center gap-2"><Lock size={16} /> Bloqueado</span>}
-            {concluidoMedicao && <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />}
+            {podeConferir ? (
+              <>
+                Abrir conferência
+                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+              </>
+            ) : (
+              <span className="flex items-center gap-2 mx-auto"><Lock size={16} /> Bloqueado</span>
+            )}
           </button>
         </div>
       </div>
