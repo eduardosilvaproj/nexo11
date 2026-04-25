@@ -2600,6 +2600,8 @@ export type Database = {
           comissao_percentual: number | null
           created_at: string
           email: string | null
+          funcoes: string[] | null
+          funcoes_app_habilitadas: string[] | null
           id: string
           loja_id: string | null
           nome: string
@@ -2610,6 +2612,8 @@ export type Database = {
           comissao_percentual?: number | null
           created_at?: string
           email?: string | null
+          funcoes?: string[] | null
+          funcoes_app_habilitadas?: string[] | null
           id: string
           loja_id?: string | null
           nome: string
@@ -2620,6 +2624,8 @@ export type Database = {
           comissao_percentual?: number | null
           created_at?: string
           email?: string | null
+          funcoes?: string[] | null
+          funcoes_app_habilitadas?: string[] | null
           id?: string
           loja_id?: string | null
           nome?: string
