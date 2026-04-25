@@ -208,29 +208,30 @@ export function ContratoMedicaoAmbientesSection({
         </span>
       </div>
 
-      <div className="overflow-x-auto" style={{ borderTop: "0.5px solid #E8ECF2" }}>
-        <table className="w-full" style={{ minWidth: 980 }}>
-          <thead style={{ backgroundColor: "#F7F9FC" }}>
-            <tr>
-              {["Ambiente", "Valor líquido", lblPessoa, "%", lblValor, "Status", "Data"].map(
-                (h) => (
-                  <th
-                    key={h}
-                    className="px-3 py-3 text-left"
-                    style={{
-                      fontSize: 11,
-                      color: "#6B7A90",
-                      fontWeight: 500,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.04em",
-                    }}
-                  >
-                    {h}
-                  </th>
-                ),
-              )}
-            </tr>
-          </thead>
+      {funcao !== "medidor" && (
+        <div className="overflow-x-auto" style={{ borderTop: "0.5px solid #E8ECF2" }}>
+          <table className="w-full" style={{ minWidth: 980 }}>
+            <thead style={{ backgroundColor: "#F7F9FC" }}>
+              <tr>
+                {["Ambiente", "Valor líquido", lblPessoa, "%", lblValor, "Status", "Data"].map(
+                  (h) => (
+                    <th
+                      key={h}
+                      className="px-3 py-3 text-left"
+                      style={{
+                        fontSize: 11,
+                        color: "#6B7A90",
+                        fontWeight: 500,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ),
+                )}
+              </tr>
+            </thead>
           <tbody>
             {isLoading && (
               <tr>
