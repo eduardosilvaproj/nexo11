@@ -185,6 +185,9 @@ export function PhotoAnnotationViewer({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle global shortcuts if user is typing in the annotation input
+      if (document.activeElement instanceof HTMLInputElement) return;
+
       if (e.key === 'Delete' && editingId) {
         const newAnns = annotations.filter(a => a.id !== editingId);
         setAnnotations(newAnns);
