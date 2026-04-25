@@ -20,7 +20,7 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contratos")
-        .select("id, loja_id, status, contrato_ambientes(id, medicao_concluido, conferencia_status)")
+        .select("id, loja_id, status, contrato_ambientes(id, medicao_concluido, status_medicao, conferencia_status)")
         .eq("id", contratoId)
         .maybeSingle();
       if (error) throw error;
