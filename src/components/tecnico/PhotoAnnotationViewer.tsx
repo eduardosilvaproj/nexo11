@@ -298,7 +298,20 @@ export function PhotoAnnotationViewer({
       <DialogContent className="max-w-[95vw] w-full h-[95vh] flex flex-col p-0 overflow-hidden bg-neutral-900 border-none">
         <DialogHeader className="p-4 bg-neutral-900 border-b border-neutral-800 shrink-0 flex-row items-center justify-between space-y-0">
           <div className="flex items-center gap-4">
-            <DialogTitle className="text-white text-lg">Anotar Medidas</DialogTitle>
+            <div className="flex flex-col">
+              <DialogTitle className="text-white text-lg">Anotar Medidas</DialogTitle>
+              <div className="flex items-center gap-2 mt-0.5">
+                {isSaving ? (
+                  <span className="text-[10px] text-neutral-400 animate-pulse flex items-center gap-1">
+                    <Loader2 className="h-3 w-3 animate-spin" /> Salvando...
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-green-500 flex items-center gap-1">
+                    Salvo ✓
+                  </span>
+                )}
+              </div>
+            </div>
             {allPhotos.length > 0 && (
               <span className="text-neutral-400 text-sm">
                 {currentIndex + 1} de {allPhotos.length} fotos
