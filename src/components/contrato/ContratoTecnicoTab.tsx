@@ -20,7 +20,7 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contratos")
-        .select("id, loja_id, status, contrato_ambientes(id, medicao_concluido, conferencia_status)")
+        .select("id, loja_id, status, contrato_ambientes(id, medicao_concluido, status_medicao, conferencia_status)")
         .eq("id", contratoId)
         .maybeSingle();
       if (error) throw error;
@@ -44,11 +44,16 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
     };
   }, [contratoId, qc]);
 
-  const ambientes = Array.isArray(contrato?.contrato_ambientes) ? contrato.contrato_ambientes : [];
+  const ambientes = Array.isArray(contrato?.contrato_ambientes) ? (contrato.contrato_ambientes as any[]) : [];
   const totalAmbientes = ambientes.length;
-  const concluidoMedicao = totalAmbientes > 0 && ambientes.every(a => a.medicao_concluido);
-  const totalMedicaoConcluida = ambientes.filter(a => a.medicao_concluido).length;
+  
+  // Nova lógica de desbloqueio: pelo menos 1 liberado para conferência
+  const ambientesLiberados = ambientes.filter(a => a.status_medicao === 'liberado_conferencia');
+  const podeConferir = ambientesLiberados.length > 0;
+  
+  const totalMedicaoConcluida = ambientes.filter(a => a.medicao_concluido || a.status_medicao === 'liberado_conferencia').length;
   const totalConferenciaConcluida = ambientes.filter(a => a.conferencia_status === 'liberada').length;
+  const aindaEmMedicao = ambientes.filter(a => !a.medicao_concluido && a.status_medicao !== 'liberado_conferencia').length;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -87,41 +92,55 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
       <div 
         className={cn(
           "bg-white rounded-xl p-6 flex flex-col border border-[#E8ECF2] shadow-sm transition-all group",
-          !concluidoMedicao && "opacity-75"
+          !podeConferir && "opacity-75"
         )}
       >
         <div className="flex items-center gap-4 mb-4">
           <div className={cn(
             "w-12 h-12 rounded-full flex items-center justify-center",
-            concluidoMedicao ? "bg-green-50 text-[#12B76A]" : "bg-neutral-50 text-neutral-300"
+            podeConferir ? "bg-green-50 text-[#12B76A]" : "bg-neutral-50 text-neutral-300"
           )}>
             <CheckSquare size={24} />
           </div>
           <div>
             <h3 className="font-semibold text-lg text-[#0D1117]">Conferência técnica</h3>
-            <p className="text-sm text-[#6B7A90]">
-              {!concluidoMedicao 
-                ? "Aguardando medição" 
-                : totalConferenciaConcluida === totalAmbientes 
-                  ? "Tudo conferido" 
-                  : `${totalConferenciaConcluida} de ${totalAmbientes} conferidos`}
-            </p>
+            <div className="text-sm text-[#6B7A90]">
+              {!podeConferir ? (
+                "Aguardando liberação de ambientes"
+              ) : (
+                <div className="flex flex-col">
+                  <span>{ambientesLiberados.length} ambiente(s) disponível(is)</span>
+                  {aindaEmMedicao > 0 && (
+                    <span className="text-[11px] text-[#1E6FBF] font-medium">{aindaEmMedicao} ainda aguardando medição</span>
+                  )}
+                  {totalConferenciaConcluida > 0 && (
+                    <span className="text-[11px] text-green-600 font-medium">{totalConferenciaConcluida} de {totalAmbientes} conferidos</span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
         
         <div className="mt-auto pt-6">
           <button
-            disabled={!concluidoMedicao}
+            disabled={!podeConferir}
             onClick={() => navigate(`/contratos/${contratoId}/conferencia`)}
             className={cn(
               "w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
-              concluidoMedicao 
+              podeConferir 
                 ? "bg-[#0D1117] text-white hover:bg-black" 
                 : "bg-neutral-100 text-neutral-400 cursor-not-allowed"
             )}
           >
-            {concluidoMedicao ? "Abrir conferência" : <span className="flex items-center gap-2"><Lock size={16} /> Bloqueado</span>}
-            {concluidoMedicao && <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />}
+            {podeConferir ? (
+              <>
+                Abrir conferência
+                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+              </>
+            ) : (
+              <span className="flex items-center gap-2 mx-auto"><Lock size={16} /> Bloqueado</span>
+            )}
           </button>
         </div>
       </div>
