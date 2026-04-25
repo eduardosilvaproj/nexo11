@@ -285,14 +285,20 @@ export function ContratoMedicaoAmbientesSection({
         </div>
         {funcao === "medidor" && ambientes && ambientes.length > 0 && (
           <div className="mt-4 space-y-2">
-            <div className="flex items-center justify-between text-xs text-[#6B7A90] font-medium">
-              <span>Progresso da medição</span>
-              <span>{ambientes.filter(a => a.medicao_concluido).length} de {ambientes.length} ambientes concluídos</span>
+            <div className="flex flex-col gap-1 text-xs text-[#6B7A90] font-medium">
+              <div className="flex items-center justify-between">
+                <span>Progresso da medição</span>
+                <span>{ambientes.filter(a => a.medicao_concluido || a.status_medicao === 'liberado_conferencia').length} de {ambientes.length} ambientes concluídos</span>
+              </div>
+              <div className="flex items-center justify-between text-[10px] text-[#1E6FBF]">
+                <span>{ambientes.filter(a => a.status_medicao === 'liberado_conferencia').length} ambientes disponíveis para conferência</span>
+                <span>{ambientes.filter(a => !a.medicao_concluido && a.status_medicao !== 'liberado_conferencia').length} ainda em medição</span>
+              </div>
             </div>
             <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-green-500 transition-all duration-500" 
-                style={{ width: `${(ambientes.filter(a => a.medicao_concluido).length / ambientes.length) * 100}%` }}
+                style={{ width: `${(ambientes.filter(a => a.medicao_concluido || a.status_medicao === 'liberado_conferencia').length / ambientes.length) * 100}%` }}
               />
             </div>
           </div>
