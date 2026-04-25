@@ -179,21 +179,33 @@ export function PhotoAnnotationViewer({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Delete' && editingId) {
-        setAnnotations(annotations.filter(a => a.id !== editingId));
+        const newAnns = annotations.filter(a => a.id !== editingId);
+        setAnnotations(newAnns);
+        saveToHistory(newAnns);
         setEditingId(null);
       }
       if (e.key === 'Escape') {
         setEditingId(null);
       }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        undo();
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        e.preventDefault();
+        redo();
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [editingId, annotations]);
+  }, [editingId, annotations, history, historyIndex]);
 
   const handleAnnotationClick = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     if (activeTool === 'eraser') {
-      setAnnotations(annotations.filter(a => a.id !== id));
+      const newAnns = annotations.filter(a => a.id !== id);
+      setAnnotations(newAnns);
+      saveToHistory(newAnns);
     } else {
       setEditingId(id);
     }
