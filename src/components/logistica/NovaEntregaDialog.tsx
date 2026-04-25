@@ -83,14 +83,16 @@ export function NovaEntregaDialog({ open, onOpenChange, defaultDate, defaultTurn
 
       const custoNum = parseFloat(custo.replace(",", ".")) || 0;
 
+      const respNome = responsavelId === "__none__" ? null : motoristas?.find(m => m.id === responsavelId)?.nome || null;
+
       const { error } = await supabase.from("entregas").insert({
         contrato_id: contratoId,
         data_prevista: data,
         rota: endereco || null,
         endereco: endereco || null,
         turno,
-        responsavel: responsavel || null,
-        transportadora: responsavel || null,
+        responsavel: respNome,
+        transportadora: respNome,
         observacoes: observacoes || null,
         custo_frete: custoNum,
         status_visual: "agendado",
