@@ -309,7 +309,7 @@ export function PhotoAnnotationViewer({
               <DialogTitle className="text-white text-lg">Anotar Medidas</DialogTitle>
               <div className="flex items-center gap-2 mt-0.5">
                 {isSaving ? (
-                  <span className="text-[10px] text-neutral-400 animate-pulse flex items-center gap-1">
+                  <span className="text-[10px] text-neutral-400 flex items-center gap-1">
                     <Loader2 className="h-3 w-3 animate-spin" /> Salvando...
                   </span>
                 ) : (
