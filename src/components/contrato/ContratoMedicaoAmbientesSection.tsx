@@ -562,25 +562,36 @@ function AmbienteMedicaoPanel({
     const novoStatus = !isConcluido;
     const status_medicao = novoStatus ? 'concluido' : 'pendente';
     
-    console.log('concluindo ambiente:', ambiente.id);
+    console.log('Iniciando conclusão de ambiente:', {
+      ambiente_id: ambiente.id,
+      novoStatus,
+      status_medicao
+    });
     
-    const { error } = await supabase
-      .from('contrato_ambientes')
-      .update({ 
-        status_medicao: status_medicao,
-        medicao_concluido: novoStatus,
-        data_medicao: novoStatus ? new Date().toISOString().split('T')[0] : null
-      })
-      .eq('id', ambiente.id);
-    
-    if (error) {
-      console.error('erro:', error);
-      toast.error("Erro ao atualizar status: " + error.message);
-      return;
-    }
+    try {
+      const { error, data } = await supabase
+        .from('contrato_ambientes')
+        .update({ 
+          status_medicao: status_medicao,
+          medicao_concluido: novoStatus,
+          data_medicao: novoStatus ? new Date().toISOString().split('T')[0] : null
+        })
+        .eq('id', ambiente.id)
+        .select();
+      
+      if (error) {
+        console.error('Erro retornado pelo Supabase:', error);
+        toast.error("Erro ao atualizar status: " + error.message);
+        return;
+      }
 
-    toast.success(novoStatus ? "Medição concluída!" : "Ambiente reaberto");
-    qc.invalidateQueries({ queryKey: ["ambientes_med_conf", contratoId] });
+      console.log('Sucesso ao atualizar ambiente:', data);
+      toast.success(novoStatus ? "Medição concluída!" : "Ambiente reaberto");
+      qc.invalidateQueries({ queryKey: ["ambientes_med_conf", contratoId] });
+    } catch (err) {
+      console.error('Erro inesperado na função toggleConcluido:', err);
+      toast.error("Ocorreu um erro inesperado ao atualizar o ambiente.");
+    }
   };
 
   return (
