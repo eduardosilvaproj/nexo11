@@ -441,7 +441,7 @@ function AmbienteMedicaoPanel({
         const newPhotos = [...photos, ...results.map(url => ({ url, annotations: [] }))];
         await onUpdate(ambiente.id, { medicao_fotos: newPhotos });
       } else {
-        await onUpdate(ambiente.id, { medicao_scan_url: results[0] });
+        await onUpdate(ambiente.id, { medicao_scan_url: results[0], status_medicao: 'concluido' });
       }
       toast.success("Arquivo enviado com sucesso!");
     } catch (error: any) {
