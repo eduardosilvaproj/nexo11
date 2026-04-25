@@ -141,6 +141,10 @@ export function ContratoMedicaoAmbientesSection({
     // Invalidate other related queries
     qc.invalidateQueries({ queryKey: ["contrato_ambientes", contratoId] });
     qc.invalidateQueries({ queryKey: ["contrato_dre_view", contratoId] });
+    
+    // Also invalidate the main técnico list to update progress bars elsewhere
+    qc.invalidateQueries({ queryKey: ["contratos-tecnico-list"] });
+    
     return true;
   };
 
