@@ -545,11 +545,18 @@ function AmbienteMedicaoPanel({
       return;
     }
     const novoStatus = !isConcluido;
-    await onUpdate(ambiente.id, { 
+    const status_medicao = novoStatus ? 'concluido' : 'pendente';
+    
+    console.log(`Atualizando ambiente ${ambiente.id}: medicao_concluido=${novoStatus}, status_medicao=${status_medicao}`);
+    
+    const ok = await onUpdate(ambiente.id, { 
       medicao_concluido: novoStatus,
-      status_medicao: novoStatus ? 'concluido' : 'pendente'
+      status_medicao: status_medicao
     });
-    toast.success(novoStatus ? "Medição concluída!" : "Ambiente reaberto");
+    
+    if (ok) {
+      toast.success(novoStatus ? "Medição concluída!" : "Ambiente reaberto");
+    }
   };
 
   return (
