@@ -151,16 +151,47 @@ export function NovoMembroDialog({ open, onOpenChange }: Props) {
             <p style={{ fontSize: 11, color: "#6B7A90" }}>Será usado para login no sistema</p>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label style={{ fontSize: 12, color: "#0D1117" }}>Acesso (role) *</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as typeof role)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {ROLES.map((r) => (
-                  <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-col gap-2.5">
+            <Label style={{ fontSize: 12, color: "#0D1117" }}>Funções no sistema *</Label>
+            <div className="grid grid-cols-2 gap-2 rounded-lg border border-neutral-200 p-3">
+              {FUNCOES_DISPONIVEIS.map((f) => (
+                <div key={f.value} className="flex items-center gap-2">
+                  <Checkbox 
+                    id={`funcao-${f.value}`} 
+                    checked={funcoes.includes(f.value)}
+                    onCheckedChange={(checked) => {
+                      if (checked) setFuncoes([...funcoes, f.value]);
+                      else setFuncoes(funcoes.filter(x => x !== f.value));
+                    }}
+                  />
+                  <Label htmlFor={`funcao-${f.value}`} className="text-xs font-normal cursor-pointer">
+                    {f.label}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2.5">
+            <Label style={{ fontSize: 12, color: "#0D1117" }}>Habilitar módulos no App Mobile</Label>
+            <div className="grid grid-cols-2 gap-2 rounded-lg border border-neutral-200 p-3 bg-neutral-50/50">
+              {FUNCOES_DISPONIVEIS.filter(f => ["tecnico", "montador", "motorista", "gerente", "vendedor"].includes(f.value)).map((f) => (
+                <div key={`app-${f.value}`} className="flex items-center gap-2">
+                  <Checkbox 
+                    id={`app-${f.value}`} 
+                    checked={funcoesApp.includes(f.value)}
+                    onCheckedChange={(checked) => {
+                      if (checked) setFuncoesApp([...funcoesApp, f.value]);
+                      else setFuncoesApp(funcoesApp.filter(x => x !== f.value));
+                    }}
+                  />
+                  <Label htmlFor={`app-${f.value}`} className="text-xs font-normal cursor-pointer">
+                    {f.label}
+                  </Label>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground italic">Determine quais áreas este usuário acessará pelo celular</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
