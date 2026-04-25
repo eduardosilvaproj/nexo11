@@ -741,6 +741,8 @@ function AmbienteMedicaoPanel({
             open={!!activePhoto}
             onOpenChange={(open) => !open && setActivePhoto(null)}
             photo={activePhoto}
+            allPhotos={photos}
+            onPhotoChange={(newPhoto) => setActivePhoto(newPhoto)}
             onSave={saveAnnotations}
           />
         )}
