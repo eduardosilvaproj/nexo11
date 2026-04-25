@@ -345,7 +345,7 @@ export function ContratoMedicaoAmbientesSection({
               </tr>
             )}
             {ambientes?.map((a) => {
-              if (funcao === "medidor") return null;
+              if ((funcao as string) === "medidor") return null;
               
               // Filter for conferente: only show 'liberado_conferencia' or already processed/paid
               if (funcao === "conferente" && a.status_medicao !== 'liberado_conferencia' && a.status_conferencia === 'pendente') {
