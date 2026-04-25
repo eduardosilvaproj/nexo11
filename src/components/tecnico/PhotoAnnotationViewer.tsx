@@ -50,11 +50,13 @@ export function PhotoAnnotationViewer({
   const [history, setHistory] = useState<Annotation[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [isSaving, setIsSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
   const [activeTool, setActiveTool] = useState<Tool>('none');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [drawingStart, setDrawingStart] = useState<{ x: number, y: number } | null>(null);
   const [tempDrawing, setTempDrawing] = useState<{ x2: number, y2: number } | null>(null);
-  
+
   const imgRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
