@@ -349,6 +349,12 @@ export function PhotoAnnotationViewer({
     }
   };
 
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      handleCloseRequest();
+    }
+  };
+
   // Removed saveAndClose in favor of more generic functions above
 
   return (
