@@ -30,8 +30,9 @@ type Props = {
 
 const FUNCOES = [
   { value: "montador", label: "Montador" },
-  { value: "medidor", label: "Medidor" },
+  { value: "tecnico", label: "Técnico / Medidor" },
   { value: "conferente", label: "Conferente" },
+  { value: "motorista", label: "Motorista / Entregador" },
 ];
 
 export function MontadorFormDialog({ open, onOpenChange, lojaId, montador }: Props) {
