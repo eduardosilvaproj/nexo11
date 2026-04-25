@@ -60,12 +60,56 @@ export function PhotoAnnotationViewer({
 
   useEffect(() => {
     if (open) {
-      setAnnotations(photo.annotations || []);
+      const initialAnns = photo.annotations || [];
+      setAnnotations(initialAnns);
+      setHistory([initialAnns]);
+      setHistoryIndex(0);
       setEditingId(null);
       setDrawingStart(null);
       setTempDrawing(null);
     }
   }, [open, photo.url, photo.annotations]);
+
+  const saveToHistory = (newAnns: Annotation[]) => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newAnns);
+    if (newHistory.length > 20) newHistory.shift();
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+    
+    // Autosave trigger
+    triggerAutosave(newAnns);
+  };
+
+  const triggerAutosave = async (anns: Annotation[]) => {
+    setIsSaving(true);
+    try {
+      await onSave(anns);
+    } catch (error) {
+      console.error("Autosave failed", error);
+    } finally {
+      // Small delay to show "Salvo" indicator
+      setTimeout(() => setIsSaving(false), 800);
+    }
+  };
+
+  const undo = () => {
+    if (historyIndex > 0) {
+      const prevAnns = history[historyIndex - 1];
+      setAnnotations(prevAnns);
+      setHistoryIndex(historyIndex - 1);
+      triggerAutosave(prevAnns);
+    }
+  };
+
+  const redo = () => {
+    if (historyIndex < history.length - 1) {
+      const nextAnns = history[historyIndex + 1];
+      setAnnotations(nextAnns);
+      setHistoryIndex(historyIndex + 1);
+      triggerAutosave(nextAnns);
+    }
+  };
 
   const getCoords = (e: React.MouseEvent | MouseEvent) => {
     if (!imgRef.current) return { x: 0, y: 0 };
