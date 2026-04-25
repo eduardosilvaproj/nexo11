@@ -44,11 +44,16 @@ export function ContratoTecnicoTab({ contratoId }: TecnicoTabProps) {
     };
   }, [contratoId, qc]);
 
-  const ambientes = Array.isArray(contrato?.contrato_ambientes) ? contrato.contrato_ambientes : [];
+  const ambientes = Array.isArray(contrato?.contrato_ambientes) ? (contrato.contrato_ambientes as any[]) : [];
   const totalAmbientes = ambientes.length;
-  const concluidoMedicao = totalAmbientes > 0 && ambientes.every(a => a.medicao_concluido);
-  const totalMedicaoConcluida = ambientes.filter(a => a.medicao_concluido).length;
+  
+  // Nova lógica de desbloqueio: pelo menos 1 liberado para conferência
+  const ambientesLiberados = ambientes.filter(a => a.status_medicao === 'liberado_conferencia');
+  const podeConferir = ambientesLiberados.length > 0;
+  
+  const totalMedicaoConcluida = ambientes.filter(a => a.medicao_concluido || a.status_medicao === 'liberado_conferencia').length;
   const totalConferenciaConcluida = ambientes.filter(a => a.conferencia_status === 'liberada').length;
+  const aindaEmMedicao = ambientes.filter(a => !a.medicao_concluido && a.status_medicao !== 'liberado_conferencia').length;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
