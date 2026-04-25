@@ -247,6 +247,16 @@ export function ContratoMedicaoAmbientesSection({
               </tr>
             )}
             {ambientes?.map((a) => {
+              if (funcao === "medidor") {
+                return (
+                  <AmbienteMedicaoPanel 
+                    key={a.id} 
+                    ambiente={a} 
+                    onUpdate={updateAmbiente} 
+                  />
+                );
+              }
+
               const status = (a[F.status] as StatusMed) || "pendente";
               const st = STATUS_STYLE[status];
               return (
