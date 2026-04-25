@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Camera, Image as ImageIcon, FileText, CheckCircle2, AlertCircle, ChevronDown, ChevronUp, Trash2, Upload, Loader2 } from "lucide-react";
+import { Camera, Image as ImageIcon, FileText, CheckCircle2, AlertCircle, ChevronDown, ChevronUp, Trash2, Upload, Loader2, FileIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -496,7 +496,7 @@ function AmbienteMedicaoPanel({
         const newPhotos = [...photos, ...results.map(url => ({ url, annotations: [] }))];
         await onUpdate(ambiente.id, { medicao_fotos: newPhotos });
       } else {
-        await onUpdate(ambiente.id, { medicao_scan_url: results[0], status_medicao: 'concluido' });
+        await onUpdate(ambiente.id, { medicao_scan_url: results[0] });
       }
       toast.success("Arquivo enviado com sucesso!");
     } catch (error: any) {
@@ -509,6 +509,11 @@ function AmbienteMedicaoPanel({
   const removePhoto = async (index: number) => {
     const newPhotos = photos.filter((_, i) => i !== index);
     await onUpdate(ambiente.id, { medicao_fotos: newPhotos });
+  };
+
+  const removeScan = async () => {
+    await onUpdate(ambiente.id, { medicao_scan_url: null });
+    toast.success("Folha de medição removida");
   };
 
   const saveAnnotations = async (annotations: any[]) => {
@@ -647,25 +652,43 @@ function AmbienteMedicaoPanel({
               <div className="space-y-6">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-semibold uppercase text-[#6B7A90] flex items-center gap-2">
-                      <FileText size={14} />
-                      Scan da Folha Manuscrita
-                    </h4>
+                    <div className="flex flex-col gap-0.5">
+                      <h4 className="text-xs font-semibold uppercase text-[#6B7A90] flex items-center gap-2">
+                        <FileText size={14} />
+                        Folha de medição
+                      </h4>
+                      <span className="text-[10px] text-[#6B7A90]">Foto, scan ou PDF da medição manuscrita</span>
+                    </div>
                     <label className="cursor-pointer">
-                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'scan')} />
+                      <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => handleFileUpload(e, 'scan')} />
                       <div className="flex items-center gap-2 text-[#1E6FBF] hover:underline text-xs font-medium">
                         {uploading === 'scan' ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-                        {hasScan ? "Substituir scan" : "Enviar scan"}
+                        {hasScan ? "Substituir" : "Enviar arquivo"}
                       </div>
                     </label>
                   </div>
 
                   {hasScan ? (
                     <div className="relative group rounded-lg border overflow-hidden bg-neutral-100 max-h-48 shadow-sm">
-                      <img src={ambiente.medicao_scan_url} alt="Scan Medição" className="w-full h-full object-contain" />
+                      {ambiente.medicao_scan_url.toLowerCase().endsWith('.pdf') ? (
+                        <div className="flex flex-col items-center justify-center py-8 gap-2 bg-white">
+                          <FileIcon size={32} className="text-red-500" />
+                          <span className="text-[10px] text-[#6B7A90] px-4 text-center break-all">
+                            {ambiente.medicao_scan_url.split('/').pop()}
+                          </span>
+                        </div>
+                      ) : (
+                        <img src={ambiente.medicao_scan_url} alt="Folha de medição" className="w-full h-full object-contain" />
+                      )}
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer" onClick={() => window.open(ambiente.medicao_scan_url, '_blank')}>
-                        <span className="text-white text-[10px] font-medium uppercase tracking-wider">Visualizar PDF/Imagem</span>
+                        <span className="text-white text-[10px] font-medium uppercase tracking-wider">Visualizar</span>
                       </div>
+                      <button 
+                        className="absolute top-1 right-1 p-1 bg-white/90 rounded-md text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 z-10"
+                        onClick={(e) => { e.stopPropagation(); removeScan(); }}
+                      >
+                        <X size={14} />
+                      </button>
                     </div>
                   ) : (
                     <div className="h-32 rounded-lg border-2 border-dashed border-neutral-200 flex flex-col items-center justify-center gap-2 text-neutral-400">
