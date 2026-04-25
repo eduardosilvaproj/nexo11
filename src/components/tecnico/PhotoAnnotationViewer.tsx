@@ -122,7 +122,13 @@ export function PhotoAnnotationViewer({
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (activeTool === 'eraser' || activeTool === 'none') return;
+    if (activeTool === 'eraser' || activeTool === 'none') {
+      // Se clicar no fundo em modo seleção, deseleciona o elemento atual
+      if (activeTool === 'none' && editingId) {
+        setEditingId(null);
+      }
+      return;
+    }
     const coords = getCoords(e);
     
     if (['arrow', 'line', 'circle', 'rect'].includes(activeTool)) {
@@ -188,11 +194,11 @@ export function PhotoAnnotationViewer({
       if (e.key === 'Escape') {
         setEditingId(null);
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
         e.preventDefault();
         undo();
       }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+      if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) {
         e.preventDefault();
         redo();
       }
@@ -303,7 +309,7 @@ export function PhotoAnnotationViewer({
               <DialogTitle className="text-white text-lg">Anotar Medidas</DialogTitle>
               <div className="flex items-center gap-2 mt-0.5">
                 {isSaving ? (
-                  <span className="text-[10px] text-neutral-400 animate-pulse flex items-center gap-1">
+                  <span className="text-[10px] text-neutral-400 flex items-center gap-1">
                     <Loader2 className="h-3 w-3 animate-spin" /> Salvando...
                   </span>
                 ) : (
@@ -461,7 +467,10 @@ export function PhotoAnnotationViewer({
                 {editingId === ann.id && (
                   <div 
                     className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-white p-2 rounded-lg shadow-xl border flex items-center gap-2 z-30 pointer-events-auto"
-                    onMouseDown={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => {
+                      e.stopPropagation();
+                      e.nativeEvent.stopImmediatePropagation();
+                    }}
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Input
@@ -476,13 +485,15 @@ export function PhotoAnnotationViewer({
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
-                          e.preventDefault(); // Impede fechamento de modais pai se houver
+                          e.preventDefault();
+                          e.stopPropagation();
                           saveToHistory(annotations);
                           setEditingId(null);
                           setActiveTool('none');
                         }
                         if (e.key === 'Escape') {
                           e.preventDefault();
+                          e.stopPropagation();
                           setEditingId(null);
                           setActiveTool('none');
                         }
@@ -495,7 +506,9 @@ export function PhotoAnnotationViewer({
                       className="h-7 w-7 text-red-500 hover:bg-red-50"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setAnnotations(annotations.filter(a => a.id !== ann.id));
+                        const newAnns = annotations.filter(a => a.id !== ann.id);
+                        setAnnotations(newAnns);
+                        saveToHistory(newAnns);
                         setEditingId(null);
                       }}
                     >
