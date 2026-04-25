@@ -42,37 +42,30 @@ function getInitials(nome: string) {
 async function fetchMembros(): Promise<Membro[]> {
   const { data: usuarios, error: uErr } = await supabase
     .from("usuarios")
-    .select("id, nome, email, papel_comissao_id, comissao_percentual")
+    .select("id, nome, email, papel_comissao_id, comissao_percentual, funcoes")
     .order("nome");
   if (uErr) throw uErr;
   if (!usuarios?.length) return [];
 
-  const ids = usuarios.map((u) => u.id);
   const papelIds = Array.from(
     new Set(usuarios.map((u) => u.papel_comissao_id).filter(Boolean) as string[])
   );
 
-  const [rolesRes, papeisRes] = await Promise.all([
-    supabase.from("user_roles").select("user_id, role").in("user_id", ids),
-    papelIds.length
-      ? supabase.from("papeis_comissao").select("id, nome").in("id", papelIds)
-      : Promise.resolve({ data: [] as { id: string; nome: string }[], error: null }),
-  ]);
-  if (rolesRes.error) throw rolesRes.error;
+  const { data: papeis, error: pErr } = await (papelIds.length
+    ? supabase.from("papeis_comissao").select("id, nome").in("id", papelIds)
+    : Promise.resolve({ data: [] as { id: string; nome: string }[], error: null }));
+  
+  if (pErr) throw pErr;
 
-  const roleByUser = new Map<string, AppRole>();
-  rolesRes.data?.forEach((r) => {
-    if (!roleByUser.has(r.user_id)) roleByUser.set(r.user_id, r.role);
-  });
   const papelById = new Map<string, string>(
-    (papeisRes.data ?? []).map((p) => [p.id, p.nome])
+    (papeis ?? []).map((p) => [p.id, p.nome])
   );
 
   return usuarios.map((u) => ({
     id: u.id,
     nome: u.nome,
     email: u.email,
-    role: roleByUser.get(u.id) ?? "vendedor",
+    funcoes: (u.funcoes as FuncaoUsuario[]) || ["vendedor"],
     papel_nome: u.papel_comissao_id ? papelById.get(u.papel_comissao_id) ?? null : null,
     comissao_percentual: u.comissao_percentual != null ? Number(u.comissao_percentual) : null,
   }));
