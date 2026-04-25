@@ -419,6 +419,7 @@ export function ContratoMedicaoAmbientesSection({
                   key={a.id} 
                   ambiente={a} 
                   onUpdate={updateAmbiente} 
+                  contratoId={contratoId}
                 />
               ))}
             </tbody>
@@ -471,11 +472,14 @@ export function ContratoMedicaoAmbientesSection({
 
 function AmbienteMedicaoPanel({ 
   ambiente, 
-  onUpdate 
+  onUpdate,
+  contratoId
 }: { 
   ambiente: AmbienteRow; 
   onUpdate: (id: string, patch: any) => Promise<boolean>;
+  contratoId: string;
 }) {
+  const qc = useQueryClient();
   const [expanded, setExpanded] = useState(false);
   const [uploading, setUploading] = useState<'photos' | 'scan' | null>(null);
   const [activePhoto, setActivePhoto] = useState<any | null>(null);
@@ -558,16 +562,25 @@ function AmbienteMedicaoPanel({
     const novoStatus = !isConcluido;
     const status_medicao = novoStatus ? 'concluido' : 'pendente';
     
-    console.log(`Atualizando ambiente ${ambiente.id}: medicao_concluido=${novoStatus}, status_medicao=${status_medicao}`);
+    console.log('concluindo ambiente:', ambiente.id);
     
-    const ok = await onUpdate(ambiente.id, { 
-      medicao_concluido: novoStatus,
-      status_medicao: status_medicao
-    });
+    const { error } = await supabase
+      .from('contrato_ambientes')
+      .update({ 
+        status_medicao: status_medicao,
+        medicao_concluido: novoStatus,
+        data_medicao: novoStatus ? new Date().toISOString().split('T')[0] : null
+      })
+      .eq('id', ambiente.id);
     
-    if (ok) {
-      toast.success(novoStatus ? "Medição concluída!" : "Ambiente reaberto");
+    if (error) {
+      console.error('erro:', error);
+      toast.error("Erro ao atualizar status: " + error.message);
+      return;
     }
+
+    toast.success(novoStatus ? "Medição concluída!" : "Ambiente reaberto");
+    qc.invalidateQueries({ queryKey: ["ambientes_med_conf", contratoId] });
   };
 
   return (
