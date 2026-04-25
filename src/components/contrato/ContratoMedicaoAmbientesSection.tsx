@@ -194,18 +194,27 @@ export function ContratoMedicaoAmbientesSection({
       className="rounded-xl bg-white"
       style={{ border: "0.5px solid #E8ECF2", overflow: "hidden" }}
     >
-      <div className="flex items-center justify-between px-5 py-4">
-        <div>
+      <div className="flex flex-col gap-1 px-5 py-4">
+        <div className="flex items-center justify-between">
           <h3 style={{ fontSize: 15, fontWeight: 500, color: "#0D1117" }}>{tituloSec}</h3>
-          {funcao === "medidor" && (
-            <p style={{ fontSize: 12, color: "#6B7A90", marginTop: 2 }}>
-              Medição e visita técnica por ambiente
-            </p>
-          )}
+          <span style={{ fontSize: 12, color: "#6B7A90" }}>
+            {ambientes?.length ?? 0} ambiente{(ambientes?.length ?? 0) === 1 ? "" : "s"}
+          </span>
         </div>
-        <span style={{ fontSize: 12, color: "#6B7A90" }}>
-          {ambientes?.length ?? 0} ambiente{(ambientes?.length ?? 0) === 1 ? "" : "s"}
-        </span>
+        {funcao === "medidor" && ambientes && ambientes.length > 0 && (
+          <div className="mt-4 space-y-2">
+            <div className="flex items-center justify-between text-xs text-[#6B7A90] font-medium">
+              <span>Progresso da medição</span>
+              <span>{ambientes.filter(a => a.medicao_concluido).length} de {ambientes.length} ambientes concluídos</span>
+            </div>
+            <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-green-500 transition-all duration-500" 
+                style={{ width: `${(ambientes.filter(a => a.medicao_concluido).length / ambientes.length) * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {funcao !== "medidor" && (
@@ -357,8 +366,10 @@ export function ContratoMedicaoAmbientesSection({
               )}
               {!isLoading && (ambientes?.length ?? 0) === 0 && (
                 <tr>
-                  <td className="px-4 py-8 text-center text-sm text-muted-foreground">
-                    Nenhum ambiente cadastrado neste contrato.
+                  <td className="px-4 py-12 text-center">
+                    <AlertCircle size={32} className="mx-auto text-neutral-300 mb-3" />
+                    <p className="text-sm font-medium text-[#0D1117]">Nenhum ambiente encontrado</p>
+                    <p className="text-xs text-[#6B7A90] mt-1">Os ambientes são importados automaticamente do XML do contrato.</p>
                   </td>
                 </tr>
               )}
@@ -384,6 +395,26 @@ export function ContratoMedicaoAmbientesSection({
           <span>Em breve: medição direta pela câmera no app para funcionários</span>
         </div>
         <div className="flex items-center gap-3">
+          {funcao === "medidor" && ambientes && ambientes.length > 0 && (
+            <Button
+              disabled={ambientes.some(a => !a.medicao_concluido)}
+              onClick={async () => {
+                const { error } = await supabase.rpc('avancar_contrato', { 
+                  p_contrato_id: contratoId,
+                  p_usuario_id: (await supabase.auth.getUser()).data.user?.id
+                });
+                if (error) {
+                  toast.error("Erro ao liberar para conferência: " + error.message);
+                } else {
+                  toast.success("Contrato liberado para conferência!");
+                  qc.invalidateQueries({ queryKey: ["contrato_dre_view", contratoId] });
+                }
+              }}
+              className="bg-[#12B76A] hover:bg-[#0e9a58] h-9 text-xs font-semibold px-4"
+            >
+              Liberar para conferência
+            </Button>
+          )}
           <span style={{ fontSize: 12, color: "#6B7A90" }}>{lblTotal}:</span>
           <span style={{ fontSize: 14, fontWeight: 600, color: "#0D1117" }}>
             {fmtBRL(totalPagar)}
@@ -409,6 +440,7 @@ function AmbienteMedicaoPanel({
   const hasPhotos = photos.length > 0;
   const hasScan = !!ambiente.medicao_scan_url;
   const isConcluido = !!ambiente.medicao_concluido;
+  const inProgress = !isConcluido && (hasPhotos || hasScan || !!ambiente.observacoes);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'photos' | 'scan') => {
     const files = e.target.files;
@@ -505,12 +537,17 @@ function AmbienteMedicaoPanel({
             <div className="flex items-center gap-4">
               <div className={cn(
                 "flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider",
-                isConcluido ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
+                isConcluido ? "bg-green-100 text-green-700" : inProgress ? "bg-blue-100 text-blue-700" : "bg-neutral-100 text-[#6B7A90]"
               )}>
                 {isConcluido ? (
                   <>
                     <CheckCircle2 size={13} />
                     <span>Concluído</span>
+                  </>
+                ) : inProgress ? (
+                  <>
+                    <Loader2 size={13} className="animate-spin" />
+                    <span>Em preenchimento</span>
                   </>
                 ) : (
                   <>
@@ -523,9 +560,9 @@ function AmbienteMedicaoPanel({
                 variant={isConcluido ? "outline" : "default"} 
                 size="sm" 
                 className={cn("h-8 text-xs", !isConcluido && "bg-[#1E6FBF] hover:bg-[#165a9e]")}
-                onClick={(e) => { e.stopPropagation(); toggleConcluido(); }}
+                onClick={(e) => { e.stopPropagation(); if (isConcluido) toggleConcluido(); else setExpanded(true); }}
               >
-                {isConcluido ? "Reabrir" : "Concluir Medição"}
+                {isConcluido ? "Reabrir" : (inProgress || expanded) ? "Continuar medição" : "Iniciar medição"}
               </Button>
             </div>
           </div>
@@ -622,7 +659,17 @@ function AmbienteMedicaoPanel({
                       }
                     }}
                   />
+                <div className="flex justify-end pt-4">
+                  <Button 
+                    disabled={isConcluido || !hasPhotos || !hasScan}
+                    onClick={() => toggleConcluido()}
+                    className="bg-green-600 hover:bg-green-700 h-9 text-xs font-semibold"
+                  >
+                    <CheckCircle2 size={14} className="mr-2" />
+                    Concluir Ambiente
+                  </Button>
                 </div>
+              </div>
               </div>
             </div>
           )}
