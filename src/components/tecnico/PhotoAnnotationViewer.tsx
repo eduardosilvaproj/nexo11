@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   X, Save, Download, ChevronLeft, ChevronRight, 
-  MapPin, ArrowRight, Ruler, Circle, Square, Type, Eraser 
+  MapPin, ArrowRight, Ruler, Circle, Square, Type, Eraser,
+  Undo2, Redo2, Loader2
 } from "lucide-react";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
