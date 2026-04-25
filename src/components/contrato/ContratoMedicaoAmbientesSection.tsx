@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +10,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Camera, Image as ImageIcon, FileText, CheckCircle2, AlertCircle, ChevronDown, ChevronUp, Trash2, Upload, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { PhotoAnnotationViewer } from "@/components/tecnico/PhotoAnnotationViewer";
+import { cn } from "@/lib/utils";
 
 type StatusMed = "pendente" | "agendado" | "concluido" | "pago";
 type Funcao = "medidor" | "conferente" | "montador";
