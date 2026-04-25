@@ -684,6 +684,7 @@ export type Database = {
           montador_id: string | null
           nome: string
           observacoes: string | null
+          origem: string | null
           percentual_conferente: number
           percentual_medidor: number
           percentual_montador: number
@@ -725,6 +726,7 @@ export type Database = {
           montador_id?: string | null
           nome: string
           observacoes?: string | null
+          origem?: string | null
           percentual_conferente?: number
           percentual_medidor?: number
           percentual_montador?: number
@@ -766,6 +768,7 @@ export type Database = {
           montador_id?: string | null
           nome?: string
           observacoes?: string | null
+          origem?: string | null
           percentual_conferente?: number
           percentual_medidor?: number
           percentual_montador?: number
