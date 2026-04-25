@@ -410,8 +410,8 @@ export default function Tecnico() {
                     </TableCell>
                     <TableCell className="text-right">
                       <button
-                        onClick={() => navigate(`/contratos/${c.id}?aba=tecnico`)}
-                        className="text-white transition-opacity hover:opacity-90"
+                        onClick={() => navigate(`/contratos/${c.id}${aba === 'medicao' ? '/medicao' : '/conferencia'}`)}
+                        className="text-white transition-opacity hover:opacity-90 whitespace-nowrap"
                         style={{
                           backgroundColor: "#0D1117",
                           fontSize: 12,
@@ -419,7 +419,9 @@ export default function Tecnico() {
                           padding: "6px 14px",
                         }}
                       >
-                        {stats.done === stats.total && stats.total > 0 ? "Ver medição" : "Iniciar medição"}
+                        {aba === 'medicao' 
+                          ? (stats.done === stats.total && stats.total > 0 ? "Ver medição" : "Iniciar medição")
+                          : "Abrir conferência"}
                       </button>
                     </TableCell>
                   </TableRow>
