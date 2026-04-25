@@ -143,7 +143,15 @@ export function NovaEntregaDialog({ open, onOpenChange, defaultDate, defaultTurn
             </div>
             <div className="space-y-1.5">
               <Label>Responsável</Label>
-              <Input value={responsavel} onChange={(e) => setResponsavel(e.target.value)} placeholder="Motorista / equipe" />
+              <Select value={responsavelId} onValueChange={setResponsavelId}>
+                <SelectTrigger><SelectValue placeholder="Selecione um motorista" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Não atribuído</SelectItem>
+                  {motoristas?.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
