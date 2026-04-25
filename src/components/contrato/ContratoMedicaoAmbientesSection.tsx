@@ -471,8 +471,12 @@ function AmbienteMedicaoPanel({
       toast.error("É necessário pelo menos 1 foto e o scan da folha para concluir.");
       return;
     }
-    await onUpdate(ambiente.id, { medicao_concluido: !isConcluido });
-    toast.success(isConcluido ? "Ambiente reaberto" : "Medição concluída!");
+    const novoStatus = !isConcluido;
+    await onUpdate(ambiente.id, { 
+      medicao_concluido: novoStatus,
+      status_medicao: novoStatus ? 'concluido' : 'pendente'
+    });
+    toast.success(novoStatus ? "Medição concluída!" : "Ambiente reaberto");
   };
 
   return (
