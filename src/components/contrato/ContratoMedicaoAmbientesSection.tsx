@@ -19,7 +19,7 @@ import { Info } from "lucide-react";
 import { PhotoAnnotationViewer } from "@/components/tecnico/PhotoAnnotationViewer";
 import { cn } from "@/lib/utils";
 
-type StatusMed = "pendente" | "agendado" | "concluido" | "pago";
+type StatusMed = "pendente" | "agendado" | "concluido" | "pago" | "liberado_conferencia";
 type Funcao = "medidor" | "conferente" | "montador";
 
 interface AmbienteRow {
