@@ -407,7 +407,7 @@ export function PhotoAnnotationViewer({
           <div className="flex items-center gap-2">
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-white hover:bg-neutral-800">
+                <Button variant="ghost" size="icon" className="text-white hover:bg-neutral-800" title="Baixar foto">
                   <Download className="h-5 w-5" />
                 </Button>
               </PopoverTrigger>
