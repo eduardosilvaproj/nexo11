@@ -419,6 +419,7 @@ export function ContratoMedicaoAmbientesSection({
                   key={a.id} 
                   ambiente={a} 
                   onUpdate={updateAmbiente} 
+                  contratoId={contratoId}
                 />
               ))}
             </tbody>
