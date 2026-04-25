@@ -386,6 +386,7 @@ export function PhotoAnnotationViewer({
                 {editingId === ann.id && (
                   <div 
                     className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-white p-2 rounded-lg shadow-xl border flex items-center gap-2 z-30 pointer-events-auto"
+                    onMouseDown={(e) => e.stopPropagation()}
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Input
@@ -399,7 +400,14 @@ export function PhotoAnnotationViewer({
                         setAnnotations(newAnns);
                       }}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') setEditingId(null);
+                        if (e.key === 'Enter') {
+                          setEditingId(null);
+                          setActiveTool('none');
+                        }
+                        if (e.key === 'Escape') {
+                          setEditingId(null);
+                          setActiveTool('none');
+                        }
                       }}
                       className="h-8 w-32 text-xs"
                     />
@@ -407,7 +415,8 @@ export function PhotoAnnotationViewer({
                       size="icon" 
                       variant="ghost" 
                       className="h-7 w-7 text-red-500 hover:bg-red-50"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setAnnotations(annotations.filter(a => a.id !== ann.id));
                         setEditingId(null);
                       }}
