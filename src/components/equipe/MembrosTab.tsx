@@ -7,13 +7,13 @@ import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { EditarComissaoDialog } from "./EditarComissaoDialog";
 
-type AppRole = Database["public"]["Enums"]["app_role"];
+type FuncaoUsuario = "vendedor" | "projetista" | "tecnico" | "conferente" | "montador" | "motorista" | "gerente" | "financeiro" | "admin" | "franqueador" | "medidor";
 
 type Membro = {
   id: string;
   nome: string;
   email: string | null;
-  role: AppRole;
+  funcoes: FuncaoUsuario[];
   papel_nome: string | null;
   comissao_percentual: number | null;
 };
