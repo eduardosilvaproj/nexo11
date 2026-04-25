@@ -101,18 +101,18 @@ export function PhotoAnnotationViewer({
   const undo = () => {
     if (historyIndex > 0) {
       const prevAnns = history[historyIndex - 1];
-      setAnnotations(prevAnns);
+      setAnnotations(JSON.parse(JSON.stringify(prevAnns)));
       setHistoryIndex(historyIndex - 1);
-      triggerAutosave(prevAnns);
+      setHasUnsavedChanges(true);
     }
   };
 
   const redo = () => {
     if (historyIndex < history.length - 1) {
       const nextAnns = history[historyIndex + 1];
-      setAnnotations(nextAnns);
+      setAnnotations(JSON.parse(JSON.stringify(nextAnns)));
       setHistoryIndex(historyIndex + 1);
-      triggerAutosave(nextAnns);
+      setHasUnsavedChanges(true);
     }
   };
 
