@@ -581,8 +581,13 @@ function AmbienteMedicaoPanel({
       
       if (error) {
         console.error('Erro retornado pelo Supabase:', error);
-        toast.error("Erro ao atualizar status: " + error.message);
-        return;
+        toast.error(`Erro ao atualizar status: ${error.message} (Ambiente: ${ambiente.id}, Status: ${status_medicao})`);
+        console.error('Detalhes do erro PostgreSQL:', {
+          code: error.code,
+          hint: error.hint,
+          details: error.details,
+          context: { ambiente_id: ambiente.id, novo_status: status_medicao }
+        });
       }
 
       console.log('Sucesso ao atualizar ambiente:', data);
