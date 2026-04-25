@@ -19,7 +19,7 @@ import { Info } from "lucide-react";
 import { PhotoAnnotationViewer } from "@/components/tecnico/PhotoAnnotationViewer";
 import { cn } from "@/lib/utils";
 
-type StatusMed = "pendente" | "agendado" | "concluido" | "pago";
+type StatusMed = "pendente" | "agendado" | "concluido" | "pago" | "liberado_conferencia";
 type Funcao = "medidor" | "conferente" | "montador";
 
 interface AmbienteRow {
@@ -43,6 +43,7 @@ const STATUS_STYLE: Record<StatusMed, { bg: string; color: string; label: string
   pendente: { bg: "#F1F3F7", color: "#6B7A90", label: "Pendente" },
   agendado: { bg: "#E3F0FB", color: "#1E6FBF", label: "Agendado" },
   concluido: { bg: "#E6F4EA", color: "#05873C", label: "Concluído" },
+  liberado_conferencia: { bg: "#E0F2FE", color: "#0369A1", label: "Aguardando conferência" },
   pago: { bg: "#EFE5FB", color: "#6E3FBF", label: "Pago" },
 };
 
@@ -201,11 +202,51 @@ export function ContratoMedicaoAmbientesSection({
     }
   };
 
+  const handleLiberarSelecionados = async () => {
+    const selecionados = ambientes?.filter(a => a.status_medicao === 'concluido');
+    if (!selecionados || selecionados.length === 0) {
+      toast.error("Nenhum ambiente concluído para liberar.");
+      return;
+    }
+
+    const ids = selecionados.map(a => a.id);
+    const { error } = await sb.from("contrato_ambientes")
+      .update({ status_medicao: 'liberado_conferencia' })
+      .in('id', ids);
+
+    if (error) {
+      toast.error("Erro ao liberar ambientes: " + error.message);
+    } else {
+      toast.success(`${ids.length} ambiente(s) liberado(s) para conferência!`);
+      qc.invalidateQueries({ queryKey: ["ambientes_med_conf", contratoId] });
+    }
+  };
+
+  const handleLiberarTodosConcluidos = async () => {
+    const concluidos = ambientes?.filter(a => a.status_medicao === 'concluido');
+    if (!concluidos || concluidos.length === 0) {
+      toast.error("Não há ambientes concluídos para liberar.");
+      return;
+    }
+
+    const ids = concluidos.map(a => a.id);
+    const { error } = await sb.from("contrato_ambientes")
+      .update({ status_medicao: 'liberado_conferencia' })
+      .in('id', ids);
+
+    if (error) {
+      toast.error("Erro ao liberar todos: " + error.message);
+    } else {
+      toast.success("Todos os ambientes concluídos foram liberados!");
+      qc.invalidateQueries({ queryKey: ["ambientes_med_conf", contratoId] });
+    }
+  };
+
   const handleLiberarConferencia = async () => {
-    // Check if all environments are completed
-    const allDone = ambientes?.every(a => a.medicao_concluido);
+    // Check if all environments are completed (including those already released)
+    const allDone = ambientes?.every(a => a.medicao_concluido || a.status_medicao === 'liberado_conferencia');
     if (!allDone) {
-      toast.error("Conclua a medição de todos os ambientes antes de liberar.");
+      toast.error("Conclua a medição de todos os ambientes antes de liberar o contrato.");
       return;
     }
 
@@ -214,9 +255,9 @@ export function ContratoMedicaoAmbientesSection({
       p_usuario_id: (await supabase.auth.getUser()).data.user?.id
     });
     if (error) {
-      toast.error("Erro ao liberar para conferência: " + error.message);
+      toast.error("Erro ao liberar contrato: " + error.message);
     } else {
-      toast.success("Contrato liberado para conferência!");
+      toast.success("Contrato avançado para conferência!");
       qc.invalidateQueries({ queryKey: ["contrato_dre_view", contratoId] });
       qc.invalidateQueries({ queryKey: ["contrato-tecnico", contratoId] });
       qc.invalidateQueries({ queryKey: ["contratos-tecnico-list", "medicao"] });
@@ -244,14 +285,20 @@ export function ContratoMedicaoAmbientesSection({
         </div>
         {funcao === "medidor" && ambientes && ambientes.length > 0 && (
           <div className="mt-4 space-y-2">
-            <div className="flex items-center justify-between text-xs text-[#6B7A90] font-medium">
-              <span>Progresso da medição</span>
-              <span>{ambientes.filter(a => a.medicao_concluido).length} de {ambientes.length} ambientes concluídos</span>
+            <div className="flex flex-col gap-1 text-xs text-[#6B7A90] font-medium">
+              <div className="flex items-center justify-between">
+                <span>Progresso da medição</span>
+                <span>{ambientes.filter(a => a.medicao_concluido || a.status_medicao === 'liberado_conferencia').length} de {ambientes.length} ambientes concluídos</span>
+              </div>
+              <div className="flex items-center justify-between text-[10px] text-[#1E6FBF]">
+                <span>{ambientes.filter(a => a.status_medicao === 'liberado_conferencia').length} ambientes disponíveis para conferência</span>
+                <span>{ambientes.filter(a => !a.medicao_concluido && a.status_medicao !== 'liberado_conferencia').length} ainda em medição</span>
+              </div>
             </div>
             <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-green-500 transition-all duration-500" 
-                style={{ width: `${(ambientes.filter(a => a.medicao_concluido).length / ambientes.length) * 100}%` }}
+                style={{ width: `${(ambientes.filter(a => a.medicao_concluido || a.status_medicao === 'liberado_conferencia').length / ambientes.length) * 100}%` }}
               />
             </div>
           </div>
@@ -299,6 +346,11 @@ export function ContratoMedicaoAmbientesSection({
             )}
             {ambientes?.map((a) => {
               if ((funcao as string) === "medidor") return null;
+              
+              // Filter for conferente: only show 'liberado_conferencia' or already processed/paid
+              if (funcao === "conferente" && a.status_medicao !== 'liberado_conferencia' && a.status_conferencia === 'pendente') {
+                return null;
+              }
 
               const status = (a[F.status] as StatusMed) || "pendente";
               const st = STATUS_STYLE[status];
@@ -369,6 +421,7 @@ export function ContratoMedicaoAmbientesSection({
                         <SelectItem value="pendente">Pendente</SelectItem>
                         <SelectItem value="agendado">Agendado</SelectItem>
                         <SelectItem value="concluido">Concluído</SelectItem>
+                        <SelectItem value="liberado_conferencia">Aguardando conferência</SelectItem>
                         <SelectItem value="pago">Pago</SelectItem>
                       </SelectContent>
                     </Select>
@@ -456,13 +509,31 @@ export function ContratoMedicaoAmbientesSection({
             </TooltipProvider>
           </div>
           {funcao === "medidor" && ambientes && ambientes.length > 0 && (
-            <Button
-              disabled={ambientes.some(a => !a.medicao_concluido)}
-              onClick={handleLiberarConferencia}
-              className="bg-[#12B76A] hover:bg-[#0e9a58] h-9 text-xs font-semibold px-4"
-            >
-              Liberar para conferência
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                disabled={!ambientes.some(a => a.status_medicao === 'concluido')}
+                onClick={handleLiberarSelecionados}
+                className="h-9 text-xs font-semibold px-4 border-[#1E6FBF] text-[#1E6FBF] hover:bg-[#E3F0FB]"
+              >
+                Liberar selecionados
+              </Button>
+              <Button
+                variant="outline"
+                disabled={!ambientes.some(a => a.status_medicao === 'concluido')}
+                onClick={handleLiberarTodosConcluidos}
+                className="h-9 text-xs font-semibold px-4 border-[#12B76A] text-[#12B76A] hover:bg-[#E6F4EA]"
+              >
+                Liberar todos concluídos
+              </Button>
+              <Button
+                disabled={ambientes.some(a => !a.medicao_concluido && a.status_medicao !== 'liberado_conferencia')}
+                onClick={handleLiberarConferencia}
+                className="bg-[#12B76A] hover:bg-[#0e9a58] h-9 text-xs font-semibold px-4"
+              >
+                Liberar contrato
+              </Button>
+            </div>
           )}
         </div>
       </div>
@@ -630,9 +701,17 @@ function AmbienteMedicaoPanel({
             <div className="flex items-center gap-4">
               <div className={cn(
                 "flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider",
-                isConcluido ? "bg-green-100 text-green-700" : inProgress ? "bg-blue-100 text-blue-700" : "bg-neutral-100 text-[#6B7A90]"
+                ambiente.status_medicao === 'liberado_conferencia' ? "bg-blue-100 text-blue-700" :
+                isConcluido ? "bg-green-100 text-green-700" : 
+                inProgress ? "bg-blue-100 text-blue-700" : 
+                "bg-neutral-100 text-[#6B7A90]"
               )}>
-                {isConcluido ? (
+                {ambiente.status_medicao === 'liberado_conferencia' ? (
+                  <>
+                    <CheckCircle2 size={13} />
+                    <span>Aguardando conferência</span>
+                  </>
+                ) : isConcluido ? (
                   <>
                     <CheckCircle2 size={13} />
                     <span>Concluído</span>
@@ -649,14 +728,31 @@ function AmbienteMedicaoPanel({
                   </>
                 )}
               </div>
-              <Button 
-                variant={isConcluido ? "outline" : "default"} 
-                size="sm" 
-                className={cn("h-8 text-xs", !isConcluido && "bg-[#0D1117] hover:bg-[#000000]")}
-                onClick={(e) => { e.stopPropagation(); if (isConcluido) toggleConcluido(); else setExpanded(true); }}
-              >
-                {isConcluido ? "Ver medição" : (inProgress || expanded) ? "Continuar" : "Preencher"}
-              </Button>
+              
+              <div className="flex gap-2">
+                {isConcluido && ambiente.status_medicao !== 'liberado_conferencia' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 text-xs border-[#1E6FBF] text-[#1E6FBF] hover:bg-[#E3F0FB]"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      await onUpdate(ambiente.id, { status_medicao: 'liberado_conferencia' });
+                      toast.success("Ambiente liberado para conferência!");
+                    }}
+                  >
+                    Liberar para conferir
+                  </Button>
+                )}
+                <Button 
+                  variant={isConcluido ? "outline" : "default"} 
+                  size="sm" 
+                  className={cn("h-8 text-xs", !isConcluido && "bg-[#0D1117] hover:bg-[#000000]")}
+                  onClick={(e) => { e.stopPropagation(); if (isConcluido) toggleConcluido(); else setExpanded(true); }}
+                >
+                  {isConcluido ? "Ver medição" : (inProgress || expanded) ? "Continuar" : "Preencher"}
+                </Button>
+              </div>
             </div>
           </div>
 
