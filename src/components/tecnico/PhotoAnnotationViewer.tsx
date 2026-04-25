@@ -34,7 +34,7 @@ interface PhotoAnnotationViewerProps {
   onSave: (annotations: Annotation[]) => void;
 }
 
-type Tool = 'point' | 'arrow' | 'line' | 'circle' | 'rect' | 'text' | 'eraser';
+type Tool = 'point' | 'arrow' | 'line' | 'circle' | 'rect' | 'text' | 'eraser' | 'none';
 
 export function PhotoAnnotationViewer({ 
   photo, 
@@ -45,7 +45,7 @@ export function PhotoAnnotationViewer({
   onSave 
 }: PhotoAnnotationViewerProps) {
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
-  const [activeTool, setActiveTool] = useState<Tool>('point');
+  const [activeTool, setActiveTool] = useState<Tool>('none');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [drawingStart, setDrawingStart] = useState<{ x: number, y: number } | null>(null);
   const [tempDrawing, setTempDrawing] = useState<{ x2: number, y2: number } | null>(null);
@@ -74,7 +74,7 @@ export function PhotoAnnotationViewer({
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (activeTool === 'eraser') return;
+    if (activeTool === 'eraser' || activeTool === 'none') return;
     const coords = getCoords(e);
     
     if (['arrow', 'line', 'circle', 'rect'].includes(activeTool)) {
@@ -88,10 +88,12 @@ export function PhotoAnnotationViewer({
         x: coords.x,
         y: coords.y,
         text: "",
-        color: activeTool === 'point' ? '#e11d48' : '#eab308' // rose-600 vs yellow-500
+        color: activeTool === 'point' ? '#e11d48' : '#eab308'
       };
       setAnnotations([...annotations, newAnn]);
       setEditingId(id);
+      // Volta para modo seleção após criar ponto/texto
+      setActiveTool('none');
     }
   };
 
@@ -120,8 +122,24 @@ export function PhotoAnnotationViewer({
       setEditingId(id);
       setDrawingStart(null);
       setTempDrawing(null);
+      // Volta para modo seleção após desenhar
+      setActiveTool('none');
     }
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Delete' && editingId) {
+        setAnnotations(annotations.filter(a => a.id !== editingId));
+        setEditingId(null);
+      }
+      if (e.key === 'Escape') {
+        setEditingId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editingId, annotations]);
 
   const handleAnnotationClick = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -274,7 +292,7 @@ export function PhotoAnnotationViewer({
 
           <div 
             ref={containerRef}
-            className="relative inline-block max-w-full max-h-full"
+            className={`relative inline-block max-w-full max-h-full ${activeTool === 'none' ? 'cursor-default' : 'cursor-crosshair'}`}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
