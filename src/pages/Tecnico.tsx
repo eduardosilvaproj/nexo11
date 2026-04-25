@@ -302,8 +302,8 @@ export default function Tecnico() {
                   stats.total === 0
                     ? { label: "Aguardando", bg: "#E8ECF2", color: "#6B7A90" }
                     : stats.done === stats.total
-                    ? { label: "Liberado ✓", bg: "#D1FAE5", color: "#05873C" }
-                    : { label: "Pendente", bg: "#FDECEA", color: "#E53935" };
+                    ? { label: "Concluído ✓", bg: "#D1FAE5", color: "#05873C" }
+                    : { label: "Pendente", bg: "#FEF3C7", color: "#C7741A" };
 
                 return (
                   <TableRow key={c.id}>
