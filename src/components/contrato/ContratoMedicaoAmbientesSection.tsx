@@ -562,10 +562,10 @@ function AmbienteMedicaoPanel({
               <Button 
                 variant={isConcluido ? "outline" : "default"} 
                 size="sm" 
-                className={cn("h-8 text-xs", !isConcluido && "bg-[#1E6FBF] hover:bg-[#165a9e]")}
+                className={cn("h-8 text-xs", !isConcluido && "bg-[#0D1117] hover:bg-[#000000]")}
                 onClick={(e) => { e.stopPropagation(); if (isConcluido) toggleConcluido(); else setExpanded(true); }}
               >
-                {isConcluido ? "Reabrir" : (inProgress || expanded) ? "Continuar medição" : "Iniciar medição"}
+                {isConcluido ? "Ver medição" : (inProgress || expanded) ? "Continuar" : "Preencher"}
               </Button>
             </div>
           </div>
