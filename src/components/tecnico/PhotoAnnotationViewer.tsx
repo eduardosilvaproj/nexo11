@@ -467,7 +467,10 @@ export function PhotoAnnotationViewer({
                 {editingId === ann.id && (
                   <div 
                     className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-white p-2 rounded-lg shadow-xl border flex items-center gap-2 z-30 pointer-events-auto"
-                    onMouseDown={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => {
+                      e.stopPropagation();
+                      e.nativeEvent.stopImmediatePropagation();
+                    }}
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Input
