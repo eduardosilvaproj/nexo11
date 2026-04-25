@@ -11,9 +11,11 @@ import { MontadorFormDialog, type Montador } from "@/components/configuracoes/Mo
 const sb = supabase as unknown as { from: (t: string) => any };
 
 const FUNCAO_BADGES: Record<string, { label: string; bg: string; color: string }> = {
-  montador:   { label: "Montador",   bg: "#E3F0FB", color: "#1E6FBF" },
-  medidor:    { label: "Medidor",    bg: "#FCE9D6", color: "#C7741A" },
-  conferente: { label: "Conferente", bg: "#DDF3E5", color: "#117A40" },
+  montador:   { label: "Montador",   bg: "#FAECE7", color: "#993C1D" },
+  tecnico:    { label: "Técnico",    bg: "#EEEDFE", color: "#534AB7" },
+  medidor:    { label: "Medidor",    bg: "#EEEDFE", color: "#534AB7" },
+  conferente: { label: "Conferente", bg: "#EEEDFE", color: "#534AB7" },
+  motorista:  { label: "Motorista",  bg: "#FFF4E5", color: "#B45309" },
 };
 
 function FuncaoBadges({ funcoes }: { funcoes: string[] | null | undefined }) {
