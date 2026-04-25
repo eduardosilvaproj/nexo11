@@ -472,10 +472,12 @@ export function ContratoMedicaoAmbientesSection({
 
 function AmbienteMedicaoPanel({ 
   ambiente, 
-  onUpdate 
+  onUpdate,
+  contratoId
 }: { 
   ambiente: AmbienteRow; 
   onUpdate: (id: string, patch: any) => Promise<boolean>;
+  contratoId: string;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [uploading, setUploading] = useState<'photos' | 'scan' | null>(null);
