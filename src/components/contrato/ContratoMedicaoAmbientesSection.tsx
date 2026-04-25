@@ -202,11 +202,51 @@ export function ContratoMedicaoAmbientesSection({
     }
   };
 
+  const handleLiberarSelecionados = async () => {
+    const selecionados = ambientes?.filter(a => a.status_medicao === 'concluido');
+    if (!selecionados || selecionados.length === 0) {
+      toast.error("Nenhum ambiente concluído para liberar.");
+      return;
+    }
+
+    const ids = selecionados.map(a => a.id);
+    const { error } = await sb.from("contrato_ambientes")
+      .update({ status_medicao: 'liberado_conferencia' })
+      .in('id', ids);
+
+    if (error) {
+      toast.error("Erro ao liberar ambientes: " + error.message);
+    } else {
+      toast.success(`${ids.length} ambiente(s) liberado(s) para conferência!`);
+      qc.invalidateQueries({ queryKey: ["ambientes_med_conf", contratoId] });
+    }
+  };
+
+  const handleLiberarTodosConcluidos = async () => {
+    const concluidos = ambientes?.filter(a => a.status_medicao === 'concluido');
+    if (!concluidos || concluidos.length === 0) {
+      toast.error("Não há ambientes concluídos para liberar.");
+      return;
+    }
+
+    const ids = concluidos.map(a => a.id);
+    const { error } = await sb.from("contrato_ambientes")
+      .update({ status_medicao: 'liberado_conferencia' })
+      .in('id', ids);
+
+    if (error) {
+      toast.error("Erro ao liberar todos: " + error.message);
+    } else {
+      toast.success("Todos os ambientes concluídos foram liberados!");
+      qc.invalidateQueries({ queryKey: ["ambientes_med_conf", contratoId] });
+    }
+  };
+
   const handleLiberarConferencia = async () => {
-    // Check if all environments are completed
-    const allDone = ambientes?.every(a => a.medicao_concluido);
+    // Check if all environments are completed (including those already released)
+    const allDone = ambientes?.every(a => a.medicao_concluido || a.status_medicao === 'liberado_conferencia');
     if (!allDone) {
-      toast.error("Conclua a medição de todos os ambientes antes de liberar.");
+      toast.error("Conclua a medição de todos os ambientes antes de liberar o contrato.");
       return;
     }
 
@@ -215,9 +255,9 @@ export function ContratoMedicaoAmbientesSection({
       p_usuario_id: (await supabase.auth.getUser()).data.user?.id
     });
     if (error) {
-      toast.error("Erro ao liberar para conferência: " + error.message);
+      toast.error("Erro ao liberar contrato: " + error.message);
     } else {
-      toast.success("Contrato liberado para conferência!");
+      toast.success("Contrato avançado para conferência!");
       qc.invalidateQueries({ queryKey: ["contrato_dre_view", contratoId] });
       qc.invalidateQueries({ queryKey: ["contrato-tecnico", contratoId] });
       qc.invalidateQueries({ queryKey: ["contratos-tecnico-list", "medicao"] });
