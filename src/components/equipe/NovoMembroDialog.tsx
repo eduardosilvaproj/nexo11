@@ -14,13 +14,19 @@ type Props = {
   onOpenChange: (open: boolean) => void;
 };
 
-const ROLES = [
+export const FUNCOES_DISPONIVEIS = [
   { value: "vendedor", label: "Vendedor" },
-  { value: "tecnico", label: "Técnico" },
+  { value: "projetista", label: "Projetista" },
+  { value: "tecnico", label: "Técnico / Medidor" },
+  { value: "conferente", label: "Conferente" },
   { value: "montador", label: "Montador" },
+  { value: "motorista", label: "Motorista / Entregador" },
   { value: "gerente", label: "Gerente" },
-  { value: "admin", label: "Admin" },
+  { value: "financeiro", label: "Financeiro" },
+  { value: "admin", label: "Administrador" },
 ] as const;
+
+export type FuncaoUsuario = typeof FUNCOES_DISPONIVEIS[number]["value"];
 
 const NONE = "__none__";
 
