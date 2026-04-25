@@ -183,6 +183,20 @@ export function ContratoMedicaoAmbientesSection({
     }
   };
 
+  const handleLiberarConferencia = async () => {
+    const { error } = await supabase.rpc('avancar_contrato', { 
+      p_contrato_id: contratoId,
+      p_usuario_id: (await supabase.auth.getUser()).data.user?.id
+    });
+    if (error) {
+      toast.error("Erro ao liberar para conferência: " + error.message);
+    } else {
+      toast.success("Contrato liberado para conferência!");
+      qc.invalidateQueries({ queryKey: ["contrato_dre_view", contratoId] });
+      qc.invalidateQueries({ queryKey: ["contrato-tecnico", contratoId] });
+    }
+  };
+
   // Total a pagar (somente desta função)
   const totalPagar = (ambientes ?? []).reduce(
     (acc, a) => acc + (Number(a[F.valor]) || 0),
