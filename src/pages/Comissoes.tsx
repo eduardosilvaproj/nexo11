@@ -110,7 +110,12 @@ export default function Comissoes() {
         .select("id, nome, papel_comissao_id, comissao_percentual, funcoes")
         .eq("loja_id", lojaId);
       if (errMembros) throw errMembros;
-      const membrosValidos = (membros ?? []).filter((m) => m.papel_comissao_id);
+      const membrosValidos = (membros ?? []).filter((m) => {
+        const userFuncoes = (m.funcoes as string[]) || [];
+        // Verifica se o usuário tem alguma das funções vinculadas aos papéis com comissão
+        // Por simplificação inicial, mantemos o papel_comissao_id, mas agora buscamos todos usuários da loja
+        return m.papel_comissao_id && papelIds.includes(m.papel_comissao_id);
+      });
       if (!membrosValidos.length) {
         toast.info("Nenhum membro com papel de comissão configurado");
         return;
