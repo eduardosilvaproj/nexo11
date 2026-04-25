@@ -537,12 +537,17 @@ function AmbienteMedicaoPanel({
             <div className="flex items-center gap-4">
               <div className={cn(
                 "flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider",
-                isConcluido ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
+                isConcluido ? "bg-green-100 text-green-700" : inProgress ? "bg-blue-100 text-blue-700" : "bg-neutral-100 text-[#6B7A90]"
               )}>
                 {isConcluido ? (
                   <>
                     <CheckCircle2 size={13} />
                     <span>Concluído</span>
+                  </>
+                ) : inProgress ? (
+                  <>
+                    <Loader2 size={13} className="animate-spin" />
+                    <span>Em preenchimento</span>
                   </>
                 ) : (
                   <>
@@ -555,9 +560,9 @@ function AmbienteMedicaoPanel({
                 variant={isConcluido ? "outline" : "default"} 
                 size="sm" 
                 className={cn("h-8 text-xs", !isConcluido && "bg-[#1E6FBF] hover:bg-[#165a9e]")}
-                onClick={(e) => { e.stopPropagation(); toggleConcluido(); }}
+                onClick={(e) => { e.stopPropagation(); if (isConcluido) toggleConcluido(); else setExpanded(true); }}
               >
-                {isConcluido ? "Reabrir" : "Concluir Medição"}
+                {isConcluido ? "Reabrir" : (inProgress || expanded) ? "Continuar medição" : "Iniciar medição"}
               </Button>
             </div>
           </div>
