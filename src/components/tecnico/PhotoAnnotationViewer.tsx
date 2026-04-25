@@ -462,6 +462,7 @@ export function PhotoAnnotationViewer({
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
+                          saveToHistory(annotations);
                           setEditingId(null);
                           setActiveTool('none');
                         }
