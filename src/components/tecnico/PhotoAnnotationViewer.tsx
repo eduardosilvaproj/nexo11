@@ -349,16 +349,35 @@ export function PhotoAnnotationViewer({
     }
   };
 
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      handleCloseRequest();
+    }
+  };
+
   // Removed saveAndClose in favor of more generic functions above
 
   return (
     <>
     <Dialog open={open} onOpenChange={(val) => {
       if (!val) {
+        // We prevent the Dialog from closing itself via overlay/Esc here 
+        // to handle the unsaved changes warning properly.
+        // Shadcn UI's Dialog onOpenChange only tells us it *wants* to close.
         handleCloseRequest();
       }
     }}>
-      <DialogContent className="max-w-[95vw] w-full h-[95vh] flex flex-col p-0 overflow-hidden bg-neutral-900 border-none">
+      <DialogContent 
+        className="max-w-[95vw] w-full h-[95vh] flex flex-col p-0 overflow-hidden bg-neutral-900 border-none"
+        onPointerDownOutside={(e) => {
+          e.preventDefault();
+          handleCloseRequest();
+        }}
+        onEscapeKeyDown={(e) => {
+          e.preventDefault();
+          handleCloseRequest();
+        }}
+      >
         <DialogHeader className="p-4 bg-neutral-900 border-b border-neutral-800 shrink-0 flex-row items-center justify-between space-y-0">
           <div className="flex items-center gap-4">
             <div className="flex flex-col">
@@ -388,7 +407,7 @@ export function PhotoAnnotationViewer({
           <div className="flex items-center gap-2">
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-white hover:bg-neutral-800">
+                <Button variant="ghost" size="icon" className="text-white hover:bg-neutral-800" title="Baixar foto">
                   <Download className="h-5 w-5" />
                 </Button>
               </PopoverTrigger>
