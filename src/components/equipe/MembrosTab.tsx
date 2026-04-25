@@ -18,15 +18,18 @@ type Membro = {
   comissao_percentual: number | null;
 };
 
-const ROLE_COLORS: Record<AppRole, { bg: string; fg: string; avatar: string; label: string }> = {
+const ROLE_COLORS: Record<string, { bg: string; fg: string; avatar: string; label: string }> = {
   admin:       { bg: "#E6F3FF", fg: "#1E6FBF", avatar: "#1E6FBF", label: "Admin" },
   gerente:     { bg: "#E6F3FF", fg: "#1E6FBF", avatar: "#1E6FBF", label: "Gerente" },
   vendedor:    { bg: "#E6F7EE", fg: "#0E8A52", avatar: "#12B76A", label: "Vendedor" },
   tecnico:     { bg: "#EEEDFE", fg: "#534AB7", avatar: "#534AB7", label: "Técnico" },
+  medidor:     { bg: "#EEEDFE", fg: "#534AB7", avatar: "#534AB7", label: "Medidor" },
   montador:    { bg: "#FAECE7", fg: "#993C1D", avatar: "#D85A30", label: "Montador" },
   franqueador: { bg: "#F1F2F4", fg: "#0D1117", avatar: "#0D1117", label: "Franqueador" },
-  medidor:     { bg: "#E6F3FF", fg: "#1E6FBF", avatar: "#1E6FBF", label: "Medidor" },
   conferente:  { bg: "#EEEDFE", fg: "#534AB7", avatar: "#534AB7", label: "Conferente" },
+  motorista:   { bg: "#FFF4E5", fg: "#B45309", avatar: "#B45309", label: "Motorista" },
+  projetista:  { bg: "#F3E8FF", fg: "#7E22CE", avatar: "#7E22CE", label: "Projetista" },
+  financeiro:  { bg: "#DCFCE7", fg: "#15803D", avatar: "#15803D", label: "Financeiro" },
 };
 
 function getInitials(nome: string) {
