@@ -7,26 +7,29 @@ import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { EditarComissaoDialog } from "./EditarComissaoDialog";
 
-type AppRole = Database["public"]["Enums"]["app_role"];
+type FuncaoUsuario = "vendedor" | "projetista" | "tecnico" | "conferente" | "montador" | "motorista" | "gerente" | "financeiro" | "admin" | "franqueador" | "medidor";
 
 type Membro = {
   id: string;
   nome: string;
   email: string | null;
-  role: AppRole;
+  funcoes: FuncaoUsuario[];
   papel_nome: string | null;
   comissao_percentual: number | null;
 };
 
-const ROLE_COLORS: Record<AppRole, { bg: string; fg: string; avatar: string; label: string }> = {
+const ROLE_COLORS: Record<string, { bg: string; fg: string; avatar: string; label: string }> = {
   admin:       { bg: "#E6F3FF", fg: "#1E6FBF", avatar: "#1E6FBF", label: "Admin" },
   gerente:     { bg: "#E6F3FF", fg: "#1E6FBF", avatar: "#1E6FBF", label: "Gerente" },
   vendedor:    { bg: "#E6F7EE", fg: "#0E8A52", avatar: "#12B76A", label: "Vendedor" },
   tecnico:     { bg: "#EEEDFE", fg: "#534AB7", avatar: "#534AB7", label: "Técnico" },
+  medidor:     { bg: "#EEEDFE", fg: "#534AB7", avatar: "#534AB7", label: "Medidor" },
   montador:    { bg: "#FAECE7", fg: "#993C1D", avatar: "#D85A30", label: "Montador" },
   franqueador: { bg: "#F1F2F4", fg: "#0D1117", avatar: "#0D1117", label: "Franqueador" },
-  medidor:     { bg: "#E6F3FF", fg: "#1E6FBF", avatar: "#1E6FBF", label: "Medidor" },
   conferente:  { bg: "#EEEDFE", fg: "#534AB7", avatar: "#534AB7", label: "Conferente" },
+  motorista:   { bg: "#FFF4E5", fg: "#B45309", avatar: "#B45309", label: "Motorista" },
+  projetista:  { bg: "#F3E8FF", fg: "#7E22CE", avatar: "#7E22CE", label: "Projetista" },
+  financeiro:  { bg: "#DCFCE7", fg: "#15803D", avatar: "#15803D", label: "Financeiro" },
 };
 
 function getInitials(nome: string) {
@@ -39,37 +42,30 @@ function getInitials(nome: string) {
 async function fetchMembros(): Promise<Membro[]> {
   const { data: usuarios, error: uErr } = await supabase
     .from("usuarios")
-    .select("id, nome, email, papel_comissao_id, comissao_percentual")
+    .select("id, nome, email, papel_comissao_id, comissao_percentual, funcoes")
     .order("nome");
   if (uErr) throw uErr;
   if (!usuarios?.length) return [];
 
-  const ids = usuarios.map((u) => u.id);
   const papelIds = Array.from(
     new Set(usuarios.map((u) => u.papel_comissao_id).filter(Boolean) as string[])
   );
 
-  const [rolesRes, papeisRes] = await Promise.all([
-    supabase.from("user_roles").select("user_id, role").in("user_id", ids),
-    papelIds.length
-      ? supabase.from("papeis_comissao").select("id, nome").in("id", papelIds)
-      : Promise.resolve({ data: [] as { id: string; nome: string }[], error: null }),
-  ]);
-  if (rolesRes.error) throw rolesRes.error;
+  const { data: papeis, error: pErr } = await (papelIds.length
+    ? supabase.from("papeis_comissao").select("id, nome").in("id", papelIds)
+    : Promise.resolve({ data: [] as { id: string; nome: string }[], error: null }));
+  
+  if (pErr) throw pErr;
 
-  const roleByUser = new Map<string, AppRole>();
-  rolesRes.data?.forEach((r) => {
-    if (!roleByUser.has(r.user_id)) roleByUser.set(r.user_id, r.role);
-  });
   const papelById = new Map<string, string>(
-    (papeisRes.data ?? []).map((p) => [p.id, p.nome])
+    (papeis ?? []).map((p) => [p.id, p.nome])
   );
 
   return usuarios.map((u) => ({
     id: u.id,
     nome: u.nome,
     email: u.email,
-    role: roleByUser.get(u.id) ?? "vendedor",
+    funcoes: (u.funcoes as FuncaoUsuario[]) || ["vendedor"],
     papel_nome: u.papel_comissao_id ? papelById.get(u.papel_comissao_id) ?? null : null,
     comissao_percentual: u.comissao_percentual != null ? Number(u.comissao_percentual) : null,
   }));
@@ -84,7 +80,8 @@ function MembroCard({
   podeEditar: boolean;
   onEditar: () => void;
 }) {
-  const role = ROLE_COLORS[membro.role];
+  const principalRole = membro.funcoes[0] || "vendedor";
+  const role = ROLE_COLORS[principalRole] || ROLE_COLORS.vendedor;
   return (
     <div className="rounded-xl bg-white p-4" style={{ border: "0.5px solid #E8ECF2" }}>
       <div className="flex items-start gap-3">
@@ -109,12 +106,20 @@ function MembroCard({
               </button>
             )}
           </div>
-          <span
-            className="mt-1 inline-flex items-center rounded-full px-2 py-0.5"
-            style={{ backgroundColor: role.bg, color: role.fg, fontSize: 11, fontWeight: 500 }}
-          >
-            {role.label}
-          </span>
+          <div className="mt-1 flex flex-wrap gap-1">
+            {membro.funcoes.map(f => {
+              const config = ROLE_COLORS[f] || ROLE_COLORS.vendedor;
+              return (
+                <span
+                  key={f}
+                  className="inline-flex items-center rounded-full px-2 py-0.5"
+                  style={{ backgroundColor: config.bg, color: config.fg, fontSize: 10, fontWeight: 500 }}
+                >
+                  {config.label}
+                </span>
+              );
+            })}
+          </div>
         </div>
       </div>
 

@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { z } from "zod";
 
@@ -13,20 +14,27 @@ type Props = {
   onOpenChange: (open: boolean) => void;
 };
 
-const ROLES = [
+export const FUNCOES_DISPONIVEIS = [
   { value: "vendedor", label: "Vendedor" },
-  { value: "tecnico", label: "Técnico" },
+  { value: "projetista", label: "Projetista" },
+  { value: "tecnico", label: "Técnico / Medidor" },
+  { value: "conferente", label: "Conferente" },
   { value: "montador", label: "Montador" },
+  { value: "motorista", label: "Motorista / Entregador" },
   { value: "gerente", label: "Gerente" },
-  { value: "admin", label: "Admin" },
+  { value: "financeiro", label: "Financeiro" },
+  { value: "admin", label: "Administrador" },
 ] as const;
+
+export type FuncaoUsuario = typeof FUNCOES_DISPONIVEIS[number]["value"];
 
 const NONE = "__none__";
 
 const schema = z.object({
   nome: z.string().trim().min(1, "Nome obrigatório").max(120),
   email: z.string().trim().email("E-mail inválido").max(255),
-  role: z.enum(["vendedor", "tecnico", "montador", "gerente", "admin"]),
+  funcoes: z.array(z.string()).min(1, "Selecione ao menos uma função"),
+  funcoes_app_habilitadas: z.array(z.string()),
   equipe_id: z.string().uuid().optional().nullable(),
   papel_comissao_id: z.string().uuid().optional().nullable(),
   comissao_percentual: z.number().min(0).max(100).optional().nullable(),
@@ -36,7 +44,8 @@ export function NovoMembroDialog({ open, onOpenChange }: Props) {
   const qc = useQueryClient();
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState<typeof ROLES[number]["value"]>("vendedor");
+  const [funcoes, setFuncoes] = useState<FuncaoUsuario[]>(["vendedor"]);
+  const [funcoesApp, setFuncoesApp] = useState<FuncaoUsuario[]>([]);
   const [equipeId, setEquipeId] = useState<string>("");
   const [papelId, setPapelId] = useState<string>(NONE);
   const [comissaoPct, setComissaoPct] = useState<string>("");
@@ -78,8 +87,13 @@ export function NovoMembroDialog({ open, onOpenChange }: Props) {
   }, [papelId, papeis]);
 
   function reset() {
-    setNome(""); setEmail(""); setRole("vendedor");
-    setEquipeId(""); setPapelId(NONE); setComissaoPct("");
+    setNome(""); 
+    setEmail(""); 
+    setFuncoes(["vendedor"]);
+    setFuncoesApp([]);
+    setEquipeId(""); 
+    setPapelId(NONE); 
+    setComissaoPct("");
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -88,8 +102,9 @@ export function NovoMembroDialog({ open, onOpenChange }: Props) {
     const parsed = schema.safeParse({
       nome,
       email,
-      role,
-      equipe_id: role === "montador" && equipeId ? equipeId : null,
+      funcoes,
+      funcoes_app_habilitadas: funcoesApp,
+      equipe_id: funcoes.includes("montador") && equipeId ? equipeId : null,
       papel_comissao_id: papelId === NONE ? null : papelId,
       comissao_percentual: pctNum,
     });
@@ -136,16 +151,47 @@ export function NovoMembroDialog({ open, onOpenChange }: Props) {
             <p style={{ fontSize: 11, color: "#6B7A90" }}>Será usado para login no sistema</p>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label style={{ fontSize: 12, color: "#0D1117" }}>Acesso (role) *</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as typeof role)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {ROLES.map((r) => (
-                  <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex flex-col gap-2.5">
+            <Label style={{ fontSize: 12, color: "#0D1117" }}>Funções no sistema *</Label>
+            <div className="grid grid-cols-2 gap-2 rounded-lg border border-neutral-200 p-3">
+              {FUNCOES_DISPONIVEIS.map((f) => (
+                <div key={f.value} className="flex items-center gap-2">
+                  <Checkbox 
+                    id={`funcao-${f.value}`} 
+                    checked={funcoes.includes(f.value)}
+                    onCheckedChange={(checked) => {
+                      if (checked) setFuncoes([...funcoes, f.value]);
+                      else setFuncoes(funcoes.filter(x => x !== f.value));
+                    }}
+                  />
+                  <Label htmlFor={`funcao-${f.value}`} className="text-xs font-normal cursor-pointer">
+                    {f.label}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2.5">
+            <Label style={{ fontSize: 12, color: "#0D1117" }}>Habilitar módulos no App Mobile</Label>
+            <div className="grid grid-cols-2 gap-2 rounded-lg border border-neutral-200 p-3 bg-neutral-50/50">
+              {FUNCOES_DISPONIVEIS.filter(f => ["tecnico", "montador", "motorista", "gerente", "vendedor"].includes(f.value)).map((f) => (
+                <div key={`app-${f.value}`} className="flex items-center gap-2">
+                  <Checkbox 
+                    id={`app-${f.value}`} 
+                    checked={funcoesApp.includes(f.value)}
+                    onCheckedChange={(checked) => {
+                      if (checked) setFuncoesApp([...funcoesApp, f.value]);
+                      else setFuncoesApp(funcoesApp.filter(x => x !== f.value));
+                    }}
+                  />
+                  <Label htmlFor={`app-${f.value}`} className="text-xs font-normal cursor-pointer">
+                    {f.label}
+                  </Label>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground italic">Determine quais áreas este usuário acessará pelo celular</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -176,7 +222,7 @@ export function NovoMembroDialog({ open, onOpenChange }: Props) {
             </div>
           </div>
 
-          {role === "montador" && (
+          {funcoes.includes("montador") && (
             <div className="flex flex-col gap-1.5">
               <Label style={{ fontSize: 12, color: "#0D1117" }}>Equipe de montagem</Label>
               <Select value={equipeId} onValueChange={setEquipeId}>

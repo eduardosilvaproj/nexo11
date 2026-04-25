@@ -24,7 +24,7 @@ export function NovaEntregaDialog({ open, onOpenChange, defaultDate, defaultTurn
   const [endereco, setEndereco] = useState("");
   const [data, setData] = useState(defaultDate ?? "");
   const [turno, setTurno] = useState<"manha" | "tarde" | "dia_todo">(defaultTurno ?? "manha");
-  const [responsavel, setResponsavel] = useState("");
+  const [responsavelId, setResponsavelId] = useState<string>("__none__");
   const [observacoes, setObservacoes] = useState("");
   const [custo, setCusto] = useState("");
 
@@ -50,6 +50,19 @@ export function NovaEntregaDialog({ open, onOpenChange, defaultDate, defaultTurn
     },
   });
 
+  const { data: motoristas } = useQuery({
+    queryKey: ["usuarios-motoristas"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("usuarios")
+        .select("id, nome")
+        .contains("funcoes", ["motorista"])
+        .order("nome");
+      return data ?? [];
+    },
+    enabled: open,
+  });
+
   const onPickContrato = (id: string) => {
     setContratoId(id);
     if (id === "manual") return;
@@ -70,14 +83,16 @@ export function NovaEntregaDialog({ open, onOpenChange, defaultDate, defaultTurn
 
       const custoNum = parseFloat(custo.replace(",", ".")) || 0;
 
+      const respNome = responsavelId === "__none__" ? null : motoristas?.find(m => m.id === responsavelId)?.nome || null;
+
       const { error } = await supabase.from("entregas").insert({
         contrato_id: contratoId,
         data_prevista: data,
         rota: endereco || null,
         endereco: endereco || null,
         turno,
-        responsavel: responsavel || null,
-        transportadora: responsavel || null,
+        responsavel: respNome,
+        transportadora: respNome,
         observacoes: observacoes || null,
         custo_frete: custoNum,
         status_visual: "agendado",
@@ -90,8 +105,13 @@ export function NovaEntregaDialog({ open, onOpenChange, defaultDate, defaultTurn
       qc.invalidateQueries({ queryKey: ["logistica-contratos"] });
       onOpenChange(false);
       setContratoId("manual");
-      setCliente(""); setEndereco(""); setData(""); setResponsavel("");
-      setObservacoes(""); setCusto(""); setTurno("manha");
+      setCliente(""); 
+      setEndereco(""); 
+      setData(""); 
+      setResponsavelId("__none__");
+      setObservacoes(""); 
+      setCusto(""); 
+      setTurno("manha");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -123,7 +143,15 @@ export function NovaEntregaDialog({ open, onOpenChange, defaultDate, defaultTurn
             </div>
             <div className="space-y-1.5">
               <Label>Responsável</Label>
-              <Input value={responsavel} onChange={(e) => setResponsavel(e.target.value)} placeholder="Motorista / equipe" />
+              <Select value={responsavelId} onValueChange={setResponsavelId}>
+                <SelectTrigger><SelectValue placeholder="Selecione um motorista" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Não atribuído</SelectItem>
+                  {motoristas?.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
