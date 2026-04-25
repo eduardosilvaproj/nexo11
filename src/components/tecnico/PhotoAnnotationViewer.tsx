@@ -137,9 +137,10 @@ export function PhotoAnnotationViewer({
         text: "",
         color: activeTool === 'point' ? '#e11d48' : '#eab308'
       };
-      setAnnotations([...annotations, newAnn]);
+      const newAnns = [...annotations, newAnn];
+      setAnnotations(newAnns);
+      saveToHistory(newAnns);
       setEditingId(id);
-      // Volta para modo seleção após criar ponto/texto
       setActiveTool('none');
     }
   };
