@@ -24,7 +24,7 @@ export function NovaEntregaDialog({ open, onOpenChange, defaultDate, defaultTurn
   const [endereco, setEndereco] = useState("");
   const [data, setData] = useState(defaultDate ?? "");
   const [turno, setTurno] = useState<"manha" | "tarde" | "dia_todo">(defaultTurno ?? "manha");
-  const [responsavel, setResponsavel] = useState("");
+  const [responsavelId, setResponsavelId] = useState<string>("__none__");
   const [observacoes, setObservacoes] = useState("");
   const [custo, setCusto] = useState("");
 
