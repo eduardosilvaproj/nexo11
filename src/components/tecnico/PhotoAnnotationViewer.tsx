@@ -65,14 +65,15 @@ export function PhotoAnnotationViewer({
   useEffect(() => {
     if (open) {
       const initialAnns = photo.annotations || [];
-      setAnnotations(initialAnns);
-      setHistory([initialAnns]);
+      setAnnotations(JSON.parse(JSON.stringify(initialAnns))); // Deep copy
+      setHistory([JSON.parse(JSON.stringify(initialAnns))]);
       setHistoryIndex(0);
       setEditingId(null);
       setDrawingStart(null);
       setTempDrawing(null);
+      setHasUnsavedChanges(false);
     }
-  }, [open, photo.url, photo.annotations]);
+  }, [open, photo.url]);
 
   const saveToHistory = (newAnns: Annotation[]) => {
     const newHistory = history.slice(0, historyIndex + 1);
