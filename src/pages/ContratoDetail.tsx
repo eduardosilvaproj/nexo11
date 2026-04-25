@@ -259,10 +259,11 @@ export default function ContratoDetail() {
         etapaPendente = "comercial";
       }
     } else if (contrato.status === "tecnico") {
-      const total = checklists?.length ?? 0;
-      const pend = (checklists ?? []).filter((c) => !c.concluido).length;
+      const amb = Array.isArray(ambientes) ? ambientes : [];
+      const total = amb.length;
+      const pend = amb.filter((a) => !a.medicao_concluido).length;
       if (total === 0 || pend > 0) {
-        travaMensagem = `Checklist técnico precisa estar 100% concluído (${pend} pendente${pend === 1 ? "" : "s"}).`;
+        travaMensagem = total === 0 ? "Nenhum ambiente importado." : `Medição fina precisa estar 100% concluída (${pend} pendente${pend === 1 ? "" : "s"}).`;
         etapaPendente = "tecnico";
       }
     } else if (contrato.status === "producao") {

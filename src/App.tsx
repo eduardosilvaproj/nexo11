@@ -23,6 +23,8 @@ import Dre from "./pages/Dre";
 import Financeiro from "./pages/Financeiro";
 import Comissoes from "./pages/Comissoes";
 import ContratoDetail from "./pages/ContratoDetail";
+import ContratoMedicao from "./pages/ContratoMedicao";
+import ContratoConferencia from "./pages/ContratoConferencia";
 import Analytics from "./pages/Analytics";
 import Lojas from "./pages/Lojas";
 import LojaDetail from "./pages/LojaDetail";
@@ -72,6 +74,8 @@ const App = () => (
                 </ProtectedRoute>
               } />
               <Route path="/contratos/:id" element={<ContratoDetail />} />
+              <Route path="/contratos/:id/medicao" element={<ContratoMedicao />} />
+              <Route path="/contratos/:id/conferencia" element={<ContratoConferencia />} />
               <Route path="/contratos/novo" element={
                 <ProtectedRoute roles={["admin","gerente","vendedor"]}>
                   <NewContract />

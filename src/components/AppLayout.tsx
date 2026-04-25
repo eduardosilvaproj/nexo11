@@ -20,7 +20,8 @@ const ROUTE_LABELS: Record<string, string> = {
   equipe: "Equipe",
   lojas: "Lojas",
   analytics: "Analytics",
-  integracoes: "Integrações",
+   integracoes: "Integrações",
+  contratos: "Contratos",
 };
 
 function getInitials(nome?: string | null, email?: string | null) {
@@ -35,7 +36,14 @@ export default function AppLayout() {
   const location = useLocation();
   const { perfil, user } = useAuth();
   const segment = location.pathname.split("/").filter(Boolean)[0] ?? "";
-  const currentLabel = ROUTE_LABELS[segment] ?? "Dashboard";
+  const segment2 = location.pathname.split("/").filter(Boolean)[1];
+  let currentLabel = ROUTE_LABELS[segment] ?? "Dashboard";
+  if (segment === 'contratos' && segment2) {
+    const segment3 = location.pathname.split("/").filter(Boolean)[2];
+    if (segment3 === 'medicao') currentLabel = "Medição Técnica";
+    else if (segment3 === 'conferencia') currentLabel = "Conferência Técnica";
+    else currentLabel = "Detalhes do Contrato";
+  }
   const isDashboard = segment === "";
   const initials = getInitials(perfil?.nome, perfil?.email ?? user?.email ?? null);
 
