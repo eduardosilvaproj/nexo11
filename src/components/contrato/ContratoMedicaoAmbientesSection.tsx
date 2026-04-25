@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +10,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Camera, Image as ImageIcon, FileText, CheckCircle2, AlertCircle, ChevronDown, ChevronUp, Trash2, Upload, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { PhotoAnnotationViewer } from "@/components/tecnico/PhotoAnnotationViewer";
+import { cn } from "@/lib/utils";
 
 type StatusMed = "pendente" | "agendado" | "concluido" | "pago";
 type Funcao = "medidor" | "conferente" | "montador";
@@ -17,7 +23,10 @@ interface AmbienteRow {
   id: string;
   nome: string;
   valor_liquido: number;
-  // dynamic fields read via key strings
+  medicao_fotos: any[];
+  medicao_scan_url: string;
+  medicao_concluido: boolean;
+  observacoes: string;
   [key: string]: any;
 }
 
@@ -85,7 +94,7 @@ export function ContratoMedicaoAmbientesSection({
       const { data, error } = await sb
         .from("contrato_ambientes")
         .select(
-          "id, nome, valor_liquido, medidor_id, percentual_medidor, valor_medidor, status_medicao, data_medicao, conferente_id, percentual_conferente, valor_conferente, status_conferencia, data_conferencia, montador_id, percentual_montador, valor_montador, status_montagem, data_montagem",
+          "id, nome, valor_liquido, medidor_id, percentual_medidor, valor_medidor, status_medicao, data_medicao, conferente_id, percentual_conferente, valor_conferente, status_conferencia, data_conferencia, montador_id, percentual_montador, valor_montador, status_montagem, data_montagem, medicao_fotos, medicao_scan_url, medicao_concluido, observacoes",
         )
         .eq("contrato_id", contratoId)
         .order("created_at", { ascending: true });
@@ -199,29 +208,30 @@ export function ContratoMedicaoAmbientesSection({
         </span>
       </div>
 
-      <div className="overflow-x-auto" style={{ borderTop: "0.5px solid #E8ECF2" }}>
-        <table className="w-full" style={{ minWidth: 980 }}>
-          <thead style={{ backgroundColor: "#F7F9FC" }}>
-            <tr>
-              {["Ambiente", "Valor líquido", lblPessoa, "%", lblValor, "Status", "Data"].map(
-                (h) => (
-                  <th
-                    key={h}
-                    className="px-3 py-3 text-left"
-                    style={{
-                      fontSize: 11,
-                      color: "#6B7A90",
-                      fontWeight: 500,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.04em",
-                    }}
-                  >
-                    {h}
-                  </th>
-                ),
-              )}
-            </tr>
-          </thead>
+      {funcao !== "medidor" && (
+        <div className="overflow-x-auto" style={{ borderTop: "0.5px solid #E8ECF2" }}>
+          <table className="w-full" style={{ minWidth: 980 }}>
+            <thead style={{ backgroundColor: "#F7F9FC" }}>
+              <tr>
+                {["Ambiente", "Valor líquido", lblPessoa, "%", lblValor, "Status", "Data"].map(
+                  (h) => (
+                    <th
+                      key={h}
+                      className="px-3 py-3 text-left"
+                      style={{
+                        fontSize: 11,
+                        color: "#6B7A90",
+                        fontWeight: 500,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.04em",
+                      }}
+                    >
+                      {h}
+                    </th>
+                  ),
+                )}
+              </tr>
+            </thead>
           <tbody>
             {isLoading && (
               <tr>
@@ -238,6 +248,8 @@ export function ContratoMedicaoAmbientesSection({
               </tr>
             )}
             {ambientes?.map((a) => {
+              if ((funcao as string) === "medidor") return null;
+
               const status = (a[F.status] as StatusMed) || "pendente";
               const st = STATUS_STYLE[status];
               return (
@@ -330,17 +342,301 @@ export function ContratoMedicaoAmbientesSection({
           </tbody>
         </table>
       </div>
+      )}
+
+      {funcao === "medidor" && (
+        <div className="flex flex-col" style={{ borderTop: "0.5px solid #E8ECF2" }}>
+          <table className="w-full">
+            <tbody>
+              {isLoading && (
+                <tr>
+                  <td className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    Carregando...
+                  </td>
+                </tr>
+              )}
+              {!isLoading && (ambientes?.length ?? 0) === 0 && (
+                <tr>
+                  <td className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    Nenhum ambiente cadastrado neste contrato.
+                  </td>
+                </tr>
+              )}
+              {ambientes?.map((a) => (
+                <AmbienteMedicaoPanel 
+                  key={a.id} 
+                  ambiente={a} 
+                  onUpdate={updateAmbiente} 
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Footer com total a pagar */}
       <div
-        className="flex items-center justify-end gap-3 px-5 py-3"
+        className="flex items-center justify-between gap-3 px-5 py-3"
         style={{ borderTop: "0.5px solid #E8ECF2", backgroundColor: "#FAFBFD" }}
       >
-        <span style={{ fontSize: 12, color: "#6B7A90" }}>{lblTotal}:</span>
-        <span style={{ fontSize: 14, fontWeight: 600, color: "#0D1117" }}>
-          {fmtBRL(totalPagar)}
-        </span>
+        <div className="flex items-center gap-2 text-[11px] text-[#6B7A90]">
+          <Camera size={14} className="text-pink-500" />
+          <span>Em breve: medição direta pela câmera no app para funcionários</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span style={{ fontSize: 12, color: "#6B7A90" }}>{lblTotal}:</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#0D1117" }}>
+            {fmtBRL(totalPagar)}
+          </span>
+        </div>
       </div>
     </div>
+  );
+}
+
+function AmbienteMedicaoPanel({ 
+  ambiente, 
+  onUpdate 
+}: { 
+  ambiente: AmbienteRow; 
+  onUpdate: (id: string, patch: any) => Promise<boolean>;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [uploading, setUploading] = useState<'photos' | 'scan' | null>(null);
+  const [activePhoto, setActivePhoto] = useState<any | null>(null);
+
+  const photos = Array.isArray(ambiente.medicao_fotos) ? ambiente.medicao_fotos : [];
+  const hasPhotos = photos.length > 0;
+  const hasScan = !!ambiente.medicao_scan_url;
+  const isConcluido = !!ambiente.medicao_concluido;
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'photos' | 'scan') => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(type);
+    try {
+      const results = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `${ambiente.id}/${type}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('medicao-arquivos')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('medicao-arquivos')
+          .getPublicUrl(filePath);
+
+        results.push(publicUrl);
+        if (type === 'scan') break; // Only one scan
+      }
+
+      if (type === 'photos') {
+        const newPhotos = [...photos, ...results.map(url => ({ url, annotations: [] }))];
+        await onUpdate(ambiente.id, { medicao_fotos: newPhotos });
+      } else {
+        await onUpdate(ambiente.id, { medicao_scan_url: results[0], status_medicao: 'concluido' });
+      }
+      toast.success("Arquivo enviado com sucesso!");
+    } catch (error: any) {
+      toast.error("Erro no upload: " + error.message);
+    } finally {
+      setUploading(null);
+    }
+  };
+
+  const removePhoto = async (index: number) => {
+    const newPhotos = photos.filter((_, i) => i !== index);
+    await onUpdate(ambiente.id, { medicao_fotos: newPhotos });
+  };
+
+  const saveAnnotations = async (annotations: any[]) => {
+    if (!activePhoto) return;
+    const newPhotos = photos.map(p => 
+      p.url === activePhoto.url ? { ...p, annotations } : p
+    );
+    await onUpdate(ambiente.id, { medicao_fotos: newPhotos });
+    setActivePhoto(null);
+    toast.success("Anotações salvas!");
+  };
+
+  const toggleConcluido = async () => {
+    if (!hasPhotos || !hasScan) {
+      toast.error("É necessário pelo menos 1 foto e o scan da folha para concluir.");
+      return;
+    }
+    const novoStatus = !isConcluido;
+    await onUpdate(ambiente.id, { 
+      medicao_concluido: novoStatus,
+      status_medicao: novoStatus ? 'concluido' : 'pendente'
+    });
+    toast.success(novoStatus ? "Medição concluída!" : "Ambiente reaberto");
+  };
+
+  return (
+    <tr style={{ borderTop: "0.5px solid #E8ECF2" }}>
+      <td colSpan={7} className="p-0">
+        <div className={cn("p-4 transition-colors", expanded ? "bg-white" : "hover:bg-neutral-50")}>
+          <div className="flex items-center justify-between cursor-pointer" onClick={() => setExpanded(!expanded)}>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                {expanded ? <ChevronUp size={16} className="text-[#6B7A90]" /> : <ChevronDown size={16} className="text-[#6B7A90]" />}
+                <span className="font-medium text-sm text-[#0D1117]">{ambiente.nome}</span>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
+                  <ImageIcon size={14} className={hasPhotos ? "text-green-500" : "text-neutral-300"} />
+                  <span className="text-[11px] text-[#6B7A90]">{photos.length} fotos</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <FileText size={14} className={hasScan ? "text-green-500" : "text-neutral-300"} />
+                  <span className="text-[11px] text-[#6B7A90]">{hasScan ? "Scan enviado" : "Sem scan"}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className={cn(
+                "flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider",
+                isConcluido ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"
+              )}>
+                {isConcluido ? (
+                  <>
+                    <CheckCircle2 size={13} />
+                    <span>Concluído</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle size={13} />
+                    <span>Pendente</span>
+                  </>
+                )}
+              </div>
+              <Button 
+                variant={isConcluido ? "outline" : "default"} 
+                size="sm" 
+                className={cn("h-8 text-xs", !isConcluido && "bg-[#1E6FBF] hover:bg-[#165a9e]")}
+                onClick={(e) => { e.stopPropagation(); toggleConcluido(); }}
+              >
+                {isConcluido ? "Reabrir" : "Concluir Medição"}
+              </Button>
+            </div>
+          </div>
+
+          {expanded && (
+            <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-8 border-t pt-6">
+              {/* Fotos Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-semibold uppercase text-[#6B7A90] flex items-center gap-2">
+                    <ImageIcon size={14} />
+                    Fotos com Anotações
+                  </h4>
+                  <label className="cursor-pointer">
+                    <input type="file" multiple accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'photos')} />
+                    <div className="flex items-center gap-2 text-[#1E6FBF] hover:underline text-xs font-medium">
+                      {uploading === 'photos' ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                      Adicionar fotos
+                    </div>
+                  </label>
+                </div>
+
+                {hasPhotos ? (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                    {photos.map((photo, idx) => (
+                      <div key={idx} className="group relative aspect-square rounded-lg border overflow-hidden bg-neutral-100 cursor-pointer shadow-sm hover:shadow-md transition-shadow" onClick={() => setActivePhoto(photo)}>
+                        <img src={photo.url} alt="Ambiente" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <span className="text-white text-[10px] font-medium">Ver / Anotar</span>
+                        </div>
+                        {photo.annotations?.length > 0 && (
+                          <div className="absolute top-1 left-1 bg-pink-500 text-white text-[9px] px-1 rounded-sm font-bold shadow-sm">
+                            {photo.annotations.length}
+                          </div>
+                        )}
+                        <button 
+                          className="absolute top-1 right-1 p-1 bg-white/90 rounded-md text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
+                          onClick={(e) => { e.stopPropagation(); removePhoto(idx); }}
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="h-32 rounded-lg border-2 border-dashed border-neutral-200 flex flex-col items-center justify-center gap-2 text-neutral-400">
+                    <ImageIcon size={24} strokeWidth={1.5} />
+                    <span className="text-xs">Nenhuma foto enviada</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Scan & Obs Section */}
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold uppercase text-[#6B7A90] flex items-center gap-2">
+                      <FileText size={14} />
+                      Scan da Folha Manuscrita
+                    </h4>
+                    <label className="cursor-pointer">
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'scan')} />
+                      <div className="flex items-center gap-2 text-[#1E6FBF] hover:underline text-xs font-medium">
+                        {uploading === 'scan' ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                        {hasScan ? "Substituir scan" : "Enviar scan"}
+                      </div>
+                    </label>
+                  </div>
+
+                  {hasScan ? (
+                    <div className="relative group rounded-lg border overflow-hidden bg-neutral-100 max-h-48 shadow-sm">
+                      <img src={ambiente.medicao_scan_url} alt="Scan Medição" className="w-full h-full object-contain" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer" onClick={() => window.open(ambiente.medicao_scan_url, '_blank')}>
+                        <span className="text-white text-[10px] font-medium uppercase tracking-wider">Visualizar PDF/Imagem</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-32 rounded-lg border-2 border-dashed border-neutral-200 flex flex-col items-center justify-center gap-2 text-neutral-400">
+                      <FileText size={24} strokeWidth={1.5} />
+                      <span className="text-xs">Obrigatório para conclusão</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="text-xs font-semibold uppercase text-[#6B7A90]">Observações Gerais</h4>
+                  <Textarea 
+                    placeholder="Notas sobre o ambiente, dificuldades, observações técnicas..."
+                    className="text-xs min-h-[80px] bg-white border-neutral-200"
+                    defaultValue={ambiente.observacoes || ""}
+                    onBlur={(e) => {
+                      if (e.target.value !== (ambiente.observacoes || "")) {
+                        onUpdate(ambiente.id, { observacoes: e.target.value });
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {activePhoto && (
+          <PhotoAnnotationViewer 
+            open={!!activePhoto}
+            onOpenChange={(open) => !open && setActivePhoto(null)}
+            photo={activePhoto}
+            onSave={saveAnnotations}
+          />
+        )}
+      </td>
+    </tr>
   );
 }

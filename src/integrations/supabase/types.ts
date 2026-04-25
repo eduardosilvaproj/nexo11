@@ -677,6 +677,9 @@ export type Database = {
           itens_conferencia_json: Json
           itens_original_json: Json
           loja_id: string
+          medicao_concluido: boolean | null
+          medicao_fotos: Json | null
+          medicao_scan_url: string | null
           medidor_id: string | null
           montador_id: string | null
           nome: string
@@ -715,6 +718,9 @@ export type Database = {
           itens_conferencia_json?: Json
           itens_original_json?: Json
           loja_id: string
+          medicao_concluido?: boolean | null
+          medicao_fotos?: Json | null
+          medicao_scan_url?: string | null
           medidor_id?: string | null
           montador_id?: string | null
           nome: string
@@ -753,6 +759,9 @@ export type Database = {
           itens_conferencia_json?: Json
           itens_original_json?: Json
           loja_id?: string
+          medicao_concluido?: boolean | null
+          medicao_fotos?: Json | null
+          medicao_scan_url?: string | null
           medidor_id?: string | null
           montador_id?: string | null
           nome?: string
@@ -2777,8 +2786,8 @@ export type Database = {
         | {
             Args: {
               _assinatura_imagem_url: string
-              _data_assinatura?: string
-              _hash?: string
+              _data_assinatura: string
+              _hash: string
               _ip: string
               _nome: string
               _token: string
