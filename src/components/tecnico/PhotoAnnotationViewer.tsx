@@ -97,6 +97,7 @@ export function PhotoAnnotationViewer({
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (drawingStart) {
+      const coords = getCoords(e);
       setTempDrawing({ x2: coords.x, y2: coords.y });
     }
   };
