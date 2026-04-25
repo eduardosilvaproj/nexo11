@@ -45,6 +45,9 @@ export function PhotoAnnotationViewer({
   onSave 
 }: PhotoAnnotationViewerProps) {
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
+  const [history, setHistory] = useState<Annotation[][]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [isSaving, setIsSaving] = useState(false);
   const [activeTool, setActiveTool] = useState<Tool>('none');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [drawingStart, setDrawingStart] = useState<{ x: number, y: number } | null>(null);
