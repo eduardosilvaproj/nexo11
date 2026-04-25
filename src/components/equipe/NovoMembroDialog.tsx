@@ -222,7 +222,7 @@ export function NovoMembroDialog({ open, onOpenChange }: Props) {
             </div>
           </div>
 
-          {role === "montador" && (
+          {funcoes.includes("montador") && (
             <div className="flex flex-col gap-1.5">
               <Label style={{ fontSize: 12, color: "#0D1117" }}>Equipe de montagem</Label>
               <Select value={equipeId} onValueChange={setEquipeId}>
