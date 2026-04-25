@@ -107,9 +107,8 @@ export default function Comissoes() {
       // 2. TODOS os membros da loja com papel configurado (inclui admins)
       const { data: membros, error: errMembros } = await supabase
         .from("usuarios")
-        .select("id, nome, papel_comissao_id, comissao_percentual")
-        .eq("loja_id", lojaId)
-        .in("papel_comissao_id", papelIds);
+        .select("id, nome, papel_comissao_id, comissao_percentual, funcoes")
+        .eq("loja_id", lojaId);
       if (errMembros) throw errMembros;
       const membrosValidos = (membros ?? []).filter((m) => m.papel_comissao_id);
       if (!membrosValidos.length) {
