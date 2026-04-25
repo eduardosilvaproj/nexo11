@@ -124,13 +124,23 @@ export function ContratoMedicaoAmbientesSection({
   });
 
   const updateAmbiente = async (id: string, patch: Record<string, any>) => {
+    // Local optimistic update
+    qc.setQueryData(["ambientes_med_conf", contratoId], (old: AmbienteRow[] | undefined) => {
+      if (!old) return old;
+      return old.map(a => a.id === id ? { ...a, ...patch } : a);
+    });
+
     const { error } = await sb.from("contrato_ambientes").update(patch).eq("id", id);
     if (error) {
       toast.error(error.message);
+      // Rollback on error
+      qc.invalidateQueries({ queryKey: ["ambientes_med_conf", contratoId] });
       return false;
     }
-    qc.invalidateQueries({ queryKey: ["ambientes_med_conf", contratoId] });
+    
+    // Invalidate other related queries
     qc.invalidateQueries({ queryKey: ["contrato_ambientes", contratoId] });
+    qc.invalidateQueries({ queryKey: ["contrato_dre_view", contratoId] });
     return true;
   };
 
