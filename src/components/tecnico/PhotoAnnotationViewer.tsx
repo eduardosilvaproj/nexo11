@@ -166,11 +166,12 @@ export function PhotoAnnotationViewer({
         text: "",
         color: ['arrow', 'line'].includes(activeTool) ? '#e11d48' : '#eab308'
       };
-      setAnnotations([...annotations, newAnn]);
+      const newAnns = [...annotations, newAnn];
+      setAnnotations(newAnns);
+      saveToHistory(newAnns);
       setEditingId(id);
       setDrawingStart(null);
       setTempDrawing(null);
-      // Volta para modo seleção após desenhar
       setActiveTool('none');
     }
   };
