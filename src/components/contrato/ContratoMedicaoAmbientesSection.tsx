@@ -479,6 +479,7 @@ function AmbienteMedicaoPanel({
   onUpdate: (id: string, patch: any) => Promise<boolean>;
   contratoId: string;
 }) {
+  const qc = useQueryClient();
   const [expanded, setExpanded] = useState(false);
   const [uploading, setUploading] = useState<'photos' | 'scan' | null>(null);
   const [activePhoto, setActivePhoto] = useState<any | null>(null);
