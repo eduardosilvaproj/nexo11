@@ -56,6 +56,7 @@ export function PhotoAnnotationViewer({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [drawingStart, setDrawingStart] = useState<{ x: number, y: number } | null>(null);
   const [tempDrawing, setTempDrawing] = useState<{ x2: number, y2: number } | null>(null);
+  const [pendingNavigation, setPendingNavigation] = useState<'prev' | 'next' | null>(null);
   
   const imgRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -300,27 +301,55 @@ export function PhotoAnnotationViewer({
     link.click();
   };
 
-  const navigatePhoto = (dir: 'prev' | 'next') => {
+  const goToPhoto = (dir: 'prev' | 'next') => {
     if (!onPhotoChange || !allPhotos.length) return;
     const nextIdx = dir === 'next' 
       ? (currentIndex + 1) % allPhotos.length 
       : (currentIndex - 1 + allPhotos.length) % allPhotos.length;
     onPhotoChange(allPhotos[nextIdx]);
+    setPendingNavigation(null);
+  };
+
+  const navigatePhoto = (dir: 'prev' | 'next') => {
+    if (hasUnsavedChanges) {
+      setPendingNavigation(dir);
+      setShowExitDialog(true);
+    } else {
+      goToPhoto(dir);
+    }
+  };
+
+  const confirmNavigation = () => {
+    if (pendingNavigation) {
+      setShowExitDialog(false);
+      goToPhoto(pendingNavigation);
+    } else {
+      setShowExitDialog(false);
+      onOpenChange(false);
+    }
+  };
+
+  const saveAndNavigate = async () => {
+    await handleManualSave();
+    if (pendingNavigation) {
+      setShowExitDialog(false);
+      goToPhoto(pendingNavigation);
+    } else {
+      setShowExitDialog(false);
+      onOpenChange(false);
+    }
   };
 
   const handleCloseRequest = () => {
     if (hasUnsavedChanges) {
+      setPendingNavigation(null);
       setShowExitDialog(true);
     } else {
       onOpenChange(false);
     }
   };
 
-  const saveAndClose = async () => {
-    await handleManualSave();
-    onOpenChange(false);
-    setShowExitDialog(false);
-  };
+  // Removed saveAndClose in favor of more generic functions above
 
   return (
     <>
@@ -641,18 +670,15 @@ export function PhotoAnnotationViewer({
             <Button 
               variant="ghost" 
               className="text-red-500 hover:text-red-400 hover:bg-red-500/10"
-              onClick={() => {
-                setShowExitDialog(false);
-                onOpenChange(false);
-              }}
+              onClick={confirmNavigation}
             >
               Sair sem salvar
             </Button>
             <Button 
               className="bg-primary hover:bg-primary/90 text-white"
-              onClick={saveAndClose}
+              onClick={saveAndNavigate}
             >
-              Salvar e fechar
+              Salvar e {pendingNavigation ? 'continuar' : 'fechar'}
             </Button>
           </div>
         </AlertDialogFooter>
