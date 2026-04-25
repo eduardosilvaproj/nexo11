@@ -497,13 +497,31 @@ export function ContratoMedicaoAmbientesSection({
             </TooltipProvider>
           </div>
           {funcao === "medidor" && ambientes && ambientes.length > 0 && (
-            <Button
-              disabled={ambientes.some(a => !a.medicao_concluido)}
-              onClick={handleLiberarConferencia}
-              className="bg-[#12B76A] hover:bg-[#0e9a58] h-9 text-xs font-semibold px-4"
-            >
-              Liberar para conferência
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                disabled={!ambientes.some(a => a.status_medicao === 'concluido')}
+                onClick={handleLiberarSelecionados}
+                className="h-9 text-xs font-semibold px-4 border-[#1E6FBF] text-[#1E6FBF] hover:bg-[#E3F0FB]"
+              >
+                Liberar selecionados
+              </Button>
+              <Button
+                variant="outline"
+                disabled={!ambientes.some(a => a.status_medicao === 'concluido')}
+                onClick={handleLiberarTodosConcluidos}
+                className="h-9 text-xs font-semibold px-4 border-[#12B76A] text-[#12B76A] hover:bg-[#E6F4EA]"
+              >
+                Liberar todos concluídos
+              </Button>
+              <Button
+                disabled={ambientes.some(a => !a.medicao_concluido && a.status_medicao !== 'liberado_conferencia')}
+                onClick={handleLiberarConferencia}
+                className="bg-[#12B76A] hover:bg-[#0e9a58] h-9 text-xs font-semibold px-4"
+              >
+                Liberar contrato
+              </Button>
+            </div>
           )}
         </div>
       </div>
