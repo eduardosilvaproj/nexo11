@@ -105,8 +105,13 @@ export function NovaEntregaDialog({ open, onOpenChange, defaultDate, defaultTurn
       qc.invalidateQueries({ queryKey: ["logistica-contratos"] });
       onOpenChange(false);
       setContratoId("manual");
-      setCliente(""); setEndereco(""); setData(""); setResponsavel("");
-      setObservacoes(""); setCusto(""); setTurno("manha");
+      setCliente(""); 
+      setEndereco(""); 
+      setData(""); 
+      setResponsavelId("__none__");
+      setObservacoes(""); 
+      setCusto(""); 
+      setTurno("manha");
     },
     onError: (e: Error) => toast.error(e.message),
   });
