@@ -202,6 +202,13 @@ export function ContratoMedicaoAmbientesSection({
   };
 
   const handleLiberarConferencia = async () => {
+    // Check if all environments are completed
+    const allDone = ambientes?.every(a => a.medicao_concluido);
+    if (!allDone) {
+      toast.error("Conclua a medição de todos os ambientes antes de liberar.");
+      return;
+    }
+
     const { error } = await supabase.rpc('avancar_contrato', { 
       p_contrato_id: contratoId,
       p_usuario_id: (await supabase.auth.getUser()).data.user?.id
