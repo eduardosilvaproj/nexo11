@@ -194,6 +194,7 @@ export function ContratoMedicaoAmbientesSection({
       toast.success("Contrato liberado para conferência!");
       qc.invalidateQueries({ queryKey: ["contrato_dre_view", contratoId] });
       qc.invalidateQueries({ queryKey: ["contrato-tecnico", contratoId] });
+      qc.invalidateQueries({ queryKey: ["contratos-tecnico-list", "medicao"] });
     }
   };
 
