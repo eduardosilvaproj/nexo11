@@ -497,7 +497,9 @@ export function PhotoAnnotationViewer({
                       className="h-7 w-7 text-red-500 hover:bg-red-50"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setAnnotations(annotations.filter(a => a.id !== ann.id));
+                        const newAnns = annotations.filter(a => a.id !== ann.id);
+                        setAnnotations(newAnns);
+                        saveToHistory(newAnns);
                         setEditingId(null);
                       }}
                     >
