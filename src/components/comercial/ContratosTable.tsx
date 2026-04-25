@@ -155,11 +155,21 @@ export function ContratosTable({ onCreate }: Props) {
               const dre = Array.isArray(c.dre_contrato) ? c.dre_contrato[0] : c.dre_contrato;
               const margem = dre?.margem_prevista ?? null;
               const etapa = ETAPAS[c.status];
+              
+              const handleNavigate = () => {
+                if (c.status === 'tecnico') {
+                  navigate(`/contratos/${c.id}/medicao`);
+                } else {
+                  navigate(`/contratos/${c.id}`);
+                }
+              };
+
               return (
                 <tr
                   key={c.id}
-                  className="transition-colors hover:bg-[#F5F7FA]"
+                  className="transition-colors hover:bg-[#F5F7FA] cursor-pointer"
                   style={{ borderBottom: "0.5px solid #E8ECF2" }}
+                  onClick={handleNavigate}
                 >
                   <td className="px-4 py-3" style={{ fontSize: 12, color: "#6B7A90" }}>
                     #{String(idx + 1).padStart(4, "0")}
@@ -217,10 +227,10 @@ export function ContratosTable({ onCreate }: Props) {
                   <td className="px-4 py-3" style={{ fontSize: 12, color: "#6B7A90" }}>
                     {formatDate(c.data_criacao)}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-1">
                       <button
-                        onClick={() => navigate(`/contratos/${c.id}`)}
+                        onClick={handleNavigate}
                         className="rounded-md p-1.5 transition-colors hover:bg-[#E8ECF2]"
                         style={{ color: "#6B7A90" }}
                         title="Ver contrato"
