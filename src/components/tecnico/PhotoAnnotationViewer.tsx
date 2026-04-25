@@ -507,7 +507,30 @@ export function PhotoAnnotationViewer({
         </div>
 
         <div className="p-4 bg-neutral-900 border-t border-neutral-800 shrink-0 flex flex-col items-center gap-4">
-          <div className="flex items-center gap-1 p-1 bg-neutral-800 rounded-lg">
+          <div className="flex items-center gap-2 p-1 bg-neutral-800 rounded-lg">
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={historyIndex <= 0}
+              onClick={undo}
+              className="text-neutral-400 hover:text-white h-9 px-3"
+              title="Desfazer (Ctrl+Z)"
+            >
+              <Undo2 className="h-4 w-4 mr-2" />
+              <span className="text-xs">Desfazer</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={historyIndex >= history.length - 1}
+              onClick={redo}
+              className="text-neutral-400 hover:text-white h-9 px-3"
+              title="Refazer (Ctrl+Y)"
+            >
+              <Redo2 className="h-4 w-4 mr-2" />
+              <span className="text-xs">Refazer</span>
+            </Button>
+            <div className="w-[1px] h-4 bg-neutral-700 mx-1" />
             {[
               { id: 'point', icon: MapPin, label: 'Ponto' },
               { id: 'arrow', icon: ArrowRight, label: 'Seta' },
@@ -535,12 +558,8 @@ export function PhotoAnnotationViewer({
               {activeTool === 'eraser' ? 'Clique em um elemento para apagar' : 'Clique ou arraste na foto para anotar'}
             </p>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => onOpenChange(false)} className="border-neutral-700 text-neutral-400 hover:bg-neutral-800">
-                Cancelar
-              </Button>
-              <Button onClick={() => { onSave(annotations); onOpenChange(false); }} className="bg-rose-600 hover:bg-rose-700 text-white">
-                <Save className="mr-2 h-4 w-4" />
-                Salvar Anotações
+              <Button variant="outline" onClick={() => onOpenChange(false)} className="border-neutral-700 text-neutral-400 hover:bg-neutral-800 px-8">
+                Fechar
               </Button>
             </div>
           </div>
