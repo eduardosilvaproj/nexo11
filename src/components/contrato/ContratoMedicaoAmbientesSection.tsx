@@ -248,15 +248,7 @@ export function ContratoMedicaoAmbientesSection({
               </tr>
             )}
             {ambientes?.map((a) => {
-              if (funcao === "medidor") {
-                return (
-                  <AmbienteMedicaoPanel 
-                    key={a.id} 
-                    ambiente={a} 
-                    onUpdate={updateAmbiente} 
-                  />
-                );
-              }
+              if ((funcao as string) === "medidor") return null;
 
               const status = (a[F.status] as StatusMed) || "pendente";
               const st = STATUS_STYLE[status];
