@@ -339,7 +339,12 @@ export function ContratoMedicaoAmbientesSection({
               </tr>
             )}
             {ambientes?.map((a) => {
-              if ((funcao as string) === "medidor") return null;
+              if (funcao === "medidor") return null;
+              
+              // Filter for conferente: only show 'liberado_conferencia' or already processed/paid
+              if (funcao === "conferente" && a.status_medicao !== 'liberado_conferencia' && a.status_conferencia === 'pendente') {
+                return null;
+              }
 
               const status = (a[F.status] as StatusMed) || "pendente";
               const st = STATUS_STYLE[status];
@@ -410,6 +415,7 @@ export function ContratoMedicaoAmbientesSection({
                         <SelectItem value="pendente">Pendente</SelectItem>
                         <SelectItem value="agendado">Agendado</SelectItem>
                         <SelectItem value="concluido">Concluído</SelectItem>
+                        <SelectItem value="liberado_conferencia">Aguardando conferência</SelectItem>
                         <SelectItem value="pago">Pago</SelectItem>
                       </SelectContent>
                     </Select>
