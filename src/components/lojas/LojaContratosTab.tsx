@@ -15,6 +15,7 @@ const ETAPAS: Record<ContratoStatus, { label: string; bg: string; color: string 
   montagem: { label: "Montagem", bg: "#E0F4EC", color: "#1D9E75" },
   pos_venda: { label: "Pós-venda", bg: "#FCEFD2", color: "#E8A020" },
   finalizado: { label: "Finalizado", bg: "#D7F0DF", color: "#05873C" },
+  cancelado: { label: "Cancelado", bg: "#FEE4E2", color: "#B42318" },
 };
 
 const formatBRL = (n: number) =>
