@@ -35,7 +35,9 @@ export default function ContratoConferenciaPage() {
   }
 
   const ambientes = Array.isArray(contrato.contrato_ambientes) ? contrato.contrato_ambientes : [];
-  const medicaoConcluida = ambientes.length > 0 && ambientes.every(a => a.medicao_concluido);
+  const ambientesLiberados = ambientes.filter(a => a.status_medicao === 'liberado_conferencia');
+  const hasLiberados = ambientesLiberados.length > 0;
+  const emMedicao = ambientes.filter(a => a.status_medicao !== 'liberado_conferencia' && a.status_medicao !== 'concluido').length;
 
   return (
     <div className="flex flex-col gap-6 p-6 md:p-8 max-w-7xl mx-auto w-full">
@@ -50,15 +52,28 @@ export default function ContratoConferenciaPage() {
         <h1 className="text-2xl font-semibold text-[#0D1117]">
           Conferência — {contrato.cliente_nome} <span className="text-[#6B7A90] font-normal">#{id?.slice(0, 6).toUpperCase()}</span>
         </h1>
+        {hasLiberados && (
+          <div className="flex gap-2 mt-2">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              {ambientesLiberados.length} ambiente(s) disponível(is) para conferência
+            </span>
+            {emMedicao > 0 && (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                {emMedicao} ainda em medição
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
-      {!medicaoConcluida ? (
+      {!hasLiberados ? (
         <div className="bg-[#FEF3C7] border border-[#FDE68A] rounded-xl p-8 flex flex-col items-center text-center gap-4">
           <AlertTriangle size={48} className="text-[#D97706]" />
           <div>
-            <h2 className="text-lg font-semibold text-[#92400E]">Medição pendente</h2>
+            <h2 className="text-lg font-semibold text-[#92400E]">Aguardando liberação</h2>
             <p className="text-[#B45309] mt-1 max-w-md">
-              Conclua a medição de todos os ambientes antes de iniciar a conferência técnica.
+              Nenhum ambiente foi liberado para conferência técnica ainda. 
+              Aguarde o técnico concluir a medição e liberar os ambientes.
             </p>
           </div>
           <button 
