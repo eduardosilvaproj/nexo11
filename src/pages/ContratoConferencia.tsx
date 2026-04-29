@@ -578,9 +578,9 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
               </div>
 
               <div className="mt-2 flex flex-col gap-1">
-                <label className="text-xs font-semibold text-[#6B7A90]">Observações da Conferência</label>
+                <label className="text-xs font-semibold text-[#6B7A90]">Obs:</label>
                 <Textarea 
-                  placeholder="Detalhe divergências ou pontos de atenção..."
+                  placeholder="Observações do ambiente..."
                   className="text-xs min-h-[80px]"
                   defaultValue={ambiente.observacoes_conferencia || ""}
                   onBlur={async (e) => {
