@@ -275,8 +275,8 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
   const isLiberado = ambiente.status_medicao === 'liberado_conferencia';
   const isBloqueado = !isLiberado;
   const inProgress = !!ambiente.conferente_id;
-  const isAprovado = ambiente.conferencia_status === 'aprovada' || ambiente.conferencia_status === 'liberada';
-  const hasDivergencia = ambiente.conferencia_status === 'bloqueada';
+  const isAprovado = ambiente.conferencia_status === 'aprovada';
+  const hasDivergencia = ambiente.conferencia_status === 'bloqueada' || (ambiente.variacao_pct !== null && ambiente.variacao_pct > 10);
   const aguardandoAprovGerente = hasDivergencia && !!ambiente.aprovacao_solicitada_em;
 
   const handleIniciar = async () => {
