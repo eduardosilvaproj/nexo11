@@ -275,8 +275,8 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
   const isLiberado = ambiente.status_medicao === 'liberado_conferencia';
   const isBloqueado = !isLiberado;
   const inProgress = !!ambiente.conferente_id;
-  const isAprovado = ambiente.conferencia_status === 'aprovada' || ambiente.conferencia_status === 'liberada';
-  const hasDivergencia = ambiente.conferencia_status === 'bloqueada';
+  const isAprovado = ambiente.conferencia_status === 'aprovada';
+  const hasDivergencia = ambiente.conferencia_status === 'bloqueada' || (ambiente.variacao_pct !== null && ambiente.variacao_pct > 10);
   const aguardandoAprovGerente = hasDivergencia && !!ambiente.aprovacao_solicitada_em;
 
   const handleIniciar = async () => {
@@ -561,26 +561,39 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
                 {ambiente.variacao_pct !== null && (
                   <div className={cn(
                     "p-3 rounded-md flex flex-col gap-2",
-                    ambiente.variacao_pct > 10 ? "bg-rose-50 border border-rose-100" : 
-                    ambiente.variacao_pct > 0 ? "bg-amber-50 border border-amber-100" :
-                    "bg-emerald-50 border border-emerald-100"
+                    ambiente.variacao_pct > 10 ? "bg-[#FCEBEB] border border-[#F9D7D7]" : 
+                    ambiente.variacao_pct > 0 ? "bg-[#FAEEDA] border border-[#F5E1C1]" :
+                    "bg-[#EAF3DE] border border-[#D9E9C3]"
                   )}>
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col">
                         <span className="text-[10px] uppercase font-bold text-neutral-500">Variação de Custo</span>
-                        <span className={cn(
-                          "text-lg font-bold", 
-                          ambiente.variacao_pct > 10 ? "text-rose-600" : 
-                          ambiente.variacao_pct > 0 ? "text-amber-600" :
-                          "text-emerald-600"
-                        )}>
-                          {ambiente.variacao_pct > 0 ? '+' : ''}{ambiente.variacao_pct}%
-                        </span>
+                        <div className="flex items-baseline gap-2">
+                          <span className={cn(
+                            "text-sm font-semibold", 
+                            ambiente.variacao_pct > 10 ? "text-[#791F1F]" : 
+                            ambiente.variacao_pct > 0 ? "text-[#633806]" :
+                            "text-[#27500A]"
+                          )}>
+                            {ambiente.variacao_pct > 10 ? '✕ Divergência crítica' : 
+                             ambiente.variacao_pct > 0 ? '⚠ Atenção' : 
+                             '✓ Dentro do esperado'}
+                          </span>
+                          <span className={cn(
+                            "text-lg font-bold", 
+                            ambiente.variacao_pct > 10 ? "text-[#791F1F]" : 
+                            ambiente.variacao_pct > 0 ? "text-[#633806]" :
+                            "text-[#27500A]"
+                          )}>
+                            {ambiente.variacao_pct > 0 ? '+' : ''}{ambiente.variacao_pct}%
+                          </span>
+                        </div>
+                        <div className="text-[10px] font-medium text-neutral-600 mt-0.5">
+                          {fmtBRL(ambiente.custo_original || 0)} → {fmtBRL(ambiente.custo_conferencia || 0)}
+                        </div>
                       </div>
                       {ambiente.variacao_pct > 10 && (
-                        <div className="flex items-center gap-2 text-rose-700 bg-rose-100 px-3 py-1 rounded text-xs font-bold">
-                          <AlertTriangle size={14} /> Divergência Crítica
-                        </div>
+                        <AlertTriangle size={18} className="text-[#791F1F]" />
                       )}
                     </div>
 
