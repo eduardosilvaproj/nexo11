@@ -14,6 +14,7 @@ const STATUS_STYLES: Record<ContratoStatus, { bg: string; fg: string; label: str
   montagem:   { bg: "#E1F5EE", fg: "#0F6E56", label: "Montagem" },
   pos_venda:  { bg: "#FEF3C7", fg: "#E8A020", label: "Pós-venda" },
   finalizado: { bg: "#D1FAE5", fg: "#05873C", label: "Finalizado" },
+  cancelado:  { bg: "#FEE4E2", fg: "#B42318", label: "Cancelado" },
 };
 
 const NEXT_STAGE: Partial<Record<ContratoStatus, ContratoStatus>> = {
