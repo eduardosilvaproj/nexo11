@@ -272,6 +272,8 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { perfil } = useAuth();
   
+  console.log('Ambiente:', ambiente.nome, 'Status:', ambiente.conferencia_status, 'ID:', ambiente.id);
+
   const isLiberado = ambiente.status_medicao === 'liberado_conferencia';
   const isBloqueado = !isLiberado;
   const inProgress = !!ambiente.conferente_id;
