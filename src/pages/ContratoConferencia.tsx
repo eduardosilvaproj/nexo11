@@ -338,11 +338,10 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
       }
 
       const variacao = ((custoConferencia - custoOriginal) / custoOriginal) * 100;
-      // Ao importar XML, o status continua "pendente" ou vai para "pendente" (em conferência)
-      // Apenas a aprovação manual ou do gerente muda para 'aprovada'
       const novoStatus: ConferenciaStatus = "pendente";
 
-      const { error } = await supabase
+      // Update both tables to keep them in sync
+      const { error: error1 } = await supabase
         .from("contrato_ambientes")
         .update({
           custo_original: custoOriginal,
@@ -357,7 +356,23 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
         } as any)
         .eq("id", ambiente.id);
 
-      if (error) throw error;
+      if (error1) throw error1;
+
+      const { error: error2 } = await supabase
+        .from("conferencia_ambientes")
+        .upsert({
+          contrato_id: ambiente.contrato_id,
+          ambiente_id: ambiente.id,
+          loja_id: ambiente.loja_id,
+          custo_original: custoOriginal,
+          custo_conferencia: custoConferencia,
+          variacao_percentual: Number(variacao.toFixed(2)),
+          status: 'em_conferencia',
+          xml_conferencia_raw: text
+        }, { onConflict: 'contrato_id,ambiente_id' });
+
+      if (error2) throw error2;
+
       toast.success("XML importado com sucesso!");
       onUpdate();
     } catch (e: any) {
