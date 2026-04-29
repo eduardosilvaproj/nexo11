@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { GUIA_TECNICO_CONTENT } from './guiaContent';
+import { GUIA_TECNICO_CONTENT, guiaCategorias } from './guiaContent';
 
 const SYSTEM_PROMPT = `Você é o assistente técnico do NEXO ERP, especializado em móveis planejados.
 
@@ -61,10 +61,19 @@ export const useGuiaTecnico = () => {
     }
   };
 
-  // Como o guia agora é um texto plano, a filtragem local simples não se aplica da mesma forma que antes.
-  // Mantemos o hook retornando uma estrutura compatível se necessário, ou ajustamos conforme o uso na UI.
-  // Por agora, retornamos um array vazio para 'resultados' para evitar quebra na UI se ela iterar sobre eles.
-  const resultados: any[] = [];
+  const filtrarConteudo = useCallback((termo: string) => {
+    if (!termo) return guiaCategorias;
+    
+    return guiaCategorias.map(cat => ({
+      ...cat,
+      topicos: cat.topicos.filter(t => 
+        t.pergunta.toLowerCase().includes(termo.toLowerCase()) || 
+        t.resposta.toLowerCase().includes(termo.toLowerCase())
+      )
+    })).filter(cat => cat.topicos.length > 0);
+  }, []);
+
+  const resultados = filtrarConteudo(busca);
 
   return {
     busca,
