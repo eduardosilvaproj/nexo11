@@ -26,6 +26,7 @@ type Contrato = {
 
 export default function Tecnico() {
   const navigate = useNavigate();
+  const { perfil } = useAuth();
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
@@ -33,14 +34,65 @@ export default function Tecnico() {
   const [aba, setAba] = useState<SubEtapa>("medicao");
 
   const { data: contratos = [], isLoading } = useQuery({
-    queryKey: ["contratos-tecnico-list", aba],
+    queryKey: ["contratos-tecnico-list", aba, perfil?.loja_id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      if (aba === "conferencia") {
+        let query = supabase
+          .from("contrato_ambientes")
+          .select(`
+            contrato_id,
+            contratos (
+              id,
+              cliente_nome,
+              status,
+              vendedor_id,
+              created_at,
+              sub_etapa_tecnico,
+              medicao_responsavel_id,
+              conferencia_responsavel_id
+            )
+          `)
+          .eq("status_medicao", "liberado_conferencia");
+
+        if (perfil?.loja_id) {
+          query = query.eq("loja_id", perfil.loja_id);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        // Group by contract and add the count of environments available
+        const contractsMap = new Map<string, any>();
+        data?.forEach((item: any) => {
+          if (item.contratos) {
+            const contract = item.contratos;
+            if (!contractsMap.has(contract.id)) {
+              contractsMap.set(contract.id, {
+                ...contract,
+                ambientes_disponiveis: 1
+              });
+            } else {
+              contractsMap.get(contract.id).ambientes_disponiveis += 1;
+            }
+          }
+        });
+
+        return Array.from(contractsMap.values()) as Contrato[];
+      }
+
+      // Default query for "medicao"
+      let query = supabase
         .from("contratos")
         .select("id,cliente_nome,status,vendedor_id,created_at,sub_etapa_tecnico,medicao_responsavel_id,conferencia_responsavel_id")
         .eq("status", "tecnico")
-        .eq("sub_etapa_tecnico", aba)
+        .eq("sub_etapa_tecnico", "medicao")
         .order("created_at", { ascending: false });
+
+      if (perfil?.loja_id) {
+        query = query.eq("loja_id", perfil.loja_id);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as Contrato[];
     },
