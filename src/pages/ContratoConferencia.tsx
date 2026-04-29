@@ -364,6 +364,14 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
   };
 
   const aprovarAmbiente = async () => {
+    const checklist = ambiente.checklist_json || {};
+    const checklistComplete = CHECKLIST_ITEMS.every(item => !!checklist[item]);
+    
+    if (!checklistComplete) {
+      toast.error("O checklist técnico precisa estar 100% preenchido.");
+      return;
+    }
+
     if (hasDivergencia && !canApprove) {
       toast.error("Ambiente com divergência crítica. Solicite aprovação do gerente.");
       return;
@@ -505,42 +513,90 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
                     <span className="text-xs font-semibold text-blue-600">{fmtBRL(ambiente.custo_original || 0)}</span>
                   </div>
                   
-                  <div 
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex flex-col items-center justify-center border-2 border-dashed border-[#B0BAC9] rounded p-2 hover:bg-blue-50 transition-colors cursor-pointer"
-                  >
-                    <input 
-                      type="file" 
-                      ref={fileInputRef} 
-                      className="hidden" 
-                      accept=".xml" 
-                      onChange={(e) => e.target.files?.[0] && handleImportXml(e.target.files[0])}
-                    />
-                    {uploading ? <Loader2 size={20} className="animate-spin text-blue-500" /> : (
-                      <>
-                        <Upload size={20} className="text-blue-500 mb-1" />
-                        <span className="text-[10px] font-semibold text-blue-600">
-                          {ambiente.conferencia_xml_raw ? "Atualizar XML Conferido" : "Upload XML Conferido"}
-                        </span>
-                      </>
-                    )}
-                  </div>
+                  {ambiente.conferencia_xml_raw ? (
+                    <div 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex flex-col gap-1 p-3 rounded bg-neutral-50 border border-neutral-100 cursor-pointer hover:bg-neutral-100 transition-colors"
+                    >
+                      <span className="text-[10px] text-[#6B7A90] uppercase font-bold">XML Conferido</span>
+                      <span className="text-sm font-medium">{ambiente.nome}</span>
+                      <span className="text-xs font-semibold text-indigo-600">{fmtBRL(ambiente.custo_conferencia || 0)}</span>
+                    </div>
+                  ) : (
+                    <div 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex flex-col items-center justify-center border-2 border-dashed border-[#B0BAC9] rounded p-2 hover:bg-blue-50 transition-colors cursor-pointer"
+                    >
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        className="hidden" 
+                        accept=".xml" 
+                        onChange={(e) => e.target.files?.[0] && handleImportXml(e.target.files[0])}
+                      />
+                      {uploading ? <Loader2 size={20} className="animate-spin text-blue-500" /> : (
+                        <>
+                          <Upload size={20} className="text-blue-500 mb-1" />
+                          <span className="text-[10px] font-semibold text-blue-600">
+                            Upload XML Conferido
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
+
+                {ambiente.conferencia_xml_raw && (
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    className="hidden" 
+                    accept=".xml" 
+                    onChange={(e) => e.target.files?.[0] && handleImportXml(e.target.files[0])}
+                  />
+                )}
 
                 {ambiente.variacao_pct !== null && (
                   <div className={cn(
-                    "p-3 rounded-md flex items-center justify-between",
-                    Math.abs(ambiente.variacao_pct) > 10 ? "bg-rose-50 border border-rose-100" : "bg-emerald-50 border border-emerald-100"
+                    "p-3 rounded-md flex flex-col gap-2",
+                    ambiente.variacao_pct > 10 ? "bg-rose-50 border border-rose-100" : 
+                    ambiente.variacao_pct > 0 ? "bg-amber-50 border border-amber-100" :
+                    "bg-emerald-50 border border-emerald-100"
                   )}>
-                    <div className="flex flex-col">
-                      <span className="text-[10px] uppercase font-bold text-neutral-500">Variação de Custo</span>
-                      <span className={cn("text-lg font-bold", Math.abs(ambiente.variacao_pct) > 10 ? "text-rose-600" : "text-emerald-600")}>
-                        {ambiente.variacao_pct > 0 ? '+' : ''}{ambiente.variacao_pct}%
-                      </span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] uppercase font-bold text-neutral-500">Variação de Custo</span>
+                        <span className={cn(
+                          "text-lg font-bold", 
+                          ambiente.variacao_pct > 10 ? "text-rose-600" : 
+                          ambiente.variacao_pct > 0 ? "text-amber-600" :
+                          "text-emerald-600"
+                        )}>
+                          {ambiente.variacao_pct > 0 ? '+' : ''}{ambiente.variacao_pct}%
+                        </span>
+                      </div>
+                      {ambiente.variacao_pct > 10 && (
+                        <div className="flex items-center gap-2 text-rose-700 bg-rose-100 px-3 py-1 rounded text-xs font-bold">
+                          <AlertTriangle size={14} /> Divergência Crítica
+                        </div>
+                      )}
                     </div>
-                    {Math.abs(ambiente.variacao_pct) > 10 && (
-                      <div className="flex items-center gap-2 text-rose-700 bg-rose-100 px-3 py-1 rounded text-xs font-bold">
-                        <AlertTriangle size={14} /> Divergência Crítica
+
+                    {ambiente.variacao_pct > 10 && !isAprovado && (
+                      <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-rose-200">
+                        <span className="text-[10px] text-rose-800 font-semibold uppercase">Ações necessárias:</span>
+                        <div className="flex gap-2">
+                          {!aguardandoAprovGerente ? (
+                            <Button size="sm" variant="outline" className="h-7 text-[10px] bg-white border-rose-200 text-rose-700 hover:bg-rose-50" onClick={solicitarAprovacao}>
+                              Solicitar aprovação do gestor
+                            </Button>
+                          ) : (
+                            <span className="text-[9px] text-rose-600 font-bold bg-rose-100/50 px-2 py-1 rounded">Aprovação solicitada</span>
+                          )}
+                          <Button size="sm" variant="outline" className="h-7 text-[10px] bg-white border-rose-200 text-rose-700 hover:bg-rose-50" onClick={() => toast.info("Funcionalidade de cobrar diferença será implementada em breve.")}>
+                            Cobrar diferença ao cliente
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -571,7 +627,17 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
               <div className="flex flex-col gap-3">
                 {CHECKLIST_ITEMS.map((item, idx) => (
                   <div key={idx} className="flex items-center gap-3">
-                    <input type="checkbox" className="rounded border-[#B0BAC9] h-4 w-4 text-emerald-600" />
+                    <input 
+                      type="checkbox" 
+                      checked={!!(ambiente.checklist_json || {})[item]}
+                      onChange={async (e) => {
+                        const current = ambiente.checklist_json || {};
+                        const next = { ...current, [item]: e.target.checked };
+                        await supabase.from('contrato_ambientes').update({ checklist_json: next }).eq('id', ambiente.id);
+                        onUpdate();
+                      }}
+                      className="rounded border-[#B0BAC9] h-4 w-4 text-emerald-600" 
+                    />
                     <span className="text-xs text-[#4A5568]">{item}</span>
                   </div>
                 ))}
