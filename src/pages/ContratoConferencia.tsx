@@ -188,11 +188,14 @@ export default function ContratoConferenciaPage() {
           Voltar ao contrato
         </button>
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-[#0D1117]">
-            Conferência — {contrato.cliente_nome} <span className="text-[#6B7A90] font-normal">#{id?.slice(0, 6).toUpperCase()}</span>
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-semibold text-[#0D1117]">
+              Conferência — {contrato.cliente_nome} <span className="text-[#6B7A90] font-normal">#{id?.slice(0, 6).toUpperCase()}</span>
+            </h1>
+            <BotaoAjudaTecnica inline />
+          </div>
           <div className="flex gap-2">
-            <BotaoAjudaTecnica />
+            {/* Removido o BotaoAjudaTecnica que estava aqui */}
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
               {stats.disponiveis} ambiente(s) disponível(is)
             </span>
@@ -257,6 +260,7 @@ export default function ContratoConferenciaPage() {
           </Button>
         </div>
       </div>
+      <BotaoAjudaTecnica />
     </div>
   );
 }
