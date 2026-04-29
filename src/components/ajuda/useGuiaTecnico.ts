@@ -1,5 +1,17 @@
 import { useState, useCallback } from 'react';
-import { guiaCategorias } from './guiaContent';
+import { GUIA_TECNICO_CONTENT } from './guiaContent';
+
+const SYSTEM_PROMPT = `Você é o assistente técnico do NEXO ERP, especializado em móveis planejados.
+
+INSTRUÇÕES:
+1. Primeiro tente responder com base no Guia Técnico abaixo
+2. Se não encontrar no guia, responda com seu conhecimento geral sobre marcenaria e móveis planejados, mas SEMPRE avise com: "⚠️ Esta informação não está no guia técnico da empresa, é baseada em conhecimento geral."
+3. Nunca invente medidas ou especificações sem avisar a fonte
+4. Responda sempre em português, de forma direta e prática
+5. Use bullet points para listas
+
+GUIA TÉCNICO DA EMPRESA:
+${GUIA_TECNICO_CONTENT}`;
 
 export const useGuiaTecnico = () => {
   const [busca, setBusca] = useState('');
@@ -16,12 +28,6 @@ export const useGuiaTecnico = () => {
 
     setLoading(true);
     try {
-      // Formata o contexto do guia técnico para a IA
-      const contexto = guiaCategorias.map(cat => 
-        `Categoria: ${cat.titulo}\n` + 
-        cat.topicos.map(t => `P: ${t.pergunta}\nR: ${t.resposta}`).join('\n')
-      ).join('\n\n');
-
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -29,11 +35,11 @@ export const useGuiaTecnico = () => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
+          model: "llama-3.3-70b-versatile",
           messages: [
             {
               role: "system",
-              content: "Você é um assistente técnico especializado em móveis sob medida. Use o guia técnico fornecido para responder às dúvidas dos usuários de forma clara e objetiva. Se a informação não estiver no guia, informe educadamente.\n\nGuia Técnico:\n" + contexto
+              content: SYSTEM_PROMPT
             },
             {
               role: "user",
@@ -55,19 +61,10 @@ export const useGuiaTecnico = () => {
     }
   };
 
-  const filtrarConteudo = useCallback((termo: string) => {
-    if (!termo) return guiaCategorias;
-    
-    return guiaCategorias.map(cat => ({
-      ...cat,
-      topicos: cat.topicos.filter(t => 
-        t.pergunta.toLowerCase().includes(termo.toLowerCase()) || 
-        t.resposta.toLowerCase().includes(termo.toLowerCase())
-      )
-    })).filter(cat => cat.topicos.length > 0);
-  }, []);
-
-  const resultados = filtrarConteudo(busca);
+  // Como o guia agora é um texto plano, a filtragem local simples não se aplica da mesma forma que antes.
+  // Mantemos o hook retornando uma estrutura compatível se necessário, ou ajustamos conforme o uso na UI.
+  // Por agora, retornamos um array vazio para 'resultados' para evitar quebra na UI se ela iterar sobre eles.
+  const resultados: any[] = [];
 
   return {
     busca,
