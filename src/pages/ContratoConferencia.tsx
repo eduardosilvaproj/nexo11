@@ -346,11 +346,11 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
           variacao_pct: Number(variacao.toFixed(2)),
           conferencia_status: novoStatus,
           conferencia_xml_raw: text,
-          itens_original_json: itensOriginais,
-          itens_conferencia_json: itensConfer,
+          itens_original_json: itensOriginais as any,
+          itens_conferencia_json: itensConfer as any,
           conferencia_aprovada_em: novoStatus === "aprovada" ? new Date().toISOString() : null,
           aprovacao_solicitada_em: null,
-        })
+        } as any)
         .eq("id", ambiente.id);
 
       if (error) throw error;
