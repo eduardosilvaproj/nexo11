@@ -336,7 +336,9 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
       }
 
       const variacao = ((custoConferencia - custoOriginal) / custoOriginal) * 100;
-      const novoStatus: ConferenciaStatus = variacao > 10 ? "bloqueada" : "aprovada";
+      // Ao importar XML, o status continua "pendente" ou vai para "pendente" (em conferência)
+      // Apenas a aprovação manual ou do gerente muda para 'aprovada'
+      const novoStatus: ConferenciaStatus = "pendente";
 
       const { error } = await supabase
         .from("contrato_ambientes")
@@ -348,7 +350,7 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
           conferencia_xml_raw: text,
           itens_original_json: itensOriginais as any,
           itens_conferencia_json: itensConfer as any,
-          conferencia_aprovada_em: novoStatus === "aprovada" ? new Date().toISOString() : null,
+          conferencia_aprovada_em: null,
           aprovacao_solicitada_em: null,
         } as any)
         .eq("id", ambiente.id);
@@ -702,7 +704,12 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
                </Button>
                <Button 
                 onClick={aprovarAmbiente}
-                disabled={loading || (hasDivergencia && !canApprove)}
+                disabled={
+                  loading || 
+                  !ambiente.conferencia_xml_raw || 
+                  (ambiente.variacao_pct !== null && ambiente.variacao_pct > 10 && !canApprove && !isAprovado) ||
+                  !CHECKLIST_ITEMS.every(item => !!(ambiente.checklist_json || {})[item])
+                }
                 className="bg-emerald-600 hover:bg-emerald-700 text-xs gap-2"
                >
                  {loading ? <Loader2 size={14} className="animate-spin" /> : "Aprovar ambiente"} <ArrowRight size={14} />
