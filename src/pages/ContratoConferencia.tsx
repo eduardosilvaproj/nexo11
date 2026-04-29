@@ -350,7 +350,7 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
           conferencia_xml_raw: text,
           itens_original_json: itensOriginais as any,
           itens_conferencia_json: itensConfer as any,
-          conferencia_aprovada_em: novoStatus === "aprovada" ? new Date().toISOString() : null,
+          conferencia_aprovada_em: null,
           aprovacao_solicitada_em: null,
         } as any)
         .eq("id", ambiente.id);
