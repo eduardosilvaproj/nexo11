@@ -272,6 +272,8 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { perfil } = useAuth();
   
+  console.log('Ambiente:', ambiente.nome, 'Status:', ambiente.conferencia_status, 'ID:', ambiente.id);
+
   const isLiberado = ambiente.status_medicao === 'liberado_conferencia';
   const isBloqueado = !isLiberado;
   const inProgress = !!ambiente.conferente_id;
@@ -448,7 +450,7 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
               </span>
             ) : isAprovado ? (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-700 uppercase">
-                <CheckCircle2 size={10} /> Aprovado
+                <CheckCircle2 size={10} /> Aprovado ✅
               </span>
             ) : hasDivergencia ? (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 text-rose-700 uppercase">
