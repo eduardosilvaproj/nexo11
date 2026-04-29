@@ -1,19 +1,94 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { 
+  ChevronLeft, Loader2, AlertTriangle, CheckCircle2, 
+  Clock, AlertCircle, ChevronDown, ChevronUp, 
+  Upload, FileText, Package, CheckSquare, 
+  Save, ArrowRight, User, Trash2, Plus, 
+  Info, ShieldCheck, Send
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronLeft, Loader2, AlertTriangle } from "lucide-react";
-import { ConferenciaAmbientesSection } from "@/components/contrato/ConferenciaAmbientesSection";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/contexts/AuthContext";
+import { parsePromobXml } from "@/lib/promob-xml";
+import { cn } from "@/lib/utils";
+import { useParams, useNavigate } from "react-router-dom";
+
+const fmtBRL = (v: number) =>
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v || 0);
+
+type ConferenciaStatus = "pendente" | "aprovada" | "bloqueada" | "liberada";
+
+interface Ambiente {
+  id: string;
+  nome: string;
+  loja_id: string;
+  contrato_id: string;
+  valor_liquido: number;
+  custo_original: number | null;
+  custo_conferencia: number | null;
+  variacao_pct: number | null;
+  conferencia_status: ConferenciaStatus;
+  conferente_id: string | null;
+  percentual_conferente: number;
+  valor_conferente: number;
+  itens_original_json: any[];
+  itens_conferencia_json: any[];
+  aprovacao_solicitada_em: string | null;
+  status_medicao: string;
+  checklist_json?: any;
+  conferencia_xml_raw?: string;
+  observacoes_conferencia?: string;
+  inclui_ferragens?: boolean;
+}
+
+interface ItemExtra {
+  id: string;
+  ambiente_id: string;
+  descricao: string;
+  quantidade: number;
+  unidade: string | null;
+  origem: "comprar" | "almoxarifado";
+  status_compra: string;
+}
+
+const CHECKLIST_ITEMS = [
+  "Conferência de medidas (largura, altura, profundidade)",
+  "Verificação de folgas de instalação",
+  "Sentido do veio da madeira",
+  "Tipo de puxadores e furações",
+  "Lado de abertura de portas",
+  "Quantidade de prateleiras internas",
+  "Espessura das chapas (corpo e fundo)",
+  "Tipo de corrediças e dobradiças",
+  "Acessórios internos (aramados, luz, etc)",
+  "Pontos elétricos e hidráulicos compatíveis",
+  "Condições de acesso e entrega"
+];
 
 export default function ContratoConferenciaPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const qc = useQueryClient();
+  const { perfil, hasRole } = useAuth();
+  const canApprove = hasRole("admin") || hasRole("gerente");
 
   const { data: contrato, isLoading: loadingContrato } = useQuery({
-    queryKey: ["contrato-conferencia-page", id],
+    queryKey: ["contrato-conferencia-full", id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contratos")
-        .select("id, cliente_nome, loja_id, contrato_ambientes(medicao_concluido, status_medicao)")
+        .select(`
+          id, 
+          cliente_nome, 
+          loja_id, 
+          status,
+          contrato_ambientes(*)
+        `)
         .eq("id", id!)
         .maybeSingle();
       if (error) throw error;
@@ -21,6 +96,56 @@ export default function ContratoConferenciaPage() {
     },
     enabled: !!id,
   });
+
+  const { data: conferentes = [] } = useQuery({
+    queryKey: ["conferentes-list", contrato?.loja_id],
+    enabled: !!contrato?.loja_id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("usuarios")
+        .select("id, nome")
+        .contains("funcoes", ["conferente"])
+        .order("nome");
+      return data ?? [];
+    },
+  });
+
+  const ambientes = (contrato?.contrato_ambientes || []) as Ambiente[];
+  
+  const stats = useMemo(() => {
+    const total = ambientes.length;
+    const disponiveis = ambientes.filter(a => a.status_medicao === 'liberado_conferencia' && a.conferencia_status === 'pendente' && !a.conferente_id).length;
+    const emConferencia = ambientes.filter(a => a.conferente_id && (a.conferencia_status === 'pendente' || a.conferencia_status === 'bloqueada')).length;
+    const aprovados = ambientes.filter(a => a.conferencia_status === 'aprovada' || a.conferencia_status === 'liberada').length;
+    const comDivergencia = ambientes.filter(a => a.conferencia_status === 'bloqueada').length;
+    const aguardMedicao = ambientes.filter(a => a.status_medicao !== 'liberado_conferencia' && a.status_medicao !== 'concluido').length;
+    const todosAprovados = total > 0 && aprovados === total;
+
+    return { total, disponiveis, emConferencia, aprovados, comDivergencia, aguardMedicao, todosAprovados };
+  }, [ambientes]);
+
+  const handleFinalizarConferencia = async () => {
+    if (!stats.todosAprovados) {
+      toast.error("Todos os ambientes precisam estar aprovados para encaminhar à fabricação.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("contratos")
+      .update({ 
+        status: 'producao',
+        trava_producao_ok: true 
+      })
+      .eq("id", id!);
+
+    if (error) {
+      toast.error("Erro ao encaminhar para produção: " + error.message);
+      return;
+    }
+
+    toast.success("Contrato encaminhado para produção! ✓");
+    navigate("/tecnico");
+  };
 
   if (loadingContrato) {
     return (
@@ -30,17 +155,11 @@ export default function ContratoConferenciaPage() {
     );
   }
 
-  if (!contrato) {
-    return <div className="p-8">Contrato não encontrado</div>;
-  }
-
-  const ambientes = Array.isArray(contrato.contrato_ambientes) ? contrato.contrato_ambientes : [];
-  const ambientesLiberados = ambientes.filter(a => (a.status_medicao as any) === 'liberado_conferencia');
-  const hasLiberados = ambientesLiberados.length > 0;
-  const emMedicao = ambientes.filter(a => (a.status_medicao as any) !== 'liberado_conferencia' && a.status_medicao !== 'concluido').length;
+  if (!contrato) return <div className="p-8">Contrato não encontrado</div>;
 
   return (
-    <div className="flex flex-col gap-6 p-6 md:p-8 max-w-7xl mx-auto w-full">
+    <div className="flex flex-col gap-6 p-6 md:p-8 max-w-7xl mx-auto w-full pb-32">
+      {/* Header */}
       <div className="flex flex-col gap-1">
         <button
           onClick={() => navigate(`/contratos/${id}`)}
@@ -49,45 +168,311 @@ export default function ContratoConferenciaPage() {
           <ChevronLeft size={16} />
           Voltar ao contrato
         </button>
-        <h1 className="text-2xl font-semibold text-[#0D1117]">
-          Conferência — {contrato.cliente_nome} <span className="text-[#6B7A90] font-normal">#{id?.slice(0, 6).toUpperCase()}</span>
-        </h1>
-        {hasLiberados && (
-          <div className="flex gap-2 mt-2">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold text-[#0D1117]">
+            Conferência — {contrato.cliente_nome} <span className="text-[#6B7A90] font-normal">#{id?.slice(0, 6).toUpperCase()}</span>
+          </h1>
+          <div className="flex gap-2">
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-              {ambientesLiberados.length} ambiente(s) disponível(is) para conferência
+              {stats.disponiveis} ambiente(s) disponível(is)
             </span>
-            {emMedicao > 0 && (
+            {stats.aguardMedicao > 0 && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
-                {emMedicao} ainda em medição
+                {stats.aguardMedicao} ainda em medição
               </span>
             )}
           </div>
-        )}
+        </div>
       </div>
 
-      {!hasLiberados ? (
-        <div className="bg-[#FEF3C7] border border-[#FDE68A] rounded-xl p-8 flex flex-col items-center text-center gap-4">
-          <AlertTriangle size={48} className="text-[#D97706]" />
-          <div>
-            <h2 className="text-lg font-semibold text-[#92400E]">Aguardando liberação</h2>
-            <p className="text-[#B45309] mt-1 max-w-md">
-              Nenhum ambiente foi liberado para conferência técnica ainda. 
-              Aguarde o técnico concluir a medição e liberar os ambientes.
-            </p>
+      {/* Progress Cards */}
+      <div className="grid grid-cols-5 gap-3">
+        {[
+          { label: "Disponíveis", value: stats.disponiveis, color: "bg-blue-500", icon: CheckCircle2 },
+          { label: "Em conferência", value: stats.emConferencia, color: "bg-indigo-500", icon: Clock },
+          { label: "Aprovados", value: stats.aprovados, color: "bg-emerald-500", icon: CheckSquare },
+          { label: "Com divergência", value: stats.comDivergencia, color: "bg-rose-500", icon: AlertTriangle },
+          { label: "Aguard. medição", value: stats.aguardMedicao, color: "bg-amber-500", icon: Loader2 },
+        ].map((c) => (
+          <div key={c.label} className="bg-white rounded-xl border border-[#E8ECF2] p-4 flex flex-col gap-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-medium text-[#6B7A90] uppercase tracking-wider">{c.label}</span>
+              <c.icon size={14} className={c.color.replace('bg-', 'text-')} />
+            </div>
+            <span className="text-2xl font-bold text-[#0D1117]">{c.value}</span>
           </div>
-          <button 
-            onClick={() => navigate(`/contratos/${id}/medicao`)}
-            className="bg-[#D97706] hover:bg-[#B45309] text-white px-6 py-2 rounded-lg font-medium transition-colors"
+        ))}
+      </div>
+
+      {/* Ambientes List */}
+      <div className="flex flex-col gap-4">
+        {ambientes.map((amb) => (
+          <AmbienteCard 
+            key={amb.id} 
+            ambiente={amb} 
+            conferentes={conferentes}
+            canApprove={canApprove}
+            onUpdate={() => qc.invalidateQueries({ queryKey: ["contrato-conferencia-full", id] })}
+          />
+        ))}
+      </div>
+
+      {/* Footer Sticky */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#E8ECF2] p-4 z-50">
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 md:px-8">
+          <div className="flex items-center gap-2 text-sm text-[#6B7A90]">
+            <Info size={16} />
+            {stats.todosAprovados 
+              ? <span className="text-emerald-600 font-medium">Todos os ambientes aprovados! Pronto para fabricação.</span>
+              : <span>Faltam {ambientes.length - stats.aprovados} ambientes para encaminhar à fabricação</span>
+            }
+          </div>
+          <Button 
+            disabled={!stats.todosAprovados}
+            className={cn("gap-2 px-8", stats.todosAprovados ? "bg-emerald-600 hover:bg-emerald-700" : "bg-neutral-300")}
+            onClick={handleFinalizarConferencia}
           >
-            Ir para medição
-          </button>
+            Encaminhar à fabricação <ArrowRight size={16} />
+          </Button>
         </div>
-      ) : (
-        <ConferenciaAmbientesSection 
-          contratoId={id!}
-          lojaId={contrato.loja_id}
-        />
+      </div>
+    </div>
+  );
+}
+
+function AmbienteCard({ ambiente, conferentes, canApprove, onUpdate }: { 
+  ambiente: Ambiente; 
+  conferentes: any[];
+  canApprove: boolean;
+  onUpdate: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { perfil } = useAuth();
+  
+  const isLiberado = ambiente.status_medicao === 'liberado_conferencia';
+  const isBloqueado = !isLiberado;
+  const inProgress = !!ambiente.conferente_id;
+  const isAprovado = ambiente.conferencia_status === 'aprovada' || ambiente.conferencia_status === 'liberada';
+  const hasDivergencia = ambiente.conferencia_status === 'bloqueada';
+
+  const handleIniciar = async () => {
+    setLoading(true);
+    const { error } = await supabase
+      .from("contrato_ambientes")
+      .update({ 
+        conferente_id: perfil?.id,
+        conferencia_status: 'pendente'
+      })
+      .eq("id", ambiente.id);
+    
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Conferência iniciada!");
+      setExpanded(true);
+      onUpdate();
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className={cn(
+      "bg-white rounded-xl border transition-all overflow-hidden",
+      isBloqueado ? "opacity-60 border-neutral-200" : "border-[#E8ECF2] shadow-sm",
+      expanded && "ring-2 ring-blue-500 ring-offset-2"
+    )}>
+      {/* Header do Card */}
+      <div 
+        className={cn(
+          "p-4 flex items-center justify-between cursor-pointer",
+          isBloqueado && "cursor-not-allowed"
+        )}
+        onClick={() => !isBloqueado && setExpanded(!expanded)}
+      >
+        <div className="flex items-center gap-4">
+          <div className="flex flex-col">
+            <span className="font-semibold text-[#0D1117]">{ambiente.nome}</span>
+            <span className="text-xs text-[#6B7A90]">{fmtBRL(ambiente.valor_liquido)}</span>
+          </div>
+          
+          <div className="flex gap-2">
+            {isBloqueado ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-neutral-100 text-neutral-500 uppercase">
+                <AlertCircle size={10} /> Bloqueado
+              </span>
+            ) : isAprovado ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-700 uppercase">
+                <CheckCircle2 size={10} /> Aprovado
+              </span>
+            ) : hasDivergencia ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 text-rose-700 uppercase">
+                <AlertTriangle size={10} /> Divergência
+              </span>
+            ) : inProgress ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-100 text-indigo-700 uppercase">
+                <Clock size={10} /> Em conferência
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-700 uppercase">
+                <CheckCircle2 size={10} /> Disponível
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {!inProgress && isLiberado && (
+            <Button size="sm" onClick={(e) => { e.stopPropagation(); handleIniciar(); }} disabled={loading}>
+              {loading ? <Loader2 size={14} className="animate-spin" /> : "Iniciar conferência"}
+            </Button>
+          )}
+          {isLiberado && (
+            expanded ? <ChevronUp size={20} className="text-[#6B7A90]" /> : <ChevronDown size={20} className="text-[#6B7A90]" />
+          )}
+        </div>
+      </div>
+
+      {/* Conteúdo Expandido */}
+      {expanded && !isBloqueado && (
+        <div className="border-t border-[#E8ECF2] p-6 bg-neutral-50 flex flex-col gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Esquerda: Atribuição e XML */}
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-semibold text-[#6B7A90] uppercase">Conferente Responsável</label>
+                <Select 
+                  value={ambiente.conferente_id || ""} 
+                  onValueChange={async (val) => {
+                    const { error } = await supabase.from('contrato_ambientes').update({ conferente_id: val }).eq('id', ambiente.id);
+                    if (error) toast.error(error.message);
+                    else onUpdate();
+                  }}
+                >
+                  <SelectTrigger className="bg-white">
+                    <SelectValue placeholder="Selecionar conferente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {conferentes.map(c => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="bg-white rounded-lg border border-[#E8ECF2] p-4 flex flex-col gap-4">
+                <h4 className="text-sm font-semibold flex items-center gap-2">
+                  <FileText size={16} className="text-blue-500" /> Comparativo XML
+                </h4>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-1 p-3 rounded bg-neutral-50 border border-neutral-100">
+                    <span className="text-[10px] text-[#6B7A90] uppercase font-bold">XML Original</span>
+                    <span className="text-sm font-medium">{ambiente.nome}</span>
+                    <span className="text-xs font-semibold text-blue-600">{fmtBRL(ambiente.custo_original || 0)}</span>
+                  </div>
+                  
+                  <div className="flex flex-col items-center justify-center border-2 border-dashed border-[#B0BAC9] rounded p-2 hover:bg-blue-50 transition-colors cursor-pointer">
+                    <Upload size={20} className="text-blue-500 mb-1" />
+                    <span className="text-[10px] font-semibold text-blue-600">Upload XML Conferido</span>
+                  </div>
+                </div>
+
+                {ambiente.variacao_pct !== null && (
+                  <div className={cn(
+                    "p-3 rounded-md flex items-center justify-between",
+                    Math.abs(ambiente.variacao_pct) > 10 ? "bg-rose-50 border border-rose-100" : "bg-emerald-50 border border-emerald-100"
+                  )}>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] uppercase font-bold text-neutral-500">Variação de Custo</span>
+                      <span className={cn("text-lg font-bold", Math.abs(ambiente.variacao_pct) > 10 ? "text-rose-600" : "text-emerald-600")}>
+                        {ambiente.variacao_pct > 0 ? '+' : ''}{ambiente.variacao_pct}%
+                      </span>
+                    </div>
+                    {Math.abs(ambiente.variacao_pct) > 10 && (
+                      <div className="flex items-center gap-2 text-rose-700 bg-rose-100 px-3 py-1 rounded text-xs font-bold">
+                        <AlertTriangle size={14} /> Divergência Crítica
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2 mt-2">
+                  <input 
+                    type="checkbox" 
+                    id={`ferragens-${ambiente.id}`}
+                    checked={ambiente.inclui_ferragens}
+                    className="rounded border-[#B0BAC9] text-blue-600"
+                  />
+                  <label htmlFor={`ferragens-${ambiente.id}`} className="text-xs text-[#6B7A90]">XML inclui ferragens</label>
+                </div>
+              </div>
+            </div>
+
+            {/* Direita: Checklist */}
+            <div className="bg-white rounded-lg border border-[#E8ECF2] p-5 flex flex-col gap-4">
+              <h4 className="text-sm font-semibold flex items-center gap-2">
+                <CheckSquare size={16} className="text-emerald-500" /> Checklist Técnico
+              </h4>
+              
+              <div className="flex flex-col gap-3">
+                {CHECKLIST_ITEMS.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-3">
+                    <input type="checkbox" className="rounded border-[#B0BAC9] h-4 w-4 text-emerald-600" />
+                    <span className="text-xs text-[#4A5568]">{item}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-2 flex flex-col gap-1">
+                <label className="text-xs font-semibold text-[#6B7A90]">Observações da Conferência</label>
+                <Textarea 
+                  placeholder="Detalhe divergências ou pontos de atenção..."
+                  className="text-xs min-h-[80px]"
+                  defaultValue={ambiente.observacoes_conferencia || ""}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Itens Terceiros */}
+          <div className="bg-white rounded-lg border border-[#E8ECF2] p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-sm font-semibold flex items-center gap-2">
+                <Package size={16} className="text-amber-500" /> Itens Terceiros / Extras
+              </h4>
+              <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 border-amber-500 text-amber-600 hover:bg-amber-50">
+                <Plus size={12} /> Adicionar item terceiro
+              </Button>
+            </div>
+            
+            <div className="text-center py-6 text-neutral-400 text-xs italic bg-neutral-50 rounded border border-dashed">
+              Nenhum item extra cadastrado.
+            </div>
+          </div>
+
+          {/* Ações do Ambiente */}
+          <div className="flex items-center justify-between pt-4 border-t border-neutral-200">
+             <div className="flex gap-2">
+               {hasDivergencia && canApprove && (
+                 <Button className="bg-rose-600 hover:bg-rose-700 text-xs gap-2">
+                   <ShieldCheck size={14} /> Forçar Aprovação (Gerente)
+                 </Button>
+               )}
+               {hasDivergencia && !canApprove && (
+                 <Button variant="outline" className="text-xs gap-2 border-rose-200 text-rose-600">
+                   <Send size={14} /> Solicitar Aprovação Gerente
+                 </Button>
+               )}
+             </div>
+             
+             <div className="flex gap-3">
+               <Button variant="outline" className="text-xs gap-2">
+                 <Save size={14} /> Salvar rascunho
+               </Button>
+               <Button className="bg-emerald-600 hover:bg-emerald-700 text-xs gap-2">
+                 Aprovar ambiente <ArrowRight size={14} />
+               </Button>
+             </div>
+          </div>
+        </div>
       )}
     </div>
   );
