@@ -53,7 +53,7 @@ export default function Tecnico() {
               conferencia_responsavel_id
             )
           `)
-          .eq("status_medicao", "liberado_conferencia");
+          .eq("status_medicao" as any, "liberado_conferencia");
 
         if (perfil?.loja_id) {
           query = query.eq("loja_id", perfil.loja_id);
