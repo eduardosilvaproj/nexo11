@@ -19,39 +19,36 @@ export const useGuiaTecnico = () => {
   const [respostaIA, setRespostaIA] = useState<string | null>(null);
 
   const perguntarIA = async (pergunta: string) => {
-    const groqKey = import.meta.env.VITE_GROQ_KEY;
-    
-    if (!groqKey) {
-      console.error("VITE_GROQ_KEY não configurada");
-      return;
-    }
-
     setLoading(true);
     try {
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${groqKey}`,
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${import.meta.env.VITE_GROQ_KEY}`,
         },
         body: JSON.stringify({
           model: "llama-3.3-70b-versatile",
           messages: [
-            {
-              role: "system",
-              content: SYSTEM_PROMPT
+            { 
+              role: "system", 
+              content: SYSTEM_PROMPT 
             },
-            {
-              role: "user",
-              content: pergunta
+            { 
+              role: "user", 
+              content: pergunta 
             }
           ],
-          temperature: 0.1,
-          max_tokens: 1024
-        })
+          max_tokens: 1024,
+        }),
       });
 
       const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error.message || "Erro na API do Groq");
+      }
+
       setRespostaIA(data.choices[0]?.message?.content || "Desculpe, não consegui processar sua pergunta.");
     } catch (error) {
       console.error("Erro ao consultar Groq:", error);
