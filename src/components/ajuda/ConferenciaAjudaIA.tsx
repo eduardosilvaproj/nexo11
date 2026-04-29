@@ -6,45 +6,25 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { useGuiaTecnico } from './useGuiaTecnico';
 
-interface Message {
-  role: 'assistant' | 'user';
-  content: string;
-}
-
-export const ConferenciaAjudaIA = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
-  const { perguntarIA, respostaIA, loading, setRespostaIA } = useGuiaTecnico();
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: 'Olá! Sou o assistente técnico. Como posso ajudar na conferência deste contrato?' }
-  ]);
+export const ConferenciaAjudaIA = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  const { messages, loading, error, sendMessage } = useGuiaTecnico();
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Efeito para adicionar a resposta da IA às mensagens
   useEffect(() => {
-    if (respostaIA) {
-      setMessages(prev => [...prev, { role: 'assistant', content: respostaIA }]);
-      setRespostaIA(null); // Limpa para evitar duplicidade se o hook for reutilizado
-    }
-  }, [respostaIA, setRespostaIA]);
-
-  // Scroll automático para a última mensagem
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
+    scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading]);
 
   const handleSend = async () => {
-    if (!input.trim() || loading) return;
-    
-    const userMessage = input.trim();
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    const text = input.trim();
+    if (!text || loading) return;
     setInput('');
-    
-    await perguntarIA(userMessage);
+    await sendMessage(text);
   };
 
   if (!isOpen) return null;
+
+  const showWelcome = messages.length === 0;
 
   return (
     <Card className="fixed bottom-20 right-6 w-96 h-[500px] shadow-2xl flex flex-col z-50 border-primary/20 animate-in slide-in-from-bottom-5">
@@ -53,23 +33,39 @@ export const ConferenciaAjudaIA = ({ isOpen, onClose }: { isOpen: boolean, onClo
           <Sparkles size={18} />
           <span className="font-semibold">Assistente de Conferência</span>
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose} className="text-primary-foreground hover:bg-primary-foreground/10">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          className="text-primary-foreground hover:bg-primary-foreground/10"
+        >
           <X size={18} />
         </Button>
       </div>
 
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
+          {showWelcome && (
+            <div className="flex justify-start">
+              <div className="max-w-[80%] p-3 rounded-lg text-sm bg-muted shadow-sm">
+                Olá! Sou o assistente técnico. Como posso ajudar na conferência deste contrato?
+              </div>
+            </div>
+          )}
+
           {messages.map((m, i) => (
-            <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] p-3 rounded-lg text-sm ${
-                m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted shadow-sm'
-              }`}>
-                {m.content}
+            <div key={m.id ?? i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div
+                className={`max-w-[80%] p-3 rounded-lg text-sm whitespace-pre-wrap ${
+                  m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted shadow-sm'
+                }`}
+              >
+                {m.content || (m.streaming ? '...' : '')}
               </div>
             </div>
           ))}
-          {loading && (
+
+          {loading && !messages.some((m) => m.streaming) && (
             <div className="flex justify-start">
               <div className="bg-muted p-3 rounded-lg flex items-center gap-2">
                 <Loader2 size={14} className="animate-spin" />
@@ -77,13 +73,22 @@ export const ConferenciaAjudaIA = ({ isOpen, onClose }: { isOpen: boolean, onClo
               </div>
             </div>
           )}
+
+          {error && (
+            <div className="flex justify-start">
+              <div className="max-w-[80%] p-3 rounded-lg text-sm bg-destructive/10 text-destructive">
+                {error}
+              </div>
+            </div>
+          )}
+
           <div ref={scrollRef} />
         </div>
       </ScrollArea>
 
       <div className="p-4 border-t flex gap-2 bg-muted/20">
-        <Input 
-          placeholder="Tirar dúvida técnica..." 
+        <Input
+          placeholder="Tirar dúvida técnica..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
