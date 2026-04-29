@@ -448,15 +448,15 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-neutral-100 text-neutral-500 uppercase">
                 <AlertCircle size={10} /> Bloqueado
               </span>
-            ) : isAprovado ? (
+            ) : ambiente.conferencia_status === 'aprovada' ? (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-700 uppercase">
-                <CheckCircle2 size={10} /> Aprovado ✅
+                <CheckCircle2 size={10} /> Aprovado
               </span>
             ) : hasDivergencia ? (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 text-rose-700 uppercase">
                 <AlertTriangle size={10} /> Divergência
               </span>
-            ) : inProgress ? (
+            ) : (ambiente.conferente_id || ambiente.conferencia_xml_raw) ? (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-100 text-indigo-700 uppercase">
                 <Clock size={10} /> Em conferência
               </span>
