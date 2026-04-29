@@ -17,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { parsePromobXml } from "@/lib/promob-xml";
 import { cn } from "@/lib/utils";
 import { useParams, useNavigate } from "react-router-dom";
+import { BotaoAjudaTecnica } from "@/components/ajuda/BotaoAjudaTecnica";
 
 const fmtBRL = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v || 0);
@@ -191,6 +192,7 @@ export default function ContratoConferenciaPage() {
             Conferência — {contrato.cliente_nome} <span className="text-[#6B7A90] font-normal">#{id?.slice(0, 6).toUpperCase()}</span>
           </h1>
           <div className="flex gap-2">
+            <BotaoAjudaTecnica />
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
               {stats.disponiveis} ambiente(s) disponível(is)
             </span>
@@ -340,7 +342,6 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
       const variacao = ((custoConferencia - custoOriginal) / custoOriginal) * 100;
       const novoStatus: ConferenciaStatus = "pendente";
 
-      // Update both tables to keep them in sync
       const { error: error1 } = await supabase
         .from("contrato_ambientes")
         .update({
