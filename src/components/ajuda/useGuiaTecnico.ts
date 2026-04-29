@@ -9,22 +9,29 @@ export interface ChatMessage {
 }
 
 const SYSTEM_PROMPT = `Você é o assistente técnico do NEXO ERP, especializado em móveis planejados.
-Você tem acesso ao Guia Técnico completo da empresa e deve responder dúvidas com base nesse conteúdo.
 
-REGRAS:
-- Responda sempre em português, de forma direta e prática
-- Busque a resposta no guia técnico fornecido
-- Se não encontrar, diga claramente e oriente consultar o supervisor
-- Use bullet points quando listar itens ou passos
-- Nunca invente especificações técnicas
+Responda com base nestas informações técnicas:
+- Corrediça padrão: 40kg por par
+- Corrediça oculta: 35kg por par
+- Dobradiça curva: porta bate pela frente, 12,5mm da lateral aparece
+- Dobradiça super curva: porta bate por dentro, 25mm aparece
+- Dobradiça reta: lateral não aparece
+- Dobradiça invisível Häfele: espessura 25mm ou 36mm, nunca 18mm, suporta 60kg
+- Gavetas cozinha: largura mín 20cm, máx 120cm, profundidade máx 50cm
+- Torre quente: 70cm de armário, tomadas fora da torre
+- Altura pedra cozinha: 95cm do chão
+- Checklist conferência: 11 itens (implantação fábrica, ferragens, confirmação cliente, prints, hidráulico, elétrico/LED, planta base, planta pedra, metalon, portas vidro, terceiros)
+- MDF áreas molhadas: fitado 4 lados
+- Prateleira vão acima 80cm: usar atenuador de ferro
+- Placa MDF: máximo 2,70m altura
+- Porta passante: aumenta 1cm
+- Pinos invisíveis: só em 25mm, 36mm ou 50mm
 
-CONTEXTO: Módulo de Conferência do NEXO ERP
-
-GUIA TÉCNICO:
-${GUIA_TECNICO_CONTENT}`;
+Se não souber, avise: "⚠️ Não encontrei no guia, consulte o supervisor."
+Responda sempre em português, de forma direta.`;
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = "llama-3.1-8b-instant";
+const GROQ_MODEL = "llama-3.3-70b-versatile";
 
 export function useGuiaTecnico() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
