@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,10 +22,12 @@ type Contrato = {
   sub_etapa_tecnico: SubEtapa;
   medicao_responsavel_id: string | null;
   conferencia_responsavel_id: string | null;
+  ambientes_disponiveis?: number;
 };
 
 export default function Tecnico() {
   const navigate = useNavigate();
+  const { perfil } = useAuth();
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
@@ -32,14 +35,66 @@ export default function Tecnico() {
   const [aba, setAba] = useState<SubEtapa>("medicao");
 
   const { data: contratos = [], isLoading } = useQuery({
-    queryKey: ["contratos-tecnico-list", aba],
+    queryKey: ["contratos-tecnico-list", aba, perfil?.loja_id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      if (aba === "conferencia") {
+        let query = supabase
+          .from("contrato_ambientes")
+          .select(`
+            contrato_id,
+            contratos (
+              id,
+              cliente_nome,
+              status,
+              vendedor_id,
+              created_at,
+              sub_etapa_tecnico,
+              medicao_responsavel_id,
+              conferencia_responsavel_id
+            )
+          `) as any;
+
+        query = query.eq("status_medicao", "liberado_conferencia");
+
+        if (perfil?.loja_id) {
+          query = query.eq("loja_id", perfil.loja_id);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+
+        // Group by contract and add the count of environments available
+        const contractsMap = new Map<string, any>();
+        data?.forEach((item: any) => {
+          if (item.contratos) {
+            const contract = item.contratos;
+            if (!contractsMap.has(contract.id)) {
+              contractsMap.set(contract.id, {
+                ...contract,
+                ambientes_disponiveis: 1
+              });
+            } else {
+              contractsMap.get(contract.id).ambientes_disponiveis += 1;
+            }
+          }
+        });
+
+        return Array.from(contractsMap.values()) as Contrato[];
+      }
+
+      // Default query for "medicao"
+      let query = supabase
         .from("contratos")
         .select("id,cliente_nome,status,vendedor_id,created_at,sub_etapa_tecnico,medicao_responsavel_id,conferencia_responsavel_id")
         .eq("status", "tecnico")
-        .eq("sub_etapa_tecnico", aba)
+        .eq("sub_etapa_tecnico", "medicao")
         .order("created_at", { ascending: false });
+
+      if (perfil?.loja_id) {
+        query = query.eq("loja_id", perfil.loja_id);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as Contrato[];
     },
@@ -346,27 +401,35 @@ export default function Tecnico() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <div
-                          className="overflow-hidden"
-                          style={{
-                            width: 140,
-                            height: 6,
-                            borderRadius: 3,
-                            backgroundColor: "#E8ECF2",
-                          }}
-                        >
-                          <div
-                            className="h-full transition-all"
-                            style={{
-                              width: `${pct}%`,
-                              backgroundColor: pct === 100 ? "#12B76A" : "#1E6FBF",
-                              borderRadius: 3,
-                            }}
-                          />
-                        </div>
-                        <span style={{ fontSize: 12, color: "#6B7A90" }}>
-                          {stats.done}/{stats.total} ambientes
-                        </span>
+                        {aba === "medicao" ? (
+                          <>
+                            <div
+                              className="overflow-hidden"
+                              style={{
+                                width: 140,
+                                height: 6,
+                                borderRadius: 3,
+                                backgroundColor: "#E8ECF2",
+                              }}
+                            >
+                              <div
+                                className="h-full transition-all"
+                                style={{
+                                  width: `${pct}%`,
+                                  backgroundColor: pct === 100 ? "#12B76A" : "#1E6FBF",
+                                  borderRadius: 3,
+                                }}
+                              />
+                            </div>
+                            <span style={{ fontSize: 12, color: "#6B7A90" }}>
+                              {stats.done}/{stats.total} ambientes
+                            </span>
+                          </>
+                        ) : (
+                          <span style={{ fontSize: 12, color: "#1E6FBF", fontWeight: 500 }}>
+                            {c.ambientes_disponiveis || 0} ambiente(s) disponível(is)
+                          </span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
