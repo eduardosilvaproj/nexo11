@@ -660,6 +660,7 @@ export type Database = {
         Row: {
           aprovacao_solicitada_em: string | null
           aprovacao_solicitada_por: string | null
+          checklist_json: Json | null
           conferencia_aprovada_em: string | null
           conferencia_aprovada_por: string | null
           conferencia_status: string
@@ -674,6 +675,7 @@ export type Database = {
           data_montagem: string | null
           desconto_percentual: number
           id: string
+          inclui_ferragens: boolean | null
           itens_conferencia_json: Json
           itens_original_json: Json
           loja_id: string
@@ -685,6 +687,7 @@ export type Database = {
           montador_id: string | null
           nome: string
           observacoes: string | null
+          observacoes_conferencia: string | null
           origem: string | null
           percentual_conferente: number
           percentual_medidor: number
@@ -703,6 +706,7 @@ export type Database = {
         Insert: {
           aprovacao_solicitada_em?: string | null
           aprovacao_solicitada_por?: string | null
+          checklist_json?: Json | null
           conferencia_aprovada_em?: string | null
           conferencia_aprovada_por?: string | null
           conferencia_status?: string
@@ -717,6 +721,7 @@ export type Database = {
           data_montagem?: string | null
           desconto_percentual?: number
           id?: string
+          inclui_ferragens?: boolean | null
           itens_conferencia_json?: Json
           itens_original_json?: Json
           loja_id: string
@@ -728,6 +733,7 @@ export type Database = {
           montador_id?: string | null
           nome: string
           observacoes?: string | null
+          observacoes_conferencia?: string | null
           origem?: string | null
           percentual_conferente?: number
           percentual_medidor?: number
@@ -746,6 +752,7 @@ export type Database = {
         Update: {
           aprovacao_solicitada_em?: string | null
           aprovacao_solicitada_por?: string | null
+          checklist_json?: Json | null
           conferencia_aprovada_em?: string | null
           conferencia_aprovada_por?: string | null
           conferencia_status?: string
@@ -760,6 +767,7 @@ export type Database = {
           data_montagem?: string | null
           desconto_percentual?: number
           id?: string
+          inclui_ferragens?: boolean | null
           itens_conferencia_json?: Json
           itens_original_json?: Json
           loja_id?: string
@@ -771,6 +779,7 @@ export type Database = {
           montador_id?: string | null
           nome?: string
           observacoes?: string | null
+          observacoes_conferencia?: string | null
           origem?: string | null
           percentual_conferente?: number
           percentual_medidor?: number
@@ -2834,7 +2843,12 @@ export type Database = {
     }
     Enums: {
       agendamento_status: "agendado" | "em_execucao" | "concluido" | "cancelado"
-      ambiente_status_montagem: "pendente" | "agendado" | "concluido" | "pago"
+      ambiente_status_montagem:
+        | "pendente"
+        | "agendado"
+        | "concluido"
+        | "pago"
+        | "liberado_conferencia"
       app_role:
         | "admin"
         | "vendedor"
@@ -2854,6 +2868,7 @@ export type Database = {
         | "montagem"
         | "pos_venda"
         | "finalizado"
+        | "cancelado"
       entrega_status: "pendente" | "confirmada"
       entrega_status_visual:
         | "a_agendar"
@@ -3024,7 +3039,13 @@ export const Constants = {
   public: {
     Enums: {
       agendamento_status: ["agendado", "em_execucao", "concluido", "cancelado"],
-      ambiente_status_montagem: ["pendente", "agendado", "concluido", "pago"],
+      ambiente_status_montagem: [
+        "pendente",
+        "agendado",
+        "concluido",
+        "pago",
+        "liberado_conferencia",
+      ],
       app_role: [
         "admin",
         "vendedor",
@@ -3045,6 +3066,7 @@ export const Constants = {
         "montagem",
         "pos_venda",
         "finalizado",
+        "cancelado",
       ],
       entrega_status: ["pendente", "confirmada"],
       entrega_status_visual: [
