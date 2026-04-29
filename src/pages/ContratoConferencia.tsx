@@ -13,7 +13,7 @@ export default function ContratoConferenciaPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contratos")
-        .select("id, cliente_nome, loja_id, contrato_ambientes(medicao_concluido)")
+        .select("id, cliente_nome, loja_id, contrato_ambientes(medicao_concluido, status_medicao)")
         .eq("id", id!)
         .maybeSingle();
       if (error) throw error;
