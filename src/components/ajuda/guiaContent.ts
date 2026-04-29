@@ -1,3 +1,6 @@
+// Conteúdo do Guia Técnico extraído do PDF
+// Gerado automaticamente em 2026-04-29 — não editar manualmente
+
 export const GUIA_TECNICO_CONTENT = `
 "Sua casa é seu mundo; e viver bem no seu mundo nunca foi tão importante."
 2024 GUIA TÉCNICO GRUPO Araraquara | Bauru | Ribeirão Preto | São Carlos
@@ -60,7 +63,7 @@ COM TODO O CONHECIMENTO TÉCNICO PODEMOS SER MAIS ASSERTIVOS
 Ser assertivo em um projeto de móveis planejados é dificil, devido a tantas variáveis presentes. A própria universidade falha gravemente ao não dedicar uma atenção especializada diante deste tema. Por isso, aprender na prática se tornou uma rotina entre todos.
 Sempre antes de iniciar um projeto é preciso saber informações básicas do espaço, além dados elétricos e hidráulics. Após esta etapa, é preciso saber mais do cliente: quais seus gostos, referências além, é claro, qual o poder de investimento para a movelaria planejada.
 O nosso desafio é equacionar três pontos: estética, funcionalidade e orçamento. Se elas não estiverem conectadas, o projeto dificilmente será seguido. Ou seja, aquele projeto belíssimo será apenas uma imagem guardada no computador.
-Lembre-se: todos os espaços tem suas peculiaridades e detalhes precisam ser pensados levando também em consideração a pergunta básica: como será afixado? Ou, como será construído este móvel?
+Lembre-se: todos os espaços tem suas peculiaridades e detalhes precisam ser pensados levando também em consideração a pergunta básica: como será afixado? Ou, como será construído este mível?
 Trabalhando desta forma teremos clientes fieis e parceiros cada vez mais alinhados com o propósito: gerar paz e deixar todos felizes.
 
 GUIA TÉCNICO - GRUPO DIAS
@@ -86,7 +89,7 @@ Briefing é o conjunto de informações sobre o ambiente e usuário. Na prática
 - Que MDF imagina na cozinha?
 - Algum eletro a gás? Ou elétrico?
 - Quais acessórios desejaria ter?
-Sempre faça o alinhamento de expectativa: desejo do cliente versus poder do investimento. Não ter isso ajustado gerará perda de tempo.
+Sempre faça o alinhamento de expectativa: desejo do cliente versus poder do investimento. Nâo ter isso ajustado gerará perda de tempo.
 
 COMO MEDIR COZINHA:
 Medir sempre que possível 3 pontos e confirmar quando for um ponto milimétrico. Buscar livrar a grapa em 15cm nas laterais e não deixar em lateral evitando cortes e danos ao armário.
@@ -94,3 +97,39 @@ Medir sempre que possível 3 pontos e confirmar quando for um ponto milimétrico
 ATENÇÃO ESPECIAL EM PROJETOS DE COZINHA:
 Analise a área livre necessária para o uso de cada equipamento. E fique atento às instalações elétricas, hidráulicas e ventilação. Lembre-se também das saídas de gás.
 `;
+
+export const guiaCategorias = [
+  {
+    id: "sobre",
+    titulo: "Sobre o Grupo Dias",
+    descricao: "Informações institucionais e missão da empresa.",
+    topicos: [
+      {
+        pergunta: "Qual a missão da empresa?",
+        resposta: "Gerar paz e deixar todos felizes, equilibrando estética, funcionalidade e orçamento."
+      }
+    ]
+  },
+  {
+    id: "ferragens",
+    titulo: "Ferragens",
+    descricao: "Especificações de dobradiças e corrediças.",
+    topicos: [
+      {
+        pergunta: "Qual o peso suportado pelas corrediças?",
+        resposta: "Corrediças comuns suportam 40kg por par. Corrediças ocultas suportam 35kg por par (incluindo gaveta e itens)."
+      }
+    ]
+  },
+  {
+    id: "cozinha",
+    titulo: "Cozinha",
+    descricao: "Regras e dicas para projetos de cozinha.",
+    topicos: [
+      {
+        pergunta: "O que é a regra do triângulo?",
+        resposta: "É criar um triângulo imaginário entre pia, fogão e geladeira para facilitar a mobilidade."
+      }
+    ]
+  }
+];
