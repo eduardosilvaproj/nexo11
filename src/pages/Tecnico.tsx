@@ -22,6 +22,7 @@ type Contrato = {
   sub_etapa_tecnico: SubEtapa;
   medicao_responsavel_id: string | null;
   conferencia_responsavel_id: string | null;
+  ambientes_disponiveis?: number;
 };
 
 export default function Tecnico() {
