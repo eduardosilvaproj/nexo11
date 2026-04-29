@@ -397,20 +397,36 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
     }
     
     setLoading(true);
-    const { error } = await supabase
-      .from("contrato_ambientes")
-      .update({ 
-        conferencia_status: 'aprovada',
-        conferencia_aprovada_em: new Date().toISOString()
-      })
-      .eq("id", ambiente.id);
-    
-    if (error) toast.error(error.message);
-    else {
+    try {
+      const { error: error1 } = await supabase
+        .from("contrato_ambientes")
+        .update({ 
+          conferencia_status: 'aprovada',
+          conferencia_aprovada_em: new Date().toISOString()
+        })
+        .eq("id", ambiente.id);
+      
+      if (error1) throw error1;
+
+      const { error: error2 } = await supabase
+        .from("conferencia_ambientes")
+        .update({ 
+          status: 'aprovado',
+          aprovado_por: perfil?.id,
+          data_aprovacao: new Date().toISOString()
+        })
+        .eq('contrato_id', ambiente.contrato_id)
+        .eq('ambiente_id', ambiente.id);
+
+      if (error2) throw error2;
+
       toast.success("Ambiente aprovado! ✓");
       onUpdate();
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao aprovar ambiente");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const solicitarAprovacao = async () => {
