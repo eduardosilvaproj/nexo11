@@ -60,17 +60,17 @@ interface ItemExtra {
 }
 
 const CHECKLIST_ITEMS = [
-  "Conferência de medidas (largura, altura, profundidade)",
-  "Verificação de folgas de instalação",
-  "Sentido do veio da madeira",
-  "Tipo de puxadores e furações",
-  "Lado de abertura de portas",
-  "Quantidade de prateleiras internas",
-  "Espessura das chapas (corpo e fundo)",
-  "Tipo de corrediças e dobradiças",
-  "Acessórios internos (aramados, luz, etc)",
-  "Pontos elétricos e hidráulicos compatíveis",
-  "Condições de acesso e entrega"
+  "Implantação dos móveis na fábrica",
+  "Lista extra de ferragens",
+  "Confirmação do cliente de alterações no projeto",
+  "Prints das imagens alteradas na conferência",
+  "Projeto hidráulico (foto, planta ou marcação)",
+  "Pontos elétricos e LED ao cliente/eletricista",
+  "Planta de base",
+  "Planta de pedra",
+  "Metalon",
+  "Portas de vidro",
+  "Implantação de pedidos de terceiros"
 ];
 
 export default function ContratoConferenciaPage() {
@@ -578,9 +578,9 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
               </div>
 
               <div className="mt-2 flex flex-col gap-1">
-                <label className="text-xs font-semibold text-[#6B7A90]">Observações da Conferência</label>
+                <label className="text-xs font-semibold text-[#6B7A90]">Obs:</label>
                 <Textarea 
-                  placeholder="Detalhe divergências ou pontos de atenção..."
+                  placeholder="Observações do ambiente..."
                   className="text-xs min-h-[80px]"
                   defaultValue={ambiente.observacoes_conferencia || ""}
                   onBlur={async (e) => {
