@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { HelpCircle, Search, BookOpen, MessageSquare, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { 
   Sheet, 
   SheetContent, 
@@ -15,7 +16,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { useGuiaTecnico } from './useGuiaTecnico';
 import { ConferenciaAjudaIA } from './ConferenciaAjudaIA';
 
-export const BotaoAjudaTecnica = () => {
+export const BotaoAjudaTecnica = ({ inline }: { inline?: boolean }) => {
   const { busca, setBusca, resultados } = useGuiaTecnico();
   const [iaOpen, setIaOpen] = useState(false);
 
@@ -23,9 +24,9 @@ export const BotaoAjudaTecnica = () => {
     <>
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-2 border-primary/30 hover:bg-primary/5">
+          <Button variant="outline" size="sm" className={cn("gap-2 border-primary/30 hover:bg-primary/5", !inline && "fixed bottom-24 right-6 z-50 rounded-full h-12 w-12 p-0 shadow-lg sm:w-auto sm:px-4")}>
             <HelpCircle size={16} className="text-primary" />
-            <span className="hidden sm:inline">Ajuda Técnica</span>
+            <span className={cn("hidden sm:inline", !inline && "inline")}>Ajuda Técnica</span>
           </Button>
         </SheetTrigger>
         <SheetContent className="w-[400px] sm:w-[540px]">
