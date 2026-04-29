@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { 
@@ -20,6 +20,9 @@ import { useParams, useNavigate } from "react-router-dom";
 
 const fmtBRL = (v: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v || 0);
+
+const norm = (s: string) =>
+  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 
 type ConferenciaStatus = "pendente" | "aprovada" | "bloqueada" | "liberada";
 
@@ -95,6 +98,21 @@ export default function ContratoConferenciaPage() {
       return data;
     },
     enabled: !!id,
+  });
+
+  const { data: orcamento } = useQuery({
+    queryKey: ["orcamento-do-contrato", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("orcamentos")
+        .select("id, xml_raw, total_pedido, categorias, itens")
+        .eq("contrato_id", id!)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
   });
 
   const { data: conferentes = [] } = useQuery({
@@ -212,6 +230,7 @@ export default function ContratoConferenciaPage() {
             ambiente={amb} 
             conferentes={conferentes}
             canApprove={canApprove}
+            orcamento={orcamento}
             onUpdate={() => qc.invalidateQueries({ queryKey: ["contrato-conferencia-full", id] })}
           />
         ))}
@@ -240,14 +259,17 @@ export default function ContratoConferenciaPage() {
   );
 }
 
-function AmbienteCard({ ambiente, conferentes, canApprove, onUpdate }: { 
+function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }: { 
   ambiente: Ambiente; 
   conferentes: any[];
   canApprove: boolean;
+  orcamento: any;
   onUpdate: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { perfil } = useAuth();
   
   const isLiberado = ambiente.status_medicao === 'liberado_conferencia';
@@ -255,6 +277,7 @@ function AmbienteCard({ ambiente, conferentes, canApprove, onUpdate }: {
   const inProgress = !!ambiente.conferente_id;
   const isAprovado = ambiente.conferencia_status === 'aprovada' || ambiente.conferencia_status === 'liberada';
   const hasDivergencia = ambiente.conferencia_status === 'bloqueada';
+  const aguardandoAprovGerente = hasDivergencia && !!ambiente.aprovacao_solicitada_em;
 
   const handleIniciar = async () => {
     setLoading(true);
@@ -273,6 +296,119 @@ function AmbienteCard({ ambiente, conferentes, canApprove, onUpdate }: {
       onUpdate();
     }
     setLoading(false);
+  };
+
+  const handleImportXml = async (file: File) => {
+    setUploading(true);
+    try {
+      const text = await file.text();
+      const parsed = parsePromobXml(text);
+
+      const target = norm(ambiente.nome);
+      let cat = parsed.categorias.find((c) => norm(c.description) === target);
+      if (!cat) cat = parsed.categorias.find((c) => norm(c.description).includes(target) || target.includes(norm(c.description)));
+
+      const custoConferencia = cat?.pedido ?? parsed.total_pedido ?? 0;
+      const itensConfer = cat?.itens ?? parsed.itens;
+
+      let custoOriginal = Number(ambiente.custo_original) || 0;
+      let itensOriginais: any[] = (ambiente.itens_original_json as any[]) || [];
+      
+      if ((!custoOriginal || itensOriginais.length === 0) && orcamento?.xml_raw) {
+        try {
+          const origParsed = parsePromobXml(orcamento.xml_raw);
+          let oc = origParsed.categorias.find((c) => norm(c.description) === target);
+          if (!oc) oc = origParsed.categorias.find((c) => norm(c.description).includes(target) || target.includes(norm(c.description)));
+          if (oc) {
+            custoOriginal = oc.pedido;
+            itensOriginais = oc.itens as any[];
+          }
+        } catch {}
+      }
+
+      if (!custoOriginal && orcamento?.total_pedido) {
+        custoOriginal = Number(orcamento.total_pedido) / Math.max(1, 1); 
+      }
+
+      if (!custoOriginal || custoOriginal <= 0) {
+        toast.error("Não foi possível determinar o custo original. Vincule um orçamento.");
+        return;
+      }
+
+      const variacao = ((custoConferencia - custoOriginal) / custoOriginal) * 100;
+      const novoStatus: ConferenciaStatus = variacao > 10 ? "bloqueada" : "aprovada";
+
+      const { error } = await supabase
+        .from("contrato_ambientes")
+        .update({
+          custo_original: custoOriginal,
+          custo_conferencia: custoConferencia,
+          variacao_pct: Number(variacao.toFixed(2)),
+          conferencia_status: novoStatus,
+          conferencia_xml_raw: text,
+          itens_original_json: itensOriginais,
+          itens_conferencia_json: itensConfer,
+          conferencia_aprovada_em: novoStatus === "aprovada" ? new Date().toISOString() : null,
+          aprovacao_solicitada_em: null,
+        })
+        .eq("id", ambiente.id);
+
+      if (error) throw error;
+      toast.success("XML importado com sucesso!");
+      onUpdate();
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao importar XML");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const aprovarAmbiente = async () => {
+    if (hasDivergencia && !canApprove) {
+      toast.error("Ambiente com divergência crítica. Solicite aprovação do gerente.");
+      return;
+    }
+    
+    setLoading(true);
+    const { error } = await supabase
+      .from("contrato_ambientes")
+      .update({ 
+        conferencia_status: 'aprovada',
+        conferencia_aprovada_em: new Date().toISOString()
+      })
+      .eq("id", ambiente.id);
+    
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Ambiente aprovado! ✓");
+      onUpdate();
+    }
+    setLoading(false);
+  };
+
+  const solicitarAprovacao = async () => {
+    const { error } = await supabase
+      .from("contrato_ambientes")
+      .update({
+        aprovacao_solicitada_em: new Date().toISOString(),
+        aprovacao_solicitada_por: perfil?.id
+      })
+      .eq("id", ambiente.id);
+    
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Aprovação solicitada ao gerente");
+      onUpdate();
+    }
+  };
+
+  const aprovarComoGerente = async () => {
+    const { data, error } = await supabase.rpc("aprovar_conferencia_ambiente", { _ambiente_id: ambiente.id });
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Conferência aprovada pelo gerente");
+      onUpdate();
+    }
   };
 
   return (
@@ -369,9 +505,25 @@ function AmbienteCard({ ambiente, conferentes, canApprove, onUpdate }: {
                     <span className="text-xs font-semibold text-blue-600">{fmtBRL(ambiente.custo_original || 0)}</span>
                   </div>
                   
-                  <div className="flex flex-col items-center justify-center border-2 border-dashed border-[#B0BAC9] rounded p-2 hover:bg-blue-50 transition-colors cursor-pointer">
-                    <Upload size={20} className="text-blue-500 mb-1" />
-                    <span className="text-[10px] font-semibold text-blue-600">Upload XML Conferido</span>
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex flex-col items-center justify-center border-2 border-dashed border-[#B0BAC9] rounded p-2 hover:bg-blue-50 transition-colors cursor-pointer"
+                  >
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      className="hidden" 
+                      accept=".xml" 
+                      onChange={(e) => e.target.files?.[0] && handleImportXml(e.target.files[0])}
+                    />
+                    {uploading ? <Loader2 size={20} className="animate-spin text-blue-500" /> : (
+                      <>
+                        <Upload size={20} className="text-blue-500 mb-1" />
+                        <span className="text-[10px] font-semibold text-blue-600">
+                          {ambiente.conferencia_xml_raw ? "Atualizar XML Conferido" : "Upload XML Conferido"}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -399,6 +551,10 @@ function AmbienteCard({ ambiente, conferentes, canApprove, onUpdate }: {
                     type="checkbox" 
                     id={`ferragens-${ambiente.id}`}
                     checked={ambiente.inclui_ferragens}
+                    onChange={async (e) => {
+                      await supabase.from('contrato_ambientes').update({ inclui_ferragens: e.target.checked }).eq('id', ambiente.id);
+                      onUpdate();
+                    }}
                     className="rounded border-[#B0BAC9] text-blue-600"
                   />
                   <label htmlFor={`ferragens-${ambiente.id}`} className="text-xs text-[#6B7A90]">XML inclui ferragens</label>
@@ -427,6 +583,12 @@ function AmbienteCard({ ambiente, conferentes, canApprove, onUpdate }: {
                   placeholder="Detalhe divergências ou pontos de atenção..."
                   className="text-xs min-h-[80px]"
                   defaultValue={ambiente.observacoes_conferencia || ""}
+                  onBlur={async (e) => {
+                    if (e.target.value !== ambiente.observacoes_conferencia) {
+                      await supabase.from('contrato_ambientes').update({ observacoes_conferencia: e.target.value }).eq('id', ambiente.id);
+                      onUpdate();
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -452,23 +614,32 @@ function AmbienteCard({ ambiente, conferentes, canApprove, onUpdate }: {
           <div className="flex items-center justify-between pt-4 border-t border-neutral-200">
              <div className="flex gap-2">
                {hasDivergencia && canApprove && (
-                 <Button className="bg-rose-600 hover:bg-rose-700 text-xs gap-2">
+                 <Button onClick={aprovarComoGerente} className="bg-rose-600 hover:bg-rose-700 text-xs gap-2">
                    <ShieldCheck size={14} /> Forçar Aprovação (Gerente)
                  </Button>
                )}
-               {hasDivergencia && !canApprove && (
-                 <Button variant="outline" className="text-xs gap-2 border-rose-200 text-rose-600">
+               {hasDivergencia && !canApprove && !aguardandoAprovGerente && (
+                 <Button onClick={solicitarAprovacao} variant="outline" className="text-xs gap-2 border-rose-200 text-rose-600">
                    <Send size={14} /> Solicitar Aprovação Gerente
                  </Button>
+               )}
+               {aguardandoAprovGerente && (
+                 <span className="text-xs text-rose-600 font-medium bg-rose-50 px-3 py-1.5 rounded-md flex items-center gap-2">
+                   <Clock size={14} /> Aprovação solicitada ao gerente
+                 </span>
                )}
              </div>
              
              <div className="flex gap-3">
-               <Button variant="outline" className="text-xs gap-2">
+               <Button variant="outline" className="text-xs gap-2" onClick={() => toast.success("Rascunho salvo!")}>
                  <Save size={14} /> Salvar rascunho
                </Button>
-               <Button className="bg-emerald-600 hover:bg-emerald-700 text-xs gap-2">
-                 Aprovar ambiente <ArrowRight size={14} />
+               <Button 
+                onClick={aprovarAmbiente}
+                disabled={loading || (hasDivergencia && !canApprove)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-xs gap-2"
+               >
+                 {loading ? <Loader2 size={14} className="animate-spin" /> : "Aprovar ambiente"} <ArrowRight size={14} />
                </Button>
              </div>
           </div>
