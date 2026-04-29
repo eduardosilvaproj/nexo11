@@ -60,17 +60,17 @@ interface ItemExtra {
 }
 
 const CHECKLIST_ITEMS = [
-  "Conferência de medidas (largura, altura, profundidade)",
-  "Verificação de folgas de instalação",
-  "Sentido do veio da madeira",
-  "Tipo de puxadores e furações",
-  "Lado de abertura de portas",
-  "Quantidade de prateleiras internas",
-  "Espessura das chapas (corpo e fundo)",
-  "Tipo de corrediças e dobradiças",
-  "Acessórios internos (aramados, luz, etc)",
-  "Pontos elétricos e hidráulicos compatíveis",
-  "Condições de acesso e entrega"
+  "Implantação dos móveis na fábrica",
+  "Lista extra de ferragens",
+  "Confirmação do cliente de alterações no projeto",
+  "Prints das imagens alteradas na conferência",
+  "Projeto hidráulico (foto, planta ou marcação)",
+  "Pontos elétricos e LED ao cliente/eletricista",
+  "Planta de base",
+  "Planta de pedra",
+  "Metalon",
+  "Portas de vidro",
+  "Implantação de pedidos de terceiros"
 ];
 
 export default function ContratoConferenciaPage() {
