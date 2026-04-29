@@ -35,9 +35,9 @@ export default function ContratoConferenciaPage() {
   }
 
   const ambientes = Array.isArray(contrato.contrato_ambientes) ? contrato.contrato_ambientes : [];
-  const ambientesLiberados = ambientes.filter(a => a.status_medicao === 'liberado_conferencia');
+  const ambientesLiberados = ambientes.filter(a => (a.status_medicao as any) === 'liberado_conferencia');
   const hasLiberados = ambientesLiberados.length > 0;
-  const emMedicao = ambientes.filter(a => a.status_medicao !== 'liberado_conferencia' && a.status_medicao !== 'concluido').length;
+  const emMedicao = ambientes.filter(a => (a.status_medicao as any) !== 'liberado_conferencia' && a.status_medicao !== 'concluido').length;
 
   return (
     <div className="flex flex-col gap-6 p-6 md:p-8 max-w-7xl mx-auto w-full">
