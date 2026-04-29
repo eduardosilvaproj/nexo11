@@ -93,7 +93,7 @@ export function ConferenciaAmbientesSection({ contratoId, lojaId }: Props) {
           "id, nome, loja_id, contrato_id, valor_liquido, custo_original, custo_conferencia, variacao_pct, conferencia_status, conferente_id, percentual_conferente, valor_conferente, itens_original_json, itens_conferencia_json, aprovacao_solicitada_em, status_medicao",
         )
         .eq("contrato_id", contratoId)
-        .eq("status_medicao", "liberado_conferencia")
+        .eq("status_medicao" as any, "liberado_conferencia")
         .order("created_at", { ascending: true });
       if (error) throw error;
       return (data ?? []) as Ambiente[];
