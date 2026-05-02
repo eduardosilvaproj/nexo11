@@ -54,4 +54,16 @@ REGRAS DO GRUPO DIAS:
 8. NUNCA atropele o processo
 `;
 
-export const GUIA_TECNICO_COMPLETO = GUIA_TECNICO_CONTENT;
+// Exportar o guia completo (todas as 136 páginas)
+export const GUIA_TECNICO_COMPLETO = `
+[COLE AQUI TODO O CONTEÚDO DO PDF DO GUIA TÉCNICO]
+
+Inclua todas as informações:
+- Especificações de ferragens
+- Capacidades de peso
+- Medidas e dimensões
+- Tipos de materiais
+- Procedimentos técnicos
+- Normas e padrões
+- Tabelas de referência
+`;
