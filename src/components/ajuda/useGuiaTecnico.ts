@@ -8,7 +8,7 @@ export interface ChatMessage {
   streaming?: boolean;
 }
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_KEY || 'SUA_CHAVE_AQUI';
+const GEMINI_API_KEY = 'AIzaSyAT9_XU-P4znqAHIAD3KgCSGhzRY-YIeRo';
 
 export const useGuiaTecnico = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -18,7 +18,7 @@ export const useGuiaTecnico = () => {
   const sendMessage = useCallback(async (pergunta: string) => {
     if (!pergunta.trim() || loading) return;
 
-    const userMsg: ChatMessage = { role: "user", content: pergunta.trim() };
+    const userMsg: ChatMessage = { role: "user", content: pergunta.trim(), id: Date.now() };
     setMessages((prev) => [...prev, userMsg]);
 
     setLoading(true);
@@ -55,14 +55,16 @@ ${pergunta}`;
       const response = await result.response;
       const text = response.text();
 
-      const assistantMsg: ChatMessage = { role: "assistant", content: text };
+      const assistantMsg: ChatMessage = { role: "assistant", content: text, id: Date.now() + 1 };
       setMessages((prev) => [...prev, assistantMsg]);
       setLoading(false);
       return text;
     } catch (err) {
+      console.error('Erro ao consultar Gemini:', err);
       const errorMessage = err instanceof Error ? err.message : 'Erro ao consultar o guia técnico';
       setError(errorMessage);
       setLoading(false);
+      // Mantendo o erro no estado para a UI exibir
     }
   }, [loading]);
 
