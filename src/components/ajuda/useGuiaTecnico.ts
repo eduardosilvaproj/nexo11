@@ -18,8 +18,8 @@ export const useGuiaTecnico = () => {
     if (!pergunta.trim() || loading) return;
 
     const userMsg: ChatMessage = { role: "user", content: pergunta.trim() };
-    setMessages(prev => [...prev, userMsg]);
-    
+    setMessages((prev) => [...prev, userMsg]);
+
     setLoading(true);
     setError(null);
 
@@ -30,15 +30,15 @@ export const useGuiaTecnico = () => {
         generationConfig: {
           temperature: 0.3,
           maxOutputTokens: 2048,
-        }
+        },
       });
 
       const { GUIA_TECNICO_CONTENT } = await import('./guiaContent');
 
-      const prompt = \`Você é um assistente técnico especializado em marcenaria e móveis planejados da empresa Grupo DIAS.
+      const prompt = `Você é um assistente técnico especializado em marcenaria e móveis planejados da empresa Grupo DIAS.
 
 GUIA TÉCNICO COMPLETO:
-\${GUIA_TECNICO_CONTENT}
+${GUIA_TECNICO_CONTENT}
 
 INSTRUÇÕES:
 - Responda APENAS com base nas informações do guia técnico acima
@@ -48,17 +48,16 @@ INSTRUÇÕES:
 - Cite valores, medidas e especificações exatas quando disponíveis
 
 PERGUNTA DO USUÁRIO:
-\${pergunta}\`;
+${pergunta}`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
 
       const assistantMsg: ChatMessage = { role: "assistant", content: text };
-      setMessages(prev => [...prev, assistantMsg]);
+      setMessages((prev) => [...prev, assistantMsg]);
       setLoading(false);
       return text;
-
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao consultar o guia técnico';
       setError(errorMessage);
@@ -76,6 +75,6 @@ PERGUNTA DO USUÁRIO:
     sendMessage,
     clearHistory,
     loading,
-    error
+    error,
   };
 };
