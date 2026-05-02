@@ -1,153 +1,81 @@
-import { useState, useCallback, useRef } from "react";
-import { GUIA_TECNICO_CONTENT } from "./guiaContent";
+import { useState, useCallback } from 'react';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   id?: number;
-  streaming?: boolean;
 }
 
-const SYSTEM_PROMPT = `Você é o assistente técnico do NEXO ERP, especializado em móveis planejados.
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_KEY || 'SUA_CHAVE_AQUI';
 
-Responda com base nestas informações técnicas:
-- Corrediça padrão: 40kg por par
-- Corrediça oculta: 35kg por par
-- Dobradiça curva: porta bate pela frente, 12,5mm da lateral aparece
-- Dobradiça super curva: porta bate por dentro, 25mm aparece
-- Dobradiça reta: lateral não aparece
-- Dobradiça invisível Häfele: espessura 25mm ou 36mm, nunca 18mm, suporta 60kg
-- Gavetas cozinha: largura mín 20cm, máx 120cm, profundidade máx 50cm
-- Torre quente: 70cm de armário, tomadas fora da torre
-- Altura pedra cozinha: 95cm do chão
-- Checklist conferência: 11 itens (implantação fábrica, ferragens, confirmação cliente, prints, hidráulico, elétrico/LED, planta base, planta pedra, metalon, portas vidro, terceiros)
-- MDF áreas molhadas: fitado 4 lados
-- Prateleira vão acima 80cm: usar atenuador de ferro
-- Placa MDF: máximo 2,70m altura
-- Porta passante: aumenta 1cm
-- Pinos invisíveis: só em 25mm, 36mm ou 50mm
-
-Se não souber, avise: "⚠️ Não encontrei no guia, consulte o supervisor."
-Responda sempre em português, de forma direta.`;
-
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = "llama-3.3-70b-versatile";
-
-export function useGuiaTecnico() {
+export const useGuiaTecnico = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
 
-  const sendMessage = useCallback(async (userText: string) => {
-    if (!userText.trim() || loading) return;
+  const sendMessage = useCallback(async (pergunta: string) => {
+    if (!pergunta.trim() || loading) return;
 
-    const userMsg: ChatMessage = { role: "user", content: userText.trim() };
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
+    const userMsg: ChatMessage = { role: "user", content: pergunta.trim() };
+    setMessages(prev => [...prev, userMsg]);
+    
     setLoading(true);
     setError(null);
 
-    const placeholderId = Date.now();
-    setMessages((prev) => [
-      ...prev,
-      { role: "assistant", content: "", id: placeholderId, streaming: true },
-    ]);
-
     try {
-      const controller = new AbortController();
-      abortRef.current = controller;
-
-      const groqMessages = [
-        { role: "system", content: SYSTEM_PROMPT },
-        ...newMessages.map(({ role, content }) => ({ role, content })),
-      ];
-
-      const response = await fetch(GROQ_API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer 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",
-        },
-        signal: controller.signal,
-        body: JSON.stringify({
-          model: GROQ_MODEL,
-          messages: groqMessages,
-          max_tokens: 1024,
-          stream: true,
+      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({
+        model: "gemini-1.5-flash",
+        generationConfig: {
           temperature: 0.3,
-        }),
+          maxOutputTokens: 2048,
+        }
       });
 
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({})) as { error?: { message?: string } };
-        throw new Error(err?.error?.message || `Erro HTTP ${response.status}`);
-      }
+      const { GUIA_TECNICO_CONTENT } = await import('./guiaContent');
 
-      const reader = response.body!.getReader();
-      const decoder = new TextDecoder();
-      let accumulated = "";
+      const prompt = \`Você é um assistente técnico especializado em marcenaria e móveis planejados da empresa Grupo DIAS.
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+GUIA TÉCNICO COMPLETO:
+\${GUIA_TECNICO_CONTENT}
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
+INSTRUÇÕES:
+- Responda APENAS com base nas informações do guia técnico acima
+- Seja preciso e objetivo
+- Se a informação não estiver no guia, diga "Não encontrei essa informação no guia técnico"
+- Use linguagem técnica mas clara
+- Cite valores, medidas e especificações exatas quando disponíveis
 
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const data = line.slice(6).trim();
-          if (data === "[DONE]") continue;
+PERGUNTA DO USUÁRIO:
+\${pergunta}\`;
 
-          try {
-            const parsed = JSON.parse(data) as {
-              choices?: Array<{ delta?: { content?: string } }>;
-            };
-            const text = parsed.choices?.[0]?.delta?.content;
-            if (text) {
-              accumulated += text;
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === placeholderId ? { ...m, content: accumulated } : m
-                )
-              );
-            }
-          } catch {
-            // ignora linhas malformadas
-          }
-        }
-      }
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
 
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === placeholderId
-            ? { role: "assistant", content: accumulated }
-            : m
-        )
-      );
-    } catch (err: unknown) {
-      if (err instanceof Error && err.name === "AbortError") {
-        setMessages((prev) => prev.filter((m) => m.id !== placeholderId));
-      } else {
-        const msg = err instanceof Error ? err.message : "Erro ao conectar com a IA";
-        setError(msg);
-        setMessages((prev) => prev.filter((m) => m.id !== placeholderId));
-      }
-    } finally {
+      const assistantMsg: ChatMessage = { role: "assistant", content: text };
+      setMessages(prev => [...prev, assistantMsg]);
       setLoading(false);
-      abortRef.current = null;
+      return text;
+
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao consultar o guia técnico';
+      setError(errorMessage);
+      setLoading(false);
     }
-  }, [messages, loading]);
+  }, [loading]);
 
   const clearHistory = useCallback(() => {
     setMessages([]);
     setError(null);
   }, []);
 
-  const cancelRequest = useCallback(() => {
-    abortRef.current?.abort();
-  }, []);
-
-  return { messages, loading, error, sendMessage, clearHistory, cancelRequest };
-}
+  return {
+    messages,
+    sendMessage,
+    clearHistory,
+    loading,
+    error
+  };
+};
