@@ -34,12 +34,12 @@ export const useGuiaTecnico = () => {
         },
       });
 
-      const { GUIA_TECNICO_CONTENT } = await import('./guiaContent');
+      const { GUIA_TECNICO_COMPLETO } = await import('./guiaContent');
 
       const prompt = `Você é um assistente técnico especializado em marcenaria e móveis planejados da empresa Grupo DIAS.
 
 GUIA TÉCNICO COMPLETO:
-${GUIA_TECNICO_CONTENT}
+${GUIA_TECNICO_COMPLETO}
 
 INSTRUÇÕES:
 - Responda APENAS com base nas informações do guia técnico acima
