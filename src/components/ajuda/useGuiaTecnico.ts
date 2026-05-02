@@ -5,6 +5,7 @@ export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   id?: number;
+  streaming?: boolean;
 }
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_KEY || 'SUA_CHAVE_AQUI';
