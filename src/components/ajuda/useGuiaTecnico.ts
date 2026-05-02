@@ -1,14 +1,12 @@
 import { useState, useCallback } from 'react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Interface para manter compatibilidade com o componente ConferenciaAjudaIA
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   id?: number;
 }
 
-// IMPORTANTE: A chave deve ser configurada via variável de ambiente VITE_GEMINI_KEY
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_KEY || 'SUA_CHAVE_AQUI';
 
 export const useGuiaTecnico = () => {
@@ -35,13 +33,12 @@ export const useGuiaTecnico = () => {
         }
       });
 
-      // Importar o guia técnico do arquivo existente
       const { GUIA_TECNICO_CONTENT } = await import('./guiaContent');
 
-      const prompt = `Você é um assistente técnico especializado em marcenaria e móveis planejados da empresa Grupo DIAS.
+      const prompt = \`Você é um assistente técnico especializado em marcenaria e móveis planejados da empresa Grupo DIAS.
 
 GUIA TÉCNICO COMPLETO:
-${GUIA_TECNICO_CONTENT}
+\${GUIA_TECNICO_CONTENT}
 
 INSTRUÇÕES:
 - Responda APENAS com base nas informações do guia técnico acima
@@ -51,7 +48,7 @@ INSTRUÇÕES:
 - Cite valores, medidas e especificações exatas quando disponíveis
 
 PERGUNTA DO USUÁRIO:
-${pergunta}`;
+\${pergunta}\`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
@@ -66,7 +63,6 @@ ${pergunta}`;
       const errorMessage = err instanceof Error ? err.message : 'Erro ao consultar o guia técnico';
       setError(errorMessage);
       setLoading(false);
-      // O componente ConferenciaAjudaIA já lida com o estado de erro, então não precisamos lançar
     }
   }, [loading]);
 
