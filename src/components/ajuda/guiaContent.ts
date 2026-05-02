@@ -1,4 +1,4 @@
-// Conteúdo do Guia Técnico extraído do PDF
+export const GUIA_TECNICO_CONTENT = `
 // Gerado automaticamente em 2026-04-29 — não editar manualmente
 // Para atualizar: python3 extrair_guia.py <novo_pdf>
 
