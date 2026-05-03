@@ -12,7 +12,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { Plus, Phone, Calendar, ArrowRightLeft, GripVertical } from "lucide-react";
+import { Plus, Phone, Calendar, ArrowRightLeft, GripVertical, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -21,6 +21,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LeadFormDialog } from "@/components/comercial/LeadFormDialog";
 import { ContratosTable } from "@/components/comercial/ContratosTable";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { UploadPDFEstimativa } from '@/components/estimativa/UploadPDFEstimativa';
+import { RelatorioEstimativaView } from '@/components/estimativa/RelatorioEstimativaView';
+import type { RelatorioEstimativa } from '@/types/estimativa';
 import { FileCode2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -43,6 +47,7 @@ function formatDate(value: string | null) {
 
 function LeadCard({ lead, onConvert }: { lead: Lead; onConvert: (l: Lead) => void }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: lead.id });
+  const [relatorioEstimativa, setRelatorioEstimativa] = useState<RelatorioEstimativa | null>(null);
 
   const isConvertido = lead.status === "convertido";
   const isPerdido = lead.status === "perdido";
@@ -119,13 +124,41 @@ function LeadCard({ lead, onConvert }: { lead: Lead; onConvert: (l: Lead) => voi
       </div>
 
       {!isConvertido && !isPerdido && (
-        <button
-          onClick={() => onConvert(lead)}
-          className="mt-2 inline-flex w-full items-center justify-center gap-1 rounded-md py-1 transition-colors hover:bg-[#E6F3FF]"
-          style={{ fontSize: 11, color: "#1E6FBF", fontWeight: 500 }}
-        >
-          <ArrowRightLeft className="h-3 w-3" /> Gerar contrato
-        </button>
+        <div className="mt-2 space-y-1">
+          <button
+            onClick={() => onConvert(lead)}
+            className="inline-flex w-full items-center justify-center gap-1 rounded-md py-1 transition-colors hover:bg-[#E6F3FF]"
+            style={{ fontSize: 11, color: "#1E6FBF", fontWeight: 500 }}
+          >
+            <ArrowRightLeft className="h-3 w-3" /> Gerar contrato
+          </button>
+
+          <Dialog>
+            <DialogTrigger asChild>
+              <button
+                className="inline-flex w-full items-center justify-center gap-1 rounded-md py-1 transition-colors hover:bg-gray-100"
+                style={{ fontSize: 11, color: "#6B7A90", fontWeight: 500 }}
+              >
+                <FileText className="h-3 w-3" /> Estimativa PDF
+              </button>
+            </DialogTrigger>
+            <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Estimativa de Orçamento - {lead.nome}</DialogTitle>
+              </DialogHeader>
+              {!relatorioEstimativa ? (
+                <UploadPDFEstimativa onRelatorioGerado={setRelatorioEstimativa} />
+              ) : (
+                <div className="space-y-4">
+                  <button onClick={() => setRelatorioEstimativa(null)} className="text-sm text-primary hover:underline">
+                    ← Nova análise
+                  </button>
+                  <RelatorioEstimativaView relatorio={relatorioEstimativa} />
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+        </div>
       )}
     </div>
   );
