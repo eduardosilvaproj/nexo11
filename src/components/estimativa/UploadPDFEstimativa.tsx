@@ -29,28 +29,19 @@ export const UploadPDFEstimativa = ({ onRelatorioGerado }: UploadPDFEstimativaPr
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      if (file.type === 'application/pdf') {
-        setSelectedFile(file);
-      }
+    if (e.dataTransfer.files?.[0]?.type === 'application/pdf') {
+      setSelectedFile(e.dataTransfer.files[0]);
     }
   }, []);
 
   const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
-    }
+    if (e.target.files?.[0]) setSelectedFile(e.target.files[0]);
   }, []);
 
   const handleAnalisar = async () => {
     if (!selectedFile) return;
-
     const relatorio = await analisarPDF(selectedFile);
-    if (relatorio) {
-      onRelatorioGerado(relatorio);
-    }
+    if (relatorio) onRelatorioGerado(relatorio);
   };
 
   return (
@@ -71,19 +62,10 @@ export const UploadPDFEstimativa = ({ onRelatorioGerado }: UploadPDFEstimativaPr
           onDrop={handleDrop}
         >
           <Upload className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-
           {!selectedFile ? (
             <>
-              <p className="text-sm text-gray-600 mb-2">
-                Arraste o PDF do projeto aqui ou clique para selecionar
-              </p>
-              <input
-                type="file"
-                accept="application/pdf"
-                onChange={handleFileInput}
-                className="hidden"
-                id="pdf-upload"
-              />
+              <p className="text-sm text-gray-600 mb-2">Arraste o PDF aqui ou clique para selecionar</p>
+              <input type="file" accept="application/pdf" onChange={handleFileInput} className="hidden" id="pdf-upload" />
               <label htmlFor="pdf-upload">
                 <Button variant="outline" className="cursor-pointer" asChild>
                   <span>Selecionar PDF</span>
@@ -96,18 +78,12 @@ export const UploadPDFEstimativa = ({ onRelatorioGerado }: UploadPDFEstimativaPr
                 <CheckCircle2 className="h-5 w-5" />
                 <span className="font-medium">{selectedFile.name}</span>
               </div>
-              <p className="text-sm text-gray-500">
-                {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-              </p>
+              <p className="text-sm text-gray-500">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
               <div className="flex gap-2 justify-center">
                 <Button onClick={handleAnalisar} disabled={loading}>
                   {loading ? 'Analisando...' : 'Analisar Projeto'}
                 </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setSelectedFile(null)}
-                  disabled={loading}
-                >
+                <Button variant="outline" onClick={() => setSelectedFile(null)} disabled={loading}>
                   Remover
                 </Button>
               </div>
@@ -130,10 +106,10 @@ export const UploadPDFEstimativa = ({ onRelatorioGerado }: UploadPDFEstimativaPr
         )}
 
         <div className="text-xs text-gray-500 space-y-1">
-          <p>• O sistema identifica apenas móveis planejados (ignora decoração)</p>
-          <p>• Estimativa baseada em dimensões e tipo de móvel</p>
-          <p>• Validação automática com guia técnico da empresa</p>
-          <p>• Orçamento final deve ser feito no Promob</p>
+          <p>• Identifica apenas móveis planejados</p>
+          <p>• Estimativa baseada em dimensões</p>
+          <p>• Validação com guia técnico</p>
+          <p>• Orçamento final no Promob</p>
         </div>
       </div>
     </Card>
