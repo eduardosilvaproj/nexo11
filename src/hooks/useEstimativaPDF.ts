@@ -45,7 +45,7 @@ export const useEstimativaPDF = () => {
       // 3. Analisar com Gemini
       setProgress('Analisando projeto...');
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
 
       const prompt = `Analise este PDF de projeto arquitetônico e identifique APENAS móveis planejados (ignore decoração, móveis soltos).
 
