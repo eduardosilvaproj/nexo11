@@ -42,9 +42,7 @@ export const useEstimativaPDF = () => {
 
       setProgress('Analisando projeto...');
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ 
-        model: 'gemini-pro-vision'
-      });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
       const prompt = `Você é um especialista em análise de projetos de marcenaria e móveis planejados.
 
