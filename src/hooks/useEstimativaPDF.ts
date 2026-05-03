@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { RelatorioEstimativa, MovelIdentificado } from '@/types/estimativa';
 
-const GEMINI_API_KEY = 'AIzaSyBk0BHgfQoojzjvTBuIxRwJlkDDjhuxEBs';
+const OPENAI_API_KEY = 'SUA_CHAVE_OPENAI_AQUI'; // gere em platform.openai.com
 
 export const useEstimativaPDF = () => {
   const [loading, setLoading] = useState(false);
@@ -14,7 +14,6 @@ export const useEstimativaPDF = () => {
     setError(null);
 
     try {
-      // 1. Upload PDF
       setProgress('Enviando PDF...');
       const fileName = `${Date.now()}_${file.name}`;
       const { error: uploadError } = await supabase.storage
@@ -27,7 +26,6 @@ export const useEstimativaPDF = () => {
         .from('estimativas')
         .getPublicUrl(fileName);
 
-      // 2. Converter para base64
       setProgress('Processando PDF...');
       const arrayBuffer = await file.arrayBuffer();
       const bytes = new Uint8Array(arrayBuffer);
@@ -41,51 +39,37 @@ export const useEstimativaPDF = () => {
       
       const base64 = btoa(binary);
 
-      // 3. Chamar Gemini via REST API
       setProgress('Analisando projeto...');
       
-      const listResponse = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_API_KEY}`
-      );
-      const models = await listResponse.json();
-      console.log('Modelos disponíveis:', models);
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${OPENAI_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [{
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Analise este PDF de projeto arquitetônico e identifique móveis planejados. Retorne JSON: {"moveis":[{"ambiente":"","tipo":"aereo|base|torre|painel|nicho|gaveta|outro","descricao":"","largura":0,"altura":0,"profundidade":0,"quantidade":1,"alertas":[]}],"observacoes_gerais":[]}' },
+              { type: 'image_url', image_url: { url: `data:application/pdf;base64,${base64}` } }
+            ]
+          }],
+          max_tokens: 4000
+        })
+      });
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${GEMINI_API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              parts: [
-                { text: 'Analise este PDF de projeto arquitetônico e identifique móveis planejados. Retorne JSON: {"moveis":[{"ambiente":"","tipo":"aereo|base|torre|painel|nicho|gaveta|outro","descricao":"","largura":0,"altura":0,"profundidade":0,"quantidade":1,"alertas":[]}],"observacoes_gerais":[]}' },
-                {
-                  inline_data: {
-                    mime_type: 'application/pdf',
-                    data: base64
-                  }
-                }
-              ]
-            }]
-          })
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || 'Erro na API Gemini');
-      }
+      if (!response.ok) throw new Error('Erro na API OpenAI');
 
       const result = await response.json();
-      const text = result.candidates[0].content.parts[0].text;
+      const text = result.choices[0].message.content;
 
-      // Extrair JSON
       const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error('Resposta inválida da IA');
+      if (!jsonMatch) throw new Error('Resposta inválida');
 
       const analise = JSON.parse(jsonMatch[0]);
 
-      // 4. Calcular estimativas
       setProgress('Calculando estimativas...');
       const moveis: MovelIdentificado[] = analise.moveis.map((m: any, idx: number) => ({
         id: `movel_${idx}`,
