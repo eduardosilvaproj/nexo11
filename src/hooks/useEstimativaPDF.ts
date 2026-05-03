@@ -3,8 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { RelatorioEstimativa, MovelIdentificado } from '@/types/estimativa';
 
-// Gemini API Key
-const GEMINI_API_KEY = 'AIzaSyAT9_XU-P4znqAHIAD3KgCSGhzRY-YIeRo';
+const GEMINI_API_KEY = 'AIzaSyBk0BHgfQoojzjvTBuIxRwJlkDDjhuxEBs';
 
 export const useEstimativaPDF = () => {
   const [loading, setLoading] = useState(false);
@@ -16,9 +15,10 @@ export const useEstimativaPDF = () => {
     setError(null);
 
     try {
+      // 1. Upload PDF para Supabase Storage
       setProgress('Enviando PDF...');
       const fileName = `${Date.now()}_${file.name}`;
-      const { error: uploadError } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('estimativas')
         .upload(fileName, file);
 
@@ -28,63 +28,39 @@ export const useEstimativaPDF = () => {
         .from('estimativas')
         .getPublicUrl(fileName);
 
-      // 2. Converter PDF para base64 em chunks
+      // 2. Converter PDF para base64
       setProgress('Processando PDF...');
       const arrayBuffer = await file.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
-      let binary = '';
-      const chunkSize = 8192;
-      for (let i = 0; i < uint8Array.length; i += chunkSize) {
-        const chunk = uint8Array.slice(i, i + chunkSize);
-        binary += String.fromCharCode.apply(null, Array.from(chunk));
-      }
-      const base64 = btoa(binary);
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
+      // 3. Analisar com Gemini
       setProgress('Analisando projeto...');
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-      const prompt = `Você é um especialista em análise de projetos de marcenaria e móveis planejados.
-
-Analise o PDF do projeto arquitetônico e identifique APENAS móveis planejados (ignore decoração, móveis soltos, quadros, plantas).
-
-Para cada móvel identificado, retorne um JSON com:
-{
-  "moveis": [
-    {
-      "ambiente": "nome do ambiente (ex: Cozinha, Quarto Casal)",
-      "tipo": "aereo|base|torre|painel|nicho|gaveta|outro",
-      "descricao": "descrição detalhada do móvel",
-      "largura": número em cm,
-      "altura": número em cm,
-      "profundidade": número em cm,
-      "quantidade": número de unidades,
-      "alertas": ["alertas técnicos se houver problemas estruturais"]
-    }
-  ],
-  "observacoes_gerais": ["observações importantes sobre o projeto"]
-}
-
-VALIDAÇÕES TÉCNICAS:
-- Vão máximo sem reforço: 90cm
-- Profundidade padrão armário: 60cm
-- Profundidade padrão aéreo: 35cm
-- Peso máximo prateleira MDP 15mm: 15kg por prateleira
-- Se vão > 90cm, adicione alerta sobre necessidade de reforço
-
-Retorne APENAS o JSON, sem texto adicional.`;
+      const prompt = `Analise este PDF e identifique móveis planejados. Retorne JSON:
+{"moveis":[{"ambiente":"","tipo":"aereo|base|torre|painel|nicho|gaveta|outro","descricao":"","largura":0,"altura":0,"profundidade":0,"quantidade":1,"alertas":[]}],"observacoes_gerais":[]}`;
 
       const result = await model.generateContent([
         { text: prompt },
-        { inlineData: { mimeType: file.type, data: base64 } }
+        {
+          inlineData: {
+            mimeType: file.type,
+            data: base64
+          }
+        }
       ]);
 
-      const text = result.response.text();
+      const response = await result.response;
+      const text = response.text();
+
+      // Extrair JSON da resposta
       const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error('Resposta inválida');
+      if (!jsonMatch) throw new Error('Resposta inválida da IA');
 
       const analise = JSON.parse(jsonMatch[0]);
 
+      // 4. Calcular estimativas de preço
       setProgress('Calculando estimativas...');
       const moveis: MovelIdentificado[] = analise.moveis.map((m: any, idx: number) => ({
         id: `movel_${idx}`,
@@ -99,16 +75,22 @@ Retorne APENAS o JSON, sem texto adicional.`;
       }));
 
       const estimativas = moveis.map(movel => {
-        const area = ((movel.largura || 0) * (movel.altura || 0)) / 10000;
-        const { min, max } = getTabelaPreco(movel.tipo);
+        const area = ((movel.largura || 0) * (movel.altura || 0)) / 10000; // m²
+        const preco_m2_min = getTabelaPreco(movel.tipo).min;
+        const preco_m2_max = getTabelaPreco(movel.tipo).max;
+
         return {
           movel_id: movel.id,
-          preco_minimo: area * min * movel.quantidade,
-          preco_maximo: area * max * movel.quantidade,
-          preco_medio: area * ((min + max) / 2) * movel.quantidade,
-          base_calculo: `${area.toFixed(2)}m² × R$ ${min}-${max}/m²`
+          preco_minimo: area * preco_m2_min * movel.quantidade,
+          preco_maximo: area * preco_m2_max * movel.quantidade,
+          preco_medio: area * ((preco_m2_min + preco_m2_max) / 2) * movel.quantidade,
+          base_calculo: `${area.toFixed(2)}m² × R$ ${preco_m2_min}-${preco_m2_max}/m²`
         };
       });
+
+      const total_minimo = estimativas.reduce((sum, e) => sum + e.preco_minimo, 0);
+      const total_maximo = estimativas.reduce((sum, e) => sum + e.preco_maximo, 0);
+      const total_medio = estimativas.reduce((sum, e) => sum + e.preco_medio, 0);
 
       const relatorio: RelatorioEstimativa = {
         id: crypto.randomUUID(),
@@ -118,15 +100,18 @@ Retorne APENAS o JSON, sem texto adicional.`;
         moveis,
         estimativas,
         validacoes: [],
-        total_minimo: estimativas.reduce((s, e) => s + e.preco_minimo, 0),
-        total_maximo: estimativas.reduce((s, e) => s + e.preco_maximo, 0),
-        total_medio: estimativas.reduce((s, e) => s + e.preco_medio, 0),
+        total_minimo,
+        total_maximo,
+        total_medio,
         observacoes_gerais: analise.observacoes_gerais || []
       };
 
+      setProgress('Concluído!');
       setLoading(false);
       return relatorio;
+
     } catch (err) {
+      console.error('Erro ao analisar PDF:', err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
       setLoading(false);
       return null;
@@ -136,7 +121,8 @@ Retorne APENAS o JSON, sem texto adicional.`;
   return { analisarPDF, loading, progress, error };
 };
 
-function getTabelaPreco(tipo: string) {
+// Tabela de preços base (valores exemplo - ajustar conforme realidade da DIAS)
+function getTabelaPreco(tipo: string): { min: number; max: number } {
   const tabela: Record<string, { min: number; max: number }> = {
     aereo: { min: 800, max: 1500 },
     base: { min: 1000, max: 1800 },
