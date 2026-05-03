@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { RelatorioEstimativa, MovelIdentificado } from '@/types/estimativa';
 
 const GEMINI_API_KEY = 'AIzaSyBk0BHgfQoojzjvTBuIxRwJlkDDjhuxEBs';
@@ -15,10 +14,10 @@ export const useEstimativaPDF = () => {
     setError(null);
 
     try {
-      // 1. Upload PDF para Supabase Storage
+      // 1. Upload PDF
       setProgress('Enviando PDF...');
       const fileName = `${Date.now()}_${file.name}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('estimativas')
         .upload(fileName, file);
 
@@ -28,7 +27,7 @@ export const useEstimativaPDF = () => {
         .from('estimativas')
         .getPublicUrl(fileName);
 
-      // 2. Converter PDF para base64 em chunks (evita stack overflow)
+      // 2. Converter para base64
       setProgress('Processando PDF...');
       const arrayBuffer = await file.arrayBuffer();
       const bytes = new Uint8Array(arrayBuffer);
@@ -42,50 +41,45 @@ export const useEstimativaPDF = () => {
       
       const base64 = btoa(binary);
 
-      // 3. Analisar com Gemini
+      // 3. Chamar Gemini via REST API
       setProgress('Analisando projeto...');
-      const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
-
-      const prompt = `Analise este PDF de projeto arquitetônico e identifique APENAS móveis planejados (ignore decoração, móveis soltos).
-
-Retorne JSON neste formato exato:
-{
-  "moveis": [
-    {
-      "ambiente": "nome do cômodo",
-      "tipo": "aereo|base|torre|painel|nicho|gaveta|outro",
-      "descricao": "descrição do móvel",
-      "largura": número em cm,
-      "altura": número em cm,
-      "profundidade": número em cm,
-      "quantidade": 1,
-      "alertas": []
-    }
-  ],
-  "observacoes_gerais": []
-}`;
-
-      const result = await model.generateContent([
-        { text: prompt },
+      
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
         {
-          inlineData: {
-            mimeType: 'application/pdf',
-            data: base64
-          }
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: 'Analise este PDF de projeto arquitetônico e identifique móveis planejados. Retorne JSON: {"moveis":[{"ambiente":"","tipo":"aereo|base|torre|painel|nicho|gaveta|outro","descricao":"","largura":0,"altura":0,"profundidade":0,"quantidade":1,"alertas":[]}],"observacoes_gerais":[]}' },
+                {
+                  inline_data: {
+                    mime_type: 'application/pdf',
+                    data: base64
+                  }
+                }
+              ]
+            }]
+          })
         }
-      ]);
+      );
 
-      const response = await result.response;
-      const text = response.text();
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'Erro na API Gemini');
+      }
 
-      // Extrair JSON da resposta
+      const result = await response.json();
+      const text = result.candidates[0].content.parts[0].text;
+
+      // Extrair JSON
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error('Resposta inválida da IA');
 
       const analise = JSON.parse(jsonMatch[0]);
 
-      // 4. Calcular estimativas de preço
+      // 4. Calcular estimativas
       setProgress('Calculando estimativas...');
       const moveis: MovelIdentificado[] = analise.moveis.map((m: any, idx: number) => ({
         id: `movel_${idx}`,
@@ -100,7 +94,7 @@ Retorne JSON neste formato exato:
       }));
 
       const estimativas = moveis.map(movel => {
-        const area = ((movel.largura || 0) * (movel.altura || 0)) / 10000; // m²
+        const area = ((movel.largura || 0) * (movel.altura || 0)) / 10000;
         const preco_m2_min = getTabelaPreco(movel.tipo).min;
         const preco_m2_max = getTabelaPreco(movel.tipo).max;
 
@@ -136,7 +130,7 @@ Retorne JSON neste formato exato:
       return relatorio;
 
     } catch (err) {
-      console.error('Erro ao analisar PDF:', err);
+      console.error('Erro:', err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
       setLoading(false);
       return null;
