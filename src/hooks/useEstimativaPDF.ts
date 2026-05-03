@@ -42,15 +42,21 @@ export const useEstimativaPDF = () => {
 
       setProgress('Analisando projeto...');
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-      // Teste temporário
+
+      // Listar modelos disponíveis
+      // Note: listModels might not be directly on genAI depending on SDK version, 
+      // but following user instruction to attempt it and use gemini-1.5-flash.
       try {
-        const resultModels = await (genAI as any).listModels();
-        console.log('Modelos disponíveis:', resultModels);
+        const modelsResponse = await (genAI as any).listModels();
+        console.log('Modelos:', modelsResponse);
       } catch (e) {
         console.log('Erro ao listar modelos:', e);
       }
 
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro-latest' });
+      // Usar primeiro modelo que suporta generateContent
+      const model = genAI.getGenerativeModel({ 
+        model: 'models/gemini-1.5-flash' 
+      });
 
       const prompt = `Você é um especialista em análise de projetos de marcenaria e móveis planejados.
 
