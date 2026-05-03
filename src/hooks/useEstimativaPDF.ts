@@ -87,7 +87,7 @@ Retorne APENAS o JSON, sem texto adicional.`;
       const text = response.text();
 
       // Extrair JSON da resposta
-      const jsonMatch = text.match(/\\{[\\s\\S]*\\}/);
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error('Resposta inválida da IA');
 
       const analise = JSON.parse(jsonMatch[0]);
