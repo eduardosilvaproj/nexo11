@@ -85,7 +85,7 @@ Retorne JSON:
       const relatorio: RelatorioEstimativa = {
         id: crypto.randomUUID(),
         pdf_url: publicUrl,
-        data_analysis: new Date().toISOString(),
+        data_analise: new Date().toISOString(),
         status: 'concluido',
         moveis,
         estimativas,
