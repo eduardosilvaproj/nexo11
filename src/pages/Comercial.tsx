@@ -12,7 +12,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { Plus, Phone, Calendar, ArrowRightLeft, GripVertical } from "lucide-react";
+import { Plus, Phone, Calendar, ArrowRightLeft, GripVertical, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -21,6 +21,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LeadFormDialog } from "@/components/comercial/LeadFormDialog";
 import { ContratosTable } from "@/components/comercial/ContratosTable";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { UploadPDFEstimativa } from '@/components/estimativa/UploadPDFEstimativa';
+import { RelatorioEstimativaView } from '@/components/estimativa/RelatorioEstimativaView';
+import type { RelatorioEstimativa } from '@/types/estimativa';
 import { FileCode2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -43,6 +47,7 @@ function formatDate(value: string | null) {
 
 function LeadCard({ lead, onConvert }: { lead: Lead; onConvert: (l: Lead) => void }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: lead.id });
+  const [relatorioEstimativa, setRelatorioEstimativa] = useState<RelatorioEstimativa | null>(null);
 
   const isConvertido = lead.status === "convertido";
   const isPerdido = lead.status === "perdido";
