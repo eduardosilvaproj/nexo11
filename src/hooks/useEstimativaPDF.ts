@@ -44,6 +44,12 @@ export const useEstimativaPDF = () => {
       // 3. Chamar Gemini via REST API
       setProgress('Analisando projeto...');
       
+      const listResponse = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_API_KEY}`
+      );
+      const models = await listResponse.json();
+      console.log('Modelos disponíveis:', models);
+
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${GEMINI_API_KEY}`,
         {
