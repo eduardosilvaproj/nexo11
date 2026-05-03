@@ -36,35 +36,35 @@ export const useEstimativaPDF = () => {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-      const prompt = `Analise este PDF de projeto arquitetônico e identifique APENAS móveis planejados.
+      const prompt = `Você é um especialista em análise de projetos de marcenaria e móveis planejados.
 
-REGRAS TÉCNICAS PRINCIPAIS:
-- Vão máximo sem reforço: 90cm
-- Profundidade padrão armário: 60cm
-- Profundidade padrão aéreo: 35cm
-- Peso máximo prateleira MDP 15mm: 15kg
-- Corrediça telescópica: até 35kg
-- Corrediça oculta: até 35kg
+Analise o PDF do projeto arquitetônico e identifique APENAS móveis planejados (ignore decoração, móveis soltos, quadros, plantas).
 
-Retorne JSON:
+Para cada móvel identificado, retorne um JSON com:
 {
   "moveis": [
     {
-      "ambiente": "nome",
+      "ambiente": "nome do ambiente (ex: Cozinha, Quarto Casal)",
       "tipo": "aereo|base|torre|painel|nicho|gaveta|outro",
-      "descricao": "detalhes",
-      "largura": 0,
-      "altura": 0,
-      "profundidade": 0,
-      "quantidade": 1,
-      "alertas": ["se vão > 90cm avisar"]
+      "descricao": "descrição detalhada do móvel",
+      "largura": número em cm,
+      "altura": número em cm,
+      "profundidade": número em cm,
+      "quantidade": número de unidades,
+      "alertas": ["alertas técnicos se houver problemas estruturais"]
     }
   ],
-  "observacoes_gerais": []
+  "observacoes_gerais": ["observações importantes sobre o projeto"]
 }
 
-IGNORE: decoração, móveis soltos, quadros, plantas.
-Retorne APENAS o JSON.`;
+VALIDAÇÕES TÉCNICAS:
+- Vão máximo sem reforço: 90cm
+- Profundidade padrão armário: 60cm
+- Profundidade padrão aéreo: 35cm
+- Peso máximo prateleira MDP 15mm: 15kg por prateleira
+- Se vão > 90cm, adicione alerta sobre necessidade de reforço
+
+Retorne APENAS o JSON, sem texto adicional.`;
 
       const result = await model.generateContent([
         { text: prompt },
