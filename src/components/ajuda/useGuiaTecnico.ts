@@ -1,5 +1,4 @@
 import { useState, useCallback } from "react";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export interface ChatMessage {
   role: "user" | "assistant";
@@ -8,7 +7,8 @@ export interface ChatMessage {
   streaming?: boolean;
 }
 
-const GEMINI_API_KEY = "AIzaSyAT9_XU-P4znqAHIAD3KgCSGhzRY-YIeRo";
+const GROQ_API_KEY = "gsk_NOVA_CHAVE_AQUI"; // Gerar em https://console.groq.com
+const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 export const useGuiaTecnico = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -26,18 +26,20 @@ export const useGuiaTecnico = () => {
       setError(null);
 
       try {
-        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({
-          model: "gemini-1.5-flash",
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 2048,
-          },
-        });
-
         const { GUIA_TECNICO_COMPLETO } = await import("./guiaContent");
 
-        const prompt = `Você é um assistente técnico especializado em marcenaria e móveis planejados da empresa Grupo DIAS.
+        const response = await fetch(GROQ_API_URL, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${GROQ_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            messages: [
+              {
+                role: "system",
+                content: `Você é um assistente técnico especializado em marcenaria e móveis planejados da empresa Grupo DIAS.
 
 GUIA TÉCNICO COMPLETO:
 ${GUIA_TECNICO_COMPLETO}
@@ -47,25 +49,34 @@ INSTRUÇÕES:
 - Seja preciso e objetivo
 - Se a informação não estiver no guia, diga "Não encontrei essa informação no guia técnico"
 - Use linguagem técnica mas clara
-- Cite valores, medidas e especificações exatas quando disponíveis
+- Cite valores, medidas e especificações exatas quando disponíveis`,
+              },
+              {
+                role: "user",
+                content: pergunta,
+              },
+            ],
+            temperature: 0.3,
+            max_tokens: 2048,
+          }),
+        });
 
-PERGUNTA DO USUÁRIO:
-${pergunta}`;
+        if (!response.ok) {
+          throw new Error(`Erro ${response.status}: ${response.statusText}`);
+        }
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
+        const data = await response.json();
+        const text = data.choices[0]?.message?.content || "Sem resposta";
 
         const assistantMsg: ChatMessage = { role: "assistant", content: text, id: Date.now() + 1 };
         setMessages((prev) => [...prev, assistantMsg]);
         setLoading(false);
         return text;
       } catch (err) {
-        console.error("Erro ao consultar Gemini:", err);
+        console.error("Erro ao consultar API:", err);
         const errorMessage = err instanceof Error ? err.message : "Erro ao consultar o guia técnico";
         setError(errorMessage);
         setLoading(false);
-        // Mantendo o erro no estado para a UI exibir
       }
     },
     [loading],
