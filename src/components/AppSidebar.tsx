@@ -66,6 +66,7 @@ const gestao = [
 const inteligencia = [
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Integrações", url: "/integracoes", icon: Plug },
+  { title: "Estimativa PDF", url: "/estimativa-orcamento", icon: MessageSquare },
 ];
 
 export function AppSidebar() {

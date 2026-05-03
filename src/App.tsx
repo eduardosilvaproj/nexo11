@@ -36,6 +36,7 @@ import ConfigPagamento from "./pages/ConfigPagamento";
 import OrcamentoNegociacao from "./pages/OrcamentoNegociacao";
 import ConfigFornecedores from "./pages/ConfigFornecedores";
 import Compras from "./pages/Compras";
+import EstimativaOrcamento from "./pages/EstimativaOrcamento";
 
 import NewContract from "./pages/NewContract";
 
