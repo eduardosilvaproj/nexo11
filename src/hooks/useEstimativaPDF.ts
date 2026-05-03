@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { RelatorioEstimativa, MovelIdentificado } from '@/types/estimativa';
 
-const OPENAI_API_KEY = 'SUA_CHAVE_OPENAI_AQUI'; // gere em platform.openai.com
+const GROQ_API_KEY = 'gsk_NOVA_CHAVE_AQUI'; // gere em console.groq.com
 
 export const useEstimativaPDF = () => {
   const [loading, setLoading] = useState(false);
@@ -41,26 +41,30 @@ export const useEstimativaPDF = () => {
 
       setProgress('Analisando projeto...');
       
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENAI_API_KEY}`
+          'Authorization': `Bearer ${GROQ_API_KEY}`
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
+          model: 'llama-3.2-90b-vision-preview',
           messages: [{
             role: 'user',
             content: [
-              { type: 'text', text: 'Analise este PDF de projeto arquitetônico e identifique móveis planejados. Retorne JSON: {"moveis":[{"ambiente":"","tipo":"aereo|base|torre|painel|nicho|gaveta|outro","descricao":"","largura":0,"altura":0,"profundidade":0,"quantidade":1,"alertas":[]}],"observacoes_gerais":[]}' },
+              { type: 'text', text: 'Analise este PDF de projeto e identifique móveis planejados. Retorne JSON: {"moveis":[{"ambiente":"","tipo":"aereo|base|torre|painel|nicho|gaveta|outro","descricao":"","largura":0,"altura":0,"profundidade":0,"quantidade":1}],"observacoes_gerais":[]}' },
               { type: 'image_url', image_url: { url: `data:application/pdf;base64,${base64}` } }
             ]
           }],
+          temperature: 0.3,
           max_tokens: 4000
         })
       });
 
-      if (!response.ok) throw new Error('Erro na API OpenAI');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || 'Erro na API');
+      }
 
       const result = await response.json();
       const text = result.choices[0].message.content;
@@ -80,7 +84,7 @@ export const useEstimativaPDF = () => {
         altura: m.altura,
         profundidade: m.profundidade,
         quantidade: m.quantidade || 1,
-        alertas: m.alertas || []
+        alertas: []
       }));
 
       const estimativas = moveis.map(movel => {
