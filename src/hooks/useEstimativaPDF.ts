@@ -3,8 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { RelatorioEstimativa, MovelIdentificado } from '@/types/estimativa';
 
-// Gemini API Key is already stored in the previous version of this file, 
-// using the one previously provided for functionality.
+// Gemini API Key
 const GEMINI_API_KEY = 'AIzaSyAT9_XU-P4znqAHIAD3KgCSGhzRY-YIeRo';
 
 export const useEstimativaPDF = () => {
@@ -37,14 +36,35 @@ export const useEstimativaPDF = () => {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-      const { GUIA_TECNICO_COMPLETO } = await import('@/components/ajuda/guiaContent');
+      const prompt = `Analise este PDF de projeto arquitetônico e identifique APENAS móveis planejados.
 
-      const prompt = `Você é especialista em móveis planejados. Analise o PDF e identifique APENAS móveis planejados (ignore decoração).
-
-GUIA TÉCNICO: \${GUIA_TECNICO_COMPLETO}
+REGRAS TÉCNICAS PRINCIPAIS:
+- Vão máximo sem reforço: 90cm
+- Profundidade padrão armário: 60cm
+- Profundidade padrão aéreo: 35cm
+- Peso máximo prateleira MDP 15mm: 15kg
+- Corrediça telescópica: até 35kg
+- Corrediça oculta: até 35kg
 
 Retorne JSON:
-{"moveis":[{"ambiente":"","tipo":"aereo|base|torre|painel|nicho|gaveta|outro","descricao":"","largura":0,"altura":0,"profundidade":0,"quantidade":1,"alertas":[]}],"observacoes_gerais":[]}`;
+{
+  "moveis": [
+    {
+      "ambiente": "nome",
+      "tipo": "aereo|base|torre|painel|nicho|gaveta|outro",
+      "descricao": "detalhes",
+      "largura": 0,
+      "altura": 0,
+      "profundidade": 0,
+      "quantidade": 1,
+      "alertas": ["se vão > 90cm avisar"]
+    }
+  ],
+  "observacoes_gerais": []
+}
+
+IGNORE: decoração, móveis soltos, quadros, plantas.
+Retorne APENAS o JSON.`;
 
       const result = await model.generateContent([
         { text: prompt },
@@ -59,7 +79,7 @@ Retorne JSON:
 
       setProgress('Calculando estimativas...');
       const moveis: MovelIdentificado[] = analise.moveis.map((m: any, idx: number) => ({
-        id: `movel_\${idx}`,
+        id: `movel_${idx}`,
         ambiente: m.ambiente,
         tipo: m.tipo,
         descricao: m.descricao,
@@ -78,7 +98,7 @@ Retorne JSON:
           preco_minimo: area * min * movel.quantidade,
           preco_maximo: area * max * movel.quantidade,
           preco_medio: area * ((min + max) / 2) * movel.quantidade,
-          base_calculo: `\${area.toFixed(2)}m² × R$ \${min}-\${max}/m²`
+          base_calculo: `${area.toFixed(2)}m² × R$ ${min}-${max}/m²`
         };
       });
 
