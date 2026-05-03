@@ -124,13 +124,41 @@ function LeadCard({ lead, onConvert }: { lead: Lead; onConvert: (l: Lead) => voi
       </div>
 
       {!isConvertido && !isPerdido && (
-        <button
-          onClick={() => onConvert(lead)}
-          className="mt-2 inline-flex w-full items-center justify-center gap-1 rounded-md py-1 transition-colors hover:bg-[#E6F3FF]"
-          style={{ fontSize: 11, color: "#1E6FBF", fontWeight: 500 }}
-        >
-          <ArrowRightLeft className="h-3 w-3" /> Gerar contrato
-        </button>
+        <div className="mt-2 space-y-1">
+          <button
+            onClick={() => onConvert(lead)}
+            className="inline-flex w-full items-center justify-center gap-1 rounded-md py-1 transition-colors hover:bg-[#E6F3FF]"
+            style={{ fontSize: 11, color: "#1E6FBF", fontWeight: 500 }}
+          >
+            <ArrowRightLeft className="h-3 w-3" /> Gerar contrato
+          </button>
+
+          <Dialog>
+            <DialogTrigger asChild>
+              <button
+                className="inline-flex w-full items-center justify-center gap-1 rounded-md py-1 transition-colors hover:bg-gray-100"
+                style={{ fontSize: 11, color: "#6B7A90", fontWeight: 500 }}
+              >
+                <FileText className="h-3 w-3" /> Estimativa PDF
+              </button>
+            </DialogTrigger>
+            <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Estimativa de Orçamento - {lead.nome}</DialogTitle>
+              </DialogHeader>
+              {!relatorioEstimativa ? (
+                <UploadPDFEstimativa onRelatorioGerado={setRelatorioEstimativa} />
+              ) : (
+                <div className="space-y-4">
+                  <button onClick={() => setRelatorioEstimativa(null)} className="text-sm text-primary hover:underline">
+                    ← Nova análise
+                  </button>
+                  <RelatorioEstimativaView relatorio={relatorioEstimativa} />
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+        </div>
       )}
     </div>
   );
