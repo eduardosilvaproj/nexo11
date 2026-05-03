@@ -109,7 +109,7 @@ Retorne JSON neste formato exato:
           preco_minimo: area * preco_m2_min * movel.quantidade,
           preco_maximo: area * preco_m2_max * movel.quantidade,
           preco_medio: area * ((preco_m2_min + preco_m2_max) / 2) * movel.quantidade,
-          base_calculo: \`\${area.toFixed(2)}m² × R$ \${preco_m2_min}-\${preco_m2_max}/m²\`
+          base_calculo: `${area.toFixed(2)}m² × R$ ${preco_m2_min}-${preco_m2_max}/m²`
         };
       });
 
