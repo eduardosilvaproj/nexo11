@@ -28,24 +28,49 @@ export const useEstimativaPDF = () => {
         .from('estimativas')
         .getPublicUrl(fileName);
 
-      // 2. Converter PDF para base64
+      // 2. Converter PDF para base64 em chunks (evita stack overflow)
       setProgress('Processando PDF...');
       const arrayBuffer = await file.arrayBuffer();
-      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = '';
+      const chunkSize = 8192;
+      
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+        binary += String.fromCharCode(...chunk);
+      }
+      
+      const base64 = btoa(binary);
 
       // 3. Analisar com Gemini
       setProgress('Analisando projeto...');
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-      const prompt = `Analise este PDF e identifique móveis planejados. Retorne JSON:
-{"moveis":[{"ambiente":"","tipo":"aereo|base|torre|painel|nicho|gaveta|outro","descricao":"","largura":0,"altura":0,"profundidade":0,"quantidade":1,"alertas":[]}],"observacoes_gerais":[]}`;
+      const prompt = `Analise este PDF de projeto arquitetônico e identifique APENAS móveis planejados (ignore decoração, móveis soltos).
+
+Retorne JSON neste formato exato:
+{
+  "moveis": [
+    {
+      "ambiente": "nome do cômodo",
+      "tipo": "aereo|base|torre|painel|nicho|gaveta|outro",
+      "descricao": "descrição do móvel",
+      "largura": número em cm,
+      "altura": número em cm,
+      "profundidade": número em cm,
+      "quantidade": 1,
+      "alertas": []
+    }
+  ],
+  "observacoes_gerais": []
+}`;
 
       const result = await model.generateContent([
         { text: prompt },
         {
           inlineData: {
-            mimeType: file.type,
+            mimeType: 'application/pdf',
             data: base64
           }
         }
@@ -121,7 +146,6 @@ export const useEstimativaPDF = () => {
   return { analisarPDF, loading, progress, error };
 };
 
-// Tabela de preços base (valores exemplo - ajustar conforme realidade da DIAS)
 function getTabelaPreco(tipo: string): { min: number; max: number } {
   const tabela: Record<string, { min: number; max: number }> = {
     aereo: { min: 800, max: 1500 },
