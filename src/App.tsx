@@ -162,6 +162,7 @@ const App = () => (
                   <ConfigFornecedores />
                 </ProtectedRoute>
               } />
+              <Route path="/estimativa-orcamento" element={<EstimativaOrcamento />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
