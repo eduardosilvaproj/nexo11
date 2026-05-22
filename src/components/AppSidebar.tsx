@@ -234,6 +234,7 @@ export function AppSidebar() {
           <div className="mb-2 px-2">
             <p className="truncate nexo-sidebar-user-name">{perfil.nome}</p>
             <p className="truncate nexo-sidebar-user-email">{perfil.email}</p>
+            <p className="text-[10px] text-gray-400 truncate">Roles: {roles.join(", ")}</p>
           </div>
         )}
         <Button
