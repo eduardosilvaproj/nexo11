@@ -29,6 +29,7 @@ export default function AcompanhamentoModuloDrawer({ modulo, isOpen, onClose, on
     if (modulo) {
       setFormData({
         ...modulo,
+        resumo_modulo: modulo.resumo_modulo || '',
         funcionalidades_text: (modulo.funcionalidades_json || []).join('\n'),
         processos_text: (modulo.processos_json || []).join('\n'),
         ok_items_text: (modulo.ok_items_json || []).join('\n'),
@@ -158,6 +159,17 @@ export default function AcompanhamentoModuloDrawer({ modulo, isOpen, onClose, on
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Resumo do Módulo (Público)</Label>
+            <Textarea 
+              rows={3}
+              value={formData.resumo_modulo || ''} 
+              onChange={(e) => setFormData({...formData, resumo_modulo: e.target.value})}
+              placeholder="Descreva de forma curta e objetiva a finalidade deste módulo..."
+              className="bg-[#0c1526] border-white/10"
+            />
           </div>
 
           <div className="space-y-2">
