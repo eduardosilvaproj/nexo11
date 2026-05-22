@@ -39,6 +39,8 @@ import Compras from "./pages/Compras";
 import EstimativaOrcamento from "./pages/EstimativaOrcamento";
 
 import AcompanhamentoCriacao from "./pages/AcompanhamentoCriacao";
+import AcessoAcompanhamento from "./pages/AcessoAcompanhamento";
+import AcompanhamentoPublico from "./pages/AcompanhamentoPublico";
 import NewContract from "./pages/NewContract";
 
 
@@ -56,6 +58,8 @@ const App = () => (
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/portal" element={<PortalEntrada />} />
             <Route path="/portal/:token" element={<PortalCliente />} />
+            <Route path="/acesso-acompanhamento" element={<AcessoAcompanhamento />} />
+            <Route path="/acompanhamento-publico" element={<AcompanhamentoPublico />} />
 
             <Route
               element={
