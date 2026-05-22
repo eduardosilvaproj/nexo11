@@ -25,7 +25,7 @@ export default function AcompanhamentoFilters({ filters, onFilterChange }: Acomp
           <SelectValue placeholder="Todas as áreas" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Todas as áreas</SelectItem>
+          <SelectItem value="all">Todas as áreas</SelectItem>
           <SelectItem value="Início">Início</SelectItem>
           <SelectItem value="Operação">Operação</SelectItem>
           <SelectItem value="Gestão">Gestão</SelectItem>
@@ -38,7 +38,7 @@ export default function AcompanhamentoFilters({ filters, onFilterChange }: Acomp
           <SelectValue placeholder="Todos os status" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Todos os status</SelectItem>
+          <SelectItem value="all">Todos os status</SelectItem>
           <SelectItem value="nao_iniciado">Não iniciado</SelectItem>
           <SelectItem value="em_andamento">Em andamento</SelectItem>
           <SelectItem value="em_revisao">Em revisão</SelectItem>
@@ -52,7 +52,7 @@ export default function AcompanhamentoFilters({ filters, onFilterChange }: Acomp
           <SelectValue placeholder="Aprovação" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">Aprovação: Todos</SelectItem>
+          <SelectItem value="all">Aprovação: Todos</SelectItem>
           <SelectItem value="true">Aprovados</SelectItem>
           <SelectItem value="false">Pendentes</SelectItem>
         </SelectContent>
