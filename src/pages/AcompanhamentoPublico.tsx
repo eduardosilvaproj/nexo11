@@ -10,13 +10,27 @@ import {
   Circle, 
   AlertCircle, 
   Image as ImageIcon,
-  ChevronRight
+  ChevronRight,
+  Eye,
+  Info,
+  CheckCircle,
+  FileText,
+  Activity,
+  ArrowRight,
+  Check
 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle,
+  DialogDescription 
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 
 export default function AcompanhamentoPublico() {
@@ -24,6 +38,7 @@ export default function AcompanhamentoPublico() {
   const serial = sessionStorage.getItem('acompanhamento_serial');
   const nomeCliente = sessionStorage.getItem('acompanhamento_nome_cliente');
   const [selectedPrint, setSelectedPrint] = React.useState<string | null>(null);
+  const [selectedModulo, setSelectedModulo] = React.useState<any | null>(null);
 
   React.useEffect(() => {
     const isValidated = sessionStorage.getItem('acompanhamento_serial_validado') === 'true';
@@ -173,9 +188,19 @@ export default function AcompanhamentoPublico() {
                     )}
                   </div>
 
-                  {/* Visualização de Print */}
-                  <div className="pt-4 mt-auto border-t border-white/5 flex flex-col gap-3">
-                    {modulo.print_url ? (
+                  {/* Botões de Ação */}
+                  <div className="pt-4 mt-auto border-t border-white/5 flex flex-col gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full border-white/10 hover:bg-white/5 gap-2"
+                      onClick={() => setSelectedModulo(modulo)}
+                    >
+                      <Eye className="h-4 w-4" />
+                      Ver detalhes completos
+                    </Button>
+
+                    {modulo.print_url && (
                       <Button 
                         variant="secondary" 
                         size="sm" 
@@ -185,10 +210,6 @@ export default function AcompanhamentoPublico() {
                         <ImageIcon className="h-4 w-4" />
                         Ver print da tela
                       </Button>
-                    ) : (
-                      <div className="text-center py-2 bg-white/5 rounded text-[10px] text-muted-foreground uppercase tracking-widest">
-                        Print ainda não disponível
-                      </div>
                     )}
                   </div>
                 </CardContent>
@@ -230,6 +251,169 @@ export default function AcompanhamentoPublico() {
             </Button>
             <Button variant="default" size="sm" onClick={() => setSelectedPrint(null)}>
               Fechar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Modal de Detalhes do Módulo (Somente Leitura) */}
+      <Dialog open={!!selectedModulo} onOpenChange={() => setSelectedModulo(null)}>
+        <DialogContent className="max-w-3xl bg-[#0c1526] border-white/10 text-white p-0 overflow-hidden flex flex-col max-h-[90vh]">
+          <DialogHeader className="p-6 border-b border-white/5 flex flex-row justify-between items-start shrink-0">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="bg-white/5 border-white/10 text-muted-foreground uppercase text-[10px]">
+                  {selectedModulo?.area}
+                </Badge>
+                <Badge className={selectedModulo ? getStatusColor(selectedModulo.status) : ""} variant="secondary">
+                  {selectedModulo ? getStatusLabel(selectedModulo.status) : ""}
+                </Badge>
+              </div>
+              <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+                {selectedModulo?.nome}
+                {selectedModulo?.aprovado && <CheckCircle2 className="h-6 w-6 text-green-500" />}
+              </DialogTitle>
+            </div>
+          </DialogHeader>
+
+          <ScrollArea className="flex-1 p-6">
+            <div className="space-y-8 pb-4">
+              {/* Progresso Detalhado */}
+              <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-muted-foreground font-medium flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-[#1a9be8]" />
+                    Evolução do Módulo
+                  </span>
+                  <span className="text-xl font-bold text-[#1a9be8]">{selectedModulo?.percentual}%</span>
+                </div>
+                <Progress value={selectedModulo?.percentual} className="h-2.5 bg-white/10" />
+              </div>
+
+              {/* Resumo */}
+              {selectedModulo?.resumo_modulo && (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                    <Info className="h-4 w-4" />
+                    Resumo do Módulo
+                  </h3>
+                  <div className="bg-white/5 rounded-lg p-4 text-gray-300 leading-relaxed italic border-l-4 border-[#1a9be8]">
+                    {selectedModulo.resumo_modulo}
+                  </div>
+                </div>
+              )}
+
+              {/* Funcionalidades */}
+              {selectedModulo?.funcionalidades_json?.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                    <Layout className="h-4 w-4" />
+                    Funcionalidades Implementadas
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {selectedModulo.funcionalidades_json.map((item: string, i: number) => (
+                      <div key={i} className="flex items-start gap-3 p-3 bg-white/5 rounded-lg border border-white/5 hover:bg-white/[0.08] transition-colors">
+                        <Check className="h-4 w-4 mt-0.5 text-[#1a9be8] shrink-0" />
+                        <span className="text-sm text-gray-300">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Processos e OK/Revisar */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Processos */}
+                {selectedModulo?.processos_json?.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-bold uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Processos Mapeados
+                    </h3>
+                    <ul className="space-y-2">
+                      {selectedModulo.processos_json.map((item: string, i: number) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-gray-400">
+                          <ArrowRight className="h-3.5 w-3.5 mt-0.5 text-muted-foreground/50 shrink-0" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Status de Validação */}
+                <div className="space-y-6">
+                  {selectedModulo?.ok_items_json?.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-bold uppercase text-green-500 tracking-widest flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4" />
+                        O que está OK
+                      </h3>
+                      <ul className="space-y-2">
+                        {selectedModulo.ok_items_json.map((item: string, i: number) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-gray-400">
+                            <div className="h-1.5 w-1.5 rounded-full bg-green-500 mt-1.5 shrink-0" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {selectedModulo?.revisar_items_json?.length > 0 && (
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-bold uppercase text-yellow-500 tracking-widest flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4" />
+                        O que revisar
+                      </h3>
+                      <ul className="space-y-2">
+                        {selectedModulo.revisar_items_json.map((item: string, i: number) => (
+                          <li key={i} className="flex items-start gap-2 text-sm text-gray-400">
+                            <div className="h-1.5 w-1.5 rounded-full bg-yellow-500 mt-1.5 shrink-0" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Próximos Passos */}
+              {selectedModulo?.proximos_passos_json?.length > 0 && (
+                <div className="space-y-3 pt-4 border-t border-white/5">
+                  <h3 className="text-sm font-bold uppercase text-[#1a9be8] tracking-widest flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Próximos Passos
+                  </h3>
+                  <div className="grid grid-cols-1 gap-2">
+                    {selectedModulo.proximos_passos_json.map((item: string, i: number) => (
+                      <div key={i} className="flex items-start gap-3 p-3 bg-white/5 rounded-lg border border-white/5">
+                        <div className="h-5 w-5 rounded bg-[#1a9be8]/10 flex items-center justify-center shrink-0">
+                          <span className="text-[10px] font-bold text-[#1a9be8]">{i + 1}</span>
+                        </div>
+                        <span className="text-sm text-gray-400">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+
+          <div className="p-4 bg-white/5 border-t border-white/5 flex justify-end gap-3 shrink-0">
+            {selectedModulo?.print_url && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2 border-white/10 hover:bg-white/5"
+                onClick={() => setSelectedPrint(selectedModulo.print_url)}
+              >
+                <ImageIcon className="h-4 w-4" />
+                Ver Print
+              </Button>
+            )}
+            <Button variant="default" size="sm" onClick={() => setSelectedModulo(null)}>
+              Fechar Detalhes
             </Button>
           </div>
         </DialogContent>
