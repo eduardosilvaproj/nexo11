@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      acompanhamento_modulos: {
+        Row: {
+          anotacoes_internas: string | null
+          aprovado: boolean
+          aprovado_em: string | null
+          aprovado_por: string | null
+          area: string | null
+          created_at: string
+          funcionalidades_json: Json
+          id: string
+          nome: string
+          ok_items_json: Json
+          ordem: number | null
+          percentual: number
+          print_url: string | null
+          processos_json: Json
+          proximos_passos_json: Json
+          revisar_items_json: Json
+          slug: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          anotacoes_internas?: string | null
+          aprovado?: boolean
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          area?: string | null
+          created_at?: string
+          funcionalidades_json?: Json
+          id?: string
+          nome: string
+          ok_items_json?: Json
+          ordem?: number | null
+          percentual?: number
+          print_url?: string | null
+          processos_json?: Json
+          proximos_passos_json?: Json
+          revisar_items_json?: Json
+          slug: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          anotacoes_internas?: string | null
+          aprovado?: boolean
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          area?: string | null
+          created_at?: string
+          funcionalidades_json?: Json
+          id?: string
+          nome?: string
+          ok_items_json?: Json
+          ordem?: number | null
+          percentual?: number
+          print_url?: string | null
+          processos_json?: Json
+          proximos_passos_json?: Json
+          revisar_items_json?: Json
+          slug?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       agendamentos_montagem: {
         Row: {
           checklist_obra_json: Json
