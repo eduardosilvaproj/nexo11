@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      acompanhamento_acessos: {
+        Row: {
+          ativo: boolean
+          created_at: string | null
+          expira_em: string | null
+          id: string
+          nome_cliente: string | null
+          serial: string
+          ultimo_acesso_em: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string | null
+          expira_em?: string | null
+          id?: string
+          nome_cliente?: string | null
+          serial: string
+          ultimo_acesso_em?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string | null
+          expira_em?: string | null
+          id?: string
+          nome_cliente?: string | null
+          serial?: string
+          ultimo_acesso_em?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       acompanhamento_modulos: {
         Row: {
           anotacoes_internas: string | null
@@ -31,6 +64,7 @@ export type Database = {
           print_url: string | null
           processos_json: Json
           proximos_passos_json: Json
+          resumo_modulo: string | null
           revisar_items_json: Json
           slug: string
           status: string
@@ -52,6 +86,7 @@ export type Database = {
           print_url?: string | null
           processos_json?: Json
           proximos_passos_json?: Json
+          resumo_modulo?: string | null
           revisar_items_json?: Json
           slug: string
           status?: string
@@ -73,6 +108,7 @@ export type Database = {
           print_url?: string | null
           processos_json?: Json
           proximos_passos_json?: Json
+          resumo_modulo?: string | null
           revisar_items_json?: Json
           slug?: string
           status?: string
@@ -4147,6 +4183,10 @@ export type Database = {
         Args: { _ambiente_id: string; _gatilho: string; _tipos_papel: string[] }
         Returns: undefined
       }
+      get_acompanhamento_publico: {
+        Args: { p_serial: string }
+        Returns: Json[]
+      }
       has_role: {
         Args: {
           _loja_id?: string
@@ -4212,6 +4252,10 @@ export type Database = {
       }
       user_is_matriz: { Args: { p_user: string }; Returns: boolean }
       user_lojas_ids: { Args: { p_user: string }; Returns: string[] }
+      validar_acesso_acompanhamento: {
+        Args: { p_serial: string }
+        Returns: Json
+      }
     }
     Enums: {
       agendamento_status: "agendado" | "em_execucao" | "concluido" | "cancelado"
