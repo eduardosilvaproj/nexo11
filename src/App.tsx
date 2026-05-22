@@ -38,7 +38,9 @@ import ConfigFornecedores from "./pages/ConfigFornecedores";
 import Compras from "./pages/Compras";
 import EstimativaOrcamento from "./pages/EstimativaOrcamento";
 
+import AcompanhamentoNexo from "./pages/AcompanhamentoNexo";
 import NewContract from "./pages/NewContract";
+
 
 const queryClient = new QueryClient();
 
@@ -63,6 +65,12 @@ const App = () => (
               }
             >
               <Route path="/" element={<Dashboard />} />
+              <Route path="/acompanhamento-nexo" element={
+                <ProtectedRoute roles={["admin", "admin_master"]}>
+                  <AcompanhamentoNexo />
+                </ProtectedRoute>
+              } />
+
 
               {/* Operação */}
               <Route path="/comercial" element={<Comercial />} />
