@@ -27,15 +27,18 @@ export default function AcessoAcompanhamento() {
 
       if (error) throw error;
 
-      if (data.valido) {
+      // Casting to any to avoid TS errors with Supabase Json type
+      const result = data as any;
+
+      if (result?.valido) {
         sessionStorage.setItem('acompanhamento_serial_validado', 'true');
         sessionStorage.setItem('acompanhamento_serial', serial.trim());
-        sessionStorage.setItem('acompanhamento_nome_cliente', data.nome_cliente || '');
+        sessionStorage.setItem('acompanhamento_nome_cliente', result.nome_cliente || '');
         
-        toast.success(data.mensagem);
+        toast.success(result.mensagem);
         navigate('/acompanhamento-publico');
       } else {
-        toast.error(data.mensagem);
+        toast.error(result?.mensagem || "Código inválido.");
       }
     } catch (error: any) {
       console.error('Erro ao validar acesso:', error);
@@ -49,7 +52,7 @@ export default function AcessoAcompanhamento() {
     <div className="min-h-screen bg-[#0a0e1a] flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="flex flex-col items-center text-center space-y-4">
-          <img src="/nexo-logo.png" alt="NEXO Logo" className="w-32 h-auto object-contain" />
+          <img src="/nexo-logo.png" alt="NEXO Logo" className="w-32 h-auto object-contain mb-4" />
           <h1 className="text-2xl font-bold text-white">Acompanhamento da Criação do Sistema</h1>
           <p className="text-muted-foreground">
             Digite o código de acesso para visualizar o andamento da criação do sistema.
