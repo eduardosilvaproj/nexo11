@@ -9,7 +9,7 @@ import AcompanhamentoModuloDrawer from '@/components/acompanhamento/Acompanhamen
 
 const AcompanhamentoCriacao = () => {
   const [selectedModulo, setSelectedModulo] = React.useState<any>(null);
-  const [filters, setFilters] = React.useState({ search: '', area: '', status: '', aprovado: '' });
+  const [filters, setFilters] = React.useState({ search: '', area: 'all', status: 'all', aprovado: 'all' });
 
   const { data: modulos, refetch, isLoading } = useQuery({
     queryKey: ['acompanhamento_modulos'],
@@ -23,9 +23,9 @@ const AcompanhamentoCriacao = () => {
   const filteredModulos = modulos?.filter(m => {
     return (
       (filters.search === '' || m.nome.toLowerCase().includes(filters.search.toLowerCase())) &&
-      (filters.area === '' || m.area === filters.area) &&
-      (filters.status === '' || m.status === filters.status) &&
-      (filters.aprovado === '' || (filters.aprovado === 'true' ? m.aprovado : !m.aprovado))
+      (filters.area === 'all' || m.area === filters.area) &&
+      (filters.status === 'all' || m.status === filters.status) &&
+      (filters.aprovado === 'all' || (filters.aprovado === 'true' ? m.aprovado : !m.aprovado))
     );
   });
 

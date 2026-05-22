@@ -21,7 +21,7 @@ interface AcompanhamentoModuloDrawerProps {
 }
 
 export default function AcompanhamentoModuloDrawer({ modulo, isOpen, onClose, onSave }: AcompanhamentoModuloDrawerProps) {
-  const { perfil } = useAuth();
+  const { user } = useAuth();
   const [formData, setFormData] = React.useState<any>({});
   const [isSaving, setIsSaving] = React.useState(false);
 
@@ -71,12 +71,18 @@ export default function AcompanhamentoModuloDrawer({ modulo, isOpen, onClose, on
   const toggleAprovado = async () => {
     try {
       const newValue = !formData.aprovado;
+      
+      if (newValue && !user?.id) {
+        toast.error("Erro: Usuário não autenticado");
+        return;
+      }
+
       const { error } = await supabase
         .from('acompanhamento_modulos')
         .update({
           aprovado: newValue,
           aprovado_em: newValue ? new Date().toISOString() : null,
-          aprovado_por: newValue ? perfil?.id : null
+          aprovado_por: newValue ? user?.id : null
         })
         .eq('id', modulo.id);
 
@@ -86,7 +92,7 @@ export default function AcompanhamentoModuloDrawer({ modulo, isOpen, onClose, on
         ...formData,
         aprovado: newValue,
         aprovado_em: newValue ? new Date().toISOString() : null,
-        aprovado_por: newValue ? perfil?.id : null
+        aprovado_por: newValue ? user?.id : null
       });
       
       toast.success(newValue ? "Módulo aprovado" : "Aprovação removida");
@@ -125,7 +131,7 @@ export default function AcompanhamentoModuloDrawer({ modulo, isOpen, onClose, on
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Área</Label>
-              <Select value={formData.area} onValueChange={(v) => setFormData({...formData, area: v})}>
+              <Select value={formData.area || "Início"} onValueChange={(v) => setFormData({...formData, area: v})}>
                 <SelectTrigger className="bg-[#0c1526] border-white/10">
                   <SelectValue />
                 </SelectTrigger>
@@ -139,7 +145,7 @@ export default function AcompanhamentoModuloDrawer({ modulo, isOpen, onClose, on
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
-              <Select value={formData.status} onValueChange={(v) => setFormData({...formData, status: v})}>
+              <Select value={formData.status || "nao_iniciado"} onValueChange={(v) => setFormData({...formData, status: v})}>
                 <SelectTrigger className="bg-[#0c1526] border-white/10">
                   <SelectValue />
                 </SelectTrigger>
