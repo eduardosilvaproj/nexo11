@@ -19,7 +19,12 @@ export function ProtectedRoute({ children, roles, redirectTo, redirectMessage }:
   const location = useLocation();
 
   const denied =
-    !loading && user && roles && roles.length > 0 && !roles.some((r) => userRoles.includes(r));
+    !loading &&
+    user &&
+    roles &&
+    roles.length > 0 &&
+    !roles.some((r) => userRoles.includes(r)) &&
+    !userRoles.includes("admin_master");
 
   useEffect(() => {
     if (denied && redirectTo) {
@@ -55,4 +60,3 @@ export function ProtectedRoute({ children, roles, redirectTo, redirectMessage }:
 
   return <>{children}</>;
 }
-

@@ -41,7 +41,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { LogoNexo } from "@/components/LogoNexo";
 
-const operacao = [
+type MenuItem = {
+  title: string;
+  url: string;
+  icon: any;
+  roles?: string[];
+};
+
+const operacao: MenuItem[] = [
   { title: "Comercial", url: "/comercial", icon: Users },
   { title: "Clientes", url: "/clientes", icon: UserRound },
   { title: "Técnico", url: "/tecnico", icon: ClipboardCheck, roles: ["admin", "gerente", "tecnico", "franqueador"] },
@@ -53,7 +60,7 @@ const operacao = [
   { title: "DRE", url: "/dre", icon: TrendingUp, roles: ["admin", "gerente", "franqueador"] },
 ];
 
-const gestao = [
+const gestao: MenuItem[] = [
   { title: "Financeiro", url: "/financeiro", icon: DollarSign },
   { title: "Comissões", url: "/comissoes", icon: Percent },
   { title: "Compras", url: "/compras", icon: ShoppingCart },
@@ -63,7 +70,8 @@ const gestao = [
   { title: "Fornecedores", url: "/configuracoes/fornecedores", icon: Factory, roles: ["admin", "gerente"] },
 ];
 
-const inteligencia = [
+const inteligencia: MenuItem[] = [
+  { title: "Acompanhamento NEXO", url: "/acompanhamento-nexo", icon: LayoutDashboard, roles: ["admin", "admin_master"] },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Integrações", url: "/integracoes", icon: Plug },
   { title: "Estimativa PDF", url: "/estimativa-orcamento", icon: MessageSquare },
@@ -115,8 +123,11 @@ export function AppSidebar() {
       ? "!bg-[rgba(26,155,232,0.12)] !text-white font-medium border-l-2 border-[#1a9be8] pl-[calc(0.5rem-2px)] rounded-l-none rounded-r-md transition-colors duration-150 ease-in-out hover:!bg-[rgba(26,155,232,0.12)] hover:!text-white [&_svg]:!text-white"
       : "!bg-transparent !text-[#64748b] transition-colors duration-150 ease-in-out hover:!bg-[rgba(255,255,255,0.04)] hover:!text-white";
 
-  const canSee = (item: { roles?: string[] }) =>
-    !item.roles || item.roles.some((r) => roles.includes(r as any));
+  const canSee = (item: MenuItem) => {
+    if (!item.roles || item.roles.length === 0) return true;
+    if (roles.includes("admin_master")) return true;
+    return item.roles.some((r) => roles.includes(r));
+  };
 
   return (
     <Sidebar collapsible="icon" className="bg-[#0a0e1a] border-r border-white/5">
@@ -200,7 +211,7 @@ export function AppSidebar() {
           <SidebarGroupLabel className="nexo-sidebar-label">Inteligência</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {inteligencia.map((item) => (
+              {inteligencia.filter(canSee).map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} className={linkClass}>
