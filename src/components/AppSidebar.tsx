@@ -74,7 +74,7 @@ const gestao: MenuItem[] = [
 ];
 
 const inteligencia: MenuItem[] = [
-  { title: "Acompanhamento NEXO", url: "/acompanhamento-nexo", icon: LayoutDashboard, roles: ["admin", "admin_master"] },
+  { title: "Acompanhamento", url: "/acompanhamento-criacao", icon: LayoutDashboard, roles: ["admin"] },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Integrações", url: "/integracoes", icon: Plug },
   { title: "Estimativa PDF", url: "/estimativa-orcamento", icon: MessageSquare },
