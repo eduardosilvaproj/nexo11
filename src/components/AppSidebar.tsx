@@ -123,8 +123,8 @@ export function AppSidebar() {
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     isActive
-      ? "!bg-[rgba(26,155,232,0.12)] !text-white font-medium border-l-2 border-[#1a9be8] pl-[calc(0.5rem-2px)] rounded-l-none rounded-r-md transition-colors duration-150 ease-in-out hover:!bg-[rgba(26,155,232,0.12)] hover:!text-white [&_svg]:!text-white"
-      : "!bg-transparent !text-[#64748b] transition-colors duration-150 ease-in-out hover:!bg-[rgba(255,255,255,0.04)] hover:!text-white";
+      ? "!bg-[rgba(26,155,232,0.16)] !text-white font-medium border-l-2 border-[#1a9be8] pl-[calc(0.5rem-2px)] rounded-l-none rounded-r-lg transition-all duration-150 hover:!bg-[rgba(26,155,232,0.2)] hover:!text-white [&_svg]:!text-[#1a9be8]"
+      : "!bg-transparent !text-slate-400 rounded-lg transition-all duration-150 hover:!bg-white/[0.04] hover:!text-white hover:[&_svg]:!text-[#1a9be8]";
 
   const canSee = (item: MenuItem) => {
     if (!item.roles || item.roles.length === 0) return true;
