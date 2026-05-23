@@ -152,8 +152,10 @@
   .nexo-sidebar-logout:hover {
     color: #ef4444 !important;
     background: transparent !important;
+  }
 
   /* === Premium UI utilities === */
+
   .nexo-card-premium {
     @apply bg-white border border-slate-200/70 rounded-2xl shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_16px_-8px_rgba(15,23,42,0.08)] transition-all duration-200;
   }
