@@ -19,43 +19,43 @@
 
     --nexo-gradient-primary: linear-gradient(90deg, #1a7fe8, #22c97a);
 
-    /* === Shadcn semantic tokens (HSL) — REVERTED TO LIGHT THEME === */
-    --background: 210 20% 98%;             /* #f8fafc (Light Gray/White) */
-    --foreground: 222.2 84% 4.9%;          /* #020817 */
+    /* === Shadcn semantic tokens (HSL) — Light, premium SaaS === */
+    --background: 210 30% 98.5%;
+    --foreground: 222 47% 11%;
 
-    --card: 0 0% 100%;                     /* White */
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 202 82% 51%;               /* #1a9be8 */
+    --primary: 202 82% 51%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 210 40% 96.5%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 210 40% 96.5%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 210 40% 96.5%;
+    --accent-foreground: 222 47% 11%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;         /* #e2e8f0 */
-    --input: 214.3 31.8% 91.4%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
     --ring: 202 82% 51%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     /* Sidebar - KEEP DARK AS REQUESTED */
-    --sidebar-background: 225 44% 7%;     /* #0a0e1a */
+    --sidebar-background: 225 44% 7%;
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 202 82% 51%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 202 82% 51% / 0.12; /* rgba(26,155,232,0.12) */
+    --sidebar-accent: 202 82% 51% / 0.14;
     --sidebar-accent-foreground: 210 40% 96%;
     --sidebar-border: 210 40% 96% / 0.06;
     --sidebar-ring: 202 82% 51%;
