@@ -152,8 +152,44 @@
   .nexo-sidebar-logout:hover {
     color: #ef4444 !important;
     background: transparent !important;
+
+  /* === Premium UI utilities === */
+  .nexo-card-premium {
+    @apply bg-white border border-slate-200/70 rounded-2xl shadow-[0_1px_2px_rgba(15,23,42,0.04),0_4px_16px_-8px_rgba(15,23,42,0.08)] transition-all duration-200;
   }
+  .nexo-card-premium:hover {
+    @apply shadow-[0_2px_4px_rgba(15,23,42,0.05),0_8px_24px_-10px_rgba(15,23,42,0.12)] border-slate-300/70;
+  }
+  .nexo-light-panel {
+    @apply bg-white/70 backdrop-blur-sm border border-white rounded-2xl shadow-sm;
+  }
+  .nexo-soft-shadow {
+    box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 4px 16px -8px rgba(15,23,42,0.08);
+  }
+  .nexo-gradient-soft {
+    background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 50%, #f0f9ff 100%);
+  }
+  .nexo-gradient-brand {
+    background: linear-gradient(90deg, #1a7fe8 0%, #22c97a 100%);
+  }
+  .nexo-title-strong {
+    @apply text-slate-900 font-bold tracking-tight;
+  }
+  .nexo-metric {
+    @apply text-3xl font-bold tracking-tight text-slate-900 tabular-nums;
+  }
+  .nexo-transition {
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Status pills */
+  .pill-success { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100; }
+  .pill-info    { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-sky-50 text-sky-700 border border-sky-100; }
+  .pill-warning { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100; }
+  .pill-error   { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-rose-50 text-rose-700 border border-rose-100; }
+  .pill-neutral { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-slate-50 text-slate-600 border border-slate-200; }
 }
+
 
 /* ===== Print: DRE individual ===== */
 .dre-print { display: none; }
