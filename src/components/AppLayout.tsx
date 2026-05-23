@@ -49,50 +49,42 @@ export default function AppLayout() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
+      <div className="flex min-h-screen w-full bg-slate-50">
         <AppSidebar />
         <div className="flex flex-1 flex-col">
-          <header
-            className="flex h-14 items-center justify-between bg-card px-4 md:px-6 border-b border-border"
-          >
+          <header className="flex h-14 items-center justify-between bg-white/80 backdrop-blur-md px-4 md:px-6 border-b border-slate-200/70 shadow-[0_1px_2px_rgba(15,23,42,0.03)] sticky top-0 z-30">
             <div className="flex items-center gap-2 md:gap-4">
               <SidebarTrigger className="md:hidden" />
-              {/* Breadcrumb */}
               <nav className="hidden sm:flex items-center gap-2 text-sm">
               {isDashboard ? (
-                <span className="font-medium text-foreground">Dashboard</span>
+                <span className="font-semibold text-slate-900">Dashboard</span>
               ) : (
                 <>
-                  <Link
-                    to="/"
-                    className="text-[#64748b] transition-colors hover:text-[#1a9be8]"
-                  >
+                  <Link to="/" className="text-slate-500 transition-colors hover:text-primary">
                     Dashboard
                   </Link>
-                  <span className="text-[#64748b]/40">/</span>
-                  <span className="font-medium text-foreground">{currentLabel}</span>
+                  <span className="text-slate-300">/</span>
+                  <span className="font-semibold text-slate-900">{currentLabel}</span>
                 </>
               )}
               </nav>
-              {/* Mobile Title */}
-              <span className="sm:hidden font-medium text-foreground text-sm">
+              <span className="sm:hidden font-semibold text-slate-900 text-sm">
                 {currentLabel}
               </span>
             </div>
 
-            {/* Right side: bell + avatar */}
             <div className="flex items-center gap-3">
               <NotificationsBell />
               <div
-                className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white"
-                style={{ background: "#1a9be8" }}
+                className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold text-white shadow-sm ring-2 ring-white"
+                style={{ background: "linear-gradient(135deg, #1a7fe8, #22c97a)" }}
                 title={perfil?.nome ?? perfil?.email ?? ""}
               >
                 {initials}
               </div>
             </div>
           </header>
-          <main className="flex-1 p-4 md:p-6 overflow-x-hidden">
+          <main className="flex-1 p-4 md:p-8 overflow-x-hidden">
             <Outlet />
           </main>
         </div>
