@@ -2,12 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatBRL } from "@/integrations/supabase/client";
 import { Check, Clock, AlertCircle } from "lucide-react";
 
 interface Props {
   contratoId: string;
 }
+
+const formatBRL = (n: number) =>
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
 
 export function ContratoFinanceiroTab({ contratoId }: Props) {
   const { data: receber, isLoading: loadingR } = useQuery({

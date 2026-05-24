@@ -9,10 +9,12 @@ export type ContratoTabKey =
   | "ambientes"
   | "pos_venda"
   | "dre"
-  | "mensagens";
+  | "mensagens"
+  | "financeiro";
 
 const TABS: { key: ContratoTabKey; label: string }[] = [
   { key: "comercial", label: "Comercial" },
+  { key: "financeiro", label: "Financeiro" },
   { key: "tecnico", label: "Técnico" },
   { key: "producao", label: "Produção" },
   { key: "logistica", label: "Logística" },
@@ -50,12 +52,6 @@ export function ContratoTabs({ active, onChange, pendencias = {} }: ContratoTabs
                 color: isActive ? "#1E6FBF" : "#6B7A90",
                 borderBottom: isActive ? "2px solid #1E6FBF" : "2px solid transparent",
                 marginBottom: "-0.5px",
-              }}
-              onMouseEnter={(e) => {
-                if (!isActive) e.currentTarget.style.color = "#0D1117";
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) e.currentTarget.style.color = "#6B7A90";
               }}
             >
               <span className="relative inline-block">
