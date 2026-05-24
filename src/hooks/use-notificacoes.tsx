@@ -48,7 +48,7 @@ export function useNotificacoes() {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("notificacoes")
-        .update({ lida: true, lida_at: new Date().toISOString() })
+        .update({ lida: true, lida_at: new Date().toISOString() } as any)
         .eq("id", id);
       if (error) throw error;
     },
@@ -61,7 +61,7 @@ export function useNotificacoes() {
     mutationFn: async () => {
       const { error } = await supabase
         .from("notificacoes")
-        .update({ lida: true, lida_at: new Date().toISOString() })
+        .update({ lida: true, lida_at: new Date().toISOString() } as any)
         .eq("lida", false);
       if (error) throw error;
     },
@@ -75,7 +75,7 @@ export function useNotificacoes() {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("notificacoes")
-        .update({ resolvida: true, resolvida_at: new Date().toISOString() })
+        .update({ resolvida: true, resolvida_at: new Date().toISOString() } as any)
         .eq("id", id);
       if (error) throw error;
     },
@@ -94,8 +94,8 @@ export function useNotificacoes() {
   };
 }
 
-export async function criarNotificacao(params: Partial<Notificacao>) {
-  const { error } = await supabase.from("notificacoes").insert(params);
+export async function criarNotificacao(params: any) {
+  const { error } = await supabase.from("notificacoes").insert([params]);
   if (error) {
     console.error("Erro ao criar notificação:", error);
     return { error };
