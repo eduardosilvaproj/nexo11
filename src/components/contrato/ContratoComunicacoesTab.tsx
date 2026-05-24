@@ -10,7 +10,8 @@ import {
   CheckCircle2, 
   AlertCircle, 
   User,
-  History
+  History,
+  XCircle
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
