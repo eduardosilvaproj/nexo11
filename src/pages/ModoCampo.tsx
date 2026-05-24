@@ -60,29 +60,45 @@ export default function ModoCampo() {
       if (canSeeEntregas) {
         const { count } = await supabase
           .from("entregas")
-          .select("*", { count: "exact", head: true })
-          .eq("loja_id", loja_id)
-          .neq("status_visual", "entregue")
-          .neq("status_visual", "cancelado");
+          .select(`
+            id,
+            contrato_id,
+            contratos!inner (
+              loja_id
+            )
+          `, { count: "exact", head: true })
+          .eq("contratos.loja_id", loja_id)
+          .neq("status_visual", "entregue" as any);
         results.entregas = count || 0;
       }
 
       if (canSeeMontagens) {
         const { count } = await supabase
           .from("agendamentos_montagem")
-          .select("*", { count: "exact", head: true })
-          .eq("loja_id", loja_id)
-          .neq("status", "concluido")
-          .neq("status", "cancelado");
+          .select(`
+            id,
+            contrato_id,
+            contratos!inner (
+              loja_id
+            )
+          `, { count: "exact", head: true })
+          .eq("contratos.loja_id", loja_id)
+          .neq("status", "concluido" as any);
         results.montagens = count || 0;
       }
 
       if (canSeePosVenda) {
         const { count } = await supabase
           .from("chamados_pos_venda")
-          .select("*", { count: "exact", head: true })
-          .eq("loja_id", loja_id)
-          .neq("status", "resolvido");
+          .select(`
+            id,
+            contrato_id,
+            contratos!inner (
+              loja_id
+            )
+          `, { count: "exact", head: true })
+          .eq("contratos.loja_id", loja_id)
+          .neq("status", "resolvido" as any);
         results.chamados = count || 0;
       }
 
