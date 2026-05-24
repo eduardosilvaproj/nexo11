@@ -8,8 +8,10 @@ import {
   Calendar, 
   Camera, 
   FileSignature,
-  Zap
+  Zap,
+  Download
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { 
   BarChart, 
   Bar, 
