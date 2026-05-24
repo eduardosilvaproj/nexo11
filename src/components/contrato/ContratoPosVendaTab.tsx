@@ -123,7 +123,7 @@ export function ContratoPosVendaTab({ contratoId }: PosVendaTabProps) {
     },
   });
 
-  const npsRow = chamados.find((c) => c.nps !== null && c.nps !== undefined) || pesquisas[0];
+  const npsRow = (chamados.find((c) => c.nps !== null && c.nps !== undefined) as any) || (pesquisas[0] ? { ...pesquisas[0], nps: pesquisas[0].nota, nps_comentario: pesquisas[0].comentario } : null);
   const chamadosAbertos = chamados.filter((c) => c.status !== "resolvido").length;
   const npsOk = !!npsRow;
   const travaOk = chamadosAbertos === 0 && npsOk;
