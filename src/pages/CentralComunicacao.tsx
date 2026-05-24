@@ -267,6 +267,71 @@ export default function CentralComunicacao() {
         </div>
       </div>
 
+      {/* Dashboard de Métricas e Alertas */}
+      <div className="grid gap-4 md:grid-cols-4">
+        {metrics.map((m: any) => (
+          <Card key={`${m.loja_id}-${m.canal}`} className="bg-muted/30">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {getCanalIcon(m.canal)}
+                  <span className="font-semibold capitalize">{m.canal}</span>
+                </div>
+                <Badge variant={m.falhas > 0 ? "destructive" : "secondary"}>
+                  {m.enviados} envios / {m.falhas} falhas
+                </Badge>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <p className="text-muted-foreground">Entregues</p>
+                  <p className="font-medium text-green-600">{m.entregues}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Tempo Médio</p>
+                  <p className="font-medium">{Math.round(m.tempo_medio_entrega || 0)}s</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+        {metrics.length === 0 && (
+          <div className="col-span-4 py-4 text-center text-sm text-muted-foreground italic">
+            Sem métricas disponíveis para as últimas 24h.
+          </div>
+        )}
+      </div>
+
+      {alerts.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold flex items-center gap-2 text-destructive">
+            <AlertCircle className="h-4 w-4" />
+            Alertas de Atenção
+          </h3>
+          <div className="grid gap-2">
+            {alerts.map((alert: any) => (
+              <div key={alert.id} className="flex items-center justify-between p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm">
+                <div className="flex items-center gap-3">
+                  <Badge variant="destructive" className="uppercase text-[10px]">
+                    {alert.tipo.replace('_', ' ')}
+                  </Badge>
+                  <span className="font-medium">{alert.mensagem}</span>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={async () => {
+                    await supabase.from("communication_alerts").update({ resolvido: true, resolvido_em: new Date().toISOString() }).eq("id", alert.id);
+                    qc.invalidateQueries({ queryKey: ["communication_alerts"] });
+                  }}
+                >
+                  Resolver
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="outbox" className="gap-2">
