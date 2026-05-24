@@ -28,15 +28,15 @@ export function RHAgendaEquipe() {
       const agenda = await Promise.all((funcionarios || []).map(async (f) => {
         const { data: disp } = await supabase.rpc("calcular_disponibilidade_funcionario", {
           p_funcionario_id: f.id,
-          p_data_inicio: new Date(dataSelecionada.setHours(0,0,0,0)).toISOString(),
-          p_data_fim: new Date(dataSelecionada.setHours(23,59,59,999)).toISOString()
+          p_data_inicio: new Date(new Date(dataSelecionada).setHours(0,0,0,0)).toISOString(),
+          p_data_fim: new Date(new Date(dataSelecionada).setHours(23,59,59,999)).toISOString()
         });
         
-        // This is a placeholder for where we'd fetch actual operational tasks
-        // In a real implementation, we'd query agendamentos_montagem, entregas, etc.
+        const availability = (disp as { status: string; motivo: string | null }) || { status: 'desconhecido', motivo: 'Erro ao calcular' };
+        
         return {
           ...f,
-          disponibilidade: disp || { status: 'desconhecido', motivo: 'Erro ao calcular' },
+          disponibilidade: availability,
           tarefas: [] // Placeholder
         };
       }));
