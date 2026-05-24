@@ -49,7 +49,13 @@ export type PermissionAction =
   | "evidencias.view"
   | "evidencias.create"
   | "evidencias.delete"
-  | "financeiro.evidencias.view";
+  | "financeiro.evidencias.view"
+  | "campo.view"
+  | "campo.medicoes"
+  | "campo.entregas"
+  | "campo.montagens"
+  | "campo.pos_venda"
+  | "campo.almoxarifado";
 
 const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
   admin_master: [
