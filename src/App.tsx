@@ -44,6 +44,8 @@ import AcompanhamentoPublico from "./pages/AcompanhamentoPublico";
 import NewContract from "./pages/NewContract";
 import Almoxarifado from "./pages/Almoxarifado";
 import Apresentacao from "./pages/Apresentacao";
+import SemPermissao from "./pages/SemPermissao";
+
 
 
 
@@ -208,7 +210,9 @@ const App = () => (
                 </ProtectedRoute>
               } />
               <Route path="/estimativa-orcamento" element={<EstimativaOrcamento />} />
+              <Route path="/sem-permissao" element={<SemPermissao />} />
             </Route>
+
 
             <Route path="*" element={<NotFound />} />
           </Routes>
