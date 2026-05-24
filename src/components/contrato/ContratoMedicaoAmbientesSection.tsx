@@ -99,7 +99,7 @@ export function ContratoMedicaoAmbientesSection({
       const { data, error } = await sb
         .from("contrato_ambientes")
         .select(
-          "id, nome, valor_liquido, medidor_id, percentual_medidor, valor_medidor, status_medicao, data_medicao, conferente_id, percentual_conferente, valor_conferente, status_conferencia, data_conferencia, montador_id, percentual_montador, valor_montador, status_montagem, data_montagem, medicao_fotos, medicao_scans, medicao_concluido, observacoes",
+          "id, nome, valor_liquido, contrato_id, medidor_id, percentual_medidor, valor_medidor, status_medicao, data_medicao, conferente_id, percentual_conferente, valor_conferente, status_conferencia, data_conferencia, montador_id, percentual_montador, valor_montador, status_montagem, data_montagem, medicao_fotos, medicao_scans, medicao_concluido, observacoes, contratos(cliente_id)",
         )
         .eq("contrato_id", contratoId)
         .order("created_at", { ascending: true });
@@ -167,6 +167,22 @@ export function ContratoMedicaoAmbientesSection({
 
     const ok = await updateAmbiente(a.id, { [F.status]: novo });
     if (!ok) return;
+
+    // Integrar com automação para Montagem Concluída
+    if (funcao === "montador" && novo === "concluido") {
+      try {
+        const { automationService } = await import("@/services/automationService");
+        await automationService.dispararGatilho(
+          "montagem_concluida",
+          "contrato",
+          contratoId,
+          lojaId!,
+          { cliente_id: a.cliente_id, contrato_id: contratoId, ambiente_id: a.id, ambiente_nome: a.nome }
+        );
+      } catch (err) {
+        console.error("Erro ao disparar gatilho de automação (montagem_concluida):", err);
+      }
+    }
 
     if (novo === "pago") {
       const valor = Number(a[F.valor]) || 0;
@@ -473,6 +489,8 @@ export function ContratoMedicaoAmbientesSection({
                   ambiente={a} 
                   onUpdate={updateAmbiente} 
                   contratoId={contratoId}
+                  lojaId={lojaId}
+                  funcao={funcao}
                 />
               ))}
             </tbody>
@@ -544,11 +562,15 @@ export function ContratoMedicaoAmbientesSection({
 function AmbienteMedicaoPanel({ 
   ambiente, 
   onUpdate,
-  contratoId
+  contratoId,
+  lojaId,
+  funcao
 }: { 
   ambiente: AmbienteRow; 
   onUpdate: (id: string, patch: any) => Promise<boolean>;
   contratoId: string;
+  lojaId?: string | null;
+  funcao: string;
 }) {
   const qc = useQueryClient();
   const [expanded, setExpanded] = useState(false);
@@ -663,6 +685,24 @@ function AmbienteMedicaoPanel({
 
       console.log('Sucesso ao atualizar ambiente:', data);
       toast.success(novoStatus ? "Medição concluída!" : "Ambiente reaberto");
+
+      // Integrar com automação para Montagem Concluída se for concluído e estiver na função de montador
+      if (novoStatus && (funcao as string) === "montador") {
+        try {
+          const { automationService } = await import("@/services/automationService");
+          const clienteId = (ambiente as any).contratos?.cliente_id;
+          await automationService.dispararGatilho(
+            "montagem_concluida",
+            "contrato",
+            contratoId,
+            lojaId!,
+            { cliente_id: clienteId, contrato_id: contratoId, ambiente_id: ambiente.id, ambiente_nome: ambiente.nome }
+          );
+        } catch (err) {
+          console.error("Erro ao disparar gatilho de automação (montagem_concluida):", err);
+        }
+      }
+
       qc.invalidateQueries({ queryKey: ["ambientes_med_conf", contratoId] });
     } catch (err) {
       console.error('Erro inesperado na função toggleConcluido:', err);

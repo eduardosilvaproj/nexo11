@@ -79,6 +79,20 @@ export function EntregaConfirmDialog({ open, onOpenChange, entregaId, contratoId
           entidadeTipo: "entregas",
           entidadeId: entregaId
         });
+
+        // Integrar com automação
+        try {
+          const { automationService } = await import("@/services/automationService");
+          await automationService.dispararGatilho(
+            "entrega_concluida",
+            "contrato",
+            contratoId,
+            contrato.loja_id,
+            { cliente_id: (contrato as any).cliente_id, contrato_id: contratoId, entrega_id: entregaId }
+          );
+        } catch (err) {
+          console.error("Erro ao disparar gatilho de automação (entrega_concluida):", err);
+        }
       }
     },
     onSuccess: () => {
