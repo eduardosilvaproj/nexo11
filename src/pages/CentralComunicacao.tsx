@@ -153,10 +153,39 @@ export default function CentralComunicacao() {
       setEditingConfig(null);
       qc.invalidateQueries({ queryKey: ["communication_settings"] });
     },
-    onError: (err: any) => toast.error("Erro ao salvar: " + err.message),
+  const sendTestMutation = useMutation({
+    mutationFn: async (payload: { canal: string, destinatario: string, mensagem: string }) => {
+      const { data, error } = await supabase
+        .from("communication_outbox")
+        .insert([{
+          ...payload,
+          loja_id: lojaId,
+          dry_run: settings.find(s => s.canal === payload.canal)?.dry_run ?? true,
+          status: "pendente",
+          assunto: "Teste de Comunicação NEXO"
+        }])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      // Trigger processing immediately for tests
+      await supabase.functions.invoke("process-outbox");
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Teste enviado para a fila e processado.");
+      qc.invalidateQueries({ queryKey: ["communication_outbox"] });
+      setTestDialogOpen(false);
+    },
+    onError: (err: any) => toast.error("Erro no teste: " + err.message),
   });
 
+  const [testDialogOpen, setTestDialogOpen] = useState(false);
+  const [testPayload, setTestPayload] = useState({ canal: "email", destinatario: "", mensagem: "Olá, este é um teste de comunicação do NEXO." });
+
   const filteredOutbox = outbox.filter(msg => 
+
     msg.destinatario.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (msg.cliente as any)?.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (msg.contrato as any)?.id?.toLowerCase().includes(searchTerm.toLowerCase())
