@@ -4377,6 +4377,7 @@ export type Database = {
         }
         Returns: Json
       }
+      sync_expedicoes_almoxarifado: { Args: never; Returns: undefined }
       user_is_matriz: { Args: { p_user: string }; Returns: boolean }
       user_lojas_ids: { Args: { p_user: string }; Returns: string[] }
       validar_acesso_acompanhamento: {
