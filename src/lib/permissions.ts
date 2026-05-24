@@ -98,7 +98,9 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
     "rh.solicitacoes.view", "rh.solicitacoes.create", "rh.solicitacoes.approve", 
     "rh.documentos.view", "rh.documentos.manage", "rh.ausencias.view", "rh.ausencias.manage",
     "rh.escalas.view", "rh.escalas.manage", "rh.disponibilidade.view", "rh.disponibilidade.manage",
-    "agenda.equipe.view", "agenda.equipe.manage"
+    "agenda.equipe.view", "agenda.equipe.manage",
+    "operacao.checkin.view", "operacao.checkin.manage", "operacao.ocorrencias.view", 
+    "operacao.ocorrencias.manage", "operacao.execucao.view"
   ],
   admin: [
     "comercial.view", "clientes.view", "contratos.view", "tecnico.view", "producao.view",
