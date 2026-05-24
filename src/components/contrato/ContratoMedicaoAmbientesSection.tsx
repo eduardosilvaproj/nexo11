@@ -562,11 +562,15 @@ export function ContratoMedicaoAmbientesSection({
 function AmbienteMedicaoPanel({ 
   ambiente, 
   onUpdate,
-  contratoId
+  contratoId,
+  lojaId,
+  funcao
 }: { 
   ambiente: AmbienteRow; 
   onUpdate: (id: string, patch: any) => Promise<boolean>;
   contratoId: string;
+  lojaId?: string | null;
+  funcao: string;
 }) {
   const qc = useQueryClient();
   const [expanded, setExpanded] = useState(false);
