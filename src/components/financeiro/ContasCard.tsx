@@ -40,7 +40,7 @@ const STATUS_STYLE: Record<Status, { bg: string; fg: string; label: string }> = 
 export function ContasCard() {
   const [receber, setReceber] = useState<Conta[]>([]);
   const [pagar, setPagar] = useState<Conta[]>([]);
-  const [pagamentoAlvo, setPagamentoAlvo] = useState<{ id: string; descricao: string; valor: number; tipo: 'receita' | 'despesa' } | null>(null);
+  const [pagamentoAlvo, setPagamentoAlvo] = useState<{ id: string; descricao: string; valor: number; tipo: 'receita' | 'despesa'; status: Status } | null>(null);
   const [filtroReceber, setFiltroReceber] = useState<FiltroKey>("todas");
   const [filtroPagar, setFiltroPagar] = useState<FiltroKey>("todas");
   const hojeStr = new Date().toISOString().slice(0, 10);
@@ -174,14 +174,19 @@ export function ContasCard() {
                         </td>
                         <td className="px-3 py-3">
                           <div className="flex items-center justify-end gap-1">
-                            {c.status === "pendente" && (
+                            {(c.status === "pendente" || c.status === "pago") && (
                               <Button
                                 size="sm"
-                                className="h-7 px-2 text-white bg-[#1E6FBF] hover:bg-[#1E6FBF]/90"
-                                onClick={() => setPagamentoAlvo({ id: c.id, descricao: c.descricao, valor: Number(c.valor), tipo: isReceita ? 'receita' : 'despesa' })}
+                                variant={c.status === "pago" ? "outline" : "default"}
+                                className={c.status === "pago" ? "h-7 px-2" : "h-7 px-2 text-white bg-[#1E6FBF] hover:bg-[#1E6FBF]/90"}
+                                onClick={() => setPagamentoAlvo({ id: c.id, descricao: c.descricao, valor: Number(c.valor), tipo: isReceita ? 'receita' : 'despesa', status: c.status })}
                               >
-                                <Check className="mr-1 h-3.5 w-3.5" />
-                                Pagar
+                                {c.status === "pago" ? "Detalhes" : (
+                                  <>
+                                    <Check className="mr-1 h-3.5 w-3.5" />
+                                    Pagar
+                                  </>
+                                )}
                               </Button>
                             )}
                             <Button

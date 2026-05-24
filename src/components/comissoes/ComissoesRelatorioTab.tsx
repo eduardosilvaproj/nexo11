@@ -174,42 +174,14 @@ export function ComissoesRelatorioTab({
     if (!alvoPagar || processando) return;
     setProcessando(true);
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      const { data: userProfile } = await supabase.from("usuarios").select("loja_id").eq("id", userData.user?.id).maybeSingle();
-      
-      // 1. Atualizar status da comissão
-      const { error } = await supabase
-        .from("comissoes")
-        .update({ status: "paga", data_pagamento: dataPagamento })
-        .eq("id", alvoPagar.id);
-      if (error) throw error;
-
-      // 2. Gerar conta a pagar vinculada
-      if (userProfile?.loja_id) {
-        await supabase.from("financeiro_contas_pagar").insert({
-          loja_id: userProfile.loja_id,
-          contrato_id: alvoPagar.contrato_id,
-          categoria: "Comissão",
-          descricao: `Comissão: ${alvoPagar.pessoa} (${alvoPagar.papel})`,
-          valor: alvoPagar.valor,
-          vencimento: dataPagamento,
-          data_pagamento: dataPagamento,
-          status: "pago",
-          observacoes: `Gerado automaticamente a partir do módulo de Comissões. Ref Contrato ${alvoPagar.contrato_id.slice(0, 8)}`
-        });
-      }
-
-      // 3. Log do contrato
-      await supabase.from("contrato_logs").insert({
-        contrato_id: alvoPagar.contrato_id,
-        acao: "comissao_paga",
-        etapa: "comercial",
-        titulo: "Comissão paga",
-        descricao: `${alvoPagar.pessoa} (${alvoPagar.papel}) — ${fmtBRL(alvoPagar.valor)} pago em ${dataPagamento}.`,
-        usuario_nome: userData.user?.user_metadata?.nome || userData.user?.email || "Sistema",
+      const { error } = await supabase.rpc('confirmar_pagamento_comissao', {
+        p_comissao_id: alvoPagar.id,
+        p_data_pagamento: dataPagamento
       });
 
-      toast.success("Comissão paga e lançada no financeiro");
+      if (error) throw error;
+
+      toast.success("Comissão paga e integrada ao financeiro");
       setAlvoPagar(null);
       await carregar();
     } catch (e) {

@@ -42,6 +42,10 @@ export function ContratoFinanceiroTab({ contratoId }: Props) {
 
   const totalReceber = (receber ?? []).reduce((s, r) => s + (r.status !== 'cancelado' ? Number(r.valor) : 0), 0);
   const totalRecebido = (receber ?? []).reduce((s, r) => s + (r.status === 'pago' ? Number(r.valor) : 0), 0);
+  const totalAtrasado = (receber ?? []).reduce((s, r) => {
+    const hoje = new Date().toISOString().slice(0, 10);
+    return s + (r.status === 'pendente' && r.vencimento < hoje ? Number(r.valor) : 0);
+  }, 0);
   const totalPagar = (pagar ?? []).reduce((s, r) => s + (r.status !== 'cancelado' ? Number(r.valor) : 0), 0);
   const totalPago = (pagar ?? []).reduce((s, r) => s + (r.status === 'pago' ? Number(r.valor) : 0), 0);
 
@@ -61,37 +65,50 @@ export function ContratoFinanceiroTab({ contratoId }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-5">
         <Card className="bg-emerald-50/50 border-emerald-100">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-emerald-600">Total Recebido</CardTitle>
+            <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Total Recebido</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-emerald-700">{formatBRL(totalRecebido)}</p>
+            <p className="text-xl font-bold text-emerald-700">{formatBRL(totalRecebido)}</p>
           </CardContent>
         </Card>
         <Card className="bg-amber-50/50 border-amber-100">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-amber-600">Saldo a Receber</CardTitle>
+            <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-amber-600">Saldo a Receber</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-amber-700">{formatBRL(totalReceber - totalRecebido)}</p>
+            <p className="text-xl font-bold text-amber-700">{formatBRL(totalReceber - totalRecebido)}</p>
           </CardContent>
         </Card>
         <Card className="bg-rose-50/50 border-rose-100">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-rose-600">Total Pago</CardTitle>
+            <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-rose-600">Total Atrasado</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-rose-700">{formatBRL(totalPago)}</p>
+            <p className="text-xl font-bold text-rose-700">{formatBRL(totalAtrasado)}</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-rose-50/50 border-rose-100">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-rose-600">Total Pago</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xl font-bold text-rose-700">{formatBRL(totalPago)}</p>
           </CardContent>
         </Card>
         <Card className="bg-slate-50 border-slate-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-600">Margem Financeira</CardTitle>
+            <CardTitle className="text-[10px] font-bold uppercase tracking-wider text-slate-600">Margem Realizada</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-slate-900">{formatBRL(totalRecebido - totalPago)}</p>
+            <p className="text-xl font-bold text-slate-900">
+              {totalRecebido > 0 
+                ? `${(((totalRecebido - totalPago) / totalRecebido) * 100).toFixed(1).replace('.', ',')}%`
+                : "Sem recebimentos"
+              }
+            </p>
           </CardContent>
         </Card>
       </div>

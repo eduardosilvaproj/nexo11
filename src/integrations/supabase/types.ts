@@ -1765,6 +1765,7 @@ export type Database = {
       financeiro_contas_pagar: {
         Row: {
           categoria: string
+          comissao_id: string | null
           contrato_id: string | null
           created_at: string | null
           data_pagamento: string | null
@@ -1781,6 +1782,7 @@ export type Database = {
         }
         Insert: {
           categoria: string
+          comissao_id?: string | null
           contrato_id?: string | null
           created_at?: string | null
           data_pagamento?: string | null
@@ -1797,6 +1799,7 @@ export type Database = {
         }
         Update: {
           categoria?: string
+          comissao_id?: string | null
           contrato_id?: string | null
           created_at?: string | null
           data_pagamento?: string | null
@@ -1812,6 +1815,13 @@ export type Database = {
           vencimento?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "financeiro_contas_pagar_comissao_id_fkey"
+            columns: ["comissao_id"]
+            isOneToOne: false
+            referencedRelation: "comissoes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "financeiro_contas_pagar_contrato_id_fkey"
             columns: ["contrato_id"]
@@ -1852,10 +1862,13 @@ export type Database = {
           forma_pagamento: string | null
           id: string
           loja_id: string
+          lote_parcelamento_id: string | null
+          numero_parcela: number | null
           observacoes: string | null
           parcela_numero: number | null
           parcela_total: number | null
           status: string
+          total_parcelas: number | null
           updated_at: string | null
           valor: number
           vencimento: string
@@ -1869,10 +1882,13 @@ export type Database = {
           forma_pagamento?: string | null
           id?: string
           loja_id: string
+          lote_parcelamento_id?: string | null
+          numero_parcela?: number | null
           observacoes?: string | null
           parcela_numero?: number | null
           parcela_total?: number | null
           status?: string
+          total_parcelas?: number | null
           updated_at?: string | null
           valor?: number
           vencimento: string
@@ -1886,10 +1902,13 @@ export type Database = {
           forma_pagamento?: string | null
           id?: string
           loja_id?: string
+          lote_parcelamento_id?: string | null
+          numero_parcela?: number | null
           observacoes?: string | null
           parcela_numero?: number | null
           parcela_total?: number | null
           status?: string
+          total_parcelas?: number | null
           updated_at?: string | null
           valor?: number
           vencimento?: string
@@ -4461,6 +4480,14 @@ export type Database = {
         }
         Returns: Json
       }
+      confirmar_pagamento_comissao: {
+        Args: {
+          p_comissao_id: string
+          p_data_pagamento: string
+          p_forma_pagamento?: string
+        }
+        Returns: undefined
+      }
       contrato_da_loja: { Args: { _contrato_id: string }; Returns: boolean }
       contrato_log_inserir: {
         Args: {
@@ -4472,8 +4499,21 @@ export type Database = {
         Returns: undefined
       }
       current_loja_id: { Args: never; Returns: string }
+      estornar_lancamento: {
+        Args: { p_id: string; p_tipo: string }
+        Returns: undefined
+      }
       gerar_comissoes_ambiente: {
         Args: { _ambiente_id: string; _gatilho: string; _tipos_papel: string[] }
+        Returns: undefined
+      }
+      gerar_parcelas_contrato: {
+        Args: {
+          p_contrato_id: string
+          p_loja_id: string
+          p_lote_id?: string
+          p_parcelas: Json
+        }
         Returns: undefined
       }
       get_acompanhamento_publico: {

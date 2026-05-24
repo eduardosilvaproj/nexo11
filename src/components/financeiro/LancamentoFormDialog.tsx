@@ -12,7 +12,7 @@ type Tipo = "receita" | "despesa";
 
 const CATEGORIAS: Record<Tipo, string[]> = {
   receita: ["Venda de contrato", "Extra", "Outro"],
-  despesa: ["Compra", "Produção", "Montagem", "Logística", "Comissão", "Aluguel", "Folha", "Marketing", "Administrativo", "Outro"],
+  despesa: ["Compra", "Produção", "Montagem", "Logística", "Comissão", "Aluguel", "Folha", "Marketing", "Administrativo", "Imposto", "Outro"],
 };
 
 interface Props {
