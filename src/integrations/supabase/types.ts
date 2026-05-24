@@ -467,6 +467,64 @@ export type Database = {
           },
         ]
       }
+      chat_conversas: {
+        Row: {
+          contrato_id: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          loja_id: string
+          modulo: string | null
+          tipo: string
+          titulo: string
+          updated_at: string | null
+        }
+        Insert: {
+          contrato_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          loja_id: string
+          modulo?: string | null
+          tipo: string
+          titulo: string
+          updated_at?: string | null
+        }
+        Update: {
+          contrato_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          loja_id?: string
+          modulo?: string | null
+          tipo?: string
+          titulo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_conversas_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_conversas_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_conversas_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_mensagens: {
         Row: {
           anexo_nome: string | null
@@ -520,6 +578,95 @@ export type Database = {
             columns: ["contrato_id"]
             isOneToOne: false
             referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_mensagens_v2: {
+        Row: {
+          anexo_url: string | null
+          conversa_id: string
+          created_at: string | null
+          deleted_at: string | null
+          edited_at: string | null
+          id: string
+          loja_id: string
+          mensagem: string | null
+          tipo: string | null
+          usuario_id: string
+        }
+        Insert: {
+          anexo_url?: string | null
+          conversa_id: string
+          created_at?: string | null
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+          loja_id: string
+          mensagem?: string | null
+          tipo?: string | null
+          usuario_id: string
+        }
+        Update: {
+          anexo_url?: string | null
+          conversa_id?: string
+          created_at?: string | null
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+          loja_id?: string
+          mensagem?: string | null
+          tipo?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_mensagens_v2_conversa_id_fkey"
+            columns: ["conversa_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_mensagens_v2_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_participantes: {
+        Row: {
+          conversa_id: string
+          id: string
+          joined_at: string | null
+          last_read_at: string | null
+          role: string | null
+          usuario_id: string
+        }
+        Insert: {
+          conversa_id: string
+          id?: string
+          joined_at?: string | null
+          last_read_at?: string | null
+          role?: string | null
+          usuario_id: string
+        }
+        Update: {
+          conversa_id?: string
+          id?: string
+          joined_at?: string | null
+          last_read_at?: string | null
+          role?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_participantes_conversa_id_fkey"
+            columns: ["conversa_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversas"
             referencedColumns: ["id"]
           },
         ]
@@ -770,6 +917,82 @@ export type Database = {
             columns: ["papel_id"]
             isOneToOne: false
             referencedRelation: "papeis_comissao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comunicado_leituras: {
+        Row: {
+          comunicado_id: string
+          id: string
+          lido_em: string | null
+          usuario_id: string
+        }
+        Insert: {
+          comunicado_id: string
+          id?: string
+          lido_em?: string | null
+          usuario_id: string
+        }
+        Update: {
+          comunicado_id?: string
+          id?: string
+          lido_em?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comunicado_leituras_comunicado_id_fkey"
+            columns: ["comunicado_id"]
+            isOneToOne: false
+            referencedRelation: "comunicados"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comunicados: {
+        Row: {
+          ativo: boolean | null
+          expira_em: string | null
+          id: string
+          loja_id: string | null
+          mensagem: string
+          perfil_destino: string | null
+          prioridade: string | null
+          publicado_em: string | null
+          publicado_por: string | null
+          titulo: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          expira_em?: string | null
+          id?: string
+          loja_id?: string | null
+          mensagem: string
+          perfil_destino?: string | null
+          prioridade?: string | null
+          publicado_em?: string | null
+          publicado_por?: string | null
+          titulo: string
+        }
+        Update: {
+          ativo?: boolean | null
+          expira_em?: string | null
+          id?: string
+          loja_id?: string | null
+          mensagem?: string
+          perfil_destino?: string | null
+          prioridade?: string | null
+          publicado_em?: string | null
+          publicado_por?: string | null
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comunicados_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
             referencedColumns: ["id"]
           },
         ]
@@ -1399,6 +1622,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "custos_fixos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      device_tokens: {
+        Row: {
+          ativo: boolean
+          created_at: string | null
+          id: string
+          last_seen_at: string | null
+          loja_id: string
+          platform: string
+          token: string
+          updated_at: string | null
+          usuario_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string | null
+          id?: string
+          last_seen_at?: string | null
+          loja_id: string
+          platform: string
+          token: string
+          updated_at?: string | null
+          usuario_id: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string | null
+          id?: string
+          last_seen_at?: string | null
+          loja_id?: string
+          platform?: string
+          token?: string
+          updated_at?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_tokens_loja_id_fkey"
             columns: ["loja_id"]
             isOneToOne: false
             referencedRelation: "lojas"
