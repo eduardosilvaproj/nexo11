@@ -5,10 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   CheckCircle2, 
-  Circle, 
   ArrowRight, 
   Upload, 
   Download, 
@@ -22,7 +20,8 @@ import {
   Package,
   DollarSign,
   TrendingUp,
-  Percent
+  Percent,
+  Warehouse
 } from "lucide-react";
 import { toast } from "sonner";
 import { ImportCSVDialog } from "@/components/implantacao/ImportCSVDialog";
@@ -139,7 +138,7 @@ export default function ConfiguracaoInicial() {
           status: isFornecedoresOk ? 'concluido' : 'pendente',
           actionLabel: 'Importar Fornecedores',
           actionPath: '#import-fornecedores',
-          icon: Factory,
+          icon: Warehouse,
           tableName: 'fornecedores'
         },
         {
