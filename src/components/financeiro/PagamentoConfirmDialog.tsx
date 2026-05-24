@@ -9,7 +9,7 @@ import { toast } from "sonner";
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  transacao: { id: string; descricao: string; valor: number; tipo: 'receita' | 'despesa' } | null;
+  transacao: { id: string; descricao: string; valor: number; tipo: 'receita' | 'despesa'; status?: string } | null;
   onConfirmed: () => void;
 }
 
@@ -22,30 +22,54 @@ export function PagamentoConfirmDialog({ open, onOpenChange, transacao, onConfir
     if (!transacao) return;
     setLoading(true);
     
-    const table = transacao.tipo === 'receita' ? 'financeiro_contas_receber' : 'financeiro_contas_pagar';
-    
-    const { error } = await supabase
-      .from(table)
-      .update({
-        status: "pago",
-        data_pagamento: data,
-        forma_pagamento: forma || null,
-      })
-      .eq("id", transacao.id);
+    try {
+      const table = transacao.tipo === 'receita' ? 'financeiro_contas_receber' : 'financeiro_contas_pagar';
+      
+      const { error } = await supabase
+        .from(table)
+        .update({
+          status: "pago",
+          data_pagamento: data,
+          forma_pagamento: forma || null,
+        })
+        .eq("id", transacao.id);
 
-    setLoading(false);
-    if (error) { toast.error(error.message); return; }
-    
-    toast.success("Pagamento registrado com sucesso");
-    onConfirmed();
-    onOpenChange(false);
+      if (error) throw error;
+      
+      toast.success("Pagamento registrado com sucesso");
+      onConfirmed();
+      onOpenChange(false);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleEstornar() {
+    if (!transacao || !window.confirm("Deseja realmente estornar este pagamento? O status voltará para pendente.")) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase.rpc('estornar_lancamento', {
+        p_id: transacao.id,
+        p_type: transacao.tipo === 'receita' ? 'receita' : 'despesa'
+      });
+      if (error) throw error;
+      toast.success("Pagamento estornado com sucesso");
+      onConfirmed();
+      onOpenChange(false);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle>Confirmar Pagamento</DialogTitle>
+          <DialogTitle>{transacao?.status === 'pago' ? 'Detalhes do Pagamento' : 'Confirmar Pagamento'}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="rounded-lg bg-slate-50 p-4 border border-slate-100">
@@ -66,10 +90,10 @@ export function PagamentoConfirmDialog({ open, onOpenChange, transacao, onConfir
             <Input placeholder="Ex: Pix, Cartão, Dinheiro..." value={forma} onChange={(e) => setForma(e.target.value)} />
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+        <DialogFooter className="flex-col gap-2 sm:flex-row">
+          <Button variant="outline" className="sm:flex-1" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button 
-            className="bg-[#1E6FBF] hover:bg-[#1E6FBF]/90 text-white" 
+            className="bg-[#1E6FBF] hover:bg-[#1E6FBF]/90 text-white sm:flex-1" 
             onClick={handleConfirmar}
             disabled={loading}
           >
