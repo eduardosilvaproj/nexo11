@@ -687,10 +687,11 @@ function EditarAgendamentoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar agendamento</DialogTitle>
         </DialogHeader>
+        <MateriaisMontagemResumo contratoId={agendamento.contrato_id} compact />
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-2" style={{ fontSize: 13, color: "#6B7A90" }}>
             <span>
