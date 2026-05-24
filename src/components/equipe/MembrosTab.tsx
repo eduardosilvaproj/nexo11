@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
+import { canPerform } from "@/lib/permissions";
+
 import { EditarComissaoDialog } from "./EditarComissaoDialog";
 
 type FuncaoUsuario = "vendedor" | "projetista" | "tecnico" | "conferente" | "montador" | "motorista" | "gerente" | "financeiro" | "admin" | "franqueador" | "medidor" | "comprador" | "almoxarife" | "logistico" | "pos_venda";
@@ -155,8 +157,8 @@ function MembroCard({
 }
 
 export function MembrosTab({ onAddMember }: { onAddMember?: () => void } = {}) {
-  const { hasRole } = useAuth();
-  const podeEditar = hasRole("admin") || hasRole("gerente") || hasRole("franqueador");
+  const { roles } = useAuth();
+  const podeEditar = canPerform(roles, "equipe.manage");
   const [editAlvo, setEditAlvo] = useState<Membro | null>(null);
 
   const { data: membros, isLoading } = useQuery({

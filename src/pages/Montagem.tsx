@@ -30,6 +30,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { checkAgendamentoConflict, diffHoras as diffH } from "@/lib/agendamento-conflict";
 import { useAuth } from "@/contexts/AuthContext";
+import { canPerform } from "@/lib/permissions";
+
 import { AmbientesMontagemList } from "@/components/montagem/AmbientesMontagemList";
 import { MateriaisMontagemResumo, calcularLiberacao, LiberacaoBadge, type LiberacaoStatus } from "@/components/montagem/MateriaisMontagemResumo";
 import { CheckCircle2, AlertTriangle, Clock as ClockIcon, Package } from "lucide-react";
@@ -51,8 +53,8 @@ function diffHoras(ini?: string | null, fim?: string | null): number {
 export default function Montagem() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { hasRole } = useAuth();
-  const podeAgendar = hasRole("admin") || hasRole("gerente");
+  const { roles } = useAuth();
+  const podeAgendar = canPerform(roles, "montagem.update");
   const [weekOffset, setWeekOffset] = useState(0);
   const [editId, setEditId] = useState<string | null>(null);
   
@@ -288,7 +290,9 @@ export default function Montagem() {
               <span style={{ fontSize: 13, color: "#6B7A90" }}>
                 Nenhuma equipe cadastrada. Crie equipes para visualizar a capacidade.
               </span>
-              <CriarEquipeDialog onCreated={() => qc.invalidateQueries({ queryKey: ["equipes"] })} />
+              {canPerform(roles, "equipe.manage") && (
+                <CriarEquipeDialog onCreated={() => qc.invalidateQueries({ queryKey: ["equipes"] })} />
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -348,9 +352,11 @@ export default function Montagem() {
                   </div>
                 );
               })}
-              <div className="flex items-center justify-center rounded-xl" style={{ border: "1px dashed #E8ECF2" }}>
-                <CriarEquipeDialog onCreated={() => qc.invalidateQueries({ queryKey: ["equipes"] })} />
-              </div>
+              {canPerform(roles, "equipe.manage") && (
+                <div className="flex items-center justify-center rounded-xl" style={{ border: "1px dashed #E8ECF2" }}>
+                  <CriarEquipeDialog onCreated={() => qc.invalidateQueries({ queryKey: ["equipes"] })} />
+                </div>
+              )}
             </div>
           )}
         </TabsContent>
