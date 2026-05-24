@@ -8,7 +8,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import AppLayout from "@/components/AppLayout";
 import AuthPage from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
-import Placeholder from "./pages/Placeholder";
+
 import Comercial from "./pages/Comercial";
 import Clientes from "./pages/Clientes";
 import ClienteDetail from "./pages/ClienteDetail";

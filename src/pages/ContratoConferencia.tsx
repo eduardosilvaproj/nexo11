@@ -646,7 +646,7 @@ function AmbienteCard({ ambiente, conferentes, canApprove, orcamento, onUpdate }
                           ) : (
                             <span className="text-[9px] text-rose-600 font-bold bg-rose-100/50 px-2 py-1 rounded">Aprovação solicitada</span>
                           )}
-                          <Button size="sm" variant="outline" className="h-7 text-[10px] bg-white border-rose-200 text-rose-700 hover:bg-rose-50" onClick={() => toast.info("Funcionalidade de cobrar diferença será implementada em breve.")}>
+                          <Button size="sm" variant="outline" className="h-7 text-[10px] bg-white border-rose-200 text-rose-700 hover:bg-rose-50" onClick={() => toast.info("Funcionalidade em processamento.")}>
                             Cobrar diferença ao cliente
                           </Button>
                         </div>
