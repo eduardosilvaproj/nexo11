@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -8,45 +8,38 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertasBanner } from "@/components/analytics/AlertasBanner";
-import { KpiRow } from "@/components/analytics/KpiRow";
-import { FaturamentoVsPeChart } from "@/components/analytics/FaturamentoVsPeChart";
-import { FunilLeadsChart } from "@/components/analytics/FunilLeadsChart";
-import { MargemEvolucaoChart } from "@/components/analytics/MargemEvolucaoChart";
-import { MargemAlertasCard } from "@/components/analytics/MargemAlertasCard";
-import { PipelineCard } from "@/components/analytics/PipelineCard";
-import { VendedoresRankingCard } from "@/components/analytics/VendedoresRankingCard";
+import { VisaoGeralSection } from "@/components/analytics/VisaoGeralSection";
+import { ComercialSection } from "@/components/analytics/ComercialSection";
+import { FinanceiroSection } from "@/components/analytics/FinanceiroSection";
+import { OperacionalSection } from "@/components/analytics/OperacionalSection";
+import { EstoqueSection } from "@/components/analytics/EstoqueSection";
+import { LogisticaMontagemSection } from "@/components/analytics/LogisticaMontagemSection";
+import { PosVendaSection } from "@/components/analytics/PosVendaSection";
+import { Periodo, rangeFromPeriodo } from "@/components/analytics/shared";
 
 type Loja = { id: string; nome: string };
 
-function buildMonthOptions(months = 12) {
-  const opts: { value: string; label: string }[] = [];
-  const now = new Date();
-  for (let i = 0; i < months; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    const label = d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
-    opts.push({ value, label: label.charAt(0).toUpperCase() + label.slice(1) });
-  }
-  return opts;
-}
+const PERIODOS: { value: Periodo; label: string }[] = [
+  { value: "mes_atual", label: "Mês atual" },
+  { value: "mes_anterior", label: "Mês anterior" },
+  { value: "ult_3m", label: "Últimos 3 meses" },
+  { value: "ult_6m", label: "Últimos 6 meses" },
+  { value: "ano_atual", label: "Ano atual" },
+];
 
 export default function Analytics() {
   const { hasRole, perfil } = useAuth();
   const isFranqueador = hasRole("franqueador");
-  const monthOptions = useMemo(() => buildMonthOptions(12), []);
-  const [mes, setMes] = useState(monthOptions[0].value);
-  // Franqueador can switch lojas; everyone else is locked to their own loja
+  const [periodo, setPeriodo] = useState<Periodo>("mes_atual");
   const [lojaId, setLojaId] = useState<string>(
-    isFranqueador ? "all" : perfil?.loja_id ?? "all"
+    isFranqueador ? "all" : perfil?.loja_id ?? "all",
   );
   const [lojas, setLojas] = useState<Loja[]>([]);
 
-  // Keep lojaId in sync with perfil for non-franqueador users
   useEffect(() => {
-    if (!isFranqueador && perfil?.loja_id) {
-      setLojaId(perfil.loja_id);
-    }
+    if (!isFranqueador && perfil?.loja_id) setLojaId(perfil.loja_id);
   }, [isFranqueador, perfil?.loja_id]);
 
   useEffect(() => {
@@ -58,48 +51,39 @@ export default function Analytics() {
       .then(({ data }) => setLojas(data ?? []));
   }, [isFranqueador]);
 
+  const { label: periodoLabel } = rangeFromPeriodo(periodo);
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 p-6">
       <AlertasBanner />
-      {/* Header */}
+
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 600, color: "#0D1117" }}>
-            NEXO Analytics
-          </h1>
+          <h1 style={{ fontSize: 22, fontWeight: 600, color: "#0D1117" }}>NEXO Analytics</h1>
           <p style={{ fontSize: 13, color: "#6B7A90", marginTop: 2 }}>
-            Visão executiva da operação
+            Visão gerencial consolidada — {periodoLabel}
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div style={{ width: 180 }}>
-            <Select value={mes} onValueChange={setMes}>
-              <SelectTrigger className="h-9">
-                <SelectValue />
-              </SelectTrigger>
+          <div style={{ width: 200 }}>
+            <Select value={periodo} onValueChange={(v) => setPeriodo(v as Periodo)}>
+              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {monthOptions.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
+                {PERIODOS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-
           {isFranqueador && (
-            <div style={{ width: 200 }}>
+            <div style={{ width: 220 }}>
               <Select value={lojaId} onValueChange={setLojaId}>
-                <SelectTrigger className="h-9">
-                  <SelectValue placeholder="Todas as lojas" />
-                </SelectTrigger>
+                <SelectTrigger className="h-9"><SelectValue placeholder="Todas as lojas" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas as lojas</SelectItem>
                   {lojas.map((l) => (
-                    <SelectItem key={l.id} value={l.id}>
-                      {l.nome}
-                    </SelectItem>
+                    <SelectItem key={l.id} value={l.id}>{l.nome}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -108,34 +92,50 @@ export default function Analytics() {
         </div>
       </div>
 
-      <KpiRow mes={mes} lojaId={lojaId} />
+      <VisaoGeralSection periodo={periodo} lojaId={lojaId} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-3">
-          <FaturamentoVsPeChart />
-        </div>
-        <div className="lg:col-span-2">
-          <FunilLeadsChart mes={mes} lojaId={lojaId} />
-        </div>
-      </div>
+      <Tabs defaultValue="comercial">
+        <TabsList
+          className="h-auto justify-start rounded-none bg-transparent p-0 border-b w-full overflow-x-auto"
+          style={{ borderColor: "#E8ECF2" }}
+        >
+          {[
+            { v: "comercial", l: "Comercial" },
+            { v: "financeiro", l: "Financeiro" },
+            { v: "operacional", l: "Operacional" },
+            { v: "estoque", l: "Compras & Almoxarifado" },
+            { v: "logistica", l: "Logística & Montagem" },
+            { v: "posvenda", l: "Pós-venda" },
+          ].map((t) => (
+            <TabsTrigger
+              key={t.v}
+              value={t.v}
+              className="rounded-none bg-transparent px-4 py-2 text-[#6B7A90] shadow-none data-[state=active]:bg-transparent data-[state=active]:text-[#1E6FBF] data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#1E6FBF] -mb-px whitespace-nowrap"
+            >
+              {t.l}
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
-      <div className="grid grid-cols-1 lg:grid-cols-20 gap-4" style={{ gridTemplateColumns: "repeat(20, minmax(0, 1fr))" }}>
-        <div className="lg:col-span-13" style={{ gridColumn: "span 13 / span 13" }}>
-          <MargemEvolucaoChart />
-        </div>
-        <div style={{ gridColumn: "span 7 / span 7" }}>
-          <MargemAlertasCard mes={mes} lojaId={lojaId} />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4" style={{ gridTemplateColumns: "repeat(20, minmax(0, 1fr))" }}>
-        <div style={{ gridColumn: "span 9 / span 9" }}>
-          <PipelineCard lojaId={lojaId} />
-        </div>
-        <div style={{ gridColumn: "span 11 / span 11" }}>
-          <VendedoresRankingCard mes={mes} lojaId={lojaId} />
-        </div>
-      </div>
-      </div>
+        <TabsContent value="comercial" className="mt-4">
+          <ComercialSection periodo={periodo} lojaId={lojaId} />
+        </TabsContent>
+        <TabsContent value="financeiro" className="mt-4">
+          <FinanceiroSection periodo={periodo} lojaId={lojaId} />
+        </TabsContent>
+        <TabsContent value="operacional" className="mt-4">
+          <OperacionalSection lojaId={lojaId} />
+        </TabsContent>
+        <TabsContent value="estoque" className="mt-4">
+          <EstoqueSection periodo={periodo} lojaId={lojaId} />
+        </TabsContent>
+        <TabsContent value="logistica" className="mt-4">
+          <LogisticaMontagemSection periodo={periodo} lojaId={lojaId} />
+        </TabsContent>
+        <TabsContent value="posvenda" className="mt-4">
+          <PosVendaSection periodo={periodo} lojaId={lojaId} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
