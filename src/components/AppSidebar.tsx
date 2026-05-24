@@ -67,6 +67,7 @@ const operacao: MenuItem[] = [
   { title: "Mensagens", url: "/mensagens", icon: MessageSquare },
   { title: "DRE", url: "/dre", icon: TrendingUp, roles: ["admin", "gerente", "franqueador", "financeiro", "admin_master"] },
   { title: "Execução Real", url: "/operacao/execucao", icon: Activity, roles: ["admin", "gerente", "admin_master"] },
+  { title: "Indicadores Op.", url: "/operacao/indicadores", icon: BarChart3, roles: ["admin", "gerente", "admin_master"] },
 ];
 
 const gestao: MenuItem[] = [
