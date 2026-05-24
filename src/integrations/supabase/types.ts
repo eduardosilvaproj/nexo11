@@ -1323,6 +1323,88 @@ export type Database = {
           },
         ]
       }
+      documentos_emitidos: {
+        Row: {
+          arquivo_url: string | null
+          cancelado_em: string | null
+          contrato_id: string | null
+          created_at: string
+          dados_snapshot: Json
+          emitido_em: string
+          emitido_por: string | null
+          entidade_id: string | null
+          entidade_tipo: string
+          id: string
+          loja_id: string
+          motivo_cancelamento: string | null
+          numero: string | null
+          status: string
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          arquivo_url?: string | null
+          cancelado_em?: string | null
+          contrato_id?: string | null
+          created_at?: string
+          dados_snapshot?: Json
+          emitido_em?: string
+          emitido_por?: string | null
+          entidade_id?: string | null
+          entidade_tipo: string
+          id?: string
+          loja_id: string
+          motivo_cancelamento?: string | null
+          numero?: string | null
+          status?: string
+          tipo: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          arquivo_url?: string | null
+          cancelado_em?: string | null
+          contrato_id?: string | null
+          created_at?: string
+          dados_snapshot?: Json
+          emitido_em?: string
+          emitido_por?: string | null
+          entidade_id?: string | null
+          entidade_tipo?: string
+          id?: string
+          loja_id?: string
+          motivo_cancelamento?: string | null
+          numero?: string | null
+          status?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_emitidos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentos_emitidos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documentos_emitidos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dre_contrato: {
         Row: {
           contrato_id: string
