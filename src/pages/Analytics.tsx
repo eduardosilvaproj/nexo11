@@ -17,6 +17,7 @@ import { OperacionalSection } from "@/components/analytics/OperacionalSection";
 import { EstoqueSection } from "@/components/analytics/EstoqueSection";
 import { LogisticaMontagemSection } from "@/components/analytics/LogisticaMontagemSection";
 import { PosVendaSection } from "@/components/analytics/PosVendaSection";
+import { SatisfacaoSection } from "@/components/analytics/SatisfacaoSection";
 import { ExecucaoRealSection } from "@/components/analytics/ExecucaoRealSection";
 import { Periodo, rangeFromPeriodo } from "@/components/analytics/shared";
 
@@ -107,6 +108,7 @@ export default function Analytics() {
             { v: "estoque", l: "Compras & Almoxarifado" },
             { v: "logistica", l: "Logística & Montagem" },
             { v: "posvenda", l: "Pós-venda" },
+            { v: "satisfacao", l: "Satisfação & NPS" },
             { v: "execucao_real", l: "Execução Real" },
           ].map((t) => (
             <TabsTrigger
@@ -136,6 +138,9 @@ export default function Analytics() {
         </TabsContent>
         <TabsContent value="posvenda" className="mt-4">
           <PosVendaSection periodo={periodo} lojaId={lojaId} />
+        </TabsContent>
+        <TabsContent value="satisfacao" className="mt-4">
+          <SatisfacaoSection periodo={periodo} lojaId={lojaId} />
         </TabsContent>
         <TabsContent value="execucao_real" className="mt-4">
           <ExecucaoRealSection lojaId={lojaId} />
