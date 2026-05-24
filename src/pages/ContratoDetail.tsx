@@ -442,7 +442,12 @@ export default function ContratoDetail() {
               </div>
             )}
           </div>
-          <div style={{ pointerEvents: "auto" }}>
+           <div style={{ pointerEvents: "auto" }} className="flex flex-col gap-4">
+            <PortalClienteManager 
+              contratoId={contrato.id} 
+              clienteId={contrato.cliente_id} 
+              lojaId={contrato.loja_id} 
+            />
             <ContratoActivityLog contratoId={contrato.id} />
           </div>
         </div>
