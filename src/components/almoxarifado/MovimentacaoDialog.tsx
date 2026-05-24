@@ -94,6 +94,22 @@ export function MovimentacaoDialog({ item, type, open, onOpenChange, onSuccess }
         .eq("id", item.id);
 
       if (itemError) throw itemError;
+      
+      // 3. Notificação se estoque ficar baixo do mínimo
+      if (type === 'saida' && novaQtdTotal < (item.estoque_minimo || 0)) {
+        await supabase.from("notificacoes").insert({
+          loja_id: item.loja_id,
+          perfil_destino: "almoxarife",
+          titulo: "Estoque Baixo",
+          mensagem: `O item ${item.descricao} atingiu nível crítico (${novaQtdTotal} ${item.unidade}).`,
+          modulo: "almoxarifado",
+          prioridade: "alta",
+          tipo: "estoque_baixo",
+          link: "/almoxarifado",
+          entidade_tipo: "estoque_item",
+          entidade_id: item.id
+        });
+      }
 
       toast.success(`${type === 'entrada' ? 'Entrada' : 'Saída'} registrada com sucesso`);
       onSuccess();
