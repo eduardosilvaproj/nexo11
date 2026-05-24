@@ -488,7 +488,6 @@ export default function CentralComunicacao() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
 
       {/* Settings Dialog */}
       <Dialog open={!!editingConfig} onOpenChange={() => setEditingConfig(null)}>
