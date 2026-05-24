@@ -251,6 +251,22 @@ export function ContratoDocumentosTab({ contratoId }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de Aceite/Assinatura */}
+      {acceptDoc && (
+        <DocumentAcceptanceDialog
+          open={!!acceptDoc}
+          onOpenChange={(open) => !open && setAcceptDoc(null)}
+          documentoId={acceptDoc.id}
+          documentoTitulo={acceptDoc.titulo}
+          contratoId={contratoId}
+          onSuccess={() => {
+            qc.invalidateQueries({ queryKey: ["contrato_documentos", contratoId] });
+            qc.invalidateQueries({ queryKey: ["documento_aceites", contratoId] });
+            qc.invalidateQueries({ queryKey: ["contrato_eventos", contratoId] });
+          }}
+        />
+      )}
     </div>
   );
 }
