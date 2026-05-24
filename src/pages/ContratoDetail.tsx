@@ -24,6 +24,7 @@ import { ContratoDocumentosTab } from "@/components/contrato/ContratoDocumentosT
 import { ReadOnlyContext } from "@/components/contrato/ReadOnlyContext";
 import OperationalAttachments from "@/components/operacional/OperationalAttachments";
 import { ContratoIndicadoresTab } from "@/components/contrato/ContratoIndicadoresTab";
+import { PortalClienteManager } from "@/components/portal/PortalClienteManager";
 
 
 const STAGE_TO_TAB: Record<string, ContratoTabKey> = {
@@ -441,7 +442,12 @@ export default function ContratoDetail() {
               </div>
             )}
           </div>
-          <div style={{ pointerEvents: "auto" }}>
+           <div style={{ pointerEvents: "auto" }} className="flex flex-col gap-4">
+            <PortalClienteManager 
+              contratoId={contrato.id} 
+              clienteId={contrato.cliente_id} 
+              lojaId={contrato.loja_id} 
+            />
             <ContratoActivityLog contratoId={contrato.id} />
           </div>
         </div>

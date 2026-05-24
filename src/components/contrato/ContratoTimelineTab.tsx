@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
 import { 
   Activity, 
   CreditCard, 
@@ -68,6 +70,7 @@ const MODULO_COLORS: Record<string, string> = {
 };
 
 export function ContratoTimelineTab({ contratoId }: Props) {
+  const qc = useQueryClient();
   const [filter, setFilter] = useState<string>("all");
   const { roles } = useAuth();
   
@@ -151,7 +154,23 @@ export function ContratoTimelineTab({ contratoId }: Props) {
                 </div>
                 <div className="flex-1 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-100">
                   <div className="mb-1 flex items-center justify-between">
-                    <h4 className="text-sm font-semibold text-slate-900">{evento.titulo}</h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-sm font-semibold text-slate-900">{evento.titulo}</h4>
+                      <Switch 
+                        checked={(evento as any).visivel_cliente} 
+                        onCheckedChange={async (val) => {
+                          const { error } = await supabase
+                            .from("contrato_eventos")
+                            .update({ visivel_cliente: val })
+                            .eq("id", evento.id);
+                          if (error) toast.error(error.message);
+                          else {
+                            toast.success(val ? "Evento liberado no portal" : "Evento ocultado do portal");
+                            qc.invalidateQueries({ queryKey: ["contrato_eventos", contratoId] });
+                          }
+                        }}
+                      />
+                    </div>
                     <time className="text-[11px] font-medium text-slate-400">
                       {format(new Date(evento.created_at), "dd 'de' MMM, HH:mm", { locale: ptBR })}
                     </time>

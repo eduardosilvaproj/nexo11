@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { canPerform } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
@@ -117,6 +119,7 @@ export function ContratoDocumentosTab({ contratoId }: Props) {
                 <th className="px-4 py-3">Título / Nº</th>
                 <th className="px-4 py-3">Emitido em</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Portal</th>
                 <th className="px-4 py-3 text-right">Ações</th>
               </tr>
             </thead>
@@ -157,6 +160,27 @@ export function ContratoDocumentosTab({ contratoId }: Props) {
                           Assinado por {aceites.find(a => a.documento_id === doc.id)?.nome_responsavel}
                         </div>
                       )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <Switch 
+                        checked={doc.visivel_cliente} 
+                        onCheckedChange={async (val) => {
+                          const { error } = await supabase
+                            .from("documentos_emitidos")
+                            .update({ visivel_cliente: val })
+                            .eq("id", doc.id);
+                          if (error) toast.error(error.message);
+                          else {
+                            toast.success(val ? "Documento liberado no portal" : "Documento ocultado do portal");
+                            qc.invalidateQueries({ queryKey: ["contrato_documentos", contratoId] });
+                          }
+                        }}
+                      />
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">
+                        {doc.visivel_cliente ? "Visível" : "Privado"}
+                      </span>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-right">
