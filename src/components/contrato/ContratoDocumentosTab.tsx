@@ -161,6 +161,27 @@ export function ContratoDocumentosTab({ contratoId }: Props) {
                       )}
                     </div>
                   </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <Switch 
+                        checked={doc.visivel_cliente} 
+                        onCheckedChange={async (val) => {
+                          const { error } = await supabase
+                            .from("documentos_emitidos")
+                            .update({ visivel_cliente: val })
+                            .eq("id", doc.id);
+                          if (error) toast.error(error.message);
+                          else {
+                            toast.success(val ? "Documento liberado no portal" : "Documento ocultado do portal");
+                            qc.invalidateQueries({ queryKey: ["contrato_documentos", contratoId] });
+                          }
+                        }}
+                      />
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">
+                        {doc.visivel_cliente ? "Visível" : "Privado"}
+                      </span>
+                    </div>
+                  </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <TooltipProvider>
