@@ -76,6 +76,15 @@ export function ContratoComunicacoesTab({ contratoId }: Props) {
         return <Badge variant="destructive" className="flex gap-1 items-center">
           <AlertCircle className="w-3 h-3" /> Falhou
         </Badge>;
+      case "ignorado":
+        return <Badge variant="outline" className="text-muted-foreground flex gap-1 items-center">
+          <XCircle className="w-3 h-3" /> Opt-out
+        </Badge>;
+      case "pendente":
+      case "preparado":
+        return <Badge variant="secondary" className="flex gap-1 items-center">
+          <Clock className="w-3 h-3" /> Pendente
+        </Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
