@@ -6387,6 +6387,10 @@ export type Database = {
         }
         Returns: Json
       }
+      check_cliente_opt_in: {
+        Args: { p_canal: string; p_cliente_id: string; p_loja_id: string }
+        Returns: boolean
+      }
       confirmar_pagamento_comissao:
         | {
             Args: {
