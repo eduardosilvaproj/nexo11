@@ -3191,6 +3191,50 @@ export type Database = {
           },
         ]
       }
+      mobile_sync_logs: {
+        Row: {
+          acao: string
+          created_at: string | null
+          device_info: Json | null
+          erro: string | null
+          id: string
+          loja_id: string
+          status: string
+          tabela: string
+          usuario_id: string
+        }
+        Insert: {
+          acao: string
+          created_at?: string | null
+          device_info?: Json | null
+          erro?: string | null
+          id?: string
+          loja_id: string
+          status: string
+          tabela: string
+          usuario_id: string
+        }
+        Update: {
+          acao?: string
+          created_at?: string | null
+          device_info?: Json | null
+          erro?: string | null
+          id?: string
+          loja_id?: string
+          status?: string
+          tabela?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mobile_sync_logs_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nexo_atualizacoes: {
         Row: {
           autor: string | null
