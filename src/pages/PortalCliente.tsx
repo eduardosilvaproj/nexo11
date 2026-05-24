@@ -86,7 +86,7 @@ export default function PortalCliente() {
   
   const [contracts, setContracts] = useState<any[]>([]);
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
-  const [currentTab, setCurrentTab] = useState<"inicio" | "chat" | "agenda" | "documentos" | "pos-venda">("inicio");
+  const [currentTab, setCurrentTab] = useState<"inicio" | "chat" | "agenda" | "documentos" | "pos-venda" | "satisfacao">("inicio");
   const [unreadMessages, setUnreadMessages] = useState(0);
 
   const [logs, setLogs] = useState<any[]>([]);
@@ -97,6 +97,9 @@ export default function PortalCliente() {
   const [chamados, setChamados] = useState<any[]>([]);
   const [isAbrirChamadoOpen, setIsAbrirChamadoOpen] = useState(false);
   const [chamadoForm, setChamadoForm] = useState({ tipo: "assistencia", ambiente: "", descricao: "" });
+  const [pesquisasPendentes, setPesquisasPendentes] = useState<any[]>([]);
+  const [pesquisaSelecionada, setPesquisaSelecionada] = useState<any | null>(null);
+  const [npsForm, setNpsForm] = useState<{ nota: number | null, comentario: string, motivos: string[] }>({ nota: null, comentario: "", motivos: [] });
 
   const [signing, setSigning] = useState(false);
   const [nomeAssinatura, setNomeAssinatura] = useState("");
@@ -229,6 +232,31 @@ export default function PortalCliente() {
     }
   }
 
+  async function handleResponderPesquisa() {
+    if (!token || !pesquisaSelecionada || npsForm.nota === null) return;
+    setLoading(true);
+    try {
+      const { data, error } = await portalClient.rpc('portal_cliente_responder_pesquisa', {
+        p_pesquisa_id: pesquisaSelecionada.id,
+        p_nota: npsForm.nota,
+        p_comentario: npsForm.comentario,
+        p_motivos: npsForm.motivos
+      });
+      
+      if (error) throw error;
+      if (!(data as any).success) throw new Error((data as any).error);
+
+      toast.success("Obrigado pela sua avaliação!");
+      setPesquisaSelecionada(null);
+      setNpsForm({ nota: null, comentario: "", motivos: [] });
+      loadContractDetails(contrato.id);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const stageLabel = STAGE_LABELS[contrato?.status] ?? contrato?.status;
 
   const renderContent = () => {
@@ -317,6 +345,41 @@ export default function PortalCliente() {
         );
       case "chat":
         return <PortalChat contractId={contrato.id} clientName={contrato.cliente_nome} portalClient={portalClient} />;
+      case "satisfacao":
+        return (
+          <div className="flex-1 p-6 space-y-6">
+            <h2 className="text-xl font-black">Satisfação</h2>
+            {pesquisasPendentes.length === 0 ? (
+              <div className="bg-white rounded-3xl p-10 text-center border-dashed border-2 border-slate-200">
+                <CheckCircle2 size={48} className="text-green-500 mx-auto mb-4" />
+                <p className="text-sm font-medium text-slate-500">Nenhuma pesquisa pendente. Obrigado por estar conosco!</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {pesquisasPendentes.map((p) => (
+                  <div key={p.id} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-purple-50 p-2 rounded-xl text-purple-600"><Star size={20} /></div>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900">Avalie nossa etapa: {p.etapa.toUpperCase()}</h4>
+                        <p className="text-xs text-slate-500">Sua opinião nos ajuda a melhorar.</p>
+                      </div>
+                    </div>
+                    <Button 
+                      className="w-full bg-[#0a1628]" 
+                      onClick={() => {
+                        setPesquisaSelecionada(p);
+                        setNpsForm({ nota: null, comentario: "", motivos: [] });
+                      }}
+                    >
+                      Responder agora
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
       default: return null;
     }
   };
@@ -336,7 +399,7 @@ export default function PortalCliente() {
             { id: "inicio", icon: Home, label: "Início" },
             { id: "agenda", icon: Calendar, label: "Agenda" },
             { id: "documentos", icon: FileText, label: "Docs" },
-            { id: "pos-venda", icon: Star, label: "Suporte" },
+            { id: "satisfacao", icon: Star, label: "Avaliar", badge: pesquisasPendentes.length },
             { id: "chat", icon: MessageCircle, label: "Chat", badge: unreadMessages },
           ].map((item) => (
             <button key={item.id} onClick={() => setCurrentTab(item.id as any)} className={cn("flex flex-col items-center gap-1", currentTab === item.id ? "text-[#0a1628]" : "text-slate-400")}>
@@ -368,6 +431,97 @@ export default function PortalCliente() {
             </div>
             <DialogFooter>
               <Button className="w-full bg-[#0a1628]" onClick={handleAbrirChamado}>Enviar Solicitação</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={!!pesquisaSelecionada} onOpenChange={(open) => !open && setPesquisaSelecionada(null)}>
+          <DialogContent className="max-w-[95vw] rounded-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Pesquisa de Satisfação</DialogTitle>
+              <DialogDescription>
+                Em uma escala de 0 a 10, o quanto você recomendaria a nossa empresa para um amigo ou familiar?
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-6 py-4">
+              <div className="flex flex-wrap justify-center gap-2">
+                {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => setNpsForm({ ...npsForm, nota: n })}
+                    className={cn(
+                      "w-10 h-10 rounded-xl font-black text-sm border-2 transition-all",
+                      npsForm.nota === n 
+                        ? "bg-[#0a1628] text-white border-[#0a1628]" 
+                        : "bg-white text-slate-600 border-slate-100 hover:border-slate-300"
+                    )}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+              
+              <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase px-2">
+                <span>Pouco provável</span>
+                <span>Muito provável</span>
+              </div>
+
+              {npsForm.nota !== null && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold uppercase text-slate-500">O que motivou sua nota?</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { id: 'atendimento', label: 'Atendimento' },
+                        { id: 'prazo', label: 'Prazo' },
+                        { id: 'qualidade_produto', label: 'Qualidade Produto' },
+                        { id: 'qualidade_montagem', label: 'Montagem' },
+                        { id: 'comunicacao', label: 'Comunicação' },
+                        { id: 'limpeza_organizacao', label: 'Limpeza' },
+                        { id: 'pos_venda', label: 'Pós-venda' },
+                        { id: 'outro', label: 'Outro' }
+                      ].map((m) => (
+                        <button
+                          key={m.id}
+                          onClick={() => {
+                            const newMotivos = npsForm.motivos.includes(m.id)
+                              ? npsForm.motivos.filter(i => i !== m.id)
+                              : [...npsForm.motivos, m.id];
+                            setNpsForm({ ...npsForm, motivos: newMotivos });
+                          }}
+                          className={cn(
+                            "px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all",
+                            npsForm.motivos.includes(m.id)
+                              ? "bg-blue-600 text-white border-blue-600"
+                              : "bg-slate-50 text-slate-500 border-slate-100"
+                          )}
+                        >
+                          {m.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold uppercase text-slate-500">Conte-nos mais (opcional)</Label>
+                    <Textarea 
+                      placeholder="Sua mensagem..."
+                      className="rounded-2xl border-slate-100 text-sm h-24"
+                      value={npsForm.comentario}
+                      onChange={(e) => setNpsForm({ ...npsForm, comentario: e.target.value })}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button 
+                className="w-full bg-[#0a1628] h-12 rounded-2xl font-bold" 
+                disabled={npsForm.nota === null || loading}
+                onClick={handleResponderPesquisa}
+              >
+                Enviar Avaliação
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
