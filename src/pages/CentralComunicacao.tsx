@@ -244,6 +244,7 @@ export default function CentralComunicacao() {
                     <TableHead>Canal</TableHead>
                     <TableHead>Destinatário</TableHead>
                     <TableHead>Cliente / Contrato</TableHead>
+                    <TableHead>Modo</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
