@@ -10,6 +10,84 @@ export default function TarefasScreen() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeCheckins, setActiveCheckins] = useState<Record<string, any>>({});
+  const [isOccurrenceModalVisible, setIsOccurrenceModalVisible] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [occurrenceForm, setOccurrenceForm] = useState({ tipo: 'outro', prioridade: 'media', descricao: '' });
+
+  async function fetchCheckins() {
+    if (!profile?.id) return;
+    const { data } = await supabase
+      .from('operacao_checkins')
+      .select('*')
+      .eq('usuario_id', profile.id)
+      .eq('status', 'iniciado');
+    
+    const mapping: Record<string, any> = {};
+    data?.forEach(c => {
+      mapping[c.entidade_id] = c;
+    });
+    setActiveCheckins(mapping);
+  }
+
+  async function handleStart(task: any) {
+    if (activeCheckins[task.id]) return;
+
+    const res = await ExecutionService.startCheckin({
+      loja_id: task.loja_id || profile?.loja_id,
+      usuario_id: profile?.id!,
+      entidade_tipo: 'logistica_tarefas',
+      entidade_id: task.id,
+      modulo: 'logistica',
+      contrato_id: task.contrato_id,
+    });
+
+    if (res.offline) {
+      Alert.alert('Offline', 'Check-in registrado localmente e será sincronizado em breve.');
+    }
+    fetchCheckins();
+  }
+
+  async function handleFinish(task: any) {
+    const checkin = activeCheckins[task.id];
+    if (!checkin) return;
+
+    Alert.confirm ? Alert.alert('Finalizar', 'Deseja finalizar esta tarefa?', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Finalizar', onPress: async () => {
+          await ExecutionService.finishCheckin(checkin.id);
+          fetchCheckins();
+          fetchTasks();
+        }}
+    ]) : await (async () => {
+        // Fallback for environment without Confirm
+        await ExecutionService.finishCheckin(checkin.id);
+        fetchCheckins();
+        fetchTasks();
+    })();
+  }
+
+  async function submitOccurrence() {
+    if (!occurrenceForm.descricao) {
+      Alert.alert('Erro', 'Informe uma descrição para a ocorrência.');
+      return;
+    }
+
+    await ExecutionService.reportOccurrence({
+      loja_id: selectedTask.loja_id || profile?.loja_id,
+      usuario_id: profile?.id!,
+      entidade_tipo: 'logistica_tarefas',
+      entidade_id: selectedTask.id,
+      modulo: 'logistica',
+      contrato_id: selectedTask.contrato_id,
+      checkin_id: activeCheckins[selectedTask.id]?.id,
+      ...occurrenceForm,
+    });
+
+    setIsOccurrenceModalVisible(false);
+    setOccurrenceForm({ tipo: 'outro', prioridade: 'media', descricao: '' });
+    Alert.alert('Sucesso', 'Ocorrência registrada com sucesso.');
+  }
 
   async function fetchTasks() {
     if (!profile?.id) return;
