@@ -176,7 +176,8 @@ export default function PortalCliente() {
         { data: orcs }, 
         { data: ambs },
         { data: dp },
-        { data: ch }
+        { data: ch },
+        { data: ps }
       ] = await Promise.all([
         portalClient.from("contrato_eventos").select("*").eq("contrato_id", contractId).eq("visivel_cliente", true).order("created_at", { ascending: false }),
         portalClient.from("entregas").select("*").eq("contrato_id", contractId).not("data_prevista", "is", null).limit(1),
@@ -184,6 +185,7 @@ export default function PortalCliente() {
         portalClient.from("contrato_ambientes").select("*").eq("contrato_id", contractId),
         portalClient.from("documentos_emitidos").select("*").eq("contrato_id", contractId).eq("visivel_cliente", true),
         portalClient.from("chamados_pos_venda").select("*").eq("contrato_id", contractId).order("created_at", { ascending: false }),
+        portalClient.rpc('portal_cliente_obter_pesquisas')
       ]);
 
       setLogs(l ?? []);
@@ -192,6 +194,7 @@ export default function PortalCliente() {
       setEntregaPrevista(ents?.[0]?.data_prevista ?? null);
       setDocsPortal(dp ?? []);
       setChamados(ch ?? []);
+      setPesquisasPendentes(ps ?? []);
     } catch (e: any) {
       console.error("Erro ao carregar detalhes:", e);
     }
