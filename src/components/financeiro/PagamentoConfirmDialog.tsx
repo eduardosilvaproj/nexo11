@@ -100,6 +100,8 @@ export function PagamentoConfirmDialog({ open, onOpenChange, transacao, onConfir
     } finally {
       setLoading(false);
     }
+  }
+
   async function handleGerarRecibo() {
     if (!transacao || transacao.tipo !== 'receita') return;
     
