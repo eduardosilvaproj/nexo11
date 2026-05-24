@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { EntregaCreateDialog } from "@/components/logistica/EntregaCreateDialog";
 import { EntregaConfirmDialog } from "@/components/logistica/EntregaConfirmDialog";
+import OperationalAttachments from "@/components/operacional/OperationalAttachments";
 
 interface Props { contratoId: string }
 
