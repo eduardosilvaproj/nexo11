@@ -613,12 +613,34 @@ export default function CentralComunicacao() {
               {selectedMsg.erro && (
                 <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm flex gap-2 items-start">
                   <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-                  <div>
-                    <span className="font-bold">Log de Erro:</span>
-                    <p className="mt-1 font-mono text-xs">{selectedMsg.erro}</p>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold">Log de Erro:</span>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-6 text-[10px]"
+                        onClick={() => {
+                          navigator.clipboard.writeText(selectedMsg.erro);
+                          toast.success("Erro copiado!");
+                        }}
+                      >
+                        Copiar Erro
+                      </Button>
+                    </div>
+                    <p className="mt-1 font-mono text-xs break-all">{selectedMsg.erro}</p>
                   </div>
                 </div>
               )}
+
+              <div className="space-y-2">
+                <Label className="text-xs">Payload Técnico (Sanitizado)</Label>
+                <ScrollArea className="h-32 w-full rounded-md border p-2 bg-muted/50">
+                  <pre className="text-[10px] font-mono">
+                    {JSON.stringify(selectedMsg.payload, null, 2)}
+                  </pre>
+                </ScrollArea>
+              </div>
 
               <div className="flex justify-between items-center text-[10px] text-muted-foreground">
                 <div className="flex gap-4">
