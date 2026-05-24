@@ -26,6 +26,7 @@ import OperationalAttachments from "@/components/operacional/OperationalAttachme
 import { ContratoIndicadoresTab } from "@/components/contrato/ContratoIndicadoresTab";
 import { PortalClienteManager } from "@/components/portal/PortalClienteManager";
 import { ContratoComunicacoesTab } from "@/components/contrato/ContratoComunicacoesTab";
+import { ContratoSatisfacaoTab } from "@/components/contrato/ContratoSatisfacaoTab";
 
 
 const STAGE_TO_TAB: Record<string, ContratoTabKey> = {
@@ -438,6 +439,8 @@ export default function ContratoDetail() {
                <ContratoIndicadoresTab contratoId={contrato.id} />
             ) : active === "comunicacoes" ? (
                <ContratoComunicacoesTab contratoId={contrato.id} />
+            ) : active === "satisfacao" ? (
+               <ContratoSatisfacaoTab contratoId={contrato.id} />
             ) : (
 
               <div className="text-sm text-muted-foreground">
