@@ -714,9 +714,10 @@ export default function PortalCliente() {
         <nav className="fixed bottom-0 w-full max-w-[390px] bg-white border-t border-slate-100 flex items-center justify-around p-3 pb-6 z-50">
           {[
             { id: "inicio", icon: Home, label: "Início" },
-            { id: "chat", icon: MessageCircle, label: "Chat", badge: unreadMessages },
             { id: "agenda", icon: Calendar, label: "Agenda" },
-            { id: "conta", icon: User, label: "Conta" }
+            { id: "documentos", icon: FileText, label: "Docs" },
+            { id: "pos-venda", icon: Star, label: "Suporte" },
+            { id: "chat", icon: MessageCircle, label: "Chat", badge: unreadMessages },
           ].map((item) => (
             <button
               key={item.id}
