@@ -74,6 +74,7 @@ export function ContratoDocumentosTab({ contratoId }: Props) {
   });
 
   const canCancel = canPerform(roles, "documentos.cancel");
+  const canAccept = canPerform(roles, "documentos.accept");
 
   const handleCancelar = async () => {
     if (!cancelId || !motivo) return;
