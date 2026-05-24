@@ -89,7 +89,9 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
     "campo.montagens", "campo.pos_venda", "campo.almoxarifado",
     "rh.view", "rh.manage", "rh.funcionarios.view", "rh.funcionarios.manage", 
     "rh.solicitacoes.view", "rh.solicitacoes.create", "rh.solicitacoes.approve", 
-    "rh.documentos.view", "rh.documentos.manage", "rh.ausencias.view", "rh.ausencias.manage"
+    "rh.documentos.view", "rh.documentos.manage", "rh.ausencias.view", "rh.ausencias.manage",
+    "rh.escalas.view", "rh.escalas.manage", "rh.disponibilidade.view", "rh.disponibilidade.manage",
+    "agenda.equipe.view", "agenda.equipe.manage"
   ],
   admin: [
     "comercial.view", "clientes.view", "contratos.view", "tecnico.view", "producao.view",
