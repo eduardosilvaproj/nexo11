@@ -11,7 +11,9 @@ import {
   ArrowRight,
   MessageSquare,
   type LucideIcon,
+  Bell,
 } from "lucide-react";
+import { DynamicAlerts } from "@/components/dashboard/DynamicAlerts";
 
 const ETAPAS_CONFIG: { key: string; label: string; border: string; text: string; iconBg: string }[] = [
   { key: "comercial", label: "Comercial", border: "#378ADD", text: "#0C447C", iconBg: "#E6F1FB" },
@@ -213,8 +215,9 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Pipeline de contratos */}
-      <div className="bg-white p-6 shadow-sm" style={cardStyle}>
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
+        {/* Pipeline de contratos */}
+        <div className="lg:col-span-2 bg-white p-6 shadow-sm flex flex-col" style={cardStyle}>
         <div className="mb-6 flex items-center justify-between">
           <h2 style={{ fontSize: 18, fontWeight: 600, color: "#0D1117" }}> Pipeline de contratos </h2>
           <span style={{ fontSize: 14, color: "#6B7A90" }}>
@@ -273,6 +276,20 @@ export default function Dashboard() {
           <span className="text-[11px] text-[#6B7A90]">
             Clique em uma etapa para ver os contratos
           </span>
+        </div>
+        </div>
+
+        {/* Alertas Dinâmicos (Sidebar) */}
+        <div className="flex flex-col gap-4">
+          <div className="bg-white p-6 shadow-sm h-full" style={cardStyle}>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 style={{ fontSize: 16, fontWeight: 600, color: "#0D1117" }}>Alertas Prioritários</h2>
+              <Link to="/notificacoes" className="text-xs text-[#1E6FBF] hover:underline">
+                Ver tudo
+              </Link>
+            </div>
+            <DynamicAlerts />
+          </div>
         </div>
       </div>
 

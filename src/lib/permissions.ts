@@ -32,6 +32,8 @@ export type PermissionAction =
   | "lojas.view"
   | "lojas.manage"
   | "analytics.view"
+  | "notificacoes.view"
+  | "notificacoes.manage"
   | "integracoes.view"
   | "configuracoes.view";
 
@@ -41,55 +43,55 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
     "logistica.view", "logistica.update", "montagem.view", "montagem.update", "pos_venda.view",
     "dre.view", "financeiro.view", "financeiro.manage", "comissoes.view", "comissoes.manage",
     "compras.view", "compras.manage", "almoxarifado.view", "almoxarifado.manage", "equipe.view",
-    "equipe.manage", "lojas.view", "lojas.manage", "analytics.view", "integracoes.view", "configuracoes.view"
+    "equipe.manage", "lojas.view", "lojas.manage", "analytics.view", "notificacoes.view", "notificacoes.manage", "integracoes.view", "configuracoes.view"
   ],
   admin: [
     "comercial.view", "clientes.view", "contratos.view", "tecnico.view", "producao.view",
     "logistica.view", "logistica.update", "montagem.view", "montagem.update", "pos_venda.view",
     "dre.view", "financeiro.view", "financeiro.manage", "comissoes.view", "comissoes.manage",
     "compras.view", "compras.manage", "almoxarifado.view", "almoxarifado.manage", "equipe.view",
-    "equipe.manage", "lojas.view", "lojas.manage", "analytics.view", "integracoes.view", "configuracoes.view"
+    "equipe.manage", "lojas.view", "lojas.manage", "analytics.view", "notificacoes.view", "notificacoes.manage", "integracoes.view", "configuracoes.view"
   ],
   franqueador: [
     "comercial.view", "clientes.view", "contratos.view", "pos_venda.view",
-    "dre.view", "financeiro.view", "comissoes.view", "lojas.view", "equipe.view", "analytics.view"
+    "dre.view", "financeiro.view", "comissoes.view", "lojas.view", "equipe.view", "analytics.view", "notificacoes.view"
   ],
   gerente: [
     "comercial.view", "clientes.view", "contratos.view", "tecnico.view", "producao.view",
     "logistica.view", "logistica.update", "montagem.view", "montagem.update", "pos_venda.view",
     "dre.view", "financeiro.view", "financeiro.manage", "comissoes.view", "comissoes.manage",
     "compras.view", "compras.manage", "almoxarifado.view", "almoxarifado.manage", "equipe.view",
-    "equipe.manage", "analytics.view", "integracoes.view", "configuracoes.view"
+    "equipe.manage", "analytics.view", "notificacoes.view", "notificacoes.manage", "integracoes.view", "configuracoes.view"
   ],
   vendedor: [
-    "comercial.view", "clientes.view", "contratos.view", "pos_venda.view"
+    "comercial.view", "clientes.view", "contratos.view", "pos_venda.view", "notificacoes.view"
   ],
   tecnico: [
-    "contratos.view", "tecnico.view", "producao.view", "logistica.view", "montagem.view"
+    "contratos.view", "tecnico.view", "producao.view", "logistica.view", "montagem.view", "notificacoes.view"
   ],
   medidor: [
-    "contratos.view", "tecnico.view"
+    "contratos.view", "tecnico.view", "notificacoes.view"
   ],
   conferente: [
-    "contratos.view", "tecnico.view"
+    "contratos.view", "tecnico.view", "notificacoes.view"
   ],
   montador: [
-    "montagem.view", "montagem.update"
+    "montagem.view", "montagem.update", "notificacoes.view"
   ],
   comprador: [
-    "compras.view", "compras.manage", "almoxarifado.view"
+    "compras.view", "compras.manage", "almoxarifado.view", "notificacoes.view"
   ],
   almoxarife: [
-    "almoxarifado.view", "almoxarifado.manage", "compras.view"
+    "almoxarifado.view", "almoxarifado.manage", "compras.view", "notificacoes.view"
   ],
   logistico: [
-    "logistica.view", "logistica.update"
+    "logistica.view", "logistica.update", "notificacoes.view"
   ],
   financeiro: [
-    "financeiro.view", "financeiro.manage", "comissoes.view", "comissoes.manage", "dre.view", "contratos.view"
+    "financeiro.view", "financeiro.manage", "comissoes.view", "comissoes.manage", "dre.view", "contratos.view", "notificacoes.view"
   ],
   pos_venda: [
-    "pos_venda.view", "clientes.view", "contratos.view"
+    "pos_venda.view", "clientes.view", "contratos.view", "notificacoes.view"
   ]
 };
 

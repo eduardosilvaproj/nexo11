@@ -223,6 +223,24 @@ export default function PosVenda() {
         custo: custoNum,
       });
       if (error) throw error;
+
+      // Buscar loja_id do contrato para a notificação
+      const { data: contrato } = await supabase.from("contratos").select("loja_id, cliente_nome").eq("id", contratoId).single();
+
+      if (contrato) {
+        await supabase.from("notificacoes").insert({
+          loja_id: contrato.loja_id,
+          perfil_destino: "gerente",
+          titulo: "Novo Chamado Pós-venda",
+          mensagem: `Novo chamado aberto para o cliente ${contrato.cliente_nome}.`,
+          modulo: "pos_venda",
+          prioridade: "media",
+          tipo: "pos_venda_criado",
+          link: "/pos-venda",
+          entidade_tipo: "chamado",
+          entidade_id: contratoId // Simplificando
+        });
+      }
       // log no contrato (autor_id obrigatório pela RLS é injetado via trigger SECURITY DEFINER)
       await supabase.rpc("contrato_log_inserir", {
         _contrato_id: contratoId,

@@ -207,6 +207,7 @@ function RequisicaoDrawer({
   ambienteNome,
   onClose,
   onChanged,
+  podeGerenciar,
 }: {
   requisicao: Requisicao | null;
   cliente?: string;
