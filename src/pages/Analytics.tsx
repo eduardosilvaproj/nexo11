@@ -17,6 +17,7 @@ import { OperacionalSection } from "@/components/analytics/OperacionalSection";
 import { EstoqueSection } from "@/components/analytics/EstoqueSection";
 import { LogisticaMontagemSection } from "@/components/analytics/LogisticaMontagemSection";
 import { PosVendaSection } from "@/components/analytics/PosVendaSection";
+import { ExecucaoRealSection } from "@/components/analytics/ExecucaoRealSection";
 import { Periodo, rangeFromPeriodo } from "@/components/analytics/shared";
 
 type Loja = { id: string; nome: string };
