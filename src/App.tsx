@@ -43,6 +43,7 @@ import AcessoAcompanhamento from "./pages/AcessoAcompanhamento";
 import AcompanhamentoPublico from "./pages/AcompanhamentoPublico";
 import NewContract from "./pages/NewContract";
 import Almoxarifado from "./pages/Almoxarifado";
+import Apresentacao from "./pages/Apresentacao";
 
 
 
@@ -58,6 +59,7 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<AuthPage />} />
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/apresentacao" element={<Apresentacao />} />
             <Route path="/portal" element={<PortalEntrada />} />
             <Route path="/portal/:token" element={<PortalCliente />} />
             <Route path="/acesso-acompanhamento" element={<AcessoAcompanhamento />} />
