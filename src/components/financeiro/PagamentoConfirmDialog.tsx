@@ -36,6 +36,21 @@ export function PagamentoConfirmDialog({ open, onOpenChange, transacao, onConfir
 
       if (error) throw error;
       
+      // Registrar evento no contrato se houver contrato_id
+      const { data: lancamento } = await supabase.from(table).select("contrato_id, descricao").eq("id", transacao.id).single();
+      if (lancamento?.contrato_id) {
+        const { registrarEventoContrato } = await import("@/services/contratoEventos");
+        await registrarEventoContrato({
+          contratoId: lancamento.contrato_id,
+          tipo: transacao.tipo === 'receita' ? "pagamento_recebido" : "pagamento_efetuado",
+          modulo: "financeiro",
+          titulo: transacao.tipo === 'receita' ? "Pagamento Recebido" : "Pagamento Efetuado",
+          descricao: `Lançamento: ${transacao.descricao}. Valor: ${transacao.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`,
+          entidadeTipo: table,
+          entidadeId: transacao.id
+        });
+      }
+      
       toast.success("Pagamento registrado com sucesso");
       onConfirmed();
       onOpenChange(false);
@@ -55,6 +70,23 @@ export function PagamentoConfirmDialog({ open, onOpenChange, transacao, onConfir
         p_tipo: transacao.tipo === 'receita' ? 'receita' : 'despesa'
       });
       if (error) throw error;
+
+      // Registrar evento no contrato se houver contrato_id
+      const table = transacao.tipo === 'receita' ? 'financeiro_contas_receber' : 'financeiro_contas_pagar';
+      const { data: lancamento } = await supabase.from(table).select("contrato_id").eq("id", transacao.id).single();
+      if (lancamento?.contrato_id) {
+        const { registrarEventoContrato } = await import("@/services/contratoEventos");
+        await registrarEventoContrato({
+          contratoId: lancamento.contrato_id,
+          tipo: "pagamento_estornado",
+          modulo: "financeiro",
+          titulo: "Pagamento Estornado",
+          descricao: `Estorno do lançamento: ${transacao.descricao}`,
+          entidadeTipo: table,
+          entidadeId: transacao.id
+        });
+      }
+
       toast.success("Pagamento estornado com sucesso");
       onConfirmed();
       onOpenChange(false);

@@ -83,6 +83,21 @@ export function LancamentoFormDialog({ open, onOpenChange, lojaId, onSaved }: Pr
     
     setSaving(false);
     if (error) { toast.error(error.message); return; }
+
+    // Registrar evento no contrato se houver contrato_id
+    if (contratoId) {
+      const { registrarEventoContrato } = await import("@/services/contratoEventos");
+      await registrarEventoContrato({
+        contratoId: contratoId,
+        tipo: tipo === "receita" ? "receita_criada" : "despesa_criada",
+        modulo: "financeiro",
+        titulo: tipo === "receita" ? "Receita Registrada" : "Despesa Registrada",
+        descricao: `${descricao.trim()}. Valor: ${v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`,
+        entidadeTipo: table,
+        // Pegar o ID do registro inserido se possível, mas como é insert manual sem .select() aqui, simplificamos
+      });
+    }
+
     toast.success("Lançamento criado");
     onSaved?.();
     onOpenChange(false);

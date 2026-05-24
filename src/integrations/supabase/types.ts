@@ -1027,6 +1027,73 @@ export type Database = {
           },
         ]
       }
+      contrato_eventos: {
+        Row: {
+          contrato_id: string
+          created_at: string
+          descricao: string | null
+          entidade_id: string | null
+          entidade_tipo: string | null
+          id: string
+          loja_id: string
+          metadata: Json
+          modulo: string
+          tipo: string
+          titulo: string
+          usuario_id: string | null
+        }
+        Insert: {
+          contrato_id: string
+          created_at?: string
+          descricao?: string | null
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          id?: string
+          loja_id: string
+          metadata?: Json
+          modulo: string
+          tipo: string
+          titulo: string
+          usuario_id?: string | null
+        }
+        Update: {
+          contrato_id?: string
+          created_at?: string
+          descricao?: string | null
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          id?: string
+          loja_id?: string
+          metadata?: Json
+          modulo?: string
+          tipo?: string
+          titulo?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrato_eventos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrato_eventos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrato_eventos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contrato_logs: {
         Row: {
           acao: string

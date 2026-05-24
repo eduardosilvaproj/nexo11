@@ -19,6 +19,7 @@ import { ContratoPosVendaTab } from "@/components/contrato/ContratoPosVendaTab";
 import { ContratoDreTab } from "@/components/contrato/ContratoDreTab";
 import { ContratoChatTab } from "@/components/contrato/ContratoChatTab";
 import { ContratoFinanceiroTab } from "@/components/contrato/ContratoFinanceiroTab";
+import { ContratoTimelineTab } from "@/components/contrato/ContratoTimelineTab";
 import { ReadOnlyContext } from "@/components/contrato/ReadOnlyContext";
 
 
@@ -318,9 +319,21 @@ export default function ContratoDetail() {
       toast.error(result?.erro ?? "Não foi possível avançar a etapa");
       return;
     }
+
+    // Registrar evento de avanço de contrato
+    const { registrarEventoContrato } = await import("@/services/contratoEventos");
+    await registrarEventoContrato({
+      contratoId: id,
+      tipo: "status_alterado",
+      modulo: "comercial",
+      titulo: `Contrato avançado para ${result.status_novo}`,
+      descricao: `A etapa do contrato foi alterada para ${result.status_novo}.`
+    });
+
     toast.success(`Contrato avançado para "${result.status_novo}"`);
     qc.invalidateQueries({ queryKey: ["contrato_dre_view", id] });
     qc.invalidateQueries({ queryKey: ["contrato_logs", id] });
+    qc.invalidateQueries({ queryKey: ["contrato_eventos", id] });
   }
 
   // Margem para faixa final
@@ -410,6 +423,8 @@ export default function ContratoDetail() {
               <ContratoChatTab contratoId={contrato.id} />
             ) : active === "financeiro" ? (
               <ContratoFinanceiroTab contratoId={contrato.id} />
+            ) : active === "timeline" ? (
+              <ContratoTimelineTab contratoId={contrato.id} />
             ) : (
 
               <div className="text-sm text-muted-foreground">

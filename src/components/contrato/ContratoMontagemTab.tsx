@@ -152,11 +152,23 @@ export function ContratoMontagemTab({ contratoId, lojaId }: MontagemTabProps) {
         });
         if (error) throw error;
       }
+
+      const { registrarEventoContrato } = await import("@/services/contratoEventos");
+      await registrarEventoContrato({
+        contratoId,
+        tipo: agendamento?.id ? "montagem_reagendada" : "montagem_agendada",
+        modulo: "montagem",
+        titulo: agendamento?.id ? "Montagem Reagendada" : "Montagem Agendada",
+        descricao: `Data: ${dataStr} das ${agInicio} às ${agFim}`,
+        entidadeTipo: "agendamentos_montagem",
+        entidadeId: agendamento?.id || (await supabase.from("agendamentos_montagem").select("id").eq("contrato_id", contratoId).order("created_at", { ascending: false }).limit(1).single()).data?.id
+      });
     },
     onSuccess: () => {
       toast.success(agendamento?.id ? "Montagem reagendada" : "Montagem agendada");
       setAgOpen(false);
       qc.invalidateQueries({ queryKey: ["agendamento", contratoId] });
+      qc.invalidateQueries({ queryKey: ["contrato_eventos", contratoId] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
