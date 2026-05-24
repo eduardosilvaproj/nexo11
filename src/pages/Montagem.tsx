@@ -31,6 +31,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { checkAgendamentoConflict, diffHoras as diffH } from "@/lib/agendamento-conflict";
 import { useAuth } from "@/contexts/AuthContext";
 import { AmbientesMontagemList } from "@/components/montagem/AmbientesMontagemList";
+import { MateriaisMontagemResumo, calcularLiberacao, LiberacaoBadge, type LiberacaoStatus } from "@/components/montagem/MateriaisMontagemResumo";
+import { CheckCircle2, AlertTriangle, Clock as ClockIcon, Package } from "lucide-react";
 
 const STATUS_BADGE: Record<string, { bg: string; fg: string; label: string }> = {
   agendado: { bg: "#E6F3FF", fg: "#1E6FBF", label: "Agendado" },
@@ -93,6 +95,59 @@ export default function Montagem() {
     },
   });
 
+  const contratoIds = useMemo(
+    () => Array.from(new Set(agendamentos.map((a) => a.contrato_id).filter(Boolean))),
+    [agendamentos],
+  );
+
+  const { data: expedicoesByContrato = {} } = useQuery({
+    queryKey: ["montagem-expedicoes-week", contratoIds.join(",")],
+    enabled: contratoIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("expedicoes_almoxarifado")
+        .select("contrato_id, status")
+        .in("contrato_id", contratoIds)
+        .neq("status", "cancelado");
+      if (error) throw error;
+      const map: Record<string, Array<{ contrato_id: string; status: string }>> = {};
+      for (const row of data ?? []) {
+        const cid = (row as any).contrato_id as string;
+        (map[cid] ||= []).push(row as any);
+      }
+      return map;
+    },
+  });
+
+  const statusPorContrato = useMemo(() => {
+    const m: Record<string, LiberacaoStatus> = {};
+    for (const cid of contratoIds) {
+      const exp = (expedicoesByContrato[cid] ?? []).map((r: any) => ({
+        id: "",
+        status: r.status,
+        quantidade: 0,
+        observacoes: null,
+        entregue_at: null,
+        carregado_at: null,
+        created_at: null,
+      }));
+      m[cid] = calcularLiberacao(exp as any).status;
+    }
+    return m;
+  }, [contratoIds, expedicoesByContrato]);
+
+  const indicadores = useMemo(() => {
+    let liberadas = 0, aguardando = 0, parciais = 0, sem = 0;
+    for (const cid of contratoIds) {
+      const s = statusPorContrato[cid];
+      if (s === "liberada") liberadas++;
+      else if (s === "aguardando") aguardando++;
+      else if (s === "parcial") parciais++;
+      else sem++;
+    }
+    return { liberadas, aguardando, parciais, sem };
+  }, [contratoIds, statusPorContrato]);
+
   const editAgendamento = agendamentos.find((a) => a.id === editId) ?? null;
 
   return (
@@ -117,6 +172,12 @@ export default function Montagem() {
 
         {/* AGENDA */}
         <TabsContent value="agenda" className="mt-4">
+          <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <IndicadorCard label="Liberadas para montagem" value={indicadores.liberadas} color="#05873C" icon={CheckCircle2} />
+            <IndicadorCard label="Aguardando materiais" value={indicadores.aguardando} color="#B91C1C" icon={AlertTriangle} />
+            <IndicadorCard label="Parcialmente entregues" value={indicadores.parciais} color="#92400E" icon={ClockIcon} />
+            <IndicadorCard label="Sem materiais vinculados" value={indicadores.sem} color="#6B7A90" icon={Package} />
+          </div>
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
@@ -169,6 +230,7 @@ export default function Montagem() {
                       {items.map((a) => {
                         const eq = a.equipes ?? null;
                         const badge = STATUS_BADGE[a.status];
+                        const libStatus = statusPorContrato[a.contrato_id];
                         return (
                           <button
                             key={a.id}
@@ -192,16 +254,19 @@ export default function Montagem() {
                             <div style={{ fontSize: 11, color: "#6B7A90" }}>
                               {a.hora_inicio?.slice(0, 5) ?? "--"}–{a.hora_fim?.slice(0, 5) ?? "--"}
                             </div>
-                            <span
-                              className="mt-1.5 inline-flex rounded-full px-2 py-0.5"
-                              style={{
-                                fontSize: 10,
-                                backgroundColor: badge?.bg,
-                                color: badge?.fg,
-                              }}
-                            >
-                              {badge?.label}
-                            </span>
+                            <div className="mt-1.5 flex flex-wrap gap-1">
+                              <span
+                                className="inline-flex rounded-full px-2 py-0.5"
+                                style={{
+                                  fontSize: 10,
+                                  backgroundColor: badge?.bg,
+                                  color: badge?.fg,
+                                }}
+                              >
+                                {badge?.label}
+                              </span>
+                              {libStatus && <LiberacaoBadge status={libStatus} />}
+                            </div>
                           </button>
                         );
                       })}
@@ -306,6 +371,30 @@ export default function Montagem() {
 }
 
 // =================== DIALOGS ===================
+
+function IndicadorCard({
+  label,
+  value,
+  color,
+  icon: Icon,
+}: {
+  label: string;
+  value: number;
+  color: string;
+  icon: any;
+}) {
+  return (
+    <div className="rounded-xl bg-white p-4" style={{ border: "0.5px solid #E8ECF2", borderTop: `3px solid ${color}` }}>
+      <div className="flex items-center gap-2">
+        <Icon className="h-4 w-4" style={{ color }} />
+        <span style={{ fontSize: 11, color: "#6B7A90", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          {label}
+        </span>
+      </div>
+      <div style={{ fontSize: 24, fontWeight: 600, color: "#0D1117", marginTop: 4 }}>{value}</div>
+    </div>
+  );
+}
 
 function AgendarDialog({
   equipes,
@@ -598,10 +687,11 @@ function EditarAgendamentoDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar agendamento</DialogTitle>
         </DialogHeader>
+        <MateriaisMontagemResumo contratoId={agendamento.contrato_id} compact />
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-2" style={{ fontSize: 13, color: "#6B7A90" }}>
             <span>

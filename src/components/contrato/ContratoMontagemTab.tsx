@@ -29,6 +29,7 @@ import {
 import { checkAgendamentoConflict } from "@/lib/agendamento-conflict";
 import { ContratoMedicaoAmbientesSection } from "./ContratoMedicaoAmbientesSection";
 import { useAuth } from "@/contexts/AuthContext";
+import { MateriaisMontagemResumo } from "@/components/montagem/MateriaisMontagemResumo";
 
 interface MontagemTabProps {
   contratoId: string;
@@ -240,6 +241,9 @@ export function ContratoMontagemTab({ contratoId, lojaId }: MontagemTabProps) {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* MATERIAIS DE ALMOXARIFADO */}
+      <MateriaisMontagemResumo contratoId={contratoId} />
+
       {/* MONTAGEM POR AMBIENTE */}
       <ContratoMedicaoAmbientesSection
         contratoId={contratoId}
