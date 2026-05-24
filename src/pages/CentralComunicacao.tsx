@@ -248,8 +248,8 @@ export default function CentralComunicacao() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="text-sm">{msg.cliente?.nome_completo || "N/A"}</span>
-                          <span className="text-[10px] text-muted-foreground">Contrato: {msg.contrato?.numero || "N/A"}</span>
+                          <span className="text-sm">{(msg.cliente as any)?.nome || "N/A"}</span>
+                          <span className="text-[10px] text-muted-foreground">Contrato: {(msg.contrato as any)?.id?.slice(0,8) || "N/A"}</span>
                         </div>
                       </TableCell>
                       <TableCell>
