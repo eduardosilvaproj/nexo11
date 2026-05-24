@@ -135,22 +135,104 @@ export default function TarefasScreen() {
         contentContainerStyle={{ padding: 16 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />}
         ListEmptyComponent={<Text style={s.empty}>Nenhuma tarefa operacional pendente.</Text>}
-        renderItem={({ item }) => (
-          <TouchableOpacity style={s.taskCard}>
-            <View style={s.taskHeader}>
-              <Text style={s.taskTitle}>{item.tipo || 'Tarefa'}</Text>
-              <View style={[s.statusBadge, { backgroundColor: item.status === 'concluida' ? '#059669' : '#d97706' }]}>
-                <Text style={s.statusText}>{item.status}</Text>
+        renderItem={({ item }) => {
+          const isActive = activeCheckins[item.id];
+          return (
+            <View style={s.taskCard}>
+              <View style={s.taskHeader}>
+                <Text style={s.taskTitle}>{item.tipo || 'Tarefa'}</Text>
+                <View style={[s.statusBadge, { backgroundColor: item.status === 'concluida' ? '#059669' : '#d97706' }]}>
+                  <Text style={s.statusText}>{item.status}</Text>
+                </View>
+              </View>
+              <Text style={s.taskDesc}>{item.cliente_nome || 'Sem cliente'}</Text>
+              <Text style={s.taskAddr}>{item.endereco || 'Sem endereço'}</Text>
+              
+              <View style={s.taskActions}>
+                {!isActive ? (
+                  <TouchableOpacity 
+                    style={[s.actionButton, s.startBtn]} 
+                    onPress={() => handleStart(item)}
+                    disabled={item.status === 'concluida'}
+                  >
+                    <Ionicons name="play-outline" size={16} color="#fff" />
+                    <Text style={s.actionBtnText}>Iniciar</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity style={[s.actionButton, s.finishBtn]} onPress={() => handleFinish(item)}>
+                    <Ionicons name="checkmark-done-outline" size={16} color="#fff" />
+                    <Text style={s.actionBtnText}>Finalizar</Text>
+                  </TouchableOpacity>
+                )}
+                
+                <TouchableOpacity 
+                  style={[s.actionButton, s.occurrenceBtn]} 
+                  onPress={() => {
+                    setSelectedTask(item);
+                    setIsOccurrenceModalVisible(true);
+                  }}
+                >
+                  <Ionicons name="alert-circle-outline" size={16} color="#fff" />
+                  <Text style={s.actionBtnText}>Ocorrência</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={s.taskFooter}>
+                <Text style={s.taskTime}>{item.data_prevista ? new Date(item.data_prevista).toLocaleDateString('pt-BR') : '-'}</Text>
+                {isActive && (
+                  <View style={s.activeBadge}>
+                    <View style={s.pulse} />
+                    <Text style={s.activeText}>Em execução</Text>
+                  </View>
+                )}
               </View>
             </View>
-            <Text style={s.taskDesc}>{item.cliente_nome || 'Sem cliente'}</Text>
-            <Text style={s.taskAddr}>{item.endereco || 'Sem endereço'}</Text>
-            <View style={s.taskFooter}>
-              <Text style={s.taskTime}>{item.data_prevista ? new Date(item.data_prevista).toLocaleDateString('pt-BR') : '-'}</Text>
-            </View>
-          </TouchableOpacity>
-        )}
+          );
+        }}
       />
+
+      <Modal visible={isOccurrenceModalVisible} animationType="slide" transparent>
+        <View style={s.modalOverlay}>
+          <View style={s.modalContent}>
+            <Text style={s.modalTitle}>Registrar Ocorrência</Text>
+            
+            <Text style={s.label}>Tipo de Ocorrência</Text>
+            <View style={s.pickerRow}>
+              {['cliente_ausente', 'material_faltando', 'avaria', 'atraso', 'outro'].map(t => (
+                <TouchableOpacity 
+                  key={t} 
+                  style={[s.pickerBtn, occurrenceForm.tipo === t && s.pickerBtnActive]}
+                  onPress={() => setOccurrenceForm({ ...occurrenceForm, tipo: t })}
+                >
+                  <Text style={[s.pickerText, occurrenceForm.tipo === t && s.pickerTextActive]}>
+                    {t.replace('_', ' ')}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={s.label}>Descrição</Text>
+            <TextInput 
+              style={s.textInput} 
+              multiline 
+              numberOfLines={4}
+              placeholder="Descreva o que aconteceu..."
+              placeholderTextColor="#64748b"
+              value={occurrenceForm.descricao}
+              onChangeText={(v) => setOccurrenceForm({ ...occurrenceForm, descricao: v })}
+            />
+
+            <View style={s.modalFooter}>
+              <TouchableOpacity style={s.cancelBtn} onPress={() => setIsOccurrenceModalVisible(false)}>
+                <Text style={s.cancelBtnText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={s.submitBtn} onPress={submitOccurrence}>
+                <Text style={s.submitBtnText}>Enviar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
