@@ -426,6 +426,33 @@ export default function PortalCliente() {
     }
   }
 
+  async function handleAbrirChamado() {
+    if (!token || !contrato) return;
+    setLoading(true);
+    try {
+      const { data, error } = await portalClient.rpc('portal_cliente_abrir_chamado', {
+        p_token: token,
+        p_tipo: chamadoForm.tipo,
+        p_ambiente: chamadoForm.ambiente || null,
+        p_descricao: chamadoForm.descricao,
+        p_contato: contrato.cliente_contato || ""
+      });
+
+      if (error) throw error;
+      const res = data as any;
+      if (!res.ok) throw new Error(res.erro);
+
+      toast.success("Chamado aberto com sucesso!");
+      setIsAbrirChamadoOpen(false);
+      setChamadoForm({ tipo: "assistencia", ambiente: "", descricao: "" });
+      loadContractDetails(contrato.id);
+    } catch (e: any) {
+      toast.error(e.message ?? "Erro ao abrir chamado");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const handleDownloadContrato = async () => {
     try {
       const doc = (
