@@ -183,7 +183,12 @@ export default function Compras() {
         cliente={aberta ? (contratoMap.get(aberta.contrato_id) as any)?.cliente_nome : ""}
         ambienteNome={aberta?.ambiente_id ? (ambMap.get(aberta.ambiente_id) as any)?.nome : ""}
         onClose={() => setOpenId(null)}
-        onChanged={() => qc.invalidateQueries({ queryKey: ["compras-requisicoes"] })}
+        onChanged={() => {
+          qc.invalidateQueries({ queryKey: ["compras-requisicoes"] });
+          qc.invalidateQueries({ queryKey: ["estoque_itens"] });
+          qc.invalidateQueries({ queryKey: ["estoque_reservas"] });
+          qc.invalidateQueries({ queryKey: ["estoque_movimentacoes"] });
+        }}
       />
     </div>
   );
@@ -346,7 +351,7 @@ function RequisicaoDrawer({
                 <EstoqueItemSelector 
                   lojaId={requisicao.loja_id}
                   contratoId={requisicao.contrato_id}
-                  item={it}
+                  item={{ ...it, requisicao_id: requisicao.id }}
                   onUpdateItem={(updates) => updateItemExtra(idx, updates)}
                   onRefresh={onChanged}
                 />
