@@ -655,6 +655,63 @@ export default function CentralComunicacao() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Test Message Dialog */}
+      <Dialog open={testDialogOpen} onOpenChange={setTestDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Enviar Mensagem de Teste</DialogTitle>
+            <DialogDescription>
+              Valide se as configurações de provider e dry run estão funcionando corretamente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Canal</Label>
+              <Select 
+                value={testPayload.canal} 
+                onValueChange={(val) => setTestPayload({ ...testPayload, canal: val })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="email">E-mail</SelectItem>
+                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>{testPayload.canal === 'email' ? 'E-mail do Destinatário' : 'WhatsApp (DDI+DDD+Número)'}</Label>
+              <Input 
+                placeholder={testPayload.canal === 'email' ? "seu@email.com" : "5511999999999"} 
+                value={testPayload.destinatario}
+                onChange={(e) => setTestPayload({ ...testPayload, destinatario: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Mensagem</Label>
+              <textarea 
+                className="w-full min-h-[100px] p-2 rounded-md border bg-background text-sm"
+                value={testPayload.mensagem}
+                onChange={(e) => setTestPayload({ ...testPayload, mensagem: e.target.value })}
+              />
+            </div>
+            <Button 
+              className="w-full gap-2" 
+              onClick={() => sendTestMutation.mutate(testPayload)}
+              disabled={sendTestMutation.isPending || !testPayload.destinatario}
+            >
+              {sendTestMutation.isPending ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              Disparar Teste
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
