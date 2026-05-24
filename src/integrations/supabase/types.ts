@@ -4573,6 +4573,277 @@ export type Database = {
           },
         ]
       }
+      rh_documentos: {
+        Row: {
+          arquivo_url: string
+          created_at: string | null
+          descricao: string | null
+          enviado_por: string | null
+          funcionario_id: string
+          id: string
+          loja_id: string
+          tipo: string
+          titulo: string
+          visivel_funcionario: boolean
+        }
+        Insert: {
+          arquivo_url: string
+          created_at?: string | null
+          descricao?: string | null
+          enviado_por?: string | null
+          funcionario_id: string
+          id?: string
+          loja_id: string
+          tipo: string
+          titulo: string
+          visivel_funcionario?: boolean
+        }
+        Update: {
+          arquivo_url?: string
+          created_at?: string | null
+          descricao?: string | null
+          enviado_por?: string | null
+          funcionario_id?: string
+          id?: string
+          loja_id?: string
+          tipo?: string
+          titulo?: string
+          visivel_funcionario?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rh_documentos_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "rh_funcionarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rh_documentos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rh_eventos: {
+        Row: {
+          created_at: string | null
+          descricao: string | null
+          entidade_id: string | null
+          entidade_tipo: string | null
+          funcionario_id: string
+          id: string
+          loja_id: string
+          metadata: Json | null
+          tipo: string
+          titulo: string
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          descricao?: string | null
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          funcionario_id: string
+          id?: string
+          loja_id: string
+          metadata?: Json | null
+          tipo: string
+          titulo: string
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string | null
+          entidade_id?: string | null
+          entidade_tipo?: string | null
+          funcionario_id?: string
+          id?: string
+          loja_id?: string
+          metadata?: Json | null
+          tipo?: string
+          titulo?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rh_eventos_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "rh_funcionarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rh_eventos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rh_funcionarios: {
+        Row: {
+          cargo: string | null
+          contato_emergencia_nome: string | null
+          contato_emergencia_telefone: string | null
+          cpf: string | null
+          created_at: string | null
+          data_admissao: string | null
+          data_nascimento: string | null
+          email: string | null
+          endereco: string | null
+          id: string
+          loja_id: string
+          nome: string
+          observacoes: string | null
+          setor: string | null
+          status: string
+          telefone: string | null
+          updated_at: string | null
+          user_id: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          cargo?: string | null
+          contato_emergencia_nome?: string | null
+          contato_emergencia_telefone?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          data_admissao?: string | null
+          data_nascimento?: string | null
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          loja_id: string
+          nome: string
+          observacoes?: string | null
+          setor?: string | null
+          status?: string
+          telefone?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          cargo?: string | null
+          contato_emergencia_nome?: string | null
+          contato_emergencia_telefone?: string | null
+          cpf?: string | null
+          created_at?: string | null
+          data_admissao?: string | null
+          data_nascimento?: string | null
+          email?: string | null
+          endereco?: string | null
+          id?: string
+          loja_id?: string
+          nome?: string
+          observacoes?: string | null
+          setor?: string | null
+          status?: string
+          telefone?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rh_funcionarios_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rh_funcionarios_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rh_funcionarios_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios_publico"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rh_solicitacoes: {
+        Row: {
+          analisado_em: string | null
+          analisado_por: string | null
+          anexo_url: string | null
+          created_at: string | null
+          data_fim: string | null
+          data_inicio: string | null
+          funcionario_id: string
+          id: string
+          loja_id: string
+          motivo: string | null
+          observacoes: string | null
+          resposta: string | null
+          status: string
+          tipo: string
+          updated_at: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          analisado_em?: string | null
+          analisado_por?: string | null
+          anexo_url?: string | null
+          created_at?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          funcionario_id: string
+          id?: string
+          loja_id: string
+          motivo?: string | null
+          observacoes?: string | null
+          resposta?: string | null
+          status?: string
+          tipo: string
+          updated_at?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          analisado_em?: string | null
+          analisado_por?: string | null
+          anexo_url?: string | null
+          created_at?: string | null
+          data_fim?: string | null
+          data_inicio?: string | null
+          funcionario_id?: string
+          id?: string
+          loja_id?: string
+          motivo?: string | null
+          observacoes?: string | null
+          resposta?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rh_solicitacoes_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "rh_funcionarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rh_solicitacoes_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       solicitacoes_desconto: {
         Row: {
           created_at: string
@@ -5224,6 +5495,10 @@ export type Database = {
         Args: { _contrato_id: string }
         Returns: boolean
       }
+      is_rh_admin_or_manager: {
+        Args: { target_loja_id: string }
+        Returns: boolean
+      }
       outros_custos_sync_dre: {
         Args: { _contrato_id: string }
         Returns: undefined
@@ -5318,6 +5593,7 @@ export type Database = {
         | "logistico"
         | "financeiro"
         | "pos_venda"
+        | "rh"
       chamado_status: "aberto" | "em_andamento" | "resolvido"
       chamado_tipo: "assistencia" | "reclamacao" | "garantia" | "solicitacao"
       contrato_status:
@@ -5521,6 +5797,7 @@ export const Constants = {
         "logistico",
         "financeiro",
         "pos_venda",
+        "rh",
       ],
       chamado_status: ["aberto", "em_andamento", "resolvido"],
       chamado_tipo: ["assistencia", "reclamacao", "garantia", "solicitacao"],
