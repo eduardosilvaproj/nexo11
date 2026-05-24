@@ -221,6 +221,11 @@ const App = () => (
                   <Integracoes />
                 </ProtectedRoute>
               } />
+              <Route path="/comunicacoes/envios" element={
+                <ProtectedRoute roles={["admin","gerente","admin_master"]}>
+                  <CentralComunicacao />
+                </ProtectedRoute>
+              } />
               <Route path="/configuracoes/pagamento" element={
                 <ProtectedRoute roles={["admin","gerente","admin_master"]}>
                   <ConfigPagamento />
