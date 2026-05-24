@@ -85,6 +85,32 @@ export function NovaEntregaDialog({ open, onOpenChange, defaultDate, defaultTurn
 
       const respNome = responsavelId === "__none__" ? null : motoristas?.find(m => m.id === responsavelId)?.nome || null;
 
+      if (responsavelId !== "__none__") {
+        const { data: func } = await supabase
+          .from("rh_funcionarios")
+          .select("id, nome")
+          .eq("usuario_id", responsavelId) // Assuming local usuarios table ID
+          .maybeSingle();
+
+        if (func) {
+          // Check for full day or turn
+          const hIni = turno === "tarde" ? "13:00" : "08:00";
+          const hFim = turno === "manha" ? "12:00" : "18:00";
+          
+          const { data: disp } = await supabase.rpc("calcular_disponibilidade_funcionario", {
+            p_funcionario_id: func.id,
+            p_data_inicio: `${data}T${hIni}:00Z`,
+            p_data_fim: `${data}T${hFim}:00Z`
+          });
+
+          const res = disp as { status: string; motivo: string | null };
+          if (res && res.status !== 'disponivel') {
+            toast.warning(`Aviso: ${func.nome} está com status "${res.motivo || res.status}" no RH.`);
+            // Note: We only toast warning as per "evitar bloqueio rígido" instruction
+          }
+        }
+      }
+
       const { error } = await supabase.from("entregas").insert({
         contrato_id: contratoId,
         data_prevista: data,
