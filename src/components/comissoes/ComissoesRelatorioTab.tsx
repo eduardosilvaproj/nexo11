@@ -174,13 +174,32 @@ export function ComissoesRelatorioTab({
     if (!alvoPagar || processando) return;
     setProcessando(true);
     try {
+      const { data: userData } = await supabase.auth.getUser();
+      const { data: userProfile } = await supabase.from("usuarios").select("loja_id").eq("id", userData.user?.id).maybeSingle();
+      
+      // 1. Atualizar status da comissão
       const { error } = await supabase
         .from("comissoes")
         .update({ status: "paga", data_pagamento: dataPagamento })
         .eq("id", alvoPagar.id);
       if (error) throw error;
 
-      const { data: userData } = await supabase.auth.getUser();
+      // 2. Gerar conta a pagar vinculada
+      if (userProfile?.loja_id) {
+        await supabase.from("financeiro_contas_pagar").insert({
+          loja_id: userProfile.loja_id,
+          contrato_id: alvoPagar.contrato_id,
+          categoria: "Comissão",
+          descricao: `Comissão: ${alvoPagar.pessoa} (${alvoPagar.papel})`,
+          valor: alvoPagar.valor,
+          vencimento: dataPagamento,
+          data_pagamento: dataPagamento,
+          status: "pago",
+          observacoes: `Gerado automaticamente a partir do módulo de Comissões. Ref Contrato ${alvoPagar.contrato_id.slice(0, 8)}`
+        });
+      }
+
+      // 3. Log do contrato
       await supabase.from("contrato_logs").insert({
         contrato_id: alvoPagar.contrato_id,
         acao: "comissao_paga",
@@ -190,7 +209,7 @@ export function ComissoesRelatorioTab({
         usuario_nome: userData.user?.user_metadata?.nome || userData.user?.email || "Sistema",
       });
 
-      toast.success("Comissão marcada como paga");
+      toast.success("Comissão paga e lançada no financeiro");
       setAlvoPagar(null);
       await carregar();
     } catch (e) {
@@ -200,6 +219,7 @@ export function ComissoesRelatorioTab({
       setProcessando(false);
     }
   }
+
 
   async function confirmarCancelar() {
     if (!alvoCancelar || processando) return;

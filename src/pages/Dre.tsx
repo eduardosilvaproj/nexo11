@@ -120,6 +120,7 @@ export default function Dre() {
       const inicio = new Date(ano, mes, 1).toISOString();
       const fim = new Date(ano, mes + 1, 1).toISOString();
 
+      // Buscar contratos do período
       let q = supabase
         .from("vw_contratos_dre")
         .select(
@@ -136,11 +137,13 @@ export default function Dre() {
       const { data } = await q;
       setRows((data as Row[]) ?? []);
 
+      // Buscar vendedores para o filtro
       const { data: us } = await supabase
         .from("usuarios_publico")
         .select("id, nome")
         .order("nome");
       setVendedores((us as any) ?? []);
+
 
       // Evolução dos últimos 6 meses (margens médias ponderadas)
       const inicio6 = new Date(ano, mes - 5, 1).toISOString();
@@ -182,6 +185,9 @@ export default function Dre() {
       setLoading(false);
     };
     load();
+
+
+
   }, [mes, ano, vendedor, statusFiltro]);
 
   const fmt = (n: number | null) =>

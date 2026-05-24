@@ -1,11 +1,16 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { FileText, Loader2 } from "lucide-react";
+import { FileText, Loader2, Calculator } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import { ContractPDF } from "./ContractPDF";
 import { ContractPreviewModal } from "./ContractPreviewModal";
 import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+
 
 interface ComercialTabProps {
   contrato: {
@@ -63,6 +68,8 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
   const qc = useQueryClient();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [parcelasOpen, setParcelasOpen] = useState(false);
+
 
   const { data: vendedor } = useQuery({
     queryKey: ["usuario", contrato.vendedor_id],
@@ -158,21 +165,36 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
       <Card 
         title="Dados do contrato"
         actions={
-          <button
-            onClick={handleGerarContrato}
-            disabled={isSubmitting}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
-            style={{ 
-              backgroundColor: "#1E6FBF", 
-              fontSize: 12, 
-              fontWeight: 500,
-            }}
-          >
-            {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText size={14} />}
-            Gerar Contrato
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setParcelasOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white transition-all hover:opacity-90 active:scale-95"
+              style={{ 
+                backgroundColor: "#E8A020", 
+                fontSize: 12, 
+                fontWeight: 500,
+              }}
+            >
+              <Calculator size={14} />
+              Gerar Parcelas
+            </button>
+            <button
+              onClick={handleGerarContrato}
+              disabled={isSubmitting}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-50"
+              style={{ 
+                backgroundColor: "#1E6FBF", 
+                fontSize: 12, 
+                fontWeight: 500,
+              }}
+            >
+              {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileText size={14} />}
+              Gerar Contrato
+            </button>
+          </div>
         }
       >
+
         <Field label="Cliente" value={contrato.cliente_nome} />
         <Field label="Telefone" value={contrato.cliente_contato} />
         <Field label="E-mail" value={lead?.email} />
@@ -294,6 +316,140 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
         ambientes={ambientes}
         orcamentos={orcamentos}
       />
+
+      <GerarParcelasDialog
+        open={parcelasOpen}
+        onOpenChange={setParcelasOpen}
+        contratoId={contrato.id}
+        valorVenda={contrato.valor_venda || 0}
+        lojaId={contrato.loja_id}
+      />
     </div>
   );
 }
+
+function GerarParcelasDialog({ open, onOpenChange, contratoId, valorVenda, lojaId }: { 
+  open: boolean; 
+  onOpenChange: (v: boolean) => void;
+  contratoId: string;
+  valorVenda: number;
+  lojaId: string;
+}) {
+  const [total, setTotal] = useState(valorVenda.toString());
+  const [entrada, setEntrada] = useState("0");
+  const [numParcelas, setNumParcelas] = useState("1");
+  const [primeiroVenc, setPrimeiroVenc] = useState(new Date().toISOString().slice(0, 10));
+  const [loading, setLoading] = useState(false);
+  const qc = useQueryClient();
+
+  async function handleGerar() {
+    setLoading(true);
+    try {
+      const vTotal = Number(total);
+      const vEntrada = Number(entrada);
+      const nParc = Number(numParcelas);
+      const vParc = nParc > 0 ? (vTotal - vEntrada) / nParc : 0;
+
+      const { data: existing } = await supabase
+        .from("financeiro_contas_receber")
+        .select("id")
+        .eq("contrato_id", contratoId)
+        .limit(1);
+
+      if (existing && existing.length > 0) {
+        if (!confirm("Já existem parcelas para este contrato. Deseja gerar novas parcelas? (Isso não apagará as existentes)")) {
+          setLoading(false);
+          return;
+        }
+      }
+
+      const inserts = [];
+      
+      // Entrada
+      if (vEntrada > 0) {
+        inserts.push({
+          loja_id: lojaId,
+          contrato_id: contratoId,
+          descricao: "Entrada",
+          valor: vEntrada,
+          vencimento: new Date().toISOString().slice(0, 10),
+          status: "pendente"
+        });
+      }
+
+      // Parcelas
+      for (let i = 1; i <= nParc; i++) {
+        const venc = new Date(primeiroVenc);
+        venc.setMonth(venc.getMonth() + i - 1);
+        
+        inserts.push({
+          loja_id: lojaId,
+          contrato_id: contratoId,
+          descricao: `Parcela ${i}/${nParc}`,
+          valor: vParc,
+          vencimento: venc.toISOString().slice(0, 10),
+          status: "pendente",
+          parcela_numero: i,
+          parcela_total: nParc
+        });
+      }
+
+      const { error } = await supabase.from("financeiro_contas_receber").insert(inserts);
+      if (error) throw error;
+
+      toast.success("Parcelas geradas com sucesso!");
+      qc.invalidateQueries({ queryKey: ["contrato_receber", contratoId] });
+      qc.invalidateQueries({ queryKey: ["contrato_financeiro_resumo", contratoId] });
+      onOpenChange(false);
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[400px]">
+        <DialogHeader>
+          <DialogTitle>Gerar Parcelas do Contrato</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-2">
+          <div className="space-y-1.5">
+            <Label>Valor Total do Contrato</Label>
+            <Input type="number" value={total} onChange={(e) => setTotal(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Valor de Entrada</Label>
+            <Input type="number" value={entrada} onChange={(e) => setEntrada(e.target.value)} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Nº de Parcelas</Label>
+              <Input type="number" value={numParcelas} onChange={(e) => setNumParcelas(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>1º Vencimento</Label>
+              <Input type="date" value={primeiroVenc} onChange={(e) => setPrimeiroVenc(e.target.value)} />
+            </div>
+          </div>
+          <div className="rounded-lg bg-slate-50 p-3 border border-slate-100 text-xs text-slate-600">
+            <p>Saldo parcelado: <strong>{((Number(total) - Number(entrada)) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></p>
+            <p>Valor por parcela: <strong>{(Number(numParcelas) > 0 ? (Number(total) - Number(entrada)) / Number(numParcelas) : 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</strong></p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button 
+            className="bg-[#E8A020] hover:bg-[#E8A020]/90 text-white" 
+            onClick={handleGerar}
+            disabled={loading}
+          >
+            {loading ? "Gerando..." : "Gerar Parcelas"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+

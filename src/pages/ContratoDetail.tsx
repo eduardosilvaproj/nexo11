@@ -18,7 +18,9 @@ import { ContratoAmbientesTab } from "@/components/contrato/ContratoAmbientesTab
 import { ContratoPosVendaTab } from "@/components/contrato/ContratoPosVendaTab";
 import { ContratoDreTab } from "@/components/contrato/ContratoDreTab";
 import { ContratoChatTab } from "@/components/contrato/ContratoChatTab";
+import { ContratoFinanceiroTab } from "@/components/contrato/ContratoFinanceiroTab";
 import { ReadOnlyContext } from "@/components/contrato/ReadOnlyContext";
+
 
 const STAGE_TO_TAB: Record<string, ContratoTabKey> = {
   comercial: "comercial",
@@ -406,7 +408,10 @@ export default function ContratoDetail() {
               />
             ) : active === "mensagens" ? (
               <ContratoChatTab contratoId={contrato.id} />
+            ) : active === "financeiro" ? (
+              <ContratoFinanceiroTab contratoId={contrato.id} />
             ) : (
+
               <div className="text-sm text-muted-foreground">
                 Não há informações disponíveis para esta seção.
               </div>
