@@ -53,32 +53,32 @@ type MenuItem = {
 };
 
 const operacao: MenuItem[] = [
-  { title: "Comercial", url: "/comercial", icon: Users },
-  { title: "Clientes", url: "/clientes", icon: UserRound },
-  { title: "Técnico", url: "/tecnico", icon: ClipboardCheck, roles: ["admin", "gerente", "tecnico", "franqueador"] },
-  { title: "Produção", url: "/producao", icon: Factory, roles: ["admin", "gerente", "tecnico", "franqueador"] },
-  { title: "Logística", url: "/logistica", icon: Truck, roles: ["admin", "gerente", "franqueador"] },
-  { title: "Montagem", url: "/montagem", icon: Wrench, roles: ["admin", "gerente", "montador", "franqueador"] },
-  { title: "Pós-venda", url: "/pos-venda", icon: HeadphonesIcon },
+  { title: "Comercial", url: "/comercial", icon: Users, roles: ["admin", "gerente", "vendedor", "franqueador", "admin_master"] },
+  { title: "Clientes", url: "/clientes", icon: UserRound, roles: ["admin", "gerente", "vendedor", "franqueador", "pos_venda", "admin_master"] },
+  { title: "Técnico", url: "/tecnico", icon: ClipboardCheck, roles: ["admin", "gerente", "tecnico", "medidor", "conferente", "franqueador", "admin_master"] },
+  { title: "Produção", url: "/producao", icon: Factory, roles: ["admin", "gerente", "tecnico", "franqueador", "admin_master"] },
+  { title: "Logística", url: "/logistica", icon: Truck, roles: ["admin", "gerente", "logistico", "franqueador", "admin_master"] },
+  { title: "Montagem", url: "/montagem", icon: Wrench, roles: ["admin", "gerente", "montador", "franqueador", "admin_master"] },
+  { title: "Pós-venda", url: "/pos-venda", icon: HeadphonesIcon, roles: ["admin", "gerente", "pos_venda", "franqueador", "admin_master"] },
   { title: "Mensagens", url: "/mensagens", icon: MessageSquare },
-  { title: "DRE", url: "/dre", icon: TrendingUp, roles: ["admin", "gerente", "franqueador"] },
+  { title: "DRE", url: "/dre", icon: TrendingUp, roles: ["admin", "gerente", "franqueador", "financeiro", "admin_master"] },
 ];
 
 const gestao: MenuItem[] = [
-  { title: "Financeiro", url: "/financeiro", icon: DollarSign },
-  { title: "Comissões", url: "/comissoes", icon: Percent },
-  { title: "Compras", url: "/compras", icon: ShoppingCart },
-  { title: "Almoxarifado", url: "/almoxarifado", icon: Package, roles: ["admin", "gerente", "franqueador"] },
-  { title: "Equipe", url: "/equipe", icon: UserCog },
-  { title: "Lojas", url: "/lojas", icon: Building2, roles: ["admin", "franqueador"] },
-  { title: "Cond. Pagamento", url: "/configuracoes/pagamento", icon: Settings, roles: ["admin", "gerente"] },
-  { title: "Fornecedores", url: "/configuracoes/fornecedores", icon: Factory, roles: ["admin", "gerente"] },
+  { title: "Financeiro", url: "/financeiro", icon: DollarSign, roles: ["admin", "gerente", "financeiro", "franqueador", "admin_master"] },
+  { title: "Comissões", url: "/comissoes", icon: Percent, roles: ["admin", "gerente", "financeiro", "admin_master"] },
+  { title: "Compras", url: "/compras", icon: ShoppingCart, roles: ["admin", "gerente", "comprador", "almoxarife", "admin_master"] },
+  { title: "Almoxarifado", url: "/almoxarifado", icon: Package, roles: ["admin", "gerente", "almoxarife", "comprador", "franqueador", "admin_master"] },
+  { title: "Equipe", url: "/equipe", icon: UserCog, roles: ["admin", "gerente", "admin_master"] },
+  { title: "Lojas", url: "/lojas", icon: Building2, roles: ["admin", "franqueador", "admin_master"] },
+  { title: "Cond. Pagamento", url: "/configuracoes/pagamento", icon: Settings, roles: ["admin", "gerente", "admin_master"] },
+  { title: "Fornecedores", url: "/configuracoes/fornecedores", icon: Factory, roles: ["admin", "gerente", "admin_master"] },
 ];
 
 const inteligencia: MenuItem[] = [
-  { title: "Acompanhamento", url: "/acompanhamento-criacao", icon: LayoutDashboard, roles: ["admin"] },
-  { title: "Analytics", url: "/analytics", icon: BarChart3 },
-  { title: "Integrações", url: "/integracoes", icon: Plug },
+  { title: "Acompanhamento", url: "/acompanhamento-criacao", icon: LayoutDashboard, roles: ["admin", "admin_master"] },
+  { title: "Analytics", url: "/analytics", icon: BarChart3, roles: ["admin", "gerente", "franqueador", "admin_master"] },
+  { title: "Integrações", url: "/integracoes", icon: Plug, roles: ["admin", "gerente", "admin_master"] },
   { title: "Estimativa PDF", url: "/estimativa-orcamento", icon: MessageSquare },
 ];
 
