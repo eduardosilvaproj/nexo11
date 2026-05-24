@@ -13,6 +13,7 @@ import {
   Wrench,
   HeadphonesIcon,
   TrendingUp,
+  Send,
   DollarSign,
   Percent,
   ShoppingCart,
