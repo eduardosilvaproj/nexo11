@@ -59,6 +59,7 @@ export default function CentralComunicacao() {
   const [selectedMsg, setSelectedMsg] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [editingConfig, setEditingConfig] = useState<any>(null);
 
   // Query Outbox
   const { data: outbox = [], isLoading: loadingOutbox } = useQuery({
