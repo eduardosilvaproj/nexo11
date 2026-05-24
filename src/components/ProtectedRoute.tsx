@@ -24,7 +24,8 @@ export function ProtectedRoute({ children, roles, redirectTo, redirectMessage }:
     roles &&
     roles.length > 0 &&
     !roles.some((r) => userRoles.includes(r)) &&
-    !userRoles.includes("admin_master");
+    !userRoles.includes("admin_master") &&
+    !userRoles.includes("admin");
 
   useEffect(() => {
     if (denied && redirectTo) {
