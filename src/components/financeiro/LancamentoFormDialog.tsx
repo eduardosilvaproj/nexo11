@@ -11,8 +11,8 @@ import { toast } from "sonner";
 type Tipo = "receita" | "despesa";
 
 const CATEGORIAS: Record<Tipo, string[]> = {
-  receita: ["Venda de contrato", "Outro"],
-  despesa: ["Fornecedor", "Folha", "Aluguel", "Marketing", "Comissão", "Impostos", "Outro"],
+  receita: ["Venda de contrato", "Extra", "Outro"],
+  despesa: ["Compra", "Produção", "Montagem", "Logística", "Comissão", "Aluguel", "Folha", "Marketing", "Administrativo", "Outro"],
 };
 
 interface Props {
@@ -46,12 +46,12 @@ export function LancamentoFormDialog({ open, onOpenChange, lojaId, onSaved }: Pr
     supabase
       .from("contratos")
       .select("id, cliente_nome")
+      .neq("status", "cancelado")
       .order("data_criacao", { ascending: false })
       .limit(50)
       .then(({ data }) => setContratos(data ?? []));
   }, [open]);
 
-  // reset categoria ao trocar tipo
   useEffect(() => { setCategoria(""); }, [tipo]);
 
   async function handleSalvar() {
@@ -62,19 +62,25 @@ export function LancamentoFormDialog({ open, onOpenChange, lojaId, onSaved }: Pr
       return;
     }
     setSaving(true);
-    const { data: u } = await supabase.auth.getUser();
-    const { error } = await supabase.from("transacoes").insert({
+    
+    const table = tipo === "receita" ? "financeiro_contas_receber" : "financeiro_contas_pagar";
+    
+    const payload: any = {
       loja_id: lojaId,
-      tipo,
       descricao: descricao.trim().slice(0, 200),
-      categoria,
       valor: v,
-      data_vencimento: vencimento,
+      vencimento: vencimento,
       status: "pendente",
       contrato_id: contratoId || null,
       observacoes: observacoes.trim().slice(0, 500) || null,
-      criado_por: u.user?.id ?? null,
-    });
+    };
+
+    if (tipo === "despesa") {
+      payload.categoria = categoria;
+    }
+
+    const { error } = await supabase.from(table).insert(payload);
+    
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Lançamento criado");
