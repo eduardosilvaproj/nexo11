@@ -679,6 +679,23 @@ function AmbienteMedicaoPanel({
 
       console.log('Sucesso ao atualizar ambiente:', data);
       toast.success(novoStatus ? "Medição concluída!" : "Ambiente reaberto");
+
+      // Integrar com automação para Montagem Concluída se for concluído e estiver na função de montador
+      if (novoStatus && funcao === "montador") {
+        try {
+          const { automationService } = await import("@/services/automationService");
+          await automationService.dispararGatilho(
+            "montagem_concluida",
+            "contrato",
+            contratoId,
+            lojaId!,
+            { cliente_id: ambiente.cliente_id, contrato_id: contratoId, ambiente_id: ambiente.id, ambiente_nome: ambiente.nome }
+          );
+        } catch (err) {
+          console.error("Erro ao disparar gatilho de automação (montagem_concluida):", err);
+        }
+      }
+
       qc.invalidateQueries({ queryKey: ["ambientes_med_conf", contratoId] });
     } catch (err) {
       console.error('Erro inesperado na função toggleConcluido:', err);
