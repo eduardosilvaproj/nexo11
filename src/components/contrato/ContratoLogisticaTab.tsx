@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus, Package, Truck, CheckCircle2, Box, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 import { EntregaCreateDialog } from "@/components/logistica/EntregaCreateDialog";
 import { EntregaConfirmDialog } from "@/components/logistica/EntregaConfirmDialog";
 
@@ -45,6 +48,8 @@ function FotoConfirmacao({ path }: { path: string }) {
 }
 
 export function ContratoLogisticaTab({ contratoId }: Props) {
+  const { user } = useAuth();
+  const qc = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -97,7 +102,41 @@ export function ContratoLogisticaTab({ contratoId }: Props) {
     };
   })();
 
-  if (!entrega) {
+  const { data: expedicoes = [] } = useQuery({
+    queryKey: ["expedicoes_contrato", contratoId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("expedicoes_almoxarifado")
+        .select("*, estoque_itens:item_id ( descricao, unidade )")
+        .eq("contrato_id", contratoId);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const updateStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const now = new Date().toISOString();
+      const updates: any = { status, updated_at: now };
+      if (status === 'carregado') {
+        updates.carregado_at = now;
+        updates.responsavel_carregamento_id = user?.id;
+      } else if (status === 'entregue') {
+        updates.entregue_at = now;
+        updates.responsavel_entrega_id = user?.id;
+      }
+      const { error } = await supabase.from("expedicoes_almoxarifado").update(updates).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Status atualizado!");
+      qc.invalidateQueries({ queryKey: ["expedicoes_contrato", contratoId] });
+      qc.invalidateQueries({ queryKey: ["expedicoes_almoxarifado"] });
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+
+  if (!entrega && expedicoes.length === 0) {
     return (
       <>
         {promob && (
@@ -220,6 +259,55 @@ export function ContratoLogisticaTab({ contratoId }: Props) {
         entregaId={entrega.id}
         contratoId={contratoId}
       />
+
+      {expedicoes.length > 0 && (
+        <div className="mt-6">
+          <Card title="Materiais Separados (Almoxarifado)">
+            <div className="space-y-4">
+              {expedicoes.map((exp) => (
+                <div key={exp.id} className="flex items-center justify-between py-3 border-b border-slate-100 last:border-0">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">{(exp.estoque_itens as any)?.descricao}</span>
+                    <span className="text-xs text-slate-500">
+                      {exp.quantidade} {(exp.estoque_itens as any)?.unidade} · Separado em {fmtDate(exp.created_at)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <StatusBadge status={exp.status} />
+                    <div className="flex gap-1">
+                      {exp.status === 'separado' && (
+                        <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => updateStatus.mutate({ id: exp.id, status: 'carregado' })}>
+                          Carregar
+                        </Button>
+                      )}
+                      {(exp.status === 'separado' || exp.status === 'carregado') && (
+                        <Button size="sm" className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700" onClick={() => updateStatus.mutate({ id: exp.id, status: 'entregue' })}>
+                          Entregar
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      )}
     </>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const configs: any = {
+    separado: { label: "Separado", className: "bg-blue-50 text-blue-700 border-blue-100" },
+    carregado: { label: "Carregado", className: "bg-amber-50 text-amber-700 border-amber-100" },
+    entregue: { label: "Entregue", className: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+    cancelado: { label: "Cancelado", className: "bg-slate-50 text-slate-700 border-slate-100" },
+  };
+  const config = configs[status] || configs.separado;
+  return (
+    <Badge variant="outline" className={`font-medium text-[10px] h-5 ${config.className}`}>
+      {config.label}
+    </Badge>
   );
 }
