@@ -3641,6 +3641,7 @@ export type Database = {
           id: string
           matriz_id: string | null
           nome: string
+          saas_client_id: string | null
           telefone: string | null
           tipo: string
           updated_at: string
@@ -3659,6 +3660,7 @@ export type Database = {
           id?: string
           matriz_id?: string | null
           nome: string
+          saas_client_id?: string | null
           telefone?: string | null
           tipo?: string
           updated_at?: string
@@ -3677,6 +3679,7 @@ export type Database = {
           id?: string
           matriz_id?: string | null
           nome?: string
+          saas_client_id?: string | null
           telefone?: string | null
           tipo?: string
           updated_at?: string
@@ -3687,6 +3690,13 @@ export type Database = {
             columns: ["matriz_id"]
             isOneToOne: false
             referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lojas_saas_client_id_fkey"
+            columns: ["saas_client_id"]
+            isOneToOne: false
+            referencedRelation: "saas_clients"
             referencedColumns: ["id"]
           },
         ]
@@ -4844,6 +4854,27 @@ export type Database = {
           },
         ]
       }
+      platform_user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["platform_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["platform_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["platform_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       portal_acessos: {
         Row: {
           cliente_id: string
@@ -5855,6 +5886,227 @@ export type Database = {
           },
         ]
       }
+      saas_audit_logs: {
+        Row: {
+          acao: string
+          actor_user_id: string | null
+          created_at: string
+          detalhes: Json
+          entidade: string
+          entidade_id: string | null
+          id: string
+        }
+        Insert: {
+          acao: string
+          actor_user_id?: string | null
+          created_at?: string
+          detalhes?: Json
+          entidade: string
+          entidade_id?: string | null
+          id?: string
+        }
+        Update: {
+          acao?: string
+          actor_user_id?: string | null
+          created_at?: string
+          detalhes?: Json
+          entidade?: string
+          entidade_id?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      saas_clients: {
+        Row: {
+          cnpj: string | null
+          created_at: string
+          email_contato: string
+          id: string
+          nome_empresa: string
+          observacoes: string | null
+          owner_user_id: string | null
+          responsavel: string | null
+          status: string
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          cnpj?: string | null
+          created_at?: string
+          email_contato: string
+          id?: string
+          nome_empresa: string
+          observacoes?: string | null
+          owner_user_id?: string | null
+          responsavel?: string | null
+          status?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cnpj?: string | null
+          created_at?: string
+          email_contato?: string
+          id?: string
+          nome_empresa?: string
+          observacoes?: string | null
+          owner_user_id?: string | null
+          responsavel?: string | null
+          status?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      saas_plans: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          features: Json
+          id: string
+          limite_envios_diarios: number
+          limite_filiais: number
+          limite_usuarios: number
+          nome: string
+          preco_mensal: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          features?: Json
+          id?: string
+          limite_envios_diarios?: number
+          limite_filiais?: number
+          limite_usuarios?: number
+          nome: string
+          preco_mensal?: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          features?: Json
+          id?: string
+          limite_envios_diarios?: number
+          limite_filiais?: number
+          limite_usuarios?: number
+          nome?: string
+          preco_mensal?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      saas_subscriptions: {
+        Row: {
+          cancelado_em: string | null
+          created_at: string
+          id: string
+          inicio_em: string
+          metadata: Json
+          plan_id: string
+          proximo_ciclo_em: string | null
+          saas_client_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          cancelado_em?: string | null
+          created_at?: string
+          id?: string
+          inicio_em?: string
+          metadata?: Json
+          plan_id: string
+          proximo_ciclo_em?: string | null
+          saas_client_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          cancelado_em?: string | null
+          created_at?: string
+          id?: string
+          inicio_em?: string
+          metadata?: Json
+          plan_id?: string
+          proximo_ciclo_em?: string | null
+          saas_client_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saas_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "saas_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saas_subscriptions_saas_client_id_fkey"
+            columns: ["saas_client_id"]
+            isOneToOne: false
+            referencedRelation: "saas_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saas_support_tickets: {
+        Row: {
+          assunto: string
+          atribuido_a: string | null
+          created_at: string
+          criado_por: string | null
+          descricao: string | null
+          id: string
+          loja_id: string | null
+          prioridade: string
+          saas_client_id: string | null
+          status: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          assunto: string
+          atribuido_a?: string | null
+          created_at?: string
+          criado_por?: string | null
+          descricao?: string | null
+          id?: string
+          loja_id?: string | null
+          prioridade?: string
+          saas_client_id?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          assunto?: string
+          atribuido_a?: string | null
+          created_at?: string
+          criado_por?: string | null
+          descricao?: string | null
+          id?: string
+          loja_id?: string | null
+          prioridade?: string
+          saas_client_id?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saas_support_tickets_saas_client_id_fkey"
+            columns: ["saas_client_id"]
+            isOneToOne: false
+            referencedRelation: "saas_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       solicitacoes_desconto: {
         Row: {
           created_at: string
@@ -6586,6 +6838,13 @@ export type Database = {
         Args: { p_serial: string }
         Returns: Json[]
       }
+      has_platform_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["platform_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _loja_id?: string
@@ -6606,6 +6865,7 @@ export type Database = {
         Args: { _contrato_id: string }
         Returns: boolean
       }
+      is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
       is_rh_admin_or_manager: {
         Args: { target_loja_id: string }
         Returns: boolean
@@ -6783,6 +7043,7 @@ export type Database = {
         | "gerente_comercial"
         | "gerente_operacional"
         | "gerente_montagem"
+      platform_role: "platform_admin" | "platform_support"
       ponto_tipo: "entrada" | "saida"
       producao_interna_prioridade: "normal" | "urgente"
       producao_interna_status:
@@ -6993,6 +7254,7 @@ export const Constants = {
         "gerente_operacional",
         "gerente_montagem",
       ],
+      platform_role: ["platform_admin", "platform_support"],
       ponto_tipo: ["entrada", "saida"],
       producao_interna_prioridade: ["normal", "urgente"],
       producao_interna_status: [
