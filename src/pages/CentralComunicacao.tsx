@@ -392,7 +392,11 @@ export default function CentralComunicacao() {
                         Aguardando integração oficial
                       </div>
                     )}
-                    <Button variant="outline" className="w-full gap-2" onClick={() => toast.info("Funcionalidade de configuração em breve")}>
+                    <Button 
+                      variant="outline" 
+                      className="w-full gap-2" 
+                      onClick={() => setEditingConfig(config || { canal: canal, ativo: false, dry_run: true })}
+                    >
                       <Settings2 className="h-4 w-4" />
                       Configurar
                     </Button>
