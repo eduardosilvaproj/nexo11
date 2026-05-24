@@ -181,6 +181,11 @@ const App = () => (
                   <Equipe />
                 </ProtectedRoute>
               } />
+              <Route path="/rh" element={
+                <ProtectedRoute roles={["admin","gerente","franqueador","rh","admin_master"]}>
+                  <RH />
+                </ProtectedRoute>
+              } />
               <Route path="/lojas" element={
                 <ProtectedRoute roles={["admin","franqueador","admin_master"]} redirectTo="/" redirectMessage="Acesso restrito">
                   <Lojas />
