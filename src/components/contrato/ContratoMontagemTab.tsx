@@ -31,6 +31,7 @@ import { ContratoMedicaoAmbientesSection } from "./ContratoMedicaoAmbientesSecti
 import { useAuth } from "@/contexts/AuthContext";
 import { MateriaisMontagemResumo } from "@/components/montagem/MateriaisMontagemResumo";
 import OperationalAttachments from "@/components/operacional/OperationalAttachments";
+import { ExecutionControl } from "@/components/operacao/ExecutionControl";
 
 interface MontagemTabProps {
   contratoId: string;
@@ -386,7 +387,18 @@ export function ContratoMontagemTab({ contratoId, lojaId }: MontagemTabProps) {
             />
           </div>
         )}
-      </Card>
+      <div className="mb-4">
+        {agendamento && (
+          <ExecutionControl 
+            entidadeId={agendamento.id}
+            entidadeTipo="agendamentos_montagem"
+            lojaId={lojaId || ""}
+            modulo="montagem"
+            contratoId={contratoId}
+          />
+        )}
+      </div>
+    </Card>
 
       {/* CHECKLIST DE OBRA */}
       {agendamento && (

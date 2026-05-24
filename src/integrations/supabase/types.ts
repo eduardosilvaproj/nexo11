@@ -3585,6 +3585,197 @@ export type Database = {
           },
         ]
       }
+      operacao_checkins: {
+        Row: {
+          contrato_id: string | null
+          created_at: string | null
+          duracao_minutos: number | null
+          entidade_id: string
+          entidade_tipo: string
+          finalizado_em: string | null
+          funcionario_id: string | null
+          id: string
+          iniciado_em: string
+          latitude_fim: number | null
+          latitude_inicio: number | null
+          loja_id: string
+          longitude_fim: number | null
+          longitude_inicio: number | null
+          modulo: string
+          observacoes: string | null
+          status: string
+          updated_at: string | null
+          usuario_id: string
+        }
+        Insert: {
+          contrato_id?: string | null
+          created_at?: string | null
+          duracao_minutos?: number | null
+          entidade_id: string
+          entidade_tipo: string
+          finalizado_em?: string | null
+          funcionario_id?: string | null
+          id?: string
+          iniciado_em?: string
+          latitude_fim?: number | null
+          latitude_inicio?: number | null
+          loja_id: string
+          longitude_fim?: number | null
+          longitude_inicio?: number | null
+          modulo: string
+          observacoes?: string | null
+          status?: string
+          updated_at?: string | null
+          usuario_id: string
+        }
+        Update: {
+          contrato_id?: string | null
+          created_at?: string | null
+          duracao_minutos?: number | null
+          entidade_id?: string
+          entidade_tipo?: string
+          finalizado_em?: string | null
+          funcionario_id?: string | null
+          id?: string
+          iniciado_em?: string
+          latitude_fim?: number | null
+          latitude_inicio?: number | null
+          loja_id?: string
+          longitude_fim?: number | null
+          longitude_inicio?: number | null
+          modulo?: string
+          observacoes?: string | null
+          status?: string
+          updated_at?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operacao_checkins_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operacao_checkins_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operacao_checkins_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "rh_funcionarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operacao_checkins_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      operacao_ocorrencias: {
+        Row: {
+          checkin_id: string | null
+          contrato_id: string | null
+          created_at: string | null
+          descricao: string
+          entidade_id: string
+          entidade_tipo: string
+          funcionario_id: string | null
+          id: string
+          loja_id: string
+          modulo: string
+          prioridade: string
+          resolvido_em: string | null
+          resolvido_por: string | null
+          status: string
+          tipo: string
+          updated_at: string | null
+          usuario_id: string
+        }
+        Insert: {
+          checkin_id?: string | null
+          contrato_id?: string | null
+          created_at?: string | null
+          descricao: string
+          entidade_id: string
+          entidade_tipo: string
+          funcionario_id?: string | null
+          id?: string
+          loja_id: string
+          modulo: string
+          prioridade?: string
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          status?: string
+          tipo: string
+          updated_at?: string | null
+          usuario_id: string
+        }
+        Update: {
+          checkin_id?: string | null
+          contrato_id?: string | null
+          created_at?: string | null
+          descricao?: string
+          entidade_id?: string
+          entidade_tipo?: string
+          funcionario_id?: string | null
+          id?: string
+          loja_id?: string
+          modulo?: string
+          prioridade?: string
+          resolvido_em?: string | null
+          resolvido_por?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operacao_ocorrencias_checkin_id_fkey"
+            columns: ["checkin_id"]
+            isOneToOne: false
+            referencedRelation: "operacao_checkins"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operacao_ocorrencias_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operacao_ocorrencias_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operacao_ocorrencias_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "rh_funcionarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "operacao_ocorrencias_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orcamentos: {
         Row: {
           acrescimos: Json | null
@@ -5621,6 +5812,10 @@ export type Database = {
         Returns: boolean
       }
       is_rh_admin_or_manager: {
+        Args: { target_loja_id: string }
+        Returns: boolean
+      }
+      is_store_admin_or_manager: {
         Args: { target_loja_id: string }
         Returns: boolean
       }

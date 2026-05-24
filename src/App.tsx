@@ -38,6 +38,7 @@ import ConfigFornecedores from "./pages/ConfigFornecedores";
 import Compras from "./pages/Compras";
 import EstimativaOrcamento from "./pages/EstimativaOrcamento";
 import RH from "./pages/RH";
+import Execucao from "./pages/Execucao";
 
 import AcompanhamentoCriacao from "./pages/AcompanhamentoCriacao";
 import AcessoAcompanhamento from "./pages/AcessoAcompanhamento";
@@ -184,6 +185,11 @@ const App = () => (
               <Route path="/rh" element={
                 <ProtectedRoute roles={["admin","gerente","franqueador","rh","admin_master"]}>
                   <RH />
+                </ProtectedRoute>
+              } />
+              <Route path="/operacao/execucao" element={
+                <ProtectedRoute roles={["admin","gerente","admin_master"]}>
+                  <Execucao />
                 </ProtectedRoute>
               } />
               <Route path="/lojas" element={
