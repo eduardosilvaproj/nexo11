@@ -95,6 +95,12 @@ export function IndicadoresVisaoGeral() {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end">
+        <Button variant="outline" size="sm" onClick={exportCSV}>
+          <Download className="w-4 h-4 mr-2" />
+          Exportar CSV
+        </Button>
+      </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {cards.map((card, i) => (
           <Card key={i}>
