@@ -181,22 +181,47 @@ export function ComunicacaoClienteDialog({ open, onOpenChange, contratoId, clien
       const finalLojaId = lojaId || contrato?.loja_id;
       if (!finalLojaId) throw new Error("ID da loja não encontrado");
 
-      const { error } = await supabase
+      // Se canal oficial, status começa como 'preparado' para a outbox
+      const statusCom = (canal === "whatsapp_oficial" || canal === "email_oficial") ? "preparado" : status;
+
+      const { data: comunicacao, error } = await supabase
         .from("cliente_comunicacoes")
         .insert({
           loja_id: finalLojaId,
           cliente_id: clienteId || contrato?.cliente_id,
           contrato_id: contratoId,
           portal_token_id: portalToken?.id,
-          canal,
+          canal: canal.replace("_oficial", ""), // normaliza para a tabela existente
           tipo,
           destinatario,
           mensagem,
-          status,
+          status: statusCom,
           enviado_por: user?.id,
           enviado_em: new Date().toISOString(),
-        } as any);
+        } as any)
+        .select()
+        .single();
+
       if (error) throw error;
+
+      // Se canal oficial, criar entrada na outbox
+      if (canal === "whatsapp_oficial" || canal === "email_oficial") {
+        const { error: errorOutbox } = await supabase
+          .from("communication_outbox")
+          .insert({
+            loja_id: finalLojaId,
+            cliente_id: clienteId || contrato?.cliente_id,
+            contrato_id: contratoId,
+            comunicacao_id: comunicacao.id,
+            canal: canal.replace("_oficial", ""),
+            destinatario,
+            mensagem,
+            status: "pendente",
+            created_by: user?.id
+          } as any);
+        
+        if (errorOutbox) console.error("Erro ao criar outbox:", errorOutbox);
+      }
 
       // Registrar na timeline
       const { registrarEventoContrato } = await import("@/services/contratoEventos");
