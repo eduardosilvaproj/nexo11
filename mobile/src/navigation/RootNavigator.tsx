@@ -14,6 +14,7 @@ import ChatDetailScreen from '../screens/ChatDetailScreen';
 import ComunicadosScreen from '../screens/ComunicadosScreen';
 import FeedbackScreen from '../screens/FeedbackScreen';
 import RHScreen from '../screens/RHScreen';
+import MinhaEscalaScreen from '../screens/MinhaEscalaScreen';
 import { setupNotificationListeners } from '../lib/notifications';
 
 const Tab = createBottomTabNavigator();
