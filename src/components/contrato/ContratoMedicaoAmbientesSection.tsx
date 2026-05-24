@@ -489,6 +489,8 @@ export function ContratoMedicaoAmbientesSection({
                   ambiente={a} 
                   onUpdate={updateAmbiente} 
                   contratoId={contratoId}
+                  lojaId={lojaId}
+                  funcao={funcao}
                 />
               ))}
             </tbody>
