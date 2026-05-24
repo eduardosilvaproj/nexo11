@@ -108,9 +108,15 @@ export default function Compras() {
 
   return (
     <div className="p-8">
-      <div className="mb-6">
-        <h1 style={{ fontSize: 22, fontWeight: 600, color: "#0D1117" }}>NEXO Compras</h1>
-        <p style={{ fontSize: 13, color: "#6B7A90" }}>Requisições de itens extras vindas da Conferência técnica.</p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 style={{ fontSize: 22, fontWeight: 600, color: "#0D1117" }}>NEXO Compras</h1>
+          <p style={{ fontSize: 13, color: "#6B7A90" }}>Requisições de itens extras vindas da Conferência técnica.</p>
+        </div>
+        <Button variant="outline" onClick={() => window.location.href = '/almoxarifado'}>
+          <Package size={16} className="mr-2" />
+          Ver almoxarifado
+        </Button>
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-6">
