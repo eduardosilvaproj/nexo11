@@ -123,9 +123,9 @@ export default function Automacoes() {
                     <div className="flex items-start gap-2 text-sm">
                       <Settings2 className="h-4 w-4 text-primary mt-0.5" />
                       <div className="flex flex-col gap-1">
-                        <span className="font-medium">Ações ({regra.acoes?.length || 0}):</span>
+                        <span className="font-medium">Ações ({Array.isArray(regra.acoes) ? regra.acoes.length : 0}):</span>
                         <div className="flex flex-wrap gap-1">
-                          {(regra.acoes as any[])?.map((acao, i) => (
+                          {Array.isArray(regra.acoes) && (regra.acoes as any[])?.map((acao, i) => (
                             <Badge key={i} variant="outline" className="text-[10px]">
                               {acao.tipo}
                             </Badge>
