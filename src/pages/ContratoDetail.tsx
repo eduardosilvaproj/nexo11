@@ -20,6 +20,7 @@ import { ContratoDreTab } from "@/components/contrato/ContratoDreTab";
 import { ContratoChatTab } from "@/components/contrato/ContratoChatTab";
 import { ContratoFinanceiroTab } from "@/components/contrato/ContratoFinanceiroTab";
 import { ContratoTimelineTab } from "@/components/contrato/ContratoTimelineTab";
+import { ContratoDocumentosTab } from "@/components/contrato/ContratoDocumentosTab";
 import { ReadOnlyContext } from "@/components/contrato/ReadOnlyContext";
 
 
@@ -425,6 +426,8 @@ export default function ContratoDetail() {
               <ContratoFinanceiroTab contratoId={contrato.id} />
             ) : active === "timeline" ? (
               <ContratoTimelineTab contratoId={contrato.id} />
+            ) : active === "documentos" ? (
+              <ContratoDocumentosTab contratoId={contrato.id} />
             ) : (
 
               <div className="text-sm text-muted-foreground">

@@ -13,7 +13,8 @@ import {
   MessageSquare,
   DollarSign,
   Star,
-  ShoppingBag
+  ShoppingBag,
+  FileText
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -50,6 +51,7 @@ const MODULO_ICONS: Record<string, any> = {
   financeiro: DollarSign,
   comissoes: CreditCard,
   pos_venda: Star,
+  documentos: FileText,
 };
 
 const MODULO_COLORS: Record<string, string> = {
@@ -62,6 +64,7 @@ const MODULO_COLORS: Record<string, string> = {
   financeiro: "#05873C",
   comissoes: "#534AB7",
   pos_venda: "#E53935",
+  documentos: "#0ea5e9",
 };
 
 export function ContratoTimelineTab({ contratoId }: Props) {
@@ -107,7 +110,7 @@ export function ContratoTimelineTab({ contratoId }: Props) {
     );
   }
 
-  const modulos = ["all", "comercial", "tecnico", "almoxarifado", "logistica", "montagem", "financeiro", "pos_venda"];
+  const modulos = ["all", "comercial", "tecnico", "almoxarifado", "logistica", "montagem", "financeiro", "pos_venda", "documentos"];
 
   return (
     <div className="flex flex-col gap-6">

@@ -37,7 +37,12 @@ export type PermissionAction =
   | "integracoes.view"
   | "configuracoes.view"
   | "implantacao.view"
-  | "implantacao.manage";
+  | "implantacao.manage"
+  | "documentos.view"
+  | "documentos.emit"
+  | "documentos.cancel"
+  | "documentos.financeiro.view"
+  | "documentos.financeiro.emit";
 
 const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
   admin_master: [
@@ -45,55 +50,71 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
     "logistica.view", "logistica.update", "montagem.view", "montagem.update", "pos_venda.view",
     "dre.view", "financeiro.view", "financeiro.manage", "comissoes.view", "comissoes.manage",
     "compras.view", "compras.manage", "almoxarifado.view", "almoxarifado.manage", "equipe.view",
-    "equipe.manage", "lojas.view", "lojas.manage", "analytics.view", "notificacoes.view", "notificacoes.manage", "integracoes.view", "configuracoes.view", "implantacao.view", "implantacao.manage"
+    "equipe.manage", "lojas.view", "lojas.manage", "analytics.view", "notificacoes.view", 
+    "notificacoes.manage", "integracoes.view", "configuracoes.view", "implantacao.view", 
+    "implantacao.manage", "documentos.view", "documentos.emit", "documentos.cancel", 
+    "documentos.financeiro.view", "documentos.financeiro.emit"
   ],
   admin: [
     "comercial.view", "clientes.view", "contratos.view", "tecnico.view", "producao.view",
     "logistica.view", "logistica.update", "montagem.view", "montagem.update", "pos_venda.view",
     "dre.view", "financeiro.view", "financeiro.manage", "comissoes.view", "comissoes.manage",
     "compras.view", "compras.manage", "almoxarifado.view", "almoxarifado.manage", "equipe.view",
-    "equipe.manage", "lojas.view", "lojas.manage", "analytics.view", "notificacoes.view", "notificacoes.manage", "integracoes.view", "configuracoes.view", "implantacao.view", "implantacao.manage"
+    "equipe.manage", "lojas.view", "lojas.manage", "analytics.view", "notificacoes.view", 
+    "notificacoes.manage", "integracoes.view", "configuracoes.view", "implantacao.view", 
+    "implantacao.manage", "documentos.view", "documentos.emit", "documentos.cancel", 
+    "documentos.financeiro.view", "documentos.financeiro.emit"
   ],
   franqueador: [
     "comercial.view", "clientes.view", "contratos.view", "pos_venda.view",
-    "dre.view", "financeiro.view", "comissoes.view", "lojas.view", "equipe.view", "analytics.view", "notificacoes.view"
+    "dre.view", "financeiro.view", "comissoes.view", "lojas.view", "equipe.view", 
+    "analytics.view", "notificacoes.view", "documentos.view", "documentos.financeiro.view"
   ],
   gerente: [
     "comercial.view", "clientes.view", "contratos.view", "tecnico.view", "producao.view",
     "logistica.view", "logistica.update", "montagem.view", "montagem.update", "pos_venda.view",
     "dre.view", "financeiro.view", "financeiro.manage", "comissoes.view", "comissoes.manage",
     "compras.view", "compras.manage", "almoxarifado.view", "almoxarifado.manage", "equipe.view",
-    "equipe.manage", "analytics.view", "notificacoes.view", "notificacoes.manage", "integracoes.view", "configuracoes.view", "implantacao.view", "implantacao.manage"
+    "equipe.manage", "analytics.view", "notificacoes.view", "notificacoes.manage", 
+    "integracoes.view", "configuracoes.view", "implantacao.view", "implantacao.manage",
+    "documentos.view", "documentos.emit", "documentos.cancel", "documentos.financeiro.view", 
+    "documentos.financeiro.emit"
   ],
   vendedor: [
-    "comercial.view", "clientes.view", "contratos.view", "pos_venda.view", "notificacoes.view"
+    "comercial.view", "clientes.view", "contratos.view", "pos_venda.view", "notificacoes.view",
+    "documentos.view"
   ],
   tecnico: [
-    "contratos.view", "tecnico.view", "producao.view", "logistica.view", "montagem.view", "notificacoes.view"
+    "contratos.view", "tecnico.view", "producao.view", "logistica.view", "montagem.view", 
+    "notificacoes.view", "documentos.view"
   ],
   medidor: [
-    "contratos.view", "tecnico.view", "notificacoes.view"
+    "contratos.view", "tecnico.view", "notificacoes.view", "documentos.view"
   ],
   conferente: [
-    "contratos.view", "tecnico.view", "notificacoes.view"
+    "contratos.view", "tecnico.view", "notificacoes.view", "documentos.view"
   ],
   montador: [
-    "montagem.view", "montagem.update", "notificacoes.view"
+    "montagem.view", "montagem.update", "notificacoes.view", "documentos.view"
   ],
   comprador: [
-    "compras.view", "compras.manage", "almoxarifado.view", "notificacoes.view"
+    "compras.view", "compras.manage", "almoxarifado.view", "notificacoes.view",
+    "documentos.view", "documentos.emit"
   ],
   almoxarife: [
-    "almoxarifado.view", "almoxarifado.manage", "compras.view", "notificacoes.view"
+    "almoxarifado.view", "almoxarifado.manage", "compras.view", "notificacoes.view",
+    "documentos.view", "documentos.emit"
   ],
   logistico: [
-    "logistica.view", "logistica.update", "notificacoes.view"
+    "logistica.view", "logistica.update", "notificacoes.view", "documentos.view", "documentos.emit"
   ],
   financeiro: [
-    "financeiro.view", "financeiro.manage", "comissoes.view", "comissoes.manage", "dre.view", "contratos.view", "notificacoes.view"
+    "financeiro.view", "financeiro.manage", "comissoes.view", "comissoes.manage", "dre.view", 
+    "contratos.view", "notificacoes.view", "documentos.view", "documentos.emit", 
+    "documentos.financeiro.view", "documentos.financeiro.emit"
   ],
   pos_venda: [
-    "pos_venda.view", "clientes.view", "contratos.view", "notificacoes.view"
+    "pos_venda.view", "clientes.view", "contratos.view", "notificacoes.view", "documentos.view"
   ]
 };
 
