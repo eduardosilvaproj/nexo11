@@ -38,7 +38,7 @@ export function NotificationsBell() {
     },
   });
 
-  const naoLidas = notifs.filter((n) => !n.lida_em).length;
+  const naoLidas = notifs.filter((n) => !n.lida).length;
 
   // Realtime: nova notificação -> invalida lista + toast
   useEffect(() => {
