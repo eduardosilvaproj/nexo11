@@ -31,6 +31,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { checkAgendamentoConflict, diffHoras as diffH } from "@/lib/agendamento-conflict";
 import { useAuth } from "@/contexts/AuthContext";
 import { AmbientesMontagemList } from "@/components/montagem/AmbientesMontagemList";
+import { MateriaisMontagemResumo, calcularLiberacao, LiberacaoBadge, type LiberacaoStatus } from "@/components/montagem/MateriaisMontagemResumo";
+import { CheckCircle2, AlertTriangle, Clock as ClockIcon, Package } from "lucide-react";
 
 const STATUS_BADGE: Record<string, { bg: string; fg: string; label: string }> = {
   agendado: { bg: "#E6F3FF", fg: "#1E6FBF", label: "Agendado" },
