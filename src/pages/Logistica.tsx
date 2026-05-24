@@ -1,13 +1,15 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Box, Truck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NovaEntregaDialog } from "@/components/logistica/NovaEntregaDialog";
 import { EntregaDrawer, type EntregaDrawerData } from "@/components/logistica/EntregaDrawer";
 import { StatusBadge, type StatusVisual } from "@/components/logistica/StatusBadge";
+import { MateriaisSeparadosTab } from "@/components/logistica/MateriaisSeparadosTab";
 import {
   addDays,
   dayShortNames,
@@ -146,99 +148,113 @@ export default function Logistica() {
         </Button>
       </div>
 
-      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-        <MetricCard label="Entregas a agendar" value={String(metrics.aAgendar)} accent="#E8A020" />
-        <MetricCard label="Entregas agendadas" value={String(metrics.agendadas)} accent="#1E6FBF" />
-        <MetricCard label="Confirmadas hoje" value={String(metrics.hoje)} accent="#12B76A" />
-      </div>
+      <Tabs defaultValue="agenda" className="space-y-6">
+        <TabsList className="bg-slate-100 p-1 rounded-lg">
+          <TabsTrigger value="agenda" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <Clock className="w-4 h-4 mr-2" />
+            Agenda de Entregas
+          </TabsTrigger>
+          <TabsTrigger value="almoxarifado" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <Box className="w-4 h-4 mr-2" />
+            Materiais Separados
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos os status</SelectItem>
-            <SelectItem value="a_agendar">A agendar</SelectItem>
-            <SelectItem value="agendado">Agendado</SelectItem>
-            <SelectItem value="em_rota">Em rota</SelectItem>
-            <SelectItem value="entregue">Entregue</SelectItem>
-            <SelectItem value="reagendado">Reagendado</SelectItem>
-          </SelectContent>
-        </Select>
-        <Input
-          className="max-w-sm"
-          placeholder="Buscar cliente ou nº..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
+        <TabsContent value="agenda" className="space-y-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <MetricCard label="Entregas a agendar" value={String(metrics.aAgendar)} accent="#E8A020" />
+            <MetricCard label="Entregas agendadas" value={String(metrics.agendadas)} accent="#1E6FBF" />
+            <MetricCard label="Confirmadas hoje" value={String(metrics.hoje)} accent="#12B76A" />
+          </div>
 
-      {/* Navegação semana */}
-      <div className="mb-4 flex flex-col sm:flex-row items-center justify-between rounded-xl bg-card px-4 py-3 gap-4" style={{ border: "0.5px solid hsl(var(--border))" }}>
-        <Button variant="ghost" size="sm" onClick={() => setAnchor((d) => addDays(d, -7))} className="w-full sm:w-auto justify-start">
-          <ChevronLeft className="h-4 w-4 mr-1" /> Semana anterior
-        </Button>
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-foreground whitespace-nowrap">{weekRangeLabel(anchor)}</span>
-          <Button variant="outline" size="sm" onClick={() => setAnchor(startOfWeek(new Date()))}>Hoje</Button>
-        </div>
-        <Button variant="ghost" size="sm" onClick={() => setAnchor((d) => addDays(d, 7))} className="w-full sm:w-auto justify-end">
-          Próxima semana <ChevronRight className="h-4 w-4 ml-1" />
-        </Button>
-      </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os status</SelectItem>
+                <SelectItem value="a_agendar">A agendar</SelectItem>
+                <SelectItem value="agendado">Agendado</SelectItem>
+                <SelectItem value="em_rota">Em rota</SelectItem>
+                <SelectItem value="entregue">Entregue</SelectItem>
+                <SelectItem value="reagendado">Reagendado</SelectItem>
+              </SelectContent>
+            </Select>
+            <Input
+              className="max-w-sm"
+              placeholder="Buscar cliente ou nº..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
 
-      {/* Grade semanal */}
-      <div className="overflow-x-auto rounded-xl bg-card border border-border">
-        <div className="grid min-w-[1000px]" style={{ gridTemplateColumns: "80px repeat(6, minmax(0, 1fr))" }}>
-          {/* Header */}
-          <div className="border-b border-r bg-muted/40 px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground"></div>
-          {days.map((d, i) => {
-            const iso = fmtISODate(d);
-            const slot = buckets.get(iso);
-            const count = (slot?.manha.length ?? 0) + (slot?.tarde.length ?? 0);
-            const isToday = iso === todayISO;
-            return (
-              <div
-                key={iso}
-                className="border-b border-r px-3 py-2 last:border-r-0"
-                style={{ backgroundColor: isToday ? "hsl(var(--accent))" : "hsl(var(--muted) / 0.4)" }}
-              >
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                    {dayShortNames[i]} {d.getDate()}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground">
-                    {count} {count === 1 ? "entrega" : "entregas"}
-                  </span>
-                </div>
+          <div className="flex flex-col sm:flex-row items-center justify-between rounded-xl bg-card px-4 py-3 gap-4" style={{ border: "0.5px solid hsl(var(--border))" }}>
+            <Button variant="ghost" size="sm" onClick={() => setAnchor((d) => addDays(d, -7))} className="w-full sm:w-auto justify-start">
+              <ChevronLeft className="h-4 w-4 mr-1" /> Semana anterior
+            </Button>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-foreground whitespace-nowrap">{weekRangeLabel(anchor)}</span>
+              <Button variant="outline" size="sm" onClick={() => setAnchor(startOfWeek(new Date()))}>Hoje</Button>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setAnchor((d) => addDays(d, 7))} className="w-full sm:w-auto justify-end">
+              Próxima semana <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+
+          <div className="overflow-x-auto rounded-xl bg-card border border-border">
+            <div className="grid min-w-[1000px]" style={{ gridTemplateColumns: "80px repeat(6, minmax(0, 1fr))" }}>
+              <div className="border-b border-r bg-muted/40 px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground"></div>
+              {days.map((d, i) => {
+                const iso = fmtISODate(d);
+                const slot = buckets.get(iso);
+                const count = (slot?.manha.length ?? 0) + (slot?.tarde.length ?? 0);
+                const isToday = iso === todayISO;
+                return (
+                  <div
+                    key={iso}
+                    className="border-b border-r px-3 py-2 last:border-r-0"
+                    style={{ backgroundColor: isToday ? "hsl(var(--accent))" : "hsl(var(--muted) / 0.4)" }}
+                  >
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                        {dayShortNames[i]} {d.getDate()}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {count} {count === 1 ? "entrega" : "entregas"}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+
+              <div className="border-r bg-muted/20 px-3 py-3 text-[11px] uppercase tracking-wider text-muted-foreground">
+                Manhã
               </div>
-            );
-          })}
+              {days.map((d) => {
+                const iso = fmtISODate(d);
+                const items = buckets.get(iso)?.manha ?? [];
+                return <DaySlot key={`m-${iso}`} items={items} onPick={setDrawerEntrega} onAdd={() => { setCreateDate(iso); setCreateTurno("manha"); setCreateOpen(true); }} />;
+              })}
 
-          {/* Linha Manhã */}
-          <div className="border-r bg-muted/20 px-3 py-3 text-[11px] uppercase tracking-wider text-muted-foreground">
-            Manhã
+              <div className="border-t border-r bg-muted/20 px-3 py-3 text-[11px] uppercase tracking-wider text-muted-foreground">
+                Tarde
+              </div>
+              {days.map((d) => {
+                const iso = fmtISODate(d);
+                const items = buckets.get(iso)?.tarde ?? [];
+                return <DaySlot key={`t-${iso}`} items={items} onPick={setDrawerEntrega} onAdd={() => { setCreateDate(iso); setCreateTurno("tarde"); setCreateOpen(true); }} topBorder />;
+              })}
+            </div>
+
+            {isLoading && (
+              <div className="border-t px-4 py-6 text-center text-sm text-muted-foreground">Carregando agenda...</div>
+            )}
           </div>
-          {days.map((d) => {
-            const iso = fmtISODate(d);
-            const items = buckets.get(iso)?.manha ?? [];
-            return <DaySlot key={`m-${iso}`} items={items} onPick={setDrawerEntrega} onAdd={() => { setCreateDate(iso); setCreateTurno("manha"); setCreateOpen(true); }} />;
-          })}
+        </TabsContent>
 
-          {/* Linha Tarde */}
-          <div className="border-t border-r bg-muted/20 px-3 py-3 text-[11px] uppercase tracking-wider text-muted-foreground">
-            Tarde
-          </div>
-          {days.map((d) => {
-            const iso = fmtISODate(d);
-            const items = buckets.get(iso)?.tarde ?? [];
-            return <DaySlot key={`t-${iso}`} items={items} onPick={setDrawerEntrega} onAdd={() => { setCreateDate(iso); setCreateTurno("tarde"); setCreateOpen(true); }} topBorder />;
-          })}
-        </div>
-
-        {isLoading && (
-          <div className="border-t px-4 py-6 text-center text-sm text-muted-foreground">Carregando agenda...</div>
-        )}
-      </div>
+        <TabsContent value="almoxarifado">
+          <MateriaisSeparadosTab />
+        </TabsContent>
+      </Tabs>
 
       <NovaEntregaDialog
         open={createOpen}
