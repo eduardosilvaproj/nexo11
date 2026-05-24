@@ -30,7 +30,7 @@ import {
 import { toast } from "sonner";
 import { format } from "date-fns";
 
-type Canal = "whatsapp" | "email" | "manual";
+type Canal = "whatsapp" | "email" | "manual" | "whatsapp_oficial" | "email_oficial";
 type TipoMensagem = 
   | "portal_link" 
   | "documento" 
