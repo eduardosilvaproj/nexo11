@@ -28,7 +28,8 @@ export function ContratoComunicacoesTab({ contratoId }: Props) {
         .from("cliente_comunicacoes")
         .select(`
           *,
-          enviado_por_user:usuarios!cliente_comunicacoes_enviado_por_fkey(nome)
+          enviado_por_user:usuarios!cliente_comunicacoes_enviado_por_fkey(nome),
+          outbox:communication_outbox(id, status, erro, enviado_em)
         `)
         .eq("contrato_id", contratoId)
         .order("created_at", { ascending: false });
