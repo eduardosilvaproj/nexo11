@@ -42,6 +42,8 @@ import AcompanhamentoCriacao from "./pages/AcompanhamentoCriacao";
 import AcessoAcompanhamento from "./pages/AcessoAcompanhamento";
 import AcompanhamentoPublico from "./pages/AcompanhamentoPublico";
 import NewContract from "./pages/NewContract";
+import Almoxarifado from "./pages/Almoxarifado";
+
 
 
 const queryClient = new QueryClient();
@@ -135,6 +137,11 @@ const App = () => (
               <Route path="/compras" element={
                 <ProtectedRoute roles={["admin","gerente","tecnico"]}>
                   <Compras />
+                </ProtectedRoute>
+              } />
+              <Route path="/almoxarifado" element={
+                <ProtectedRoute roles={["admin","gerente","franqueador"]}>
+                  <Almoxarifado />
                 </ProtectedRoute>
               } />
               <Route path="/equipe" element={
