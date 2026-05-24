@@ -20,6 +20,7 @@ export interface ContratoEventoParams {
   entidadeTipo?: string | null;
   entidadeId?: string | null;
   metadata?: Record<string, any>;
+  visivelCliente?: boolean;
 }
 
 export const registrarEventoContrato = async (params: ContratoEventoParams) => {
