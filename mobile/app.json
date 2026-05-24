@@ -2,7 +2,7 @@
   "expo": {
     "name": "NEXO Operacional",
     "slug": "nexo-operacional",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -13,19 +13,45 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.nexo.operacional"
+      "bundleIdentifier": "com.nexo.operacional",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Precisamos de acesso à câmera para anexar evidências operacionais.",
+        "NSPhotoLibraryUsageDescription": "Precisamos de acesso à galeria para selecionar anexos.",
+        "NSLocationWhenInUseUsageDescription": "Usamos sua localização para registrar o ponto e entregas."
+      }
     },
     "android": {
       "package": "com.nexo.operacional",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0F172A"
-      }
+      },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ]
     },
-    "plugins": ["expo-secure-store", "expo-notifications"],
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-notifications",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O app precisa acessar suas fotos para anexar evidências."
+        }
+      ]
+    ],
     "extra": {
-      "supabaseUrl": "https://pllvwcszoyjhfvnzshzw.supabase.co",
-      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsbHZ3Y3N6b3lqaGZ2bnpzaHp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzODI0NTgsImV4cCI6MjA5MTk1ODQ1OH0.gE6tpIUNvdvPYlYgboAnnH_OAyojlggoFWMg8jHI3-o"
+      "eas": {
+        "projectId": "your-project-id"
+      }
     }
   }
 }
