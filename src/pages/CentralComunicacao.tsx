@@ -88,15 +88,50 @@ export default function CentralComunicacao() {
     },
   });
 
-  // Query Settings
+  // Query Settings - Using masked view for security
   const { data: settings = [], isLoading: loadingSettings } = useQuery({
-    queryKey: ["communication_settings", lojaId],
+    queryKey: ["v_communication_settings", lojaId],
     enabled: !!lojaId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("communication_settings")
+        .from("v_communication_settings")
         .select("*")
         .eq("loja_id", lojaId!);
+      if (error) throw error;
+      // Map configuracao_masked to configuracao for component compatibility
+      return data.map(s => ({
+        ...s,
+        configuracao: (s as any).configuracao_masked
+      }));
+    },
+  });
+
+  // Query Metrics
+  const { data: metrics = [] } = useQuery({
+    queryKey: ["v_communication_metrics", lojaId],
+    enabled: !!lojaId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("v_communication_metrics")
+        .select("*")
+        .eq("loja_id", lojaId!);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Query Alerts
+  const { data: alerts = [] } = useQuery({
+    queryKey: ["communication_alerts", lojaId],
+    enabled: !!lojaId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("communication_alerts")
+        .select("*")
+        .eq("loja_id", lojaId!)
+        .eq("resolvido", false)
+        .order("created_at", { ascending: false })
+        .limit(5);
       if (error) throw error;
       return data;
     },
@@ -134,17 +169,24 @@ export default function CentralComunicacao() {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (config: any) => {
-      const { id, ...rest } = config;
+      const { id, configuracao, ...rest } = config;
+      
+      // Sanitizar configuração: se a api_key começar com ***, não enviar para não sobrescrever a chave real com a máscara
+      const updatedConfig = { ...configuracao };
+      if (updatedConfig.api_key && updatedConfig.api_key.startsWith('***')) {
+        delete updatedConfig.api_key;
+      }
+
       if (id) {
         const { error } = await supabase
           .from("communication_settings")
-          .update(rest)
+          .update({ ...rest, configuracao: updatedConfig })
           .eq("id", id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("communication_settings")
-          .insert([{ ...rest, loja_id: lojaId }]);
+          .insert([{ ...rest, configuracao: updatedConfig, loja_id: lojaId }]);
         if (error) throw error;
       }
     },
@@ -231,6 +273,71 @@ export default function CentralComunicacao() {
           </p>
         </div>
       </div>
+
+      {/* Dashboard de Métricas e Alertas */}
+      <div className="grid gap-4 md:grid-cols-4">
+        {metrics.map((m: any) => (
+          <Card key={`${m.loja_id}-${m.canal}`} className="bg-muted/30">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {getCanalIcon(m.canal)}
+                  <span className="font-semibold capitalize">{m.canal}</span>
+                </div>
+                <Badge variant={m.falhas > 0 ? "destructive" : "secondary"}>
+                  {m.enviados} envios / {m.falhas} falhas
+                </Badge>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <p className="text-muted-foreground">Entregues</p>
+                  <p className="font-medium text-green-600">{m.entregues}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Tempo Médio</p>
+                  <p className="font-medium">{Math.round(m.tempo_medio_entrega || 0)}s</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+        {metrics.length === 0 && (
+          <div className="col-span-4 py-4 text-center text-sm text-muted-foreground italic">
+            Sem métricas disponíveis para as últimas 24h.
+          </div>
+        )}
+      </div>
+
+      {alerts.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold flex items-center gap-2 text-destructive">
+            <AlertCircle className="h-4 w-4" />
+            Alertas de Atenção
+          </h3>
+          <div className="grid gap-2">
+            {alerts.map((alert: any) => (
+              <div key={alert.id} className="flex items-center justify-between p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm">
+                <div className="flex items-center gap-3">
+                  <Badge variant="destructive" className="uppercase text-[10px]">
+                    {alert.tipo.replace('_', ' ')}
+                  </Badge>
+                  <span className="font-medium">{alert.mensagem}</span>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={async () => {
+                    await supabase.from("communication_alerts").update({ resolvido: true, resolvido_em: new Date().toISOString() }).eq("id", alert.id);
+                    qc.invalidateQueries({ queryKey: ["communication_alerts"] });
+                  }}
+                >
+                  Resolver
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full max-w-md grid-cols-2">
@@ -506,12 +613,34 @@ export default function CentralComunicacao() {
               {selectedMsg.erro && (
                 <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm flex gap-2 items-start">
                   <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-                  <div>
-                    <span className="font-bold">Log de Erro:</span>
-                    <p className="mt-1 font-mono text-xs">{selectedMsg.erro}</p>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold">Log de Erro:</span>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-6 text-[10px]"
+                        onClick={() => {
+                          navigator.clipboard.writeText(selectedMsg.erro);
+                          toast.success("Erro copiado!");
+                        }}
+                      >
+                        Copiar Erro
+                      </Button>
+                    </div>
+                    <p className="mt-1 font-mono text-xs break-all">{selectedMsg.erro}</p>
                   </div>
                 </div>
               )}
+
+              <div className="space-y-2">
+                <Label className="text-xs">Payload Técnico (Sanitizado)</Label>
+                <ScrollArea className="h-32 w-full rounded-md border p-2 bg-muted/50">
+                  <pre className="text-[10px] font-mono">
+                    {JSON.stringify(selectedMsg.payload, null, 2)}
+                  </pre>
+                </ScrollArea>
+              </div>
 
               <div className="flex justify-between items-center text-[10px] text-muted-foreground">
                 <div className="flex gap-4">
