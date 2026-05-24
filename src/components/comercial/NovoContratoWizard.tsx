@@ -473,6 +473,20 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
           .single();
         if (contErr) throw contErr;
 
+        // Integrar com automação
+        try {
+          const { automationService } = await import("@/services/automationService");
+          await automationService.dispararGatilho(
+            "contrato_criado",
+            "contrato",
+            contrato.id,
+            perfil.loja_id,
+            { cliente_id: finalClienteId, contrato_id: contrato.id }
+          );
+        } catch (err) {
+          console.error("Erro ao disparar gatilho de automação (contrato_criado):", err);
+        }
+
         await supabase.from("orcamentos").update({ contrato_id: contrato.id }).eq("id", orcamento.id);
         if (selectedLeadId) await supabase.from("leads").update({ status: "convertido" }).eq("id", selectedLeadId);
 
