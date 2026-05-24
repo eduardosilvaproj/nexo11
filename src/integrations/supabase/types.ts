@@ -4573,6 +4573,63 @@ export type Database = {
           },
         ]
       }
+      rh_disponibilidade_excecoes: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          data_fim: string
+          data_inicio: string
+          funcionario_id: string
+          id: string
+          loja_id: string
+          motivo: string | null
+          origem: string | null
+          origem_id: string | null
+          tipo: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          data_fim: string
+          data_inicio: string
+          funcionario_id: string
+          id?: string
+          loja_id: string
+          motivo?: string | null
+          origem?: string | null
+          origem_id?: string | null
+          tipo: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          data_fim?: string
+          data_inicio?: string
+          funcionario_id?: string
+          id?: string
+          loja_id?: string
+          motivo?: string | null
+          origem?: string | null
+          origem_id?: string | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rh_disponibilidade_excecoes_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "rh_funcionarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rh_disponibilidade_excecoes_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rh_documentos: {
         Row: {
           arquivo_url: string
@@ -4620,6 +4677,66 @@ export type Database = {
           },
           {
             foreignKeyName: "rh_documentos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rh_escalas: {
+        Row: {
+          ativo: boolean
+          created_at: string | null
+          dia_semana: number
+          funcionario_id: string
+          hora_fim: string
+          hora_inicio: string
+          id: string
+          intervalo_fim: string | null
+          intervalo_inicio: string | null
+          loja_id: string
+          observacoes: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string | null
+          dia_semana: number
+          funcionario_id: string
+          hora_fim: string
+          hora_inicio: string
+          id?: string
+          intervalo_fim?: string | null
+          intervalo_inicio?: string | null
+          loja_id: string
+          observacoes?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string | null
+          dia_semana?: number
+          funcionario_id?: string
+          hora_fim?: string
+          hora_inicio?: string
+          id?: string
+          intervalo_fim?: string | null
+          intervalo_inicio?: string | null
+          loja_id?: string
+          observacoes?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rh_escalas_funcionario_id_fkey"
+            columns: ["funcionario_id"]
+            isOneToOne: false
+            referencedRelation: "rh_funcionarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rh_escalas_loja_id_fkey"
             columns: ["loja_id"]
             isOneToOne: false
             referencedRelation: "lojas"
@@ -5418,6 +5535,14 @@ export type Database = {
           p_requisicao_id: string
           p_reserva_id: string
           p_usuario_id: string
+        }
+        Returns: Json
+      }
+      calcular_disponibilidade_funcionario: {
+        Args: {
+          p_data_fim: string
+          p_data_inicio: string
+          p_funcionario_id: string
         }
         Returns: Json
       }

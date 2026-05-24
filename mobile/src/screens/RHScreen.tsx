@@ -12,9 +12,11 @@ import {
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 
 export default function RHScreen() {
   const { profile, user } = useAuth();
+  const navigation = useNavigation<any>();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [funcionario, setFuncionario] = useState<any>(null);
@@ -102,6 +104,14 @@ export default function RHScreen() {
       style={s.container}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />}
     >
+      <TouchableOpacity 
+        style={s.scaleButton} 
+        onPress={() => navigation.navigate('MinhaEscala')}
+      >
+        <Ionicons name="time-outline" size={20} color="#3b82f6" />
+        <Text style={s.scaleButtonText}>Ver Minha Escala Completa</Text>
+        <Ionicons name="chevron-forward" size={16} color="#3b82f6" />
+      </TouchableOpacity>
       <View style={s.section}>
         <Text style={s.sectionTitle}>Meus Dados</Text>
         <View style={s.card}>
@@ -186,7 +196,7 @@ const s = StyleSheet.create({
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   label: { color: '#94a3b8', fontSize: 14 },
   value: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  emptyText: { color: '#64748b', textAlign: 'center', py: 20 },
+  emptyText: { color: '#64748b', textAlign: 'center', paddingVertical: 20 },
   requestHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   requestType: { color: '#fff', fontWeight: '700', fontSize: 14 },
   requestDate: { color: '#94a3b8', fontSize: 12, marginBottom: 4 },
@@ -199,4 +209,15 @@ const s = StyleSheet.create({
   documentInfo: { flex: 1, marginLeft: 12 },
   documentTitle: { color: '#fff', fontSize: 14, fontWeight: '600' },
   documentType: { color: '#64748b', fontSize: 12 },
+  scaleButton: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: '#3b82f615', 
+    padding: 16, 
+    borderRadius: 12, 
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#3b82f633'
+  },
+  scaleButtonText: { color: '#3b82f6', fontWeight: '700', flex: 1, marginLeft: 12 },
 });

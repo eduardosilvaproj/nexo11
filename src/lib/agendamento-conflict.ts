@@ -23,7 +23,51 @@ export interface ConflictCheckResult {
   horasReservadas: number;
   horasNovas: number;
   capacidade: number;
+  rhConflito?: { funcionario: string; motivo: string } | null;
   error?: string;
+}
+
+export async function checkRHAvailability(
+  equipeId: string,
+  dataInicio: string,
+  dataFim: string
+): Promise<{ funcionario: string; motivo: string } | null> {
+  // Get team members
+  const { data: membros } = await supabase
+    .from("equipe_membros")
+    .select("user_id")
+    .eq("equipe_id", equipeId);
+  
+  if (!membros || membros.length === 0) return null;
+
+  for (const membro of membros) {
+    if (!membro.user_id) continue;
+
+    // Find rh_funcionario
+    const { data: func } = await supabase
+      .from("rh_funcionarios")
+      .select("id, nome")
+      .eq("user_id", membro.user_id)
+      .maybeSingle();
+
+    if (func) {
+      const { data: disp } = await supabase.rpc("calcular_disponibilidade_funcionario", {
+        p_funcionario_id: func.id,
+        p_data_inicio: dataInicio,
+        p_data_fim: dataFim
+      });
+
+      const res = disp as { status: string; motivo: string | null };
+      if (res && res.status !== 'disponivel') {
+        return {
+          funcionario: func.nome,
+          motivo: res.motivo || res.status
+        };
+      }
+    }
+  }
+
+  return null;
 }
 
 export async function checkAgendamentoConflict(
@@ -37,11 +81,22 @@ export async function checkAgendamentoConflict(
     horasReservadas: 0,
     horasNovas,
     capacidade,
+    rhConflito: null,
   };
 
   if (!p.equipeId || !p.data) return base;
   if (p.horaInicio && p.horaFim && p.horaInicio >= p.horaFim) {
     return { ...base, error: "Hora fim deve ser maior que hora início" };
+  }
+
+  // RH Check
+  if (p.horaInicio && p.horaFim) {
+    const dataInicio = `${p.data}T${p.horaInicio}:00Z`; // Approximation, should consider timezone
+    const dataFim = `${p.data}T${p.horaFim}:00Z`;
+    const rhConflito = await checkRHAvailability(p.equipeId, dataInicio, dataFim);
+    if (rhConflito) {
+      return { ...base, rhConflito };
+    }
   }
 
   let q = supabase
@@ -77,5 +132,6 @@ export async function checkAgendamentoConflict(
     horasReservadas,
     horasNovas,
     capacidade,
+    rhConflito: null, // If we reached here, there's no rhConflito (or we'd have returned early)
   };
 }
