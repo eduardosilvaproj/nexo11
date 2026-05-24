@@ -289,6 +289,14 @@ export default function CentralComunicacao() {
                     <RefreshCw className="h-4 w-4" />
                     Processar Fila
                   </Button>
+                  <Button 
+                    variant="default" 
+                    className="gap-2"
+                    onClick={() => setTestDialogOpen(true)}
+                  >
+                    <Send className="h-4 w-4" />
+                    Enviar Teste
+                  </Button>
                   <Button variant="outline" size="icon" onClick={() => qc.invalidateQueries({ queryKey: ["communication_outbox"] })}>
                     <RefreshCw className="h-4 w-4" />
                   </Button>
