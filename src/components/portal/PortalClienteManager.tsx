@@ -124,6 +124,15 @@ export function PortalClienteManager({ contratoId, clienteId, lojaId }: Props) {
               </Button>
             </div>
 
+            <Button 
+              className="w-full bg-green-600 hover:bg-green-700 text-white" 
+              size="sm"
+              onClick={() => setComunicarOpen(true)}
+            >
+              <Send className="w-3 h-3 mr-2" />
+              Comunicar Cliente
+            </Button>
+
             <div className="pt-2 border-t border-slate-200 flex flex-col gap-2">
               <div className="flex justify-between text-[10px] text-slate-400">
                 <span>Criado em: {format(new Date(acesso.created_at), "dd/MM/yy")}</span>
