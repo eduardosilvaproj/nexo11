@@ -153,6 +153,14 @@ export function PortalClienteManager({ contratoId, clienteId, lojaId }: Props) {
           </div>
         )}
       </CardContent>
+
+      <ComunicacaoClienteDialog 
+        open={comunicarOpen}
+        onOpenChange={setComunicarOpen}
+        contratoId={contratoId}
+        clienteId={clienteId}
+        lojaId={lojaId}
+      />
     </Card>
   );
 }
