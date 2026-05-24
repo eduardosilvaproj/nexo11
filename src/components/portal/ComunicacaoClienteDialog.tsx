@@ -173,11 +173,15 @@ export function ComunicacaoClienteDialog({ open, onOpenChange, contratoId, clien
   const registrarComunicacao = useMutation({
     mutationFn: async (status: string = "enviado") => {
       const { data: { user } } = await supabase.auth.getUser();
+      
+      const finalLojaId = lojaId || contrato?.loja_id;
+      if (!finalLojaId) throw new Error("ID da loja não encontrado");
+
       const { error } = await supabase
         .from("cliente_comunicacoes")
         .insert({
-          loja_id: lojaId,
-          cliente_id: clienteId,
+          loja_id: finalLojaId,
+          cliente_id: clienteId || contrato?.cliente_id,
           contrato_id: contratoId,
           portal_token_id: portalToken?.id,
           canal,
