@@ -769,6 +769,99 @@ export type Database = {
           },
         ]
       }
+      cliente_comunicacoes: {
+        Row: {
+          assunto: string | null
+          canal: string
+          cliente_id: string | null
+          contrato_id: string | null
+          created_at: string
+          destinatario: string
+          enviado_em: string | null
+          enviado_por: string | null
+          erro: string | null
+          id: string
+          loja_id: string
+          mensagem: string
+          portal_token_id: string | null
+          status: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          assunto?: string | null
+          canal: string
+          cliente_id?: string | null
+          contrato_id?: string | null
+          created_at?: string
+          destinatario: string
+          enviado_em?: string | null
+          enviado_por?: string | null
+          erro?: string | null
+          id?: string
+          loja_id: string
+          mensagem: string
+          portal_token_id?: string | null
+          status?: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          assunto?: string | null
+          canal?: string
+          cliente_id?: string | null
+          contrato_id?: string | null
+          created_at?: string
+          destinatario?: string
+          enviado_em?: string | null
+          enviado_por?: string | null
+          erro?: string | null
+          id?: string
+          loja_id?: string
+          mensagem?: string
+          portal_token_id?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_comunicacoes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_comunicacoes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_comunicacoes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_comunicacoes_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_comunicacoes_portal_token_id_fkey"
+            columns: ["portal_token_id"]
+            isOneToOne: false
+            referencedRelation: "portal_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clientes: {
         Row: {
           celular: string | null
