@@ -53,6 +53,19 @@ import SemPermissao from "./pages/SemPermissao";
 import Notificacoes from "./pages/Notificacoes";
 import ConfiguracaoInicial from "./pages/ConfiguracaoInicial";
 import ModoCampo from "./pages/ModoCampo";
+import MasterLayout from "@/components/master/MasterLayout";
+import { MasterProtectedRoute } from "@/components/master/MasterProtectedRoute";
+import MasterDashboard from "./pages/master/MasterDashboard";
+import MasterClientes from "./pages/master/MasterClientes";
+import MasterLojas from "./pages/master/MasterLojas";
+import MasterPlanos from "./pages/master/MasterPlanos";
+import MasterAssinaturas from "./pages/master/MasterAssinaturas";
+import MasterLimites from "./pages/master/MasterLimites";
+import MasterSuporte from "./pages/master/MasterSuporte";
+import MasterSaude from "./pages/master/MasterSaude";
+import MasterAuditoria from "./pages/master/MasterAuditoria";
+
+
 
 
 
@@ -257,6 +270,24 @@ const App = () => (
               <Route path="/sem-permissao" element={<SemPermissao />} />
             </Route>
 
+            <Route
+              path="/master"
+              element={
+                <MasterProtectedRoute>
+                  <MasterLayout />
+                </MasterProtectedRoute>
+              }
+            >
+              <Route index element={<MasterDashboard />} />
+              <Route path="clientes" element={<MasterClientes />} />
+              <Route path="lojas" element={<MasterLojas />} />
+              <Route path="planos" element={<MasterPlanos />} />
+              <Route path="assinaturas" element={<MasterAssinaturas />} />
+              <Route path="limites" element={<MasterLimites />} />
+              <Route path="suporte" element={<MasterSuporte />} />
+              <Route path="saude" element={<MasterSaude />} />
+              <Route path="auditoria" element={<MasterAuditoria />} />
+            </Route>
 
             <Route path="*" element={<NotFound />} />
           </Routes>
