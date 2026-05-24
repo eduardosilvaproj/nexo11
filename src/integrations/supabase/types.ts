@@ -1274,6 +1274,53 @@ export type Database = {
           },
         ]
       }
+      communication_alerts: {
+        Row: {
+          canal: string
+          created_at: string | null
+          id: string
+          loja_id: string | null
+          mensagem: string
+          metadata: Json | null
+          resolvido: boolean | null
+          resolvido_em: string | null
+          severidade: string
+          tipo: string
+        }
+        Insert: {
+          canal: string
+          created_at?: string | null
+          id?: string
+          loja_id?: string | null
+          mensagem: string
+          metadata?: Json | null
+          resolvido?: boolean | null
+          resolvido_em?: string | null
+          severidade?: string
+          tipo: string
+        }
+        Update: {
+          canal?: string
+          created_at?: string | null
+          id?: string
+          loja_id?: string | null
+          mensagem?: string
+          metadata?: Json | null
+          resolvido?: boolean | null
+          resolvido_em?: string | null
+          severidade?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_alerts_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       communication_outbox: {
         Row: {
           assunto: string | null
@@ -1411,6 +1458,7 @@ export type Database = {
           horario_fim: string | null
           horario_inicio: string | null
           id: string
+          last_webhook_at: string | null
           limite_diario: number | null
           loja_id: string
           provider: string
@@ -1427,6 +1475,7 @@ export type Database = {
           horario_fim?: string | null
           horario_inicio?: string | null
           id?: string
+          last_webhook_at?: string | null
           limite_diario?: number | null
           loja_id: string
           provider: string
@@ -1443,6 +1492,7 @@ export type Database = {
           horario_fim?: string | null
           horario_inicio?: string | null
           id?: string
+          last_webhook_at?: string | null
           limite_diario?: number | null
           loja_id?: string
           provider?: string
@@ -6291,6 +6341,87 @@ export type Database = {
           },
         ]
       }
+      v_communication_metrics: {
+        Row: {
+          canal: string | null
+          entregues: number | null
+          enviados: number | null
+          falhas: number | null
+          loja_id: string | null
+          opt_outs: number | null
+          pendentes: number | null
+          tempo_medio_entrega: number | null
+          tempo_medio_processamento: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_outbox_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_communication_settings: {
+        Row: {
+          ativo: boolean | null
+          canal: string | null
+          configuracao_masked: Json | null
+          created_at: string | null
+          dry_run: boolean | null
+          horario_fim: string | null
+          horario_inicio: string | null
+          id: string | null
+          last_webhook_at: string | null
+          limite_diario: number | null
+          loja_id: string | null
+          provider: string | null
+          remetente: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          canal?: string | null
+          configuracao_masked?: never
+          created_at?: string | null
+          dry_run?: boolean | null
+          horario_fim?: string | null
+          horario_inicio?: string | null
+          id?: string | null
+          last_webhook_at?: string | null
+          limite_diario?: number | null
+          loja_id?: string | null
+          provider?: string | null
+          remetente?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          canal?: string | null
+          configuracao_masked?: never
+          created_at?: string | null
+          dry_run?: boolean | null
+          horario_fim?: string | null
+          horario_inicio?: string | null
+          id?: string | null
+          last_webhook_at?: string | null
+          limite_diario?: number | null
+          loja_id?: string | null
+          provider?: string | null
+          remetente?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_settings_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vw_contratos_dre: {
         Row: {
           assinado: boolean | null
@@ -6400,6 +6531,7 @@ export type Database = {
         Args: { p_canal: string; p_cliente_id: string; p_loja_id: string }
         Returns: boolean
       }
+      check_communication_anomalies: { Args: never; Returns: undefined }
       check_communication_quota: {
         Args: { p_canal: string; p_loja_id: string }
         Returns: boolean
