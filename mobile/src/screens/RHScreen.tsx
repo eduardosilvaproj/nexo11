@@ -104,6 +104,14 @@ export default function RHScreen() {
       style={s.container}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />}
     >
+      <TouchableOpacity 
+        style={s.scaleButton} 
+        onPress={() => navigation.navigate('MinhaEscala')}
+      >
+        <Ionicons name="time-outline" size={20} color="#3b82f6" />
+        <Text style={s.scaleButtonText}>Ver Minha Escala Completa</Text>
+        <Ionicons name="chevron-forward" size={16} color="#3b82f6" />
+      </TouchableOpacity>
       <View style={s.section}>
         <Text style={s.sectionTitle}>Meus Dados</Text>
         <View style={s.card}>
