@@ -99,7 +99,7 @@ export function ContratoMedicaoAmbientesSection({
       const { data, error } = await sb
         .from("contrato_ambientes")
         .select(
-          "id, nome, valor_liquido, medidor_id, percentual_medidor, valor_medidor, status_medicao, data_medicao, conferente_id, percentual_conferente, valor_conferente, status_conferencia, data_conferencia, montador_id, percentual_montador, valor_montador, status_montagem, data_montagem, medicao_fotos, medicao_scans, medicao_concluido, observacoes",
+          "id, nome, valor_liquido, contrato_id, medidor_id, percentual_medidor, valor_medidor, status_medicao, data_medicao, conferente_id, percentual_conferente, valor_conferente, status_conferencia, data_conferencia, montador_id, percentual_montador, valor_montador, status_montagem, data_montagem, medicao_fotos, medicao_scans, medicao_concluido, observacoes, contratos(cliente_id)",
         )
         .eq("contrato_id", contratoId)
         .order("created_at", { ascending: true });
