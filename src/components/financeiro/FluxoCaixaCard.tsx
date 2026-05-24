@@ -168,7 +168,7 @@ export function FluxoCaixaCard() {
     .filter((l) => l.tipo === "despesa" && l.status !== "cancelado")
     .reduce((s, l) => s + l.valor, 0);
 
-  const [pagamentoAlvo, setPagamentoAlvo] = useState<{ id: string; descricao: string; valor: number } | null>(null);
+  const [pagamentoAlvo, setPagamentoAlvo] = useState<{ id: string; descricao: string; valor: number; tipo: LancamentoTipo } | null>(null);
   async function cancelar(id: string, tipo: LancamentoTipo) {
     if (!window.confirm("Cancelar este lançamento?")) return;
     const table = tipo === "receita" ? "financeiro_contas_receber" : "financeiro_contas_pagar";
