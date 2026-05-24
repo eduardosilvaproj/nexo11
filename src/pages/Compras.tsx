@@ -7,8 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { EstoqueItemSelector } from "@/components/compras/EstoqueItemSelector";
+import { useAuth } from "@/contexts/AuthContext";
+import { canPerform } from "@/lib/permissions";
 
 const sb = supabase as unknown as { from: (t: string) => any };
+
 
 interface ReqItem {
   id?: string;
@@ -58,8 +61,11 @@ function StatCard({ icon: Icon, label, value, color }: any) {
 }
 
 export default function Compras() {
+  const { roles } = useAuth();
   const qc = useQueryClient();
   const [openId, setOpenId] = useState<string | null>(null);
+  const podeGerenciar = canPerform(roles, "compras.manage");
+
 
   const { data: reqs = [], isLoading } = useQuery<Requisicao[]>({
     queryKey: ["compras-requisicoes"],
@@ -189,6 +195,7 @@ export default function Compras() {
           qc.invalidateQueries({ queryKey: ["estoque_reservas"] });
           qc.invalidateQueries({ queryKey: ["estoque_movimentacoes"] });
         }}
+        podeGerenciar={podeGerenciar}
       />
     </div>
   );
@@ -206,6 +213,7 @@ function RequisicaoDrawer({
   ambienteNome?: string;
   onClose: () => void;
   onChanged: () => void;
+  podeGerenciar?: boolean;
 }) {
   const open = !!requisicao;
   const [items, setItems] = useState<ReqItem[]>([]);
@@ -332,7 +340,7 @@ function RequisicaoDrawer({
                     size="sm"
                     variant={it.origem === "comprar" ? "default" : "outline"}
                     onClick={() => toggleOrigem(idx)}
-                    disabled={!!it.reserva_estoque_id || it.estoque_baixado}
+                    disabled={!!it.reserva_estoque_id || it.estoque_baixado || !podeGerenciar}
                   >
                     {it.origem === "comprar" ? "🛒 Comprar" : "📦 Almoxarifado"}
                   </Button>
@@ -340,7 +348,7 @@ function RequisicaoDrawer({
                     size="sm"
                     variant={it.status === "concluido" ? "default" : "outline"}
                     onClick={() => toggleStatus(idx)}
-                    disabled={it.origem === "almoxarifado" && !it.estoque_baixado}
+                    disabled={(it.origem === "almoxarifado" && !it.estoque_baixado) || !podeGerenciar}
                   >
                     {it.status === "concluido" ? "✓ Concluído" : "Pendente"}
                   </Button>
@@ -361,11 +369,15 @@ function RequisicaoDrawer({
         </div>
 
         <div className="mt-6 flex items-center justify-between gap-2">
-          <Button variant="outline" onClick={salvar}>Salvar alterações</Button>
-          <Button onClick={concluir} disabled={!allDone}>
-            <CheckCircle2 size={14} className="mr-1.5" />
-            Concluir requisição
-          </Button>
+          {podeGerenciar && (
+            <>
+              <Button variant="outline" onClick={salvar}>Salvar alterações</Button>
+              <Button onClick={concluir} disabled={!allDone}>
+                <CheckCircle2 size={14} className="mr-1.5" />
+                Concluir requisição
+              </Button>
+            </>
+          )}
         </div>
       </SheetContent>
     </Sheet>
