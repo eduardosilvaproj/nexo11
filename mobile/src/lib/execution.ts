@@ -45,7 +45,7 @@ export const ExecutionService = {
 
     if (error) {
       // If error (likely offline), add to sync queue
-      await SyncQueueService.enqueue({
+      await SyncQueueService.addToQueue({
         type: 'INSERT',
         table: 'operacao_checkins',
         data,
@@ -89,7 +89,7 @@ export const ExecutionService = {
       .eq('id', checkinId);
 
     if (error) {
-      await SyncQueueService.enqueue({
+      await SyncQueueService.addToQueue({
         type: 'UPDATE',
         table: 'operacao_checkins',
         id: checkinId,
@@ -107,7 +107,7 @@ export const ExecutionService = {
       .insert(params);
 
     if (error) {
-      await SyncQueueService.enqueue({
+      await SyncQueueService.addToQueue({
         type: 'INSERT',
         table: 'operacao_ocorrencias',
         data: params,

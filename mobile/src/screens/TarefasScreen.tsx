@@ -52,19 +52,14 @@ export default function TarefasScreen() {
     const checkin = activeCheckins[task.id];
     if (!checkin) return;
 
-    Alert.confirm ? Alert.alert('Finalizar', 'Deseja finalizar esta tarefa?', [
+    Alert.alert('Finalizar', 'Deseja finalizar esta tarefa?', [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Finalizar', onPress: async () => {
           await ExecutionService.finishCheckin(checkin.id);
           fetchCheckins();
           fetchTasks();
         }}
-    ]) : await (async () => {
-        // Fallback for environment without Confirm
-        await ExecutionService.finishCheckin(checkin.id);
-        fetchCheckins();
-        fetchTasks();
-    })();
+    ]);
   }
 
   async function submitOccurrence() {
