@@ -169,17 +169,24 @@ export default function CentralComunicacao() {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (config: any) => {
-      const { id, ...rest } = config;
+      const { id, configuracao, ...rest } = config;
+      
+      // Sanitizar configuração: se a api_key começar com ***, não enviar para não sobrescrever a chave real com a máscara
+      const updatedConfig = { ...configuracao };
+      if (updatedConfig.api_key && updatedConfig.api_key.startsWith('***')) {
+        delete updatedConfig.api_key;
+      }
+
       if (id) {
         const { error } = await supabase
           .from("communication_settings")
-          .update(rest)
+          .update({ ...rest, configuracao: updatedConfig })
           .eq("id", id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("communication_settings")
-          .insert([{ ...rest, loja_id: lojaId }]);
+          .insert([{ ...rest, configuracao: updatedConfig, loja_id: lojaId }]);
         if (error) throw error;
       }
     },
