@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export function MasterProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useAuth();
-  const { isAdmin, loading } = usePlatformAdmin();
+  const { isAdmin, isSupport, loading } = usePlatformAdmin();
 
   if (authLoading || loading) {
     return (
@@ -15,6 +15,7 @@ export function MasterProtectedRoute({ children }: { children: React.ReactNode }
     );
   }
   if (!user) return <Navigate to="/login" replace />;
-  if (!isAdmin) return <Navigate to="/sem-permissao" replace />;
+  if (!isSupport) return <Navigate to="/sem-permissao" replace />;
+
   return <>{children}</>;
 }
