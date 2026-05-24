@@ -4168,6 +4168,24 @@ export type Database = {
         Args: { p_contrato_id: string; p_usuario_id?: string }
         Returns: Json
       }
+      baixar_estoque_requisicao: {
+        Args: {
+          p_item_id_ou_idx: string
+          p_requisicao_id: string
+          p_reserva_id: string
+          p_usuario_id: string
+        }
+        Returns: Json
+      }
+      cancelar_reserva_estoque_requisicao: {
+        Args: {
+          p_item_id_ou_idx: string
+          p_requisicao_id: string
+          p_reserva_id: string
+          p_usuario_id: string
+        }
+        Returns: Json
+      }
       contrato_da_loja: { Args: { _contrato_id: string }; Returns: boolean }
       contrato_log_inserir: {
         Args: {
@@ -4249,6 +4267,18 @@ export type Database = {
       realtime_canal_user_permitido: {
         Args: { _topic: string }
         Returns: boolean
+      }
+      reservar_estoque_requisicao: {
+        Args: {
+          p_contrato_id: string
+          p_item_estoque_id: string
+          p_item_id_ou_idx: string
+          p_loja_id: string
+          p_quantidade: number
+          p_requisicao_id: string
+          p_usuario_id: string
+        }
+        Returns: Json
       }
       user_is_matriz: { Args: { p_user: string }; Returns: boolean }
       user_lojas_ids: { Args: { p_user: string }; Returns: string[] }
