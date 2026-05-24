@@ -132,5 +132,6 @@ export async function checkAgendamentoConflict(
     horasReservadas,
     horasNovas,
     capacidade,
+    rhConflito: null, // If we reached here, there's no rhConflito (or we'd have returned early)
   };
 }
