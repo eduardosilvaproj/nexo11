@@ -10,6 +10,8 @@ import { NovaEntregaDialog } from "@/components/logistica/NovaEntregaDialog";
 import { EntregaDrawer, type EntregaDrawerData } from "@/components/logistica/EntregaDrawer";
 import { StatusBadge, type StatusVisual } from "@/components/logistica/StatusBadge";
 import { MateriaisSeparadosTab } from "@/components/logistica/MateriaisSeparadosTab";
+import { useAuth } from "@/contexts/AuthContext";
+import { canPerform } from "@/lib/permissions";
 import {
   addDays,
   dayShortNames,
@@ -18,6 +20,7 @@ import {
   weekDays,
   weekRangeLabel,
 } from "@/lib/agenda-week";
+
 
 function MetricCard({ label, value, accent }: { label: string; value: string; accent?: string }) {
   return (
@@ -51,6 +54,7 @@ function shortAddress(addr: string | null): string {
 }
 
 export default function Logistica() {
+  const { roles } = useAuth();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [anchor, setAnchor] = useState<Date>(() => startOfWeek(new Date()));
@@ -143,9 +147,11 @@ export default function Logistica() {
           <h1 className="text-[22px] font-semibold text-foreground">NEXO Logística</h1>
           <p className="text-sm text-muted-foreground">Agenda visual semanal de entregas</p>
         </div>
-        <Button onClick={() => { setCreateDate(undefined); setCreateTurno(undefined); setCreateOpen(true); }} className="w-full sm:w-auto">
-          <Plus className="mr-1 h-4 w-4" /> Nova Entrega
-        </Button>
+        {canPerform(roles, "logistica.update") && (
+          <Button onClick={() => { setCreateDate(undefined); setCreateTurno(undefined); setCreateOpen(true); }} className="w-full sm:w-auto">
+            <Plus className="mr-1 h-4 w-4" /> Nova Entrega
+          </Button>
+        )}
       </div>
 
       <Tabs defaultValue="agenda" className="space-y-6">
@@ -282,11 +288,12 @@ function DaySlot({
   onAdd: () => void;
   topBorder?: boolean;
 }) {
+  const { roles } = useAuth();
   return (
     <div
       className={`border-r px-2 py-2 last:border-r-0 ${topBorder ? "border-t" : ""} min-h-[160px] flex flex-col gap-1.5`}
     >
-      {items.length === 0 && (
+      {items.length === 0 && canPerform(roles, "logistica.update") && (
         <button
           onClick={onAdd}
           className="flex h-full min-h-[140px] w-full items-center justify-center rounded-lg border border-dashed text-[11px] text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors"
@@ -307,7 +314,7 @@ function DaySlot({
           <div className="mt-1.5"><StatusBadge status={e.status_visual} /></div>
         </button>
       ))}
-      {items.length > 0 && (
+      {items.length > 0 && canPerform(roles, "logistica.update") && (
         <button
           onClick={onAdd}
           className="mt-auto rounded-md py-1 text-[10px] text-muted-foreground hover:text-primary"
