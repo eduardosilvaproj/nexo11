@@ -26,6 +26,7 @@ import {
   Package,
   Bell,
   Rocket,
+  Smartphone,
 } from "lucide-react";
 import { useNotificacoes } from "@/hooks/use-notificacoes";
 import {
