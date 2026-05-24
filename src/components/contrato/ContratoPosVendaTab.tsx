@@ -416,6 +416,7 @@ export function ContratoPosVendaTab({ contratoId }: PosVendaTabProps) {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         }
       >
         {chamados.length === 0 ? (
