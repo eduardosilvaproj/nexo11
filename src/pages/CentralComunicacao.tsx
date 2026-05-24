@@ -156,7 +156,39 @@ export default function CentralComunicacao() {
     onError: (err: any) => toast.error("Erro ao salvar: " + err.message),
   });
 
+  const sendTestMutation = useMutation({
+    mutationFn: async (payload: { canal: string, destinatario: string, mensagem: string }) => {
+      const { data, error } = await supabase
+        .from("communication_outbox")
+        .insert([{
+          ...payload,
+          loja_id: lojaId,
+          dry_run: settings.find(s => s.canal === payload.canal)?.dry_run ?? true,
+          status: "pendente",
+          assunto: "Teste de Comunicação NEXO"
+        }])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      // Trigger processing immediately for tests
+      await supabase.functions.invoke("process-outbox");
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("Teste enviado para a fila e processado.");
+      qc.invalidateQueries({ queryKey: ["communication_outbox"] });
+      setTestDialogOpen(false);
+    },
+    onError: (err: any) => toast.error("Erro no teste: " + err.message),
+  });
+
+  const [testDialogOpen, setTestDialogOpen] = useState(false);
+  const [testPayload, setTestPayload] = useState({ canal: "email", destinatario: "", mensagem: "Olá, este é um teste de comunicação do NEXO." });
+
   const filteredOutbox = outbox.filter(msg => 
+
     msg.destinatario.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (msg.cliente as any)?.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (msg.contrato as any)?.id?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -256,6 +288,14 @@ export default function CentralComunicacao() {
                   >
                     <RefreshCw className="h-4 w-4" />
                     Processar Fila
+                  </Button>
+                  <Button 
+                    variant="default" 
+                    className="gap-2"
+                    onClick={() => setTestDialogOpen(true)}
+                  >
+                    <Send className="h-4 w-4" />
+                    Enviar Teste
                   </Button>
                   <Button variant="outline" size="icon" onClick={() => qc.invalidateQueries({ queryKey: ["communication_outbox"] })}>
                     <RefreshCw className="h-4 w-4" />
@@ -525,9 +565,50 @@ export default function CentralComunicacao() {
               </div>
 
               <div className="space-y-2">
-                <Label>Remetente / Nome de Exibição</Label>
+                <Label>Provedor</Label>
+                <Select 
+                  value={editingConfig.provider || ""} 
+                  onValueChange={(val) => setEditingConfig({ ...editingConfig, provider: val })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o provedor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {editingConfig.canal === 'email' && (
+                      <>
+                        <SelectItem value="resend">Resend</SelectItem>
+                        <SelectItem value="sendgrid">SendGrid</SelectItem>
+                        <SelectItem value="amazon_ses">Amazon SES</SelectItem>
+                      </>
+                    )}
+                    {editingConfig.canal === 'whatsapp' && (
+                      <>
+                        <SelectItem value="meta">Meta (Official API)</SelectItem>
+                        <SelectItem value="twilio">Twilio</SelectItem>
+                        <SelectItem value="zapi">Z-API</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>API Key / Token (Será armazenado com segurança)</Label>
                 <Input 
-                  placeholder="Ex: NEXO Tecnologia" 
+                  type="password"
+                  placeholder="••••••••••••••••" 
+                  value={editingConfig.configuracao?.api_key || ""}
+                  onChange={(e) => setEditingConfig({ 
+                    ...editingConfig, 
+                    configuracao: { ...editingConfig.configuracao, api_key: e.target.value } 
+                  })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Remetente / E-mail / Número (ID)</Label>
+                <Input 
+                  placeholder={editingConfig.canal === 'email' ? "contato@sualoja.com.br" : "ID do Telefone (Meta)"} 
                   value={editingConfig.remetente || ""}
                   onChange={(e) => setEditingConfig({ ...editingConfig, remetente: e.target.value })}
                 />
@@ -560,7 +641,7 @@ export default function CentralComunicacao() {
                   value={editingConfig.limite_diario || ""}
                   onChange={(e) => setEditingConfig({ ...editingConfig, limite_diario: parseInt(e.target.value) || null })}
                 />
-                <p className="text-[10px] text-muted-foreground">Evite bloqueios no WhatsApp usando limites seguros.</p>
+                <p className="text-[10px] text-muted-foreground">Evite bloqueios usando limites seguros.</p>
               </div>
 
               <Button 
@@ -572,6 +653,63 @@ export default function CentralComunicacao() {
               </Button>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Test Message Dialog */}
+      <Dialog open={testDialogOpen} onOpenChange={setTestDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Enviar Mensagem de Teste</DialogTitle>
+            <DialogDescription>
+              Valide se as configurações de provider e dry run estão funcionando corretamente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Canal</Label>
+              <Select 
+                value={testPayload.canal} 
+                onValueChange={(val) => setTestPayload({ ...testPayload, canal: val })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="email">E-mail</SelectItem>
+                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>{testPayload.canal === 'email' ? 'E-mail do Destinatário' : 'WhatsApp (DDI+DDD+Número)'}</Label>
+              <Input 
+                placeholder={testPayload.canal === 'email' ? "seu@email.com" : "5511999999999"} 
+                value={testPayload.destinatario}
+                onChange={(e) => setTestPayload({ ...testPayload, destinatario: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Mensagem</Label>
+              <textarea 
+                className="w-full min-h-[100px] p-2 rounded-md border bg-background text-sm"
+                value={testPayload.mensagem}
+                onChange={(e) => setTestPayload({ ...testPayload, mensagem: e.target.value })}
+              />
+            </div>
+            <Button 
+              className="w-full gap-2" 
+              onClick={() => sendTestMutation.mutate(testPayload)}
+              disabled={sendTestMutation.isPending || !testPayload.destinatario}
+            >
+              {sendTestMutation.isPending ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              Disparar Teste
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
