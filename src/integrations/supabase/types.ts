@@ -6564,6 +6564,7 @@ export type Database = {
       }
       current_loja_id: { Args: never; Returns: string }
       debug_trigger_nps_pilot: { Args: never; Returns: undefined }
+      debug_trigger_nps_pos_venda_pilot: { Args: never; Returns: undefined }
       estornar_lancamento: {
         Args: { p_id: string; p_tipo: string }
         Returns: undefined
