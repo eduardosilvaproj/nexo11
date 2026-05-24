@@ -131,8 +131,8 @@ export default function CentralComunicacao() {
 
   const filteredOutbox = outbox.filter(msg => 
     msg.destinatario.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    msg.cliente?.nome_completo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    msg.contrato?.numero?.toLowerCase().includes(searchTerm.toLowerCase())
+    (msg.cliente as any)?.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (msg.contrato as any)?.id?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getStatusBadge = (status: string) => {
