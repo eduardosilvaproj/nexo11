@@ -111,6 +111,7 @@ export default function TarefasScreen() {
 
   useEffect(() => {
     fetchTasks();
+    fetchCheckins();
   }, [profile?.id]);
 
   const onRefresh = () => {
