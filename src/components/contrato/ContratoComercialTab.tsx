@@ -348,53 +348,85 @@ function GerarParcelasDialog({ open, onOpenChange, contratoId, valorVenda, lojaI
       const vTotal = Number(total);
       const vEntrada = Number(entrada);
       const nParc = Number(numParcelas);
-      const vParc = nParc > 0 ? (vTotal - vEntrada) / nParc : 0;
+
+      if (vTotal <= 0) throw new Error("Valor total deve ser maior que zero");
+      if (vEntrada < 0) throw new Error("Entrada não pode ser negativa");
+      if (vEntrada >= vTotal) throw new Error("Entrada deve ser menor que o valor total (ou use 0 parcelas)");
+      if (nParc < 0) throw new Error("Número de parcelas não pode ser negativo");
+
+      const saldoParaParcelar = vTotal - vEntrada;
+      
+      // Validação de segurança: se houver saldo, deve haver pelo menos 1 parcela
+      if (saldoParaParcelar > 0 && nParc <= 0) {
+        throw new Error("Saldo remanescente exige pelo menos 1 parcela.");
+      }
 
       const { data: existing } = await supabase
         .from("financeiro_contas_receber")
-        .select("id")
+        .select("id, status")
         .eq("contrato_id", contratoId)
-        .limit(1);
+        .neq("status", "cancelado");
 
       if (existing && existing.length > 0) {
-        if (!confirm("Já existem parcelas para este contrato. Deseja gerar novas parcelas? (Isso não apagará as existentes)")) {
+        const hasPago = existing.some(e => e.status === 'pago');
+        if (hasPago) {
+          throw new Error("Não é possível regerar parcelas pois já existem parcelas pagas vinculadas a este contrato.");
+        }
+        if (!confirm("Já existem parcelas ativas para este contrato. Elas serão CANCELADAS para dar lugar às novas. Deseja continuar?")) {
           setLoading(false);
           return;
         }
+        // Cancelar as antigas
+        await supabase
+          .from("financeiro_contas_receber")
+          .update({ status: 'cancelado' })
+          .eq("contrato_id", contratoId)
+          .neq("status", "pago");
       }
 
-      const inserts = [];
+      const parcelasInsert = [];
+      const loteId = crypto.randomUUID();
       
       // Entrada
       if (vEntrada > 0) {
-        inserts.push({
-          loja_id: lojaId,
-          contrato_id: contratoId,
+        parcelasInsert.push({
           descricao: "Entrada",
           valor: vEntrada,
           vencimento: new Date().toISOString().slice(0, 10),
-          status: "pendente"
+          numero: 0,
+          total: nParc
         });
       }
 
-      // Parcelas
-      for (let i = 1; i <= nParc; i++) {
-        const venc = new Date(primeiroVenc);
-        venc.setMonth(venc.getMonth() + i - 1);
-        
-        inserts.push({
-          loja_id: lojaId,
-          contrato_id: contratoId,
-          descricao: `Parcela ${i}/${nParc}`,
-          valor: vParc,
-          vencimento: venc.toISOString().slice(0, 10),
-          status: "pendente",
-          parcela_numero: i,
-          parcela_total: nParc
-        });
+      // Parcelas com ajuste de centavos na última
+      if (nParc > 0) {
+        const vParcBase = Math.floor((saldoParaParcelar / nParc) * 100) / 100;
+        const totalBase = vParcBase * nParc;
+        const ajuste = Number((saldoParaParcelar - totalBase).toFixed(2));
+
+        for (let i = 1; i <= nParc; i++) {
+          const venc = new Date(primeiroVenc);
+          venc.setMonth(venc.getMonth() + i - 1);
+          
+          const valorFinal = i === nParc ? Number((vParcBase + ajuste).toFixed(2)) : vParcBase;
+
+          parcelasInsert.push({
+            descricao: `Parcela ${i}/${nParc}`,
+            valor: valorFinal,
+            vencimento: venc.toISOString().slice(0, 10),
+            numero: i,
+            total: nParc
+          });
+        }
       }
 
-      const { error } = await supabase.from("financeiro_contas_receber").insert(inserts);
+      const { error } = await supabase.rpc('gerar_parcelas_contrato', {
+        p_contrato_id: contratoId,
+        p_loja_id: lojaId,
+        p_parcelas: parcelasInsert,
+        p_lote_id: loteId
+      });
+
       if (error) throw error;
 
       toast.success("Parcelas geradas com sucesso!");
