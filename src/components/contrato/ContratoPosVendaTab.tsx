@@ -613,6 +613,12 @@ export function ContratoPosVendaTab({ contratoId }: PosVendaTabProps) {
           </div>
         )}
       </Card>
+
+      <OperationalAttachments 
+        contratoId={contratoId} 
+        modulo="pos_venda" 
+        title="Evidências de Pós-venda e Atendimento" 
+      />
     </div>
   );
 }
