@@ -26,16 +26,16 @@ export const registrarEventoContrato = async (params: ContratoEventoParams) => {
   try {
     // Buscar loja_id do contrato para garantir integridade
     const { data: contrato, error: contratoError } = await supabase
-      .from("contratos")
+      .from("contratos" as any)
       .select("loja_id")
       .eq("id", params.contratoId)
       .single();
 
     if (contratoError) throw contratoError;
 
-    const { error } = await supabase.from("contrato_eventos").insert({
+    const { error } = await supabase.from("contrato_eventos" as any).insert({
       contrato_id: params.contratoId,
-      loja_id: contrato.loja_id,
+      loja_id: (contrato as any).loja_id,
       tipo: params.tipo,
       modulo: params.modulo,
       titulo: params.titulo,
