@@ -29,6 +29,7 @@ import {
   Smartphone,
   Briefcase,
   Activity,
+  Bot,
 } from "lucide-react";
 import { useNotificacoes } from "@/hooks/use-notificacoes";
 import {
@@ -87,6 +88,7 @@ const inteligencia: MenuItem[] = [
   { title: "Analytics", url: "/analytics", icon: BarChart3, roles: ["admin", "gerente", "franqueador", "admin_master"] },
   { title: "Integrações", url: "/integracoes", icon: Plug, roles: ["admin", "gerente", "admin_master"] },
   { title: "Estimativa PDF", url: "/estimativa-orcamento", icon: MessageSquare },
+  { title: "Automações", url: "/configuracoes/automacoes", icon: Bot, roles: ["admin", "gerente", "franqueador", "admin_master"] },
   { title: "Implantação", url: "/configuracao-inicial", icon: Rocket, roles: ["admin", "gerente", "franqueador", "admin_master"] },
   { title: "Modo Campo", url: "/campo", icon: Smartphone, roles: ["admin", "gerente", "tecnico", "medidor", "conferente", "logistico", "montador", "pos_venda", "almoxarife", "admin_master"] },
 ];
