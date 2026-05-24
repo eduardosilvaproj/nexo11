@@ -769,6 +769,77 @@ export type Database = {
           },
         ]
       }
+      cliente_portal_acessos: {
+        Row: {
+          ativo: boolean
+          cliente_id: string
+          contrato_id: string
+          created_at: string | null
+          created_by: string | null
+          expira_em: string | null
+          id: string
+          loja_id: string
+          token_hash: string
+          ultimo_acesso_em: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          cliente_id: string
+          contrato_id: string
+          created_at?: string | null
+          created_by?: string | null
+          expira_em?: string | null
+          id?: string
+          loja_id: string
+          token_hash: string
+          ultimo_acesso_em?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          cliente_id?: string
+          contrato_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          expira_em?: string | null
+          id?: string
+          loja_id?: string
+          token_hash?: string
+          ultimo_acesso_em?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_portal_acessos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_portal_acessos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_portal_acessos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_portal_acessos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clientes: {
         Row: {
           celular: string | null
@@ -1347,6 +1418,7 @@ export type Database = {
           tipo: string
           titulo: string
           usuario_id: string | null
+          visivel_cliente: boolean
         }
         Insert: {
           contrato_id: string
@@ -1361,6 +1433,7 @@ export type Database = {
           tipo: string
           titulo: string
           usuario_id?: string | null
+          visivel_cliente?: boolean
         }
         Update: {
           contrato_id?: string
@@ -1375,6 +1448,7 @@ export type Database = {
           tipo?: string
           titulo?: string
           usuario_id?: string | null
+          visivel_cliente?: boolean
         }
         Relationships: [
           {
@@ -1772,6 +1846,7 @@ export type Database = {
           tipo: string
           titulo: string
           updated_at: string
+          visivel_cliente: boolean
         }
         Insert: {
           arquivo_url?: string | null
@@ -1791,6 +1866,7 @@ export type Database = {
           tipo: string
           titulo: string
           updated_at?: string
+          visivel_cliente?: boolean
         }
         Update: {
           arquivo_url?: string | null
@@ -1810,6 +1886,7 @@ export type Database = {
           tipo?: string
           titulo?: string
           updated_at?: string
+          visivel_cliente?: boolean
         }
         Relationships: [
           {
@@ -5891,6 +5968,7 @@ export type Database = {
         Args: { p_serial: string }
         Returns: Json[]
       }
+      get_portal_contrato_id: { Args: never; Returns: string }
       has_role: {
         Args: {
           _loja_id?: string
@@ -5955,6 +6033,20 @@ export type Database = {
             }
             Returns: Json
           }
+      portal_cliente_abrir_chamado: {
+        Args: {
+          p_ambiente: string
+          p_contato: string
+          p_descricao: string
+          p_tipo: string
+          p_token: string
+        }
+        Returns: Json
+      }
+      portal_cliente_validar_token: {
+        Args: { p_token: string }
+        Returns: string
+      }
       portal_registrar_nps: {
         Args: { _comentario?: string; _nota: number; _token: string }
         Returns: Json
