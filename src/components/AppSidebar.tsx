@@ -28,6 +28,7 @@ import {
   Rocket,
   Smartphone,
   Briefcase,
+  Activity,
 } from "lucide-react";
 import { useNotificacoes } from "@/hooks/use-notificacoes";
 import {
