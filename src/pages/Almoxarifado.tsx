@@ -19,7 +19,8 @@ import { ItemFormDialog } from "@/components/almoxarifado/ItemFormDialog";
 import { toast } from "sonner";
 
 export default function Almoxarifado() {
-  const { perfil, loading: authLoading } = useAuth();
+  const { perfil, roles, loading: authLoading } = useAuth();
+  const { canPerform } = await import("@/lib/permissions"); // Import dinâmico ou fixo no topo se preferir
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("todos");
   const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
@@ -98,10 +99,12 @@ export default function Almoxarifado() {
           </h1>
           <p className="text-slate-500">Controle de itens, saldos e movimentações de estoque.</p>
         </div>
-        <Button onClick={handleNewItem} className="bg-blue-600 hover:bg-blue-700">
-          <Plus size={18} className="mr-2" />
-          Novo Item
-        </Button>
+        {canPerform(roles, "almoxarifado.manage") && (
+          <Button onClick={handleNewItem} className="bg-blue-600 hover:bg-blue-700">
+            <Plus size={18} className="mr-2" />
+            Novo Item
+          </Button>
+        )}
       </div>
 
       <AlmoxarifadoStats items={items} />
