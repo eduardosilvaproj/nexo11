@@ -4621,6 +4621,11 @@ export type Database = {
         | "medidor"
         | "conferente"
         | "admin_master"
+        | "comprador"
+        | "almoxarife"
+        | "logistico"
+        | "financeiro"
+        | "pos_venda"
       chamado_status: "aberto" | "em_andamento" | "resolvido"
       chamado_tipo: "assistencia" | "reclamacao" | "garantia" | "solicitacao"
       contrato_status:
@@ -4819,6 +4824,11 @@ export const Constants = {
         "medidor",
         "conferente",
         "admin_master",
+        "comprador",
+        "almoxarife",
+        "logistico",
+        "financeiro",
+        "pos_venda",
       ],
       chamado_status: ["aberto", "em_andamento", "resolvido"],
       chamado_tipo: ["assistencia", "reclamacao", "garantia", "solicitacao"],
