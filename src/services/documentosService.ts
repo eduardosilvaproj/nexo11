@@ -41,6 +41,8 @@ export const documentosService = {
     if (documento.contrato_id) {
       await supabase.from("contrato_eventos").insert({
         contrato_id: documento.contrato_id,
+        loja_id: documento.loja_id,
+        modulo: "documentos",
         tipo: "documento_emitido",
         titulo: `Documento emitido: ${documento.titulo}`,
         descricao: `Tipo: ${documento.tipo}`,
@@ -77,6 +79,8 @@ export const documentosService = {
     if (doc.contrato_id) {
       await supabase.from("contrato_eventos").insert({
         contrato_id: doc.contrato_id,
+        loja_id: doc.loja_id,
+        modulo: "documentos",
         tipo: "documento_cancelado",
         titulo: `Documento cancelado: ${doc.titulo}`,
         descricao: `Motivo: ${motivo}`,
