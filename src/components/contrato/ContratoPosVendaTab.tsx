@@ -110,7 +110,20 @@ export function ContratoPosVendaTab({ contratoId }: PosVendaTabProps) {
     },
   });
 
-  const npsRow = chamados.find((c) => c.nps !== null && c.nps !== undefined);
+  const { data: pesquisas = [] } = useQuery({
+    queryKey: ["cliente_pesquisas_status", contratoId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("cliente_pesquisas")
+        .select("*")
+        .eq("contrato_id", contratoId)
+        .eq("status", "respondida");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const npsRow = chamados.find((c) => c.nps !== null && c.nps !== undefined) || pesquisas[0];
   const chamadosAbertos = chamados.filter((c) => c.status !== "resolvido").length;
   const npsOk = !!npsRow;
   const travaOk = chamadosAbertos === 0 && npsOk;
