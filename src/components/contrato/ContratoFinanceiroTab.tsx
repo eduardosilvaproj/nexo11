@@ -179,6 +179,16 @@ export function ContratoFinanceiroTab({ contratoId }: Props) {
           </CardContent>
         </Card>
       </div>
+
+      {canViewFinancialEvidences && (
+        <div className="mt-6">
+          <OperationalAttachments 
+            contratoId={contratoId} 
+            modulo="financeiro" 
+            title="Comprovantes e Evidências Financeiras" 
+          />
+        </div>
+      )}
     </div>
   );
 }
