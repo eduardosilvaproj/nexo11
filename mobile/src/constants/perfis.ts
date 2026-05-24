@@ -13,15 +13,15 @@ export type Perfil =
   | 'franqueador';
 
 export const MODULOS_POR_PERFIL: Record<Perfil, string[]> = {
-  vendedor: ['home', 'agenda', 'tarefas', 'notificacoes', 'contratos'],
-  tecnico: ['home', 'agenda', 'tarefas', 'notificacoes', 'medicoes', 'conferencias'],
-  comprador: ['home', 'tarefas', 'notificacoes', 'compras'],
-  almoxarife: ['home', 'tarefas', 'notificacoes', 'separacoes'],
-  logistico: ['home', 'agenda', 'tarefas', 'notificacoes', 'entregas'],
-  montador: ['home', 'agenda', 'tarefas', 'notificacoes', 'montagens'],
-  financeiro: ['home', 'tarefas', 'notificacoes', 'financeiro'],
-  pos_venda: ['home', 'tarefas', 'notificacoes', 'chamados'],
-  gerente: ['home', 'agenda', 'tarefas', 'notificacoes', 'contratos', 'indicadores'],
+  vendedor: ['home', 'agenda', 'tarefas', 'notificacoes', 'contratos', 'rh'],
+  tecnico: ['home', 'agenda', 'tarefas', 'notificacoes', 'medicoes', 'conferencias', 'rh'],
+  comprador: ['home', 'tarefas', 'notificacoes', 'compras', 'rh'],
+  almoxarife: ['home', 'tarefas', 'notificacoes', 'separacoes', 'rh'],
+  logistico: ['home', 'agenda', 'tarefas', 'notificacoes', 'entregas', 'rh'],
+  montador: ['home', 'agenda', 'tarefas', 'notificacoes', 'montagens', 'rh'],
+  financeiro: ['home', 'tarefas', 'notificacoes', 'financeiro', 'rh'],
+  pos_venda: ['home', 'tarefas', 'notificacoes', 'chamados', 'rh'],
+  gerente: ['home', 'agenda', 'tarefas', 'notificacoes', 'contratos', 'indicadores', 'rh'],
   admin: ['*'],
   franqueador: ['*'],
 };

@@ -13,6 +13,7 @@ import ChatListScreen from '../screens/ChatListScreen';
 import ChatDetailScreen from '../screens/ChatDetailScreen';
 import ComunicadosScreen from '../screens/ComunicadosScreen';
 import FeedbackScreen from '../screens/FeedbackScreen';
+import RHScreen from '../screens/RHScreen';
 import { setupNotificationListeners } from '../lib/notifications';
 
 const Tab = createBottomTabNavigator();
@@ -103,6 +104,7 @@ export default function RootNavigator() {
             />
             <Stack.Screen name="Comunicados" component={ComunicadosScreen} options={{ title: 'Comunicados' }} />
             <Stack.Screen name="Feedback" component={FeedbackScreen} options={{ title: 'Enviar Feedback' }} />
+            <Stack.Screen name="RH" component={RHScreen} options={{ title: 'Meu RH' }} />
           </>
         ) : (
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />

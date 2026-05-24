@@ -19,6 +19,7 @@ const ROUTE_LABELS: Record<string, string> = {
   compras: "Compras",
   equipe: "Equipe",
   lojas: "Lojas",
+  rh: "RH / Pessoas",
   analytics: "Analytics",
    integracoes: "Integrações",
   contratos: "Contratos",
