@@ -28,6 +28,7 @@ const TABS: { key: ContratoTabKey; label: string }[] = [
   { key: "mensagens", label: "Mensagens" },
   { key: "timeline", label: "Linha do Tempo" },
   { key: "documentos", label: "Documentos" },
+  { key: "anexos", label: "Evidências" },
 ];
 
 interface ContratoTabsProps {
