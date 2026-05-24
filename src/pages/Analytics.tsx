@@ -107,6 +107,7 @@ export default function Analytics() {
             { v: "estoque", l: "Compras & Almoxarifado" },
             { v: "logistica", l: "Logística & Montagem" },
             { v: "posvenda", l: "Pós-venda" },
+            { v: "execucao_real", l: "Execução Real" },
           ].map((t) => (
             <TabsTrigger
               key={t.v}
