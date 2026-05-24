@@ -16,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 
 export default function RHScreen() {
   const { profile, user } = useAuth();
+  const navigation = useNavigation<any>();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [funcionario, setFuncionario] = useState<any>(null);
