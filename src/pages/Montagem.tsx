@@ -95,6 +95,59 @@ export default function Montagem() {
     },
   });
 
+  const contratoIds = useMemo(
+    () => Array.from(new Set(agendamentos.map((a) => a.contrato_id).filter(Boolean))),
+    [agendamentos],
+  );
+
+  const { data: expedicoesByContrato = {} } = useQuery({
+    queryKey: ["montagem-expedicoes-week", contratoIds.join(",")],
+    enabled: contratoIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("expedicoes_almoxarifado")
+        .select("contrato_id, status")
+        .in("contrato_id", contratoIds)
+        .neq("status", "cancelado");
+      if (error) throw error;
+      const map: Record<string, Array<{ contrato_id: string; status: string }>> = {};
+      for (const row of data ?? []) {
+        const cid = (row as any).contrato_id as string;
+        (map[cid] ||= []).push(row as any);
+      }
+      return map;
+    },
+  });
+
+  const statusPorContrato = useMemo(() => {
+    const m: Record<string, LiberacaoStatus> = {};
+    for (const cid of contratoIds) {
+      const exp = (expedicoesByContrato[cid] ?? []).map((r: any) => ({
+        id: "",
+        status: r.status,
+        quantidade: 0,
+        observacoes: null,
+        entregue_at: null,
+        carregado_at: null,
+        created_at: null,
+      }));
+      m[cid] = calcularLiberacao(exp as any).status;
+    }
+    return m;
+  }, [contratoIds, expedicoesByContrato]);
+
+  const indicadores = useMemo(() => {
+    let liberadas = 0, aguardando = 0, parciais = 0, sem = 0;
+    for (const cid of contratoIds) {
+      const s = statusPorContrato[cid];
+      if (s === "liberada") liberadas++;
+      else if (s === "aguardando") aguardando++;
+      else if (s === "parcial") parciais++;
+      else sem++;
+    }
+    return { liberadas, aguardando, parciais, sem };
+  }, [contratoIds, statusPorContrato]);
+
   const editAgendamento = agendamentos.find((a) => a.id === editId) ?? null;
 
   return (
