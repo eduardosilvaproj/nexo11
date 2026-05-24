@@ -59,6 +59,13 @@ export function RHStats() {
       color: "text-purple-600",
       bg: "bg-purple-100",
     },
+    {
+      title: "Escalas Configuradas",
+      value: stats?.escalasAtivas || 0,
+      icon: Clock,
+      color: "text-indigo-600",
+      bg: "bg-indigo-100",
+    },
   ];
 
   return (
