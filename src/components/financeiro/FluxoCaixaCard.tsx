@@ -35,14 +35,7 @@ function shiftMes(d: Date, delta: number) { return new Date(d.getFullYear(), d.g
 
 type Linha = { mes: string; entradas: number; saidas: number };
 
-const SERIE_FAKE: Linha[] = [
-  { mes: "Nov", entradas: 142000, saidas: 128000 },
-  { mes: "Dez", entradas: 168000, saidas: 134000 },
-  { mes: "Jan", entradas: 125000, saidas: 142000 },
-  { mes: "Fev", entradas: 155000, saidas: 138000 },
-  { mes: "Mar", entradas: 184000, saidas: 151000 },
-  { mes: "Abr", entradas: 96000, saidas: 88000 },
-];
+const SERIE_FAKE: Linha[] = [];
 
 function fmtBRL(v: number) {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });

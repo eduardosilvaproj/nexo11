@@ -11,14 +11,7 @@ import {
 
 type Row = { mes: string; faturamento: number; pe: number };
 
-const DATA: Row[] = [
-  { mes: "Nov", faturamento: 142000, pe: 135000 },
-  { mes: "Dez", faturamento: 168000, pe: 135000 },
-  { mes: "Jan", faturamento: 125000, pe: 148000 },
-  { mes: "Fev", faturamento: 155000, pe: 148000 },
-  { mes: "Mar", faturamento: 184000, pe: 148000 },
-  { mes: "Abr", faturamento: 0, pe: 155000 },
-];
+const DATA: Row[] = [];
 
 const fmt = (v: number) => {
   if (v >= 1_000_000) return `R$ ${(v / 1_000_000).toFixed(1)}M`;

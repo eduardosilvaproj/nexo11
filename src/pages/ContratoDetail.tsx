@@ -408,7 +408,7 @@ export default function ContratoDetail() {
               <ContratoChatTab contratoId={contrato.id} />
             ) : (
               <div className="text-sm text-muted-foreground">
-                Conteúdo da aba “{active}” em construção.
+                Não há informações disponíveis para esta seção.
               </div>
             )}
           </div>
