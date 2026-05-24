@@ -3776,6 +3776,62 @@ export type Database = {
           },
         ]
       }
+      operacao_slas: {
+        Row: {
+          ativo: boolean
+          created_at: string | null
+          created_by: string | null
+          exigir_assinatura: boolean
+          exigir_evidencia: boolean
+          id: string
+          loja_id: string
+          modulo: string
+          nome: string
+          prazo_dias: number | null
+          prazo_horas: number | null
+          tipo_tarefa: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string | null
+          created_by?: string | null
+          exigir_assinatura?: boolean
+          exigir_evidencia?: boolean
+          id?: string
+          loja_id: string
+          modulo: string
+          nome: string
+          prazo_dias?: number | null
+          prazo_horas?: number | null
+          tipo_tarefa?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string | null
+          created_by?: string | null
+          exigir_assinatura?: boolean
+          exigir_evidencia?: boolean
+          id?: string
+          loja_id?: string
+          modulo?: string
+          nome?: string
+          prazo_dias?: number | null
+          prazo_horas?: number | null
+          tipo_tarefa?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operacao_slas_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orcamentos: {
         Row: {
           acrescimos: Json | null
