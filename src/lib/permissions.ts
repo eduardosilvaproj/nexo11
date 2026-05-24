@@ -79,7 +79,15 @@ export type PermissionAction =
   | "operacao.ocorrencias.view"
   | "operacao.ocorrencias.create"
   | "operacao.ocorrencias.manage"
-  | "operacao.execucao.view";
+  | "operacao.execucao.view"
+  | "operacao.indicadores.view"
+  | "operacao.sla.view"
+  | "operacao.qualidade.view"
+  | "operacao.indicadores.equipe.view"
+  | "operacao.indicadores.individual.view"
+  | "operacao.configuracoes_sla.manage"
+  | "rh.documentos_sensiveis.view"
+  | "rh.audit_logs.view";
 
 const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
   admin_master: [
