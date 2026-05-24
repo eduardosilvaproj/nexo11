@@ -199,18 +199,3 @@ const s = StyleSheet.create({
   sendButtonDisabled: { backgroundColor: '#334155' },
   sendButtonText: { color: '#fff', fontWeight: '700' },
 });
-
-
-const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F172A' },
-  center: { justifyContent: 'center', alignItems: 'center' },
-  msgContainer: { maxWidth: '80%', padding: 12, borderRadius: 16, marginBottom: 8 },
-  msgMine: { alignSelf: 'flex-end', backgroundColor: '#3b82f6', borderBottomRightRadius: 4 },
-  msgOther: { alignSelf: 'flex-start', backgroundColor: '#1e293b', borderBottomLeftRadius: 4 },
-  msgText: { color: '#fff', fontSize: 16 },
-  msgTime: { color: 'rgba(255,255,255,0.5)', fontSize: 10, marginTop: 4, alignSelf: 'flex-end' },
-  inputArea: { flexDirection: 'row', padding: 12, backgroundColor: '#1e293b', borderTopWidth: 1, borderTopColor: '#334155', alignItems: 'flex-end' },
-  input: { flex: 1, color: '#fff', backgroundColor: '#0F172A', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, maxHeight: 100 },
-  sendButton: { marginLeft: 12, paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#3b82f6', borderRadius: 20 },
-  sendButtonText: { color: '#fff', fontWeight: '700' },
-});
