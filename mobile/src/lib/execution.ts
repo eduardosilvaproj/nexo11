@@ -48,7 +48,7 @@ export const ExecutionService = {
       await SyncQueueService.addToQueue({
         type: 'INSERT',
         table: 'operacao_checkins',
-        data,
+        payload: data,
       });
       return { offline: true };
     }
@@ -92,8 +92,7 @@ export const ExecutionService = {
       await SyncQueueService.addToQueue({
         type: 'UPDATE',
         table: 'operacao_checkins',
-        id: checkinId,
-        data,
+        payload: { id: checkinId, ...data },
       });
       return { offline: true };
     }
@@ -110,7 +109,7 @@ export const ExecutionService = {
       await SyncQueueService.addToQueue({
         type: 'INSERT',
         table: 'operacao_ocorrencias',
-        data: params,
+        payload: params,
       });
       return { offline: true };
     }
