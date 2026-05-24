@@ -30,6 +30,7 @@ import { checkAgendamentoConflict } from "@/lib/agendamento-conflict";
 import { ContratoMedicaoAmbientesSection } from "./ContratoMedicaoAmbientesSection";
 import { useAuth } from "@/contexts/AuthContext";
 import { MateriaisMontagemResumo } from "@/components/montagem/MateriaisMontagemResumo";
+import OperationalAttachments from "@/components/operacional/OperationalAttachments";
 
 interface MontagemTabProps {
   contratoId: string;
