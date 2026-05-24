@@ -15,7 +15,7 @@ export function MasterProtectedRoute({ children }: { children: React.ReactNode }
     );
   }
   if (!user) return <Navigate to="/login" replace />;
-  if (!isSupport) return <Navigate to="/sem-permissao" replace />;
+  if (!isAdmin && !isSupport) return <Navigate to="/sem-permissao" replace />;
 
   return <>{children}</>;
 }
