@@ -31,6 +31,23 @@ export function ContratoFinanceStrip({ contratoId, onVerDre }: ContratoFinanceSt
     enabled: !!contratoId,
   });
 
+  const { data: financeiro } = useQuery({
+    queryKey: ["contrato_financeiro_resumo", contratoId],
+    queryFn: async () => {
+      const [resReceber, resPagar] = await Promise.all([
+        supabase.from("financeiro_contas_receber").select("valor, status").eq("contrato_id", contratoId).neq("status", "cancelado"),
+        supabase.from("financeiro_contas_pagar").select("valor, status").eq("contrato_id", contratoId).neq("status", "cancelado")
+      ]);
+      
+      const recebido = (resReceber.data ?? []).filter(r => r.status === 'pago').reduce((s, r) => s + Number(r.valor), 0);
+      const pago = (resPagar.data ?? []).filter(p => p.status === 'pago').reduce((s, p) => s + Number(p.valor), 0);
+      const aPagar = (resPagar.data ?? []).filter(p => p.status !== 'pago').reduce((s, p) => s + Number(p.valor), 0);
+      
+      return { recebido, pago, aPagar };
+    },
+    enabled: !!contratoId,
+  });
+
   const valorVenda = Number(dre?.valor_venda ?? 0);
   const custoPrev =
     Number(dre?.custo_produto_previsto ?? 0) +
@@ -38,16 +55,13 @@ export function ContratoFinanceStrip({ contratoId, onVerDre }: ContratoFinanceSt
     Number(dre?.custo_frete_previsto ?? 0) +
     Number(dre?.custo_comissao_previsto ?? 0) +
     Number(dre?.outros_custos_previstos ?? 0);
-  const custoReal =
-    Number(dre?.custo_produto_real ?? 0) +
-    Number(dre?.custo_montagem_real ?? 0) +
-    Number(dre?.custo_frete_real ?? 0) +
-    Number(dre?.custo_comissao_real ?? 0) +
-    Number(dre?.outros_custos_reais ?? 0);
+  
+  const custoReal = (financeiro?.pago ?? 0) + (financeiro?.aPagar ?? 0);
   const margemPrev = Number(dre?.margem_prevista ?? 0);
-  const margemReal = Number(dre?.margem_realizada ?? 0);
+  const margemReal = valorVenda > 0 ? ((valorVenda - custoReal) / valorVenda) * 100 : 0;
   const delta = margemReal - margemPrev;
-  const hasReal = custoReal > 0;
+  const hasReal = (financeiro?.recebido ?? 0) > 0 || (financeiro?.pago ?? 0) > 0;
+
 
   const Item = ({
     label,
@@ -86,7 +100,9 @@ export function ContratoFinanceStrip({ contratoId, onVerDre }: ContratoFinanceSt
       <div className="flex flex-wrap items-center gap-x-10 gap-y-4">
         <Item label="Receita líquida" value={formatBRL(valorVenda)} />
         <Item label="Custo previsto" value={formatBRL(custoPrev)} />
-        <Item label="Custo real" value={hasReal ? formatBRL(custoReal) : "—"} />
+        <Item label="Custo real (pago+pend)" value={hasReal ? formatBRL(custoReal) : "—"} />
+        <Item label="Total recebido" value={hasReal ? formatBRL(financeiro?.recebido ?? 0) : "—"} />
+
         <Item
           label="Margem prevista"
           value={`${margemPrev.toFixed(1).replace(".", ",")}%`}
