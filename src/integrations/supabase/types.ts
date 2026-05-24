@@ -1665,6 +1665,103 @@ export type Database = {
           },
         ]
       }
+      expedicoes_almoxarifado: {
+        Row: {
+          carregado_at: string | null
+          contrato_id: string
+          created_at: string | null
+          entregue_at: string | null
+          id: string
+          item_id: string
+          loja_id: string
+          movimentacao_id: string
+          observacoes: string | null
+          quantidade: number
+          requisicao_id: string
+          responsavel_carregamento_id: string | null
+          responsavel_entrega_id: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          carregado_at?: string | null
+          contrato_id: string
+          created_at?: string | null
+          entregue_at?: string | null
+          id?: string
+          item_id: string
+          loja_id: string
+          movimentacao_id: string
+          observacoes?: string | null
+          quantidade: number
+          requisicao_id: string
+          responsavel_carregamento_id?: string | null
+          responsavel_entrega_id?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          carregado_at?: string | null
+          contrato_id?: string
+          created_at?: string | null
+          entregue_at?: string | null
+          id?: string
+          item_id?: string
+          loja_id?: string
+          movimentacao_id?: string
+          observacoes?: string | null
+          quantidade?: number
+          requisicao_id?: string
+          responsavel_carregamento_id?: string | null
+          responsavel_entrega_id?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expedicoes_almoxarifado_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expedicoes_almoxarifado_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expedicoes_almoxarifado_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "estoque_itens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expedicoes_almoxarifado_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expedicoes_almoxarifado_movimentacao_id_fkey"
+            columns: ["movimentacao_id"]
+            isOneToOne: false
+            referencedRelation: "estoque_movimentacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expedicoes_almoxarifado_requisicao_id_fkey"
+            columns: ["requisicao_id"]
+            isOneToOne: false
+            referencedRelation: "requisicoes_compra"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fornecedores: {
         Row: {
           ativo: boolean
