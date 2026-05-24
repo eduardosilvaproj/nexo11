@@ -213,16 +213,19 @@ export default function PortalCliente() {
         { data: l }, 
         { data: ents }, 
         { data: orcs }, 
-        { data: ambs }
+        { data: ambs },
+        { data: dp },
+        { data: ch }
       ] = await Promise.all([
         portalClient
-          .from("contrato_logs")
+          .from("contrato_eventos")
           .select("*")
           .eq("contrato_id", contractId)
+          .eq("visivel_cliente", true)
           .order("created_at", { ascending: false }),
         portalClient
           .from("entregas")
-          .select("data_prevista")
+          .select("data_prevista, turno, status_visual, observacoes")
           .eq("contrato_id", contractId)
           .not("data_prevista", "is", null)
           .order("data_prevista", { ascending: true })
@@ -236,12 +239,25 @@ export default function PortalCliente() {
           .from("contrato_ambientes")
           .select("*")
           .eq("contrato_id", contractId),
+        portalClient
+          .from("documentos_emitidos")
+          .select("*")
+          .eq("contrato_id", contractId)
+          .eq("visivel_cliente", true)
+          .order("emitido_em", { ascending: false }),
+        portalClient
+          .from("chamados_pos_venda")
+          .select("*")
+          .eq("contrato_id", contractId)
+          .order("data_abertura", { ascending: false }),
       ]);
 
       setLogs(l ?? []);
       setOrcamentos(orcs ?? []);
       setAmbientes(ambs ?? []);
       setEntregaPrevista((ents?.[0] as any)?.data_prevista ?? null);
+      setDocsPortal(dp ?? []);
+      setChamados(ch ?? []);
     } catch (e: any) {
       console.error("Erro ao carregar detalhes do contrato:", e);
     }
