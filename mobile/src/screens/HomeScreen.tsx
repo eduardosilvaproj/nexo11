@@ -76,6 +76,9 @@ export default function HomeScreen() {
       case 'comunicados':
         navigation.navigate('Comunicados');
         break;
+      case 'rh':
+        navigation.navigate('RH');
+        break;
       default:
         Alert.alert('Módulo em Desenvolvimento', `O módulo "${modulo.replace('_', ' ')}" está em fase de implantação.`);
     }
