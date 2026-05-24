@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Package, Plus, Search, Filter } from "lucide-react";
@@ -17,9 +16,10 @@ import { AlmoxarifadoStats } from "@/components/almoxarifado/AlmoxarifadoStats";
 import { AlmoxarifadoTable } from "@/components/almoxarifado/AlmoxarifadoTable";
 import { ItemFormDialog } from "@/components/almoxarifado/ItemFormDialog";
 import { toast } from "sonner";
+import { canPerform } from "@/lib/permissions";
 
 export default function Almoxarifado() {
-  const { perfil, loading: authLoading } = useAuth();
+  const { perfil, roles, loading: authLoading } = useAuth();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("todos");
   const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
@@ -98,10 +98,12 @@ export default function Almoxarifado() {
           </h1>
           <p className="text-slate-500">Controle de itens, saldos e movimentações de estoque.</p>
         </div>
-        <Button onClick={handleNewItem} className="bg-blue-600 hover:bg-blue-700">
-          <Plus size={18} className="mr-2" />
-          Novo Item
-        </Button>
+        {canPerform(roles, "almoxarifado.manage") && (
+          <Button onClick={handleNewItem} className="bg-blue-600 hover:bg-blue-700">
+            <Plus size={18} className="mr-2" />
+            Novo Item
+          </Button>
+        )}
       </div>
 
       <AlmoxarifadoStats items={items} />

@@ -23,6 +23,10 @@ export const FUNCOES_DISPONIVEIS = [
   { value: "motorista", label: "Motorista / Entregador" },
   { value: "gerente", label: "Gerente" },
   { value: "financeiro", label: "Financeiro" },
+  { value: "comprador", label: "Comprador" },
+  { value: "almoxarife", label: "Almoxarife" },
+  { value: "logistico", label: "Logístico" },
+  { value: "pos_venda", label: "Pós-venda" },
   { value: "admin", label: "Administrador" },
 ] as const;
 

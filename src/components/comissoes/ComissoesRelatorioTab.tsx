@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { canPerform } from "@/lib/permissions";
+
 import { toast } from "sonner";
 import {
   Dialog,
@@ -76,6 +79,8 @@ export function ComissoesRelatorioTab({
   apenasProprio = false,
 }: Props) {
   const [linhas, setLinhas] = useState<Linha[]>([]);
+  const { roles } = useAuth();
+  const podeGerenciarComissao = canPerform(roles, "comissoes.manage");
   const [loading, setLoading] = useState(false);
   const [alvoPagar, setAlvoPagar] = useState<Linha | null>(null);
   const [alvoCancelar, setAlvoCancelar] = useState<Linha | null>(null);
@@ -307,7 +312,7 @@ export function ComissoesRelatorioTab({
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex justify-end gap-1">
-                      {podeAgir && podePagar && (
+                      {podeAgir && podePagar && podeGerenciarComissao && (
                         <>
                           <Button
                             size="sm"

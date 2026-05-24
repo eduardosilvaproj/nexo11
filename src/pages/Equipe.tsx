@@ -6,6 +6,9 @@ import { NovoMembroDialog } from "@/components/equipe/NovoMembroDialog";
 import { PontoTab } from "@/components/equipe/PontoTab";
 import { DesempenhoTab } from "@/components/equipe/DesempenhoTab";
 import { MontadoresTab } from "@/components/equipe/MontadoresTab";
+import { useAuth } from "@/contexts/AuthContext";
+import { canPerform } from "@/lib/permissions";
+
 
 type Metric = {
   label: string;
@@ -52,7 +55,9 @@ function MetricCard({ metric }: { metric: Metric }) {
 }
 
 export default function Equipe() {
+  const { roles } = useAuth();
   const [novoOpen, setNovoOpen] = useState(false);
+  const podeGerenciar = canPerform(roles, "equipe.manage");
   return (
     <div className="flex flex-col gap-6 p-8">
       <div className="flex items-end justify-between">
@@ -64,13 +69,15 @@ export default function Equipe() {
             Pessoas, ponto e desempenho
           </p>
         </div>
-        <button
-          onClick={() => setNovoOpen(true)}
-          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-white"
-          style={{ backgroundColor: "#1E6FBF", fontSize: 13 }}
-        >
-          <Plus className="h-4 w-4" /> Novo membro
-        </button>
+        {podeGerenciar && (
+          <button
+            onClick={() => setNovoOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-white"
+            style={{ backgroundColor: "#1E6FBF", fontSize: 13 }}
+          >
+            <Plus className="h-4 w-4" /> Novo membro
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

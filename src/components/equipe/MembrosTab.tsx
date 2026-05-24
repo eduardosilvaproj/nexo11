@@ -5,9 +5,11 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
+import { canPerform } from "@/lib/permissions";
+
 import { EditarComissaoDialog } from "./EditarComissaoDialog";
 
-type FuncaoUsuario = "vendedor" | "projetista" | "tecnico" | "conferente" | "montador" | "motorista" | "gerente" | "financeiro" | "admin" | "franqueador" | "medidor";
+type FuncaoUsuario = "vendedor" | "projetista" | "tecnico" | "conferente" | "montador" | "motorista" | "gerente" | "financeiro" | "admin" | "franqueador" | "medidor" | "comprador" | "almoxarife" | "logistico" | "pos_venda";
 
 type Membro = {
   id: string;
@@ -30,6 +32,10 @@ const ROLE_COLORS: Record<string, { bg: string; fg: string; avatar: string; labe
   motorista:   { bg: "#FFF4E5", fg: "#B45309", avatar: "#B45309", label: "Motorista" },
   projetista:  { bg: "#F3E8FF", fg: "#7E22CE", avatar: "#7E22CE", label: "Projetista" },
   financeiro:  { bg: "#DCFCE7", fg: "#15803D", avatar: "#15803D", label: "Financeiro" },
+  comprador:   { bg: "#FEF9C3", fg: "#A16207", avatar: "#EAB308", label: "Comprador" },
+  almoxarife:  { bg: "#F1F5F9", fg: "#475569", avatar: "#64748B", label: "Almoxarife" },
+  logistico:   { bg: "#DBEAFE", fg: "#1E40AF", avatar: "#3B82F6", label: "Logístico" },
+  pos_venda:   { bg: "#FAE8FF", fg: "#86198F", avatar: "#D946EF", label: "Pós-venda" },
 };
 
 function getInitials(nome: string) {
@@ -151,8 +157,8 @@ function MembroCard({
 }
 
 export function MembrosTab({ onAddMember }: { onAddMember?: () => void } = {}) {
-  const { hasRole } = useAuth();
-  const podeEditar = hasRole("admin") || hasRole("gerente") || hasRole("franqueador");
+  const { roles } = useAuth();
+  const podeEditar = canPerform(roles, "equipe.manage");
   const [editAlvo, setEditAlvo] = useState<Membro | null>(null);
 
   const { data: membros, isLoading } = useQuery({

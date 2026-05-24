@@ -4480,14 +4480,19 @@ export type Database = {
         }
         Returns: Json
       }
-      confirmar_pagamento_comissao: {
-        Args: {
-          p_comissao_id: string
-          p_data_pagamento: string
-          p_forma_pagamento?: string
-        }
-        Returns: undefined
-      }
+      confirmar_pagamento_comissao:
+        | {
+            Args: {
+              p_comissao_id: string
+              p_data_pagamento: string
+              p_forma_pagamento?: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: { p_comissao_id: string; p_usuario_id: string }
+            Returns: undefined
+          }
       contrato_da_loja: { Args: { _contrato_id: string }; Returns: boolean }
       contrato_log_inserir: {
         Args: {
@@ -4525,6 +4530,14 @@ export type Database = {
           _loja_id?: string
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
+        }
+        Returns: boolean
+      }
+      has_role_on_loja: {
+        Args: {
+          p_loja_id: string
+          p_required_roles: Database["public"]["Enums"]["app_role"][]
+          p_user_id: string
         }
         Returns: boolean
       }
@@ -4621,6 +4634,11 @@ export type Database = {
         | "medidor"
         | "conferente"
         | "admin_master"
+        | "comprador"
+        | "almoxarife"
+        | "logistico"
+        | "financeiro"
+        | "pos_venda"
       chamado_status: "aberto" | "em_andamento" | "resolvido"
       chamado_tipo: "assistencia" | "reclamacao" | "garantia" | "solicitacao"
       contrato_status:
@@ -4819,6 +4837,11 @@ export const Constants = {
         "medidor",
         "conferente",
         "admin_master",
+        "comprador",
+        "almoxarife",
+        "logistico",
+        "financeiro",
+        "pos_venda",
       ],
       chamado_status: ["aberto", "em_andamento", "resolvido"],
       chamado_tipo: ["assistencia", "reclamacao", "garantia", "solicitacao"],

@@ -10,6 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LancamentoFormDialog } from "./LancamentoFormDialog";
 import { PagamentoConfirmDialog } from "./PagamentoConfirmDialog";
+import { useAuth } from "@/contexts/AuthContext";
+import { canPerform } from "@/lib/permissions";
+
 
 type LancamentoStatus = "pendente" | "pago" | "cancelado";
 type LancamentoTipo = "receita" | "despesa";
@@ -114,6 +117,8 @@ export function FluxoCaixaCard() {
 
   // Lançamentos do mês ativo (DB)
   const [lancamentos, setLancamentos] = useState<Lancamento[]>([]);
+  const { roles } = useAuth();
+  const podeGerenciar = canPerform(roles, "financeiro.manage");
   const [lojaId, setLojaId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const hojeStr = new Date().toISOString().slice(0, 10);
@@ -222,14 +227,16 @@ export function FluxoCaixaCard() {
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        <Button
-          size="sm"
-          className="text-white hover:opacity-90"
-          style={{ background: "#1E6FBF" }}
-          onClick={() => setDialogOpen(true)}
-        >
-          <Plus className="mr-1 h-4 w-4" /> Lançamento
-        </Button>
+        {podeGerenciar && (
+          <Button
+            size="sm"
+            className="text-white hover:opacity-90"
+            style={{ background: "#1E6FBF" }}
+            onClick={() => setDialogOpen(true)}
+          >
+            <Plus className="mr-1 h-4 w-4" /> Lançamento
+          </Button>
+        )}
       </div>
 
       {/* Cards de previsão do mês ativo */}
@@ -351,9 +358,11 @@ export function FluxoCaixaCard() {
           {lancamentosOrdenados.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
               <p className="text-sm text-[#6B7A90]">Nenhum lançamento em {labelMes(mesAtivo)}</p>
-              <Button size="sm" className="text-white hover:opacity-90" style={{ background: "#1E6FBF" }} onClick={() => setDialogOpen(true)}>
-                <Plus className="mr-1 h-4 w-4" /> Criar primeiro lançamento
-              </Button>
+              {podeGerenciar && (
+                <Button size="sm" className="text-white hover:opacity-90" style={{ background: "#1E6FBF" }} onClick={() => setDialogOpen(true)}>
+                  <Plus className="mr-1 h-4 w-4" /> Criar primeiro lançamento
+                </Button>
+              )}
             </div>
           ) : (
             <div className="overflow-hidden rounded-md border" style={{ borderColor: "#E8ECF2" }}>

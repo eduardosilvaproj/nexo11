@@ -48,14 +48,7 @@ export function ProtectedRoute({ children, roles, redirectTo, redirectMessage }:
     if (redirectTo) {
       return <Navigate to={redirectTo} replace />;
     }
-    return (
-      <div className="flex h-full flex-col items-center justify-center gap-2 p-12 text-center">
-        <h2 className="text-xl font-semibold">Acesso negado</h2>
-        <p className="text-sm text-muted-foreground">
-          Seu papel atual não tem permissão para acessar esta área.
-        </p>
-      </div>
-    );
+    return <Navigate to="/sem-permissao" replace />;
   }
 
   return <>{children}</>;

@@ -6,6 +6,9 @@ import { Check, Trash2, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PagamentoConfirmDialog } from "./PagamentoConfirmDialog";
+import { useAuth } from "@/contexts/AuthContext";
+import { canPerform } from "@/lib/permissions";
+
 
 type Status = "pendente" | "pago" | "cancelado" | "atrasado";
 type Conta = {
@@ -44,6 +47,9 @@ export function ContasCard() {
   const [filtroReceber, setFiltroReceber] = useState<FiltroKey>("todas");
   const [filtroPagar, setFiltroPagar] = useState<FiltroKey>("todas");
   const hojeStr = new Date().toISOString().slice(0, 10);
+  const { roles } = useAuth();
+  const podeGerenciar = canPerform(roles, "financeiro.manage");
+
 
   async function carregar() {
     const [resReceber, resPagar] = await Promise.all([
@@ -180,6 +186,7 @@ export function ContasCard() {
                                 variant={c.status === "pago" ? "outline" : "default"}
                                 className={c.status === "pago" ? "h-7 px-2" : "h-7 px-2 text-white bg-[#1E6FBF] hover:bg-[#1E6FBF]/90"}
                                 onClick={() => setPagamentoAlvo({ id: c.id, descricao: c.descricao, valor: Number(c.valor), tipo: isReceita ? 'receita' : 'despesa', status: c.status })}
+                                disabled={!podeGerenciar && c.status === "pendente"}
                               >
                                 {c.status === "pago" ? "Detalhes" : (
                                   <>
@@ -189,14 +196,16 @@ export function ContasCard() {
                                 )}
                               </Button>
                             )}
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50"
-                              onClick={() => cancelar(c.id, isReceita ? 'receita' : 'despesa')}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            {podeGerenciar && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                                onClick={() => cancelar(c.id, isReceita ? 'receita' : 'despesa')}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </tr>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { canPerform } from "@/lib/permissions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,8 +36,8 @@ const turnoLabel = { manha: "Manhã", tarde: "Tarde", dia_todo: "Dia todo" } as 
 export function EntregaDrawer({ open, onOpenChange, entrega }: Props) {
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const { hasRole } = useAuth();
-  const podeAcao = hasRole("admin") || hasRole("gerente") || hasRole("tecnico");
+  const { roles } = useAuth();
+  const podeAcao = canPerform(roles, "logistica.update");
 
   const [editing, setEditing] = useState(false);
   const [novoData, setNovoData] = useState("");
