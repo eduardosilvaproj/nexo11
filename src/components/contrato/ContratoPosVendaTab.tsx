@@ -631,6 +631,13 @@ export function ContratoPosVendaTab({ contratoId }: PosVendaTabProps) {
         modulo="pos_venda" 
         title="Evidências de Pós-venda e Atendimento" 
       />
+      <ComunicacaoClienteDialog 
+        open={comunicarOpen}
+        onOpenChange={setComunicarOpen}
+        contratoId={contratoId}
+        lojaId={""} // Pass appropriately or fetch in dialog if needed
+        clienteId={null} // Optional
+      />
     </div>
   );
 }
