@@ -66,7 +66,13 @@ export type PermissionAction =
   | "rh.documentos.view"
   | "rh.documentos.manage"
   | "rh.ausencias.view"
-  | "rh.ausencias.manage";
+  | "rh.ausencias.manage"
+  | "rh.escalas.view"
+  | "rh.escalas.manage"
+  | "rh.disponibilidade.view"
+  | "rh.disponibilidade.manage"
+  | "agenda.equipe.view"
+  | "agenda.equipe.manage";
 
 const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
   admin_master: [
