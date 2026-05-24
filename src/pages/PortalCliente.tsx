@@ -129,8 +129,7 @@ export default function PortalCliente() {
     if (!token) return;
     setLoading(true);
     try {
-      const { data: originalIdData } = await portalClient.rpc('portal_cliente_validar_token', { p_token: token });
-      const originalId = originalIdData;
+      const { data: originalId } = await portalClient.rpc('portal_token_contrato_id');
 
       if (!originalId) {
         setError("Link inválido ou expirado.");
