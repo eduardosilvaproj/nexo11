@@ -575,6 +575,14 @@ export function ContratoMontagemTab({ contratoId, lojaId }: MontagemTabProps) {
           </ul>
         )}
       </Card>
+
+      <OperationalAttachments 
+        contratoId={contratoId} 
+        modulo="montagem" 
+        title="Evidências de Montagem (Antes/Depois)" 
+        entidadeId={agendamento?.id}
+        entidadeTipo="agendamentos_montagem"
+      />
     </div>
   );
 }
