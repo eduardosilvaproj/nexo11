@@ -39,6 +39,7 @@ import Compras from "./pages/Compras";
 import EstimativaOrcamento from "./pages/EstimativaOrcamento";
 import RH from "./pages/RH";
 import Execucao from "./pages/Execucao";
+import IndicadoresOperacionais from "./pages/IndicadoresOperacionais";
 
 import AcompanhamentoCriacao from "./pages/AcompanhamentoCriacao";
 import AcessoAcompanhamento from "./pages/AcessoAcompanhamento";
