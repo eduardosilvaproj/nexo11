@@ -13,6 +13,7 @@ import {
   AlertCircle, 
   ShieldCheck, 
   MessageCircle, 
+  Star,
   Calendar, 
   Camera, 
   Home, 
@@ -21,7 +22,10 @@ import {
   X,
   FileSignature,
   Eraser,
-  Printer
+  Printer,
+  History,
+  AlertTriangle,
+  Upload
 } from "lucide-react";
 import { LogoNexo } from "@/components/LogoNexo";
 import { pdf } from "@react-pdf/renderer";
