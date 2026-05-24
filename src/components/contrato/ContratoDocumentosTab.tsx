@@ -46,6 +46,19 @@ export function ContratoDocumentosTab({ contratoId }: Props) {
   const qc = useQueryClient();
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [motivo, setMotivo] = useState("");
+  const [acceptDoc, setAcceptDoc] = useState<{ id: string, titulo: string } | null>(null);
+
+  const { data: aceites = [] } = useQuery({
+    queryKey: ["documento_aceites", contratoId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("documento_aceites")
+        .select("*")
+        .eq("contrato_id", contratoId);
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data: documentos = [], isLoading } = useQuery({
     queryKey: ["contrato_documentos", contratoId],
