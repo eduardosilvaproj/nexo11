@@ -34,10 +34,7 @@ export function PosVendaSection({ periodo, lojaId }: { periodo: Periodo; lojaId:
       ).length;
 
       const notas = arr.map((c) => Number(c.nps)).filter((n) => Number.isFinite(n) && n >= 0);
-      const nps = notas.length ? notas.reduce((a, b) => a + b, 0) / notas.length : null;
-
-      // Integrate with the new cliente_pesquisas for NPS if needed, 
-      // but for now, we'll also fetch from cliente_pesquisas to show a consolidated NPS
+      
       let qP = supabase
         .from("cliente_pesquisas")
         .select("nota")
@@ -50,7 +47,7 @@ export function PosVendaSection({ periodo, lojaId }: { periodo: Periodo; lojaId:
       const psNotas = (ps ?? []).map(p => p.nota).filter(n => n !== null) as number[];
       
       const allNotas = [...notas, ...psNotas];
-      const consolidatedNps = allNotas.length ? allNotas.reduce((a, b) => a + b, 0) / allNotas.length : nps;
+      const consolidatedNps = allNotas.length ? allNotas.reduce((a, b) => a + b, 0) / allNotas.length : null;
       const consolidatedCount = allNotas.length;
 
       const resolvidosComDatas = arr.filter((c) => c.status === "resolvido" && c.data_abertura && c.data_fechamento);
