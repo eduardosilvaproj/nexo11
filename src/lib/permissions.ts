@@ -79,7 +79,15 @@ export type PermissionAction =
   | "operacao.ocorrencias.view"
   | "operacao.ocorrencias.create"
   | "operacao.ocorrencias.manage"
-  | "operacao.execucao.view";
+  | "operacao.execucao.view"
+  | "operacao.indicadores.view"
+  | "operacao.sla.view"
+  | "operacao.qualidade.view"
+  | "operacao.indicadores.equipe.view"
+  | "operacao.indicadores.individual.view"
+  | "operacao.configuracoes_sla.manage"
+  | "rh.documentos_sensiveis.view"
+  | "rh.audit_logs.view";
 
 const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
   admin_master: [
@@ -100,7 +108,10 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
     "rh.escalas.view", "rh.escalas.manage", "rh.disponibilidade.view", "rh.disponibilidade.manage",
     "agenda.equipe.view", "agenda.equipe.manage",
     "operacao.checkin.view", "operacao.checkin.manage", "operacao.ocorrencias.view", 
-    "operacao.ocorrencias.manage", "operacao.execucao.view"
+    "operacao.ocorrencias.manage", "operacao.execucao.view", "operacao.indicadores.view",
+    "operacao.sla.view", "operacao.qualidade.view", "operacao.indicadores.equipe.view",
+    "operacao.indicadores.individual.view", "operacao.configuracoes_sla.manage",
+    "rh.documentos_sensiveis.view", "rh.audit_logs.view"
   ],
   admin: [
     "comercial.view", "clientes.view", "contratos.view", "tecnico.view", "producao.view",
@@ -120,7 +131,10 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
     "rh.escalas.view", "rh.escalas.manage", "rh.disponibilidade.view", "rh.disponibilidade.manage",
     "agenda.equipe.view", "agenda.equipe.manage",
     "operacao.checkin.view", "operacao.checkin.manage", "operacao.ocorrencias.view", 
-    "operacao.ocorrencias.manage", "operacao.execucao.view"
+    "operacao.ocorrencias.manage", "operacao.execucao.view", "operacao.indicadores.view",
+    "operacao.sla.view", "operacao.qualidade.view", "operacao.indicadores.equipe.view",
+    "operacao.indicadores.individual.view", "operacao.configuracoes_sla.manage",
+    "rh.documentos_sensiveis.view", "rh.audit_logs.view"
   ],
   franqueador: [
     "comercial.view", "clientes.view", "contratos.view", "pos_venda.view",
@@ -146,7 +160,9 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
     "rh.escalas.view", "rh.escalas.manage", "rh.disponibilidade.view", "rh.disponibilidade.manage",
     "agenda.equipe.view", "agenda.equipe.manage",
     "operacao.checkin.view", "operacao.checkin.manage", "operacao.ocorrencias.view", 
-    "operacao.ocorrencias.manage", "operacao.execucao.view"
+    "operacao.ocorrencias.manage", "operacao.execucao.view", "operacao.indicadores.view",
+    "operacao.sla.view", "operacao.qualidade.view", "operacao.indicadores.equipe.view",
+    "operacao.indicadores.individual.view", "operacao.configuracoes_sla.manage"
   ],
   rh: [
     "rh.view", "rh.manage", "rh.funcionarios.view", "rh.funcionarios.manage", 
@@ -155,6 +171,7 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
     "rh.escalas.view", "rh.escalas.manage", "rh.disponibilidade.view", "rh.disponibilidade.manage",
     "agenda.equipe.view", "agenda.equipe.manage",
     "operacao.checkin.view", "operacao.ocorrencias.view", "operacao.execucao.view",
+    "operacao.indicadores.equipe.view", "rh.documentos_sensiveis.view", "rh.audit_logs.view",
     "equipe.view", "notificacoes.view"
   ],
   vendedor: [

@@ -3191,6 +3191,50 @@ export type Database = {
           },
         ]
       }
+      mobile_sync_logs: {
+        Row: {
+          acao: string
+          created_at: string | null
+          device_info: Json | null
+          erro: string | null
+          id: string
+          loja_id: string
+          status: string
+          tabela: string
+          usuario_id: string
+        }
+        Insert: {
+          acao: string
+          created_at?: string | null
+          device_info?: Json | null
+          erro?: string | null
+          id?: string
+          loja_id: string
+          status: string
+          tabela: string
+          usuario_id: string
+        }
+        Update: {
+          acao?: string
+          created_at?: string | null
+          device_info?: Json | null
+          erro?: string | null
+          id?: string
+          loja_id?: string
+          status?: string
+          tabela?: string
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mobile_sync_logs_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nexo_atualizacoes: {
         Row: {
           autor: string | null
@@ -3769,6 +3813,62 @@ export type Database = {
           },
           {
             foreignKeyName: "operacao_ocorrencias_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      operacao_slas: {
+        Row: {
+          ativo: boolean
+          created_at: string | null
+          created_by: string | null
+          exigir_assinatura: boolean
+          exigir_evidencia: boolean
+          id: string
+          loja_id: string
+          modulo: string
+          nome: string
+          prazo_dias: number | null
+          prazo_horas: number | null
+          tipo_tarefa: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string | null
+          created_by?: string | null
+          exigir_assinatura?: boolean
+          exigir_evidencia?: boolean
+          id?: string
+          loja_id: string
+          modulo: string
+          nome: string
+          prazo_dias?: number | null
+          prazo_horas?: number | null
+          tipo_tarefa?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string | null
+          created_by?: string | null
+          exigir_assinatura?: boolean
+          exigir_evidencia?: boolean
+          id?: string
+          loja_id?: string
+          modulo?: string
+          nome?: string
+          prazo_dias?: number | null
+          prazo_horas?: number | null
+          tipo_tarefa?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operacao_slas_loja_id_fkey"
             columns: ["loja_id"]
             isOneToOne: false
             referencedRelation: "lojas"

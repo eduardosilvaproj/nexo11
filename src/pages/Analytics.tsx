@@ -17,6 +17,7 @@ import { OperacionalSection } from "@/components/analytics/OperacionalSection";
 import { EstoqueSection } from "@/components/analytics/EstoqueSection";
 import { LogisticaMontagemSection } from "@/components/analytics/LogisticaMontagemSection";
 import { PosVendaSection } from "@/components/analytics/PosVendaSection";
+import { ExecucaoRealSection } from "@/components/analytics/ExecucaoRealSection";
 import { Periodo, rangeFromPeriodo } from "@/components/analytics/shared";
 
 type Loja = { id: string; nome: string };
@@ -106,6 +107,7 @@ export default function Analytics() {
             { v: "estoque", l: "Compras & Almoxarifado" },
             { v: "logistica", l: "Logística & Montagem" },
             { v: "posvenda", l: "Pós-venda" },
+            { v: "execucao_real", l: "Execução Real" },
           ].map((t) => (
             <TabsTrigger
               key={t.v}
@@ -134,6 +136,9 @@ export default function Analytics() {
         </TabsContent>
         <TabsContent value="posvenda" className="mt-4">
           <PosVendaSection periodo={periodo} lojaId={lojaId} />
+        </TabsContent>
+        <TabsContent value="execucao_real" className="mt-4">
+          <ExecucaoRealSection lojaId={lojaId} />
         </TabsContent>
       </Tabs>
     </div>

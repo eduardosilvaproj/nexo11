@@ -1,5 +1,4 @@
 import { useState } from "react";
-import AppLayout from "@/components/AppLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExecucaoHoje } from "@/components/operacao/ExecucaoHoje";
 import { OcorrenciasList } from "@/components/operacao/OcorrenciasList";
@@ -27,9 +26,9 @@ export default function ExecucaoPage() {
   }
 
   return (
-    <div className="p-4 md:p-8 space-y-6">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold tracking-tight">Execução Operacional</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-slate-900 font-inter">Execução Operacional</h2>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -57,7 +56,7 @@ export default function ExecucaoPage() {
         </TabsContent>
 
         <TabsContent value="historico">
-          <p className="text-slate-500 text-sm">Em breve: Relatórios avançados de produtividade e tempo médio de execução.</p>
+          <p className="text-slate-500 text-sm italic">Em breve: Relatórios avançados de produtividade e tempo médio de execução.</p>
         </TabsContent>
       </Tabs>
     </div>

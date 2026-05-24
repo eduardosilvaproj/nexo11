@@ -13,7 +13,8 @@ export type ContratoTabKey =
   | "financeiro"
   | "timeline"
   | "documentos"
-  | "anexos";
+  | "anexos"
+  | "indicadores";
 
 const TABS: { key: ContratoTabKey; label: string }[] = [
   { key: "comercial", label: "Comercial" },
@@ -29,6 +30,7 @@ const TABS: { key: ContratoTabKey; label: string }[] = [
   { key: "timeline", label: "Linha do Tempo" },
   { key: "documentos", label: "Documentos" },
   { key: "anexos", label: "Evidências" },
+  { key: "indicadores", label: "Indicadores" },
 ];
 
 interface ContratoTabsProps {
