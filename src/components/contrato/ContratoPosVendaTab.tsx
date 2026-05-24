@@ -319,8 +319,19 @@ export function ContratoPosVendaTab({ contratoId }: PosVendaTabProps) {
         right={
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setComunicarOpen(true)}
+              onClick={() => {
+                // If it's for NPS/Satisfaction, we should set the type to satisfaction
+                setComunicarOpen(true);
+              }}
               className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-[#05873C] border border-[#05873C] hover:bg-green-50"
+              style={{ fontSize: 12 }}
+            >
+              <Star className="h-3 w-3" />
+              Enviar Pesquisa (NPS)
+            </button>
+            <button
+              onClick={() => setComunicarOpen(true)}
+              className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-slate-600 border border-slate-300 hover:bg-slate-50"
               style={{ fontSize: 12 }}
             >
               <Send className="h-3 w-3" />
