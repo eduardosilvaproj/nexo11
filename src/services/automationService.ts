@@ -201,6 +201,17 @@ export const automationService = {
 
         // Se canal não for manual, criar entrada na outbox
         if (params.canal && params.canal !== "manual") {
+          // Verificar opt-in antes de criar na outbox (camada extra de segurança)
+          const { data: pref } = await supabase
+            .from("cliente_preferencias_comunicacao")
+            .select("whatsapp_opt_in, email_opt_in")
+            .eq("cliente_id", metadata.cliente_id)
+            .eq("loja_id", loja_id)
+            .maybeSingle();
+
+          const isOptOut = (params.canal === "whatsapp" && pref?.whatsapp_opt_in === false) ||
+                          (params.canal === "email" && pref?.email_opt_in === false);
+
           const { error: errorOutbox } = await supabase
             .from("communication_outbox")
             .insert([{
@@ -212,7 +223,8 @@ export const automationService = {
               destinatario: metadata.cliente_contato || "Cliente",
               assunto: params.assunto,
               mensagem: params.mensagem || comunicacao.mensagem,
-              status: "pendente",
+              status: isOptOut ? "ignorado" : "pendente",
+              erro: isOptOut ? "Cliente realizou opt-out para este canal." : null,
               template_key: params.template_key
             } as any]);
           

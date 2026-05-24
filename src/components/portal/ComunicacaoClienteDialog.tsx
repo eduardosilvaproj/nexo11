@@ -206,6 +206,18 @@ export function ComunicacaoClienteDialog({ open, onOpenChange, contratoId, clien
 
       // Se canal oficial, criar entrada na outbox
       if (canal === "whatsapp_oficial" || canal === "email_oficial") {
+        // Verificar opt-in
+        const { data: pref } = await supabase
+          .from("cliente_preferencias_comunicacao")
+          .select("whatsapp_opt_in, email_opt_in")
+          .eq("cliente_id", clienteId || contrato?.cliente_id)
+          .eq("loja_id", finalLojaId)
+          .maybeSingle();
+
+        const realCanal = canal.replace("_oficial", "");
+        const isOptOut = (realCanal === "whatsapp" && pref?.whatsapp_opt_in === false) ||
+                        (realCanal === "email" && pref?.email_opt_in === false);
+
         const { error: errorOutbox } = await supabase
           .from("communication_outbox")
           .insert({
@@ -213,10 +225,11 @@ export function ComunicacaoClienteDialog({ open, onOpenChange, contratoId, clien
             cliente_id: clienteId || contrato?.cliente_id,
             contrato_id: contratoId,
             comunicacao_id: comunicacao.id,
-            canal: canal.replace("_oficial", ""),
+            canal: realCanal,
             destinatario,
             mensagem,
-            status: "pendente",
+            status: isOptOut ? "ignorado" : "pendente",
+            erro: isOptOut ? "Cliente realizou opt-out para este canal." : null,
             created_by: user?.id
           } as any);
         

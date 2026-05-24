@@ -213,6 +213,23 @@ export default function CentralComunicacao() {
                       <SelectItem value="cancelado">Cancelado</SelectItem>
                     </SelectContent>
                   </Select>
+                  <Button 
+                    variant="outline" 
+                    className="gap-2"
+                    onClick={async () => {
+                      try {
+                        const { data, error } = await supabase.functions.invoke("process-outbox");
+                        if (error) throw error;
+                        toast.success(`Processamento concluído: ${data.results?.length || 0} mensagens.`);
+                        qc.invalidateQueries({ queryKey: ["communication_outbox"] });
+                      } catch (err: any) {
+                        toast.error("Erro ao processar: " + err.message);
+                      }
+                    }}
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Processar Fila
+                  </Button>
                   <Button variant="outline" size="icon" onClick={() => qc.invalidateQueries({ queryKey: ["communication_outbox"] })}>
                     <RefreshCw className="h-4 w-4" />
                   </Button>
