@@ -624,7 +624,7 @@ export default function PortalCliente() {
                 </button>
                 
                 <button 
-                  onClick={() => toast.info("Em breve!")}
+                  onClick={() => toast.info("Seção temporariamente indisponível.")}
                   className="bg-[#e6fcf5] rounded-3xl p-5 text-left flex flex-col gap-3 transition-transform active:scale-95 shadow-sm border border-[#c3fae8] h-32"
                 >
                   <Camera size={28} className="text-[#099268]" />

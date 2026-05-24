@@ -207,7 +207,7 @@ export default function AuthPage() {
 
         <div className="text-center absolute bottom-8 left-0 w-full">
           <p className="text-slate-600 text-[10px] tracking-wide uppercase">
-            © 2024 NEXO. Todos os direitos reservados.
+            © {new Date().getFullYear()} NEXO. Todos os direitos reservados.
           </p>
         </div>
       </div>
