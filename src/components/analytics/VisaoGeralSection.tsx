@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MetricTile } from "./SectionCard";
 import { Periodo, rangeFromPeriodo, fmtBRL, fmtPct } from "./shared";
 
-const ATIVOS = ["comercial", "tecnico", "producao", "logistica", "montagem", "pos_venda"];
+const ATIVOS = ["comercial", "tecnico", "producao", "logistica", "montagem", "pos_venda"] as const;
 
 async function fetchResumo(periodo: Periodo, lojaId: string) {
   const { start, end } = rangeFromPeriodo(periodo);
