@@ -55,7 +55,18 @@ export type PermissionAction =
   | "campo.entregas"
   | "campo.montagens"
   | "campo.pos_venda"
-  | "campo.almoxarifado";
+  | "campo.almoxarifado"
+  | "rh.view"
+  | "rh.manage"
+  | "rh.funcionarios.view"
+  | "rh.funcionarios.manage"
+  | "rh.solicitacoes.view"
+  | "rh.solicitacoes.create"
+  | "rh.solicitacoes.approve"
+  | "rh.documentos.view"
+  | "rh.documentos.manage"
+  | "rh.ausencias.view"
+  | "rh.ausencias.manage";
 
 const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
   admin_master: [
