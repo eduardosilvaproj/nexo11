@@ -317,7 +317,16 @@ export function ContratoPosVendaTab({ contratoId }: PosVendaTabProps) {
       <Card
         title="Chamados"
         right={
-          <Dialog open={chamadoOpen} onOpenChange={setChamadoOpen}>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setComunicarOpen(true)}
+              className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-[#05873C] border border-[#05873C] hover:bg-green-50"
+              style={{ fontSize: 12 }}
+            >
+              <Send className="h-3 w-3" />
+              Notificar Cliente
+            </button>
+            <Dialog open={chamadoOpen} onOpenChange={setChamadoOpen}>
             <DialogTrigger asChild>
               <button
                 className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-white"
