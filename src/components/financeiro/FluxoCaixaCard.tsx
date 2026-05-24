@@ -121,27 +121,29 @@ export function FluxoCaixaCard() {
   async function carregar() {
     const inicio = new Date(mesAtivo.getFullYear(), mesAtivo.getMonth(), 1).toISOString().slice(0, 10);
     const fim = new Date(mesAtivo.getFullYear(), mesAtivo.getMonth() + 1, 0).toISOString().slice(0, 10);
+    
     const { data: rows, error } = await supabase
-      .from("transacoes")
-      .select("id, tipo, descricao, categoria, valor, data_vencimento, data_pagamento, status, created_at, loja_id")
-      .gte("data_vencimento", inicio)
-      .lte("data_vencimento", fim)
-      .order("data_vencimento", { ascending: true });
+      .from("vw_fluxo_caixa")
+      .select("*")
+      .gte("data", inicio)
+      .lte("data", fim)
+      .order("data", { ascending: true });
+
     if (error) return;
     setLancamentos(
       (rows ?? []).map((r) => ({
         id: r.id,
-        data: (r.data_pagamento ?? r.created_at)?.slice(0, 10) ?? "",
+        data: r.data,
         descricao: r.descricao,
         categoria: r.categoria,
         tipo: r.tipo as LancamentoTipo,
         valor: Number(r.valor),
-        vencimento: r.data_vencimento,
+        vencimento: r.data,
         status: r.status as LancamentoStatus,
       })),
     );
-    if (rows && rows.length > 0) setLojaId(rows[0].loja_id);
   }
+
 
   useEffect(() => {
     (async () => {
@@ -167,13 +169,15 @@ export function FluxoCaixaCard() {
     .reduce((s, l) => s + l.valor, 0);
 
   const [pagamentoAlvo, setPagamentoAlvo] = useState<{ id: string; descricao: string; valor: number } | null>(null);
-  async function cancelar(id: string) {
+  async function cancelar(id: string, tipo: LancamentoTipo) {
     if (!window.confirm("Cancelar este lançamento?")) return;
-    const { error } = await supabase.from("transacoes").update({ status: "cancelado" }).eq("id", id);
+    const table = tipo === "receita" ? "financeiro_contas_receber" : "financeiro_contas_pagar";
+    const { error } = await supabase.from(table).update({ status: "cancelado" }).eq("id", id);
     if (error) { toast.error(error.message); return; }
     toast.success("Lançamento cancelado");
     carregar();
   }
+
   const saldoProjetado = entradasPrevistas - saidasPrevistas;
   const saldoColor = saldoProjetado >= 0 ? "#12B76A" : "#E53935";
 
@@ -421,17 +425,23 @@ export function FluxoCaixaCard() {
                                 size="sm"
                                 className="h-7 px-2 text-white hover:opacity-90"
                                 style={{ background: "#05873C" }}
-                                onClick={() => setPagamentoAlvo({ id: l.id, descricao: l.descricao, valor: l.valor })}
+                                onClick={() => setPagamentoAlvo({ 
+                                  id: l.id, 
+                                  descricao: l.descricao, 
+                                  valor: l.valor,
+                                  tipo: l.tipo
+                                })}
                               >
                                 <Check className="mr-1 h-3 w-3" /> Marcar pago
                               </Button>
                             )}
+
                             {!cancelado && (
                               <Button
                                 size="icon"
                                 variant="ghost"
                                 className="h-7 w-7 text-[#6B7A90] hover:text-[#E53935]"
-                                onClick={() => cancelar(l.id)}
+                                onClick={() => cancelar(l.id, l.tipo)}
                                 aria-label="Cancelar lançamento"
                               >
                                 <Trash2 className="h-4 w-4" />
