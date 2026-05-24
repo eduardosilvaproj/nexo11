@@ -127,6 +127,20 @@ export function ContratoComunicacoesTab({ contratoId }: Props) {
                     {comm.erro}
                   </div>
                 )}
+
+                {(comm as any).outbox?.[0] && (
+                  <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-400 font-medium">Status Oficial:</span>
+                      {getStatusBadge((comm as any).outbox[0].status)}
+                    </div>
+                    {(comm as any).outbox[0].enviado_em && (
+                      <span className="text-[10px] text-slate-400">
+                        Processado em: {format(new Date((comm as any).outbox[0].enviado_em), "dd/MM HH:mm")}
+                      </span>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
