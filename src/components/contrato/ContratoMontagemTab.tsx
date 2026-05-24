@@ -128,6 +128,10 @@ export function ContratoMontagemTab({ contratoId, lojaId }: MontagemTabProps) {
         throw new Error(
           `Conflito: equipe já agendada das ${check.conflito.hora_inicio?.slice(0, 5)} às ${check.conflito.hora_fim?.slice(0, 5)}`,
         );
+      if (check.rhConflito)
+        throw new Error(
+          `Indisponibilidade RH: ${check.rhConflito.funcionario} está com status "${check.rhConflito.motivo}"`,
+        );
       if (check.excedeCapacidade)
         throw new Error(
           `Excede capacidade diária (${check.capacidade}h). Já reservadas: ${check.horasReservadas.toFixed(1)}h`,
