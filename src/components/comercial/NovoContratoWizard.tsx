@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Database } from "@/integrations/supabase/types";
 import { 
   ChevronRight, 
   ChevronLeft, 
@@ -157,14 +158,16 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
 
   const vendedores = useMemo(() => {
     return membrosEquipe.filter(m => {
-      const papel = (m as any).papeis_comissao?.nome;
+      const p = m.papeis_comissao as unknown as { nome: string } | null;
+      const papel = p?.nome;
       return papel === "Vendedor" || papel === "Vendedor + Projetista";
     });
   }, [membrosEquipe]);
 
   const projetistas = useMemo(() => {
     return membrosEquipe.filter(m => {
-      const papel = (m as any).papeis_comissao?.nome;
+      const p = m.papeis_comissao as unknown as { nome: string } | null;
+      const papel = p?.nome;
       return papel === "Projetista" || papel === "Vendedor + Projetista";
     });
   }, [membrosEquipe]);
@@ -394,8 +397,8 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
         finalClienteId = newCli.id;
       }
 
-      const todasCategorias: any[] = [];
-      const todosItens: any[] = [];
+      const todasCategorias: Database["public"]["Tables"]["orcamentos"]["Row"]["categorias"] = [];
+      const todosItens: Database["public"]["Tables"]["orcamentos"]["Row"]["itens"] = [];
       let totalTabela = 0;
       let totalPedido = 0;
 
@@ -408,8 +411,12 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
           valor: c.budget * (1 - descAmbiente / 100),
           ambiente: a.nome,
         }));
-        todasCategorias.push(...cats);
-        todosItens.push(...a.parsed.itens.map(it => ({ ...it, ambiente: a.nome })));
+        if (Array.isArray(todasCategorias)) {
+          (todasCategorias as any[]).push(...cats);
+        }
+        if (Array.isArray(todosItens)) {
+          (todosItens as any[]).push(...a.parsed.itens.map(it => ({ ...it, ambiente: a.nome })));
+        }
         totalTabela += a.parsed.total_tabela;
         totalPedido += a.parsed.total_pedido;
       });

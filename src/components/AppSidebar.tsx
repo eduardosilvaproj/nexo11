@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import {
@@ -19,7 +18,6 @@ import {
   ShoppingCart,
   UserCog,
   Building2,
-  Users2,
   BarChart3,
   Plug,
   Settings,
@@ -44,7 +42,6 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { LogoNexo } from "@/components/LogoNexo";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 

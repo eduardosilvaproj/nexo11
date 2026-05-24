@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Bell, Inbox } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -29,14 +30,13 @@ export function NotificationsBell() {
           // Filter depends on the RLS but we can try to filter by user or profile here too for efficiency
         },
         (payload) => {
-          // Verify if it belongs to this user or their profiles
-          const n = payload.new as any;
+          const n = payload.new as Database["public"]["Tables"]["notificacoes"]["Row"];
           if (n.usuario_id === user.id || !n.usuario_id) {
             toast(n.mensagem, {
               description: n.titulo,
               action: n.link ? {
                 label: "Ver",
-                onClick: () => window.location.href = n.link
+                onClick: () => window.location.href = n.link || "#"
               } : undefined
             });
             qc.invalidateQueries({ queryKey: ["notificacoes"] });
