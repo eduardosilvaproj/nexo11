@@ -159,6 +159,16 @@ serve(async (req) => {
             .from("cliente_comunicacoes")
             .update({ status: "falhou" })
             .eq("id", msg.comunicacao_id);
+          
+          // Registrar Alerta de falha se for a última tentativa
+          await supabase.from("communication_alerts").insert({
+            loja_id: msg.loja_id,
+            canal: msg.canal,
+            tipo: 'sending_failed',
+            severidade: 'warning',
+            mensagem: `Falha definitiva ao enviar mensagem: ${err.message}`,
+            metadata: { outbox_id: msg.id, error: err.message }
+          });
         }
         results.push({ id: msg.id, status, error: err.message });
       }
