@@ -32,6 +32,8 @@ export type PermissionAction =
   | "lojas.view"
   | "lojas.manage"
   | "analytics.view"
+  | "notificacoes.view"
+  | "notificacoes.manage"
   | "integracoes.view"
   | "configuracoes.view";
 
