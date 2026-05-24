@@ -1,5 +1,6 @@
-
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { canPerform } from "@/lib/permissions";
 import { 
   Table, 
   TableBody, 
@@ -28,6 +29,7 @@ interface AlmoxarifadoTableProps {
 }
 
 export function AlmoxarifadoTable({ items, isLoading, onEdit, onRefresh }: AlmoxarifadoTableProps) {
+  const { roles } = useAuth();
   const [movementItem, setMovementItem] = useState<{ item: any, type: 'entrada' | 'saida' } | null>(null);
   const [historyItem, setHistoryItem] = useState<any>(null);
 
@@ -101,22 +103,28 @@ export function AlmoxarifadoTable({ items, isLoading, onEdit, onRefresh }: Almox
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem onClick={() => setMovementItem({ item, type: 'entrada' })} className="text-green-600 focus:text-green-700 focus:bg-green-50">
-                        <ArrowUpCircle size={16} className="mr-2" />
-                        Entrada manual
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setMovementItem({ item, type: 'saida' })} className="text-orange-600 focus:text-orange-700 focus:bg-orange-50">
-                        <ArrowDownCircle size={16} className="mr-2" />
-                        Saída manual
-                      </DropdownMenuItem>
+                      {canPerform(roles, "almoxarifado.manage") && (
+                        <>
+                          <DropdownMenuItem onClick={() => setMovementItem({ item, type: 'entrada' })} className="text-green-600 focus:text-green-700 focus:bg-green-50">
+                            <ArrowUpCircle size={16} className="mr-2" />
+                            Entrada manual
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setMovementItem({ item, type: 'saida' })} className="text-orange-600 focus:text-orange-700 focus:bg-orange-50">
+                            <ArrowDownCircle size={16} className="mr-2" />
+                            Saída manual
+                          </DropdownMenuItem>
+                        </>
+                      )}
                       <DropdownMenuItem onClick={() => setHistoryItem(item)}>
                         <History size={16} className="mr-2" />
                         Histórico
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onEdit(item)}>
-                        <Edit size={16} className="mr-2" />
-                        Editar item
-                      </DropdownMenuItem>
+                      {canPerform(roles, "almoxarifado.manage") && (
+                        <DropdownMenuItem onClick={() => onEdit(item)}>
+                          <Edit size={16} className="mr-2" />
+                          Editar item
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
