@@ -25,6 +25,7 @@ import {
   MessageSquare,
   Package,
   Bell,
+  Rocket,
 } from "lucide-react";
 import { useNotificacoes } from "@/hooks/use-notificacoes";
 import {
@@ -80,6 +81,7 @@ const inteligencia: MenuItem[] = [
   { title: "Analytics", url: "/analytics", icon: BarChart3, roles: ["admin", "gerente", "franqueador", "admin_master"] },
   { title: "Integrações", url: "/integracoes", icon: Plug, roles: ["admin", "gerente", "admin_master"] },
   { title: "Estimativa PDF", url: "/estimativa-orcamento", icon: MessageSquare },
+  { title: "Implantação", url: "/configuracao-inicial", icon: Rocket, roles: ["admin", "gerente", "franqueador", "admin_master"] },
 ];
 
 export function AppSidebar() {

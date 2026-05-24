@@ -46,6 +46,7 @@ import Almoxarifado from "./pages/Almoxarifado";
 import Apresentacao from "./pages/Apresentacao";
 import SemPermissao from "./pages/SemPermissao";
 import Notificacoes from "./pages/Notificacoes";
+import ConfiguracaoInicial from "./pages/ConfiguracaoInicial";
 
 
 
@@ -212,6 +213,11 @@ const App = () => (
               } />
               <Route path="/estimativa-orcamento" element={<EstimativaOrcamento />} />
               <Route path="/notificacoes" element={<Notificacoes />} />
+              <Route path="/configuracao-inicial" element={
+                <ProtectedRoute roles={["admin", "gerente", "franqueador", "admin_master"]}>
+                  <ConfiguracaoInicial />
+                </ProtectedRoute>
+              } />
               <Route path="/sem-permissao" element={<SemPermissao />} />
             </Route>
 
