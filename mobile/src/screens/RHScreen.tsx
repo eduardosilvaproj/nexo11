@@ -196,7 +196,7 @@ const s = StyleSheet.create({
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   label: { color: '#94a3b8', fontSize: 14 },
   value: { color: '#fff', fontSize: 14, fontWeight: '600' },
-  emptyText: { color: '#64748b', textAlign: 'center', py: 20 },
+  emptyText: { color: '#64748b', textAlign: 'center', paddingVertical: 20 },
   requestHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   requestType: { color: '#fff', fontWeight: '700', fontSize: 14 },
   requestDate: { color: '#94a3b8', fontSize: 12, marginBottom: 4 },
