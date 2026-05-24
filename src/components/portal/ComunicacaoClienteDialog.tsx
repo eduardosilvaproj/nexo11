@@ -267,6 +267,8 @@ export function ComunicacaoClienteDialog({ open, onOpenChange, contratoId, clien
       const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(mensagem)}`;
       window.open(url, "_blank");
       registrarComunicacao.mutate("enviado");
+    } else if (canal === "whatsapp_oficial" || canal === "email_oficial") {
+      registrarComunicacao.mutate("preparado");
     } else {
       // Logic for email or manual
       registrarComunicacao.mutate("enviado");
