@@ -894,6 +894,7 @@ export type Database = {
           loja_id: string
           mensagem: string
           portal_token_id: string | null
+          provider_message_id: string | null
           status: string
           tipo: string
           updated_at: string
@@ -912,6 +913,7 @@ export type Database = {
           loja_id: string
           mensagem: string
           portal_token_id?: string | null
+          provider_message_id?: string | null
           status?: string
           tipo: string
           updated_at?: string
@@ -930,6 +932,7 @@ export type Database = {
           loja_id?: string
           mensagem?: string
           portal_token_id?: string | null
+          provider_message_id?: string | null
           status?: string
           tipo?: string
           updated_at?: string
