@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Database } from "@/integrations/supabase/types";
 import { SectionCard, MetricTile, EmptyState } from "./SectionCard";
 import { Periodo, rangeFromPeriodo } from "./shared";
 import { Truck, Package, Wrench, CheckCircle2 } from "lucide-react";
@@ -27,7 +28,7 @@ export function LogisticaMontagemSection({ periodo, lojaId }: { periodo: Periodo
 
       // Status de liberação para montagem por contrato
       const porContrato = new Map<string, { total: number; entregues: number }>();
-      arr.forEach((e: any) => {
+      arr.forEach((e: Database["public"]["Tables"]["expedicoes_almoxarifado"]["Row"]) => {
         if (!e.contrato_id) return;
         const cur = porContrato.get(e.contrato_id) ?? { total: 0, entregues: 0 };
         cur.total += 1;
