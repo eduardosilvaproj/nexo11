@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ShoppingCart, Package, ClipboardList, CheckCircle2 } from "lucide-react";
+import { ShoppingCart, Package, ClipboardList, CheckCircle2, Box } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import { EstoqueItemSelector } from "@/components/compras/EstoqueItemSelector";
 
 const sb = supabase as unknown as { from: (t: string) => any };
 
@@ -15,6 +17,11 @@ interface ReqItem {
   unidade?: string | null;
   origem: "comprar" | "almoxarifado";
   status: "pendente" | "concluido";
+  item_estoque_id?: string | null;
+  reserva_estoque_id?: string | null;
+  quantidade_em_estoque?: number | null;
+  divergencia_estoque?: boolean;
+  estoque_baixado?: boolean;
 }
 
 interface Requisicao {
@@ -213,8 +220,19 @@ function RequisicaoDrawer({
 
   const toggleOrigem = (idx: number) => {
     setItems((arr) =>
-      arr.map((it, i) => (i === idx ? { ...it, origem: it.origem === "comprar" ? "almoxarifado" : "comprar" } : it)),
+      arr.map((it, i) => {
+        if (i === idx) {
+          // If switching away from almoxarifado, we should probably warn or clear?
+          // But usually, the user knows what they are doing.
+          return { ...it, origem: it.origem === "comprar" ? "almoxarifado" : "comprar" };
+        }
+        return it;
+      }),
     );
+  };
+
+  const updateItemExtra = (idx: number, updates: Partial<ReqItem>) => {
+    setItems((arr) => arr.map((it, i) => (i === idx ? { ...it, ...updates } : it)));
   };
 
   const toggleStatus = (idx: number) => {
@@ -289,19 +307,27 @@ function RequisicaoDrawer({
 
         <div className="flex flex-col gap-2">
           {items.map((it, idx) => (
-            <div key={idx} className="rounded-md p-3" style={{ border: "0.5px solid #E8ECF2" }}>
+            <div key={idx} className="rounded-md p-4" style={{ border: "0.5px solid #E8ECF2" }}>
               <div className="flex items-center justify-between gap-3">
                 <div className="flex flex-col">
                   <span style={{ fontSize: 13, fontWeight: 500, color: "#0D1117" }}>{it.descricao}</span>
-                  <span style={{ fontSize: 11, color: "#6B7A90" }}>
-                    {it.quantidade} {it.unidade ?? ""}
-                  </span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span style={{ fontSize: 11, color: "#6B7A90" }}>
+                      {it.quantidade} {it.unidade ?? ""}
+                    </span>
+                    {it.origem === "almoxarifado" && (
+                      <Badge variant={it.estoque_baixado ? "success" : it.reserva_estoque_id ? "info" : "outline"} className="h-4 px-1 text-[9px]">
+                        {it.estoque_baixado ? "Baixado" : it.reserva_estoque_id ? "Reservado" : "Pendente Estoque"}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
                     size="sm"
                     variant={it.origem === "comprar" ? "default" : "outline"}
                     onClick={() => toggleOrigem(idx)}
+                    disabled={!!it.reserva_estoque_id || it.estoque_baixado}
                   >
                     {it.origem === "comprar" ? "🛒 Comprar" : "📦 Almoxarifado"}
                   </Button>
@@ -309,11 +335,22 @@ function RequisicaoDrawer({
                     size="sm"
                     variant={it.status === "concluido" ? "default" : "outline"}
                     onClick={() => toggleStatus(idx)}
+                    disabled={it.origem === "almoxarifado" && !it.estoque_baixado}
                   >
                     {it.status === "concluido" ? "✓ Concluído" : "Pendente"}
                   </Button>
                 </div>
               </div>
+
+              {it.origem === "almoxarifado" && (
+                <EstoqueItemSelector 
+                  lojaId={requisicao.loja_id}
+                  contratoId={requisicao.contrato_id}
+                  item={it}
+                  onUpdateItem={(updates) => updateItemExtra(idx, updates)}
+                  onRefresh={onChanged}
+                />
+              )}
             </div>
           ))}
         </div>
