@@ -25,7 +25,9 @@ import {
   LogOut,
   MessageSquare,
   Package,
+  Bell,
 } from "lucide-react";
+import { useNotificacoes } from "@/hooks/use-notificacoes";
 import {
   Sidebar,
   SidebarContent,
@@ -86,6 +88,7 @@ export function AppSidebar() {
   const queryClient = useQueryClient();
   const { state } = useSidebar();
   const { perfil, roles, signOut } = useAuth();
+  const { naoLidas: totalNotifs } = useNotificacoes();
   const collapsed = state === "collapsed";
 
   useEffect(() => {
@@ -157,6 +160,26 @@ export function AppSidebar() {
                   <NavLink to="/" end className={linkClass}>
                     <LayoutDashboard className="h-4 w-4" />
                     {!collapsed && <span>Dashboard</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink to="/notificacoes" className={linkClass}>
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-2">
+                        <Bell className="h-4 w-4" />
+                        {!collapsed && <span>Notificações</span>}
+                      </div>
+                      {!collapsed && totalNotifs > 0 && (
+                        <span className="bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                          {totalNotifs}
+                        </span>
+                      )}
+                      {collapsed && totalNotifs > 0 && (
+                        <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full" />
+                      )}
+                    </div>
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
