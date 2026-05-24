@@ -1,3 +1,4 @@
+import React, { useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
@@ -50,7 +51,7 @@ type AppRole = Database["public"]["Enums"]["app_role"];
 type MenuItem = {
   title: string;
   url: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   roles?: AppRole[];
 };
 

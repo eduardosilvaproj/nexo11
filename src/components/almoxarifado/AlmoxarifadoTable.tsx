@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { canPerform } from "@/lib/permissions";
 import { 
@@ -22,9 +23,9 @@ import { MovimentacaoDialog } from "./MovimentacaoDialog";
 import { HistoricoDrawer } from "./HistoricoDrawer";
 
 interface AlmoxarifadoTableProps {
-  items: any[];
+  items: Database["public"]["Tables"]["estoque_itens"]["Row"][];
   isLoading: boolean;
-  onEdit: (item: any) => void;
+  onEdit: (item: Database["public"]["Tables"]["estoque_itens"]["Row"]) => void;
   onRefresh: () => void;
 }
 

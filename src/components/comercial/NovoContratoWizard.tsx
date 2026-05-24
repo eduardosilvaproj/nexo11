@@ -328,7 +328,7 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
       toast.error("Selecione ao menos um ambiente");
       return;
     }
-    setStep(2); // In the new layout, we only have step 1 and 2
+    setStep(2);
   };
 
   useEffect(() => {
