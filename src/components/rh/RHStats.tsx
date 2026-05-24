@@ -15,11 +15,17 @@ export function RHStats() {
         .from("rh_solicitacoes")
         .select("status");
 
+      const { data: escalas } = await supabase
+        .from("rh_escalas")
+        .select("id")
+        .eq("ativo", true);
+
       return {
         ativos: funcionarios?.filter(f => f.status === "ativo").length || 0,
         ferias: funcionarios?.filter(f => f.status === "ferias").length || 0,
         afastados: funcionarios?.filter(f => f.status === "afastado").length || 0,
         solicitacoesPendentes: solicitacoes?.filter(s => s.status === "enviada").length || 0,
+        escalasAtivas: escalas?.length || 0,
       };
     }
   });
