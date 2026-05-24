@@ -47,6 +47,7 @@ import Apresentacao from "./pages/Apresentacao";
 import SemPermissao from "./pages/SemPermissao";
 import Notificacoes from "./pages/Notificacoes";
 import ConfiguracaoInicial from "./pages/ConfiguracaoInicial";
+import ModoCampo from "./pages/ModoCampo";
 
 
 
