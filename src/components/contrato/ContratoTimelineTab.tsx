@@ -16,7 +16,8 @@ import {
   DollarSign,
   Star,
   ShoppingBag,
-  FileText
+  FileText,
+  Bot
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
