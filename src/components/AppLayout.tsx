@@ -23,6 +23,7 @@ const ROUTE_LABELS: Record<string, string> = {
   analytics: "Analytics",
    integracoes: "Integrações",
   contratos: "Contratos",
+  operacao: "Operação",
 };
 
 function getInitials(nome?: string | null, email?: string | null) {
