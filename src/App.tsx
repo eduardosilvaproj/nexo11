@@ -47,6 +47,7 @@ import Apresentacao from "./pages/Apresentacao";
 import SemPermissao from "./pages/SemPermissao";
 import Notificacoes from "./pages/Notificacoes";
 import ConfiguracaoInicial from "./pages/ConfiguracaoInicial";
+import ModoCampo from "./pages/ModoCampo";
 
 
 
@@ -216,6 +217,11 @@ const App = () => (
               <Route path="/configuracao-inicial" element={
                 <ProtectedRoute roles={["admin", "gerente", "franqueador", "admin_master"]}>
                   <ConfiguracaoInicial />
+                </ProtectedRoute>
+              } />
+              <Route path="/campo" element={
+                <ProtectedRoute roles={["admin", "gerente", "tecnico", "medidor", "conferente", "logistico", "montador", "pos_venda", "almoxarife", "admin_master"]}>
+                  <ModoCampo />
                 </ProtectedRoute>
               } />
               <Route path="/sem-permissao" element={<SemPermissao />} />

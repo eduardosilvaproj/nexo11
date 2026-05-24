@@ -49,7 +49,13 @@ export type PermissionAction =
   | "evidencias.view"
   | "evidencias.create"
   | "evidencias.delete"
-  | "financeiro.evidencias.view";
+  | "financeiro.evidencias.view"
+  | "campo.view"
+  | "campo.medicoes"
+  | "campo.entregas"
+  | "campo.montagens"
+  | "campo.pos_venda"
+  | "campo.almoxarifado";
 
 const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
   admin_master: [
@@ -62,7 +68,8 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
     "implantacao.manage", "documentos.view", "documentos.emit", "documentos.cancel", 
     "documentos.accept", "documentos.sign", "documentos.attach", "documentos.financeiro.view", 
     "documentos.financeiro.emit", "evidencias.view", "evidencias.create", "evidencias.delete", 
-    "financeiro.evidencias.view"
+    "financeiro.evidencias.view", "campo.view", "campo.medicoes", "campo.entregas", 
+    "campo.montagens", "campo.pos_venda", "campo.almoxarifado"
   ],
   admin: [
     "comercial.view", "clientes.view", "contratos.view", "tecnico.view", "producao.view",
@@ -74,7 +81,8 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
     "implantacao.manage", "documentos.view", "documentos.emit", "documentos.cancel", 
     "documentos.accept", "documentos.sign", "documentos.attach", "documentos.financeiro.view", 
     "documentos.financeiro.emit", "evidencias.view", "evidencias.create", "evidencias.delete", 
-    "financeiro.evidencias.view"
+    "financeiro.evidencias.view", "campo.view", "campo.medicoes", "campo.entregas", 
+    "campo.montagens", "campo.pos_venda", "campo.almoxarifado"
   ],
   franqueador: [
     "comercial.view", "clientes.view", "contratos.view", "pos_venda.view",
@@ -92,7 +100,8 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
     "documentos.view", "documentos.emit", "documentos.cancel", "documentos.accept", 
     "documentos.sign", "documentos.attach", "documentos.financeiro.view", 
     "documentos.financeiro.emit", "evidencias.view", "evidencias.create", "evidencias.delete", 
-    "financeiro.evidencias.view"
+    "financeiro.evidencias.view", "campo.view", "campo.medicoes", "campo.entregas", 
+    "campo.montagens", "campo.pos_venda", "campo.almoxarifado"
   ],
   vendedor: [
     "comercial.view", "clientes.view", "contratos.view", "pos_venda.view", "notificacoes.view",
@@ -100,19 +109,21 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
   ],
   tecnico: [
     "contratos.view", "tecnico.view", "producao.view", "logistica.view", "montagem.view", 
-    "notificacoes.view", "documentos.view", "evidencias.view", "evidencias.create"
+    "notificacoes.view", "documentos.view", "evidencias.view", "evidencias.create",
+    "campo.view", "campo.medicoes"
   ],
   medidor: [
     "contratos.view", "tecnico.view", "notificacoes.view", "documentos.view", 
-    "evidencias.view", "evidencias.create"
+    "evidencias.view", "evidencias.create", "campo.view", "campo.medicoes"
   ],
   conferente: [
     "contratos.view", "tecnico.view", "notificacoes.view", "documentos.view", 
-    "evidencias.view", "evidencias.create"
+    "evidencias.view", "evidencias.create", "campo.view", "campo.medicoes"
   ],
   montador: [
     "montagem.view", "montagem.update", "notificacoes.view", "documentos.view", 
-    "documentos.accept", "documentos.sign", "evidencias.view", "evidencias.create"
+    "documentos.accept", "documentos.sign", "evidencias.view", "evidencias.create",
+    "campo.view", "campo.montagens"
   ],
   comprador: [
     "compras.view", "compras.manage", "almoxarifado.view", "notificacoes.view",
@@ -120,11 +131,13 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
   ],
   almoxarife: [
     "almoxarifado.view", "almoxarifado.manage", "compras.view", "notificacoes.view",
-    "documentos.view", "documentos.emit", "evidencias.view", "evidencias.create"
+    "documentos.view", "documentos.emit", "evidencias.view", "evidencias.create",
+    "campo.view", "campo.almoxarifado"
   ],
   logistico: [
     "logistica.view", "logistica.update", "notificacoes.view", "documentos.view", 
-    "documentos.emit", "documentos.accept", "documentos.sign", "evidencias.view", "evidencias.create"
+    "documentos.emit", "documentos.accept", "documentos.sign", "evidencias.view", "evidencias.create",
+    "campo.view", "campo.entregas"
   ],
   financeiro: [
     "financeiro.view", "financeiro.manage", "comissoes.view", "comissoes.manage", "dre.view", 
@@ -134,7 +147,7 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
   ],
   pos_venda: [
     "pos_venda.view", "clientes.view", "contratos.view", "notificacoes.view", "documentos.view",
-    "evidencias.view", "evidencias.create"
+    "evidencias.view", "evidencias.create", "campo.view", "campo.pos_venda"
   ]
 };
 
