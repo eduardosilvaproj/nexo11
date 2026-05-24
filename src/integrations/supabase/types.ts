@@ -3132,6 +3132,65 @@ export type Database = {
           },
         ]
       }
+      mobile_feedback: {
+        Row: {
+          anexo_url: string | null
+          created_at: string | null
+          descricao: string
+          id: string
+          impacto: string
+          loja_id: string
+          modulo: string
+          perfil: string | null
+          plataforma: string | null
+          status: string
+          tipo: string
+          updated_at: string | null
+          usuario_id: string
+          versao_app: string | null
+        }
+        Insert: {
+          anexo_url?: string | null
+          created_at?: string | null
+          descricao: string
+          id?: string
+          impacto: string
+          loja_id: string
+          modulo: string
+          perfil?: string | null
+          plataforma?: string | null
+          status?: string
+          tipo: string
+          updated_at?: string | null
+          usuario_id: string
+          versao_app?: string | null
+        }
+        Update: {
+          anexo_url?: string | null
+          created_at?: string | null
+          descricao?: string
+          id?: string
+          impacto?: string
+          loja_id?: string
+          modulo?: string
+          perfil?: string | null
+          plataforma?: string | null
+          status?: string
+          tipo?: string
+          updated_at?: string | null
+          usuario_id?: string
+          versao_app?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mobile_feedback_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nexo_atualizacoes: {
         Row: {
           autor: string | null

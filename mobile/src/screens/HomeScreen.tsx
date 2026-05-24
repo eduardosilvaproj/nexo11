@@ -15,6 +15,7 @@ import { MODULOS_POR_PERFIL } from '../constants/perfis';
 import { registerForPushNotificationsAsync } from '../lib/notifications';
 import { useNavigation } from '@react-navigation/native';
 import { SyncQueueService } from '../lib/syncQueue';
+import Constants from 'expo-constants';
 
 export default function HomeScreen() {
   const { profile, loading, signOut, refreshProfile } = useAuth();
@@ -121,11 +122,16 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        {modulos.includes('*') && (
-          <View style={s.adminBanner}>
-            <Text style={s.adminText}>Acesso Administrativo Total</Text>
-          </View>
-        )}
+        <TouchableOpacity 
+          style={s.feedbackCard} 
+          onPress={() => navigation.navigate('Feedback')}
+        >
+          <Text style={s.feedbackText}>💡 Enviar Feedback do Piloto</Text>
+        </TouchableOpacity>
+
+        <View style={s.footerInfo}>
+          <Text style={s.footerText}>v{Constants.expoConfig?.version || '1.0.0'}</Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -170,45 +176,8 @@ const s = StyleSheet.create({
   logoutText: { color: '#fff', fontWeight: '700', fontSize: 16 },
   logoutMini: { padding: 8 },
   logoutTextMini: { color: '#ef4444', fontWeight: '600' },
-  adminBanner: { marginTop: 24, padding: 12, backgroundColor: '#3b82f633', borderRadius: 12, borderWidth: 1, borderColor: '#3b82f666' },
-  adminText: { color: '#3b82f6', fontStyle: 'italic', textAlign: 'center', fontWeight: '600' }
-});
-
-
-const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F172A' },
-  center: { justifyContent: 'center', alignItems: 'center' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  hi: { color: '#fff', fontSize: 24, fontWeight: '700' },
-  role: { color: '#94a3b8', marginTop: 4, textTransform: 'capitalize' },
-  noProfile: { color: '#cbd5e1', fontSize: 16, textAlign: 'center', marginTop: 12 },
-  section: { color: '#64748b', fontSize: 12, marginBottom: 12, textTransform: 'uppercase', fontWeight: '700', letterSpacing: 1 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  card: {
-    backgroundColor: '#1e293b',
-    padding: 20,
-    borderRadius: 16,
-    width: '48%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  cardTitle: { color: '#fff', fontWeight: '600', textTransform: 'capitalize', fontSize: 16 },
-  cardSub: { color: '#3b82f6', fontSize: 12, marginTop: 8 },
-  quickActions: { flexDirection: 'row', gap: 12, marginBottom: 24 },
-  actionCard: { 
-    flex: 1, 
-    backgroundColor: '#334155', 
-    padding: 16, 
-    borderRadius: 12, 
-    alignItems: 'center' 
-  },
-  actionText: { color: '#f1f5f9', fontWeight: '600' },
-  logout: { marginTop: 32, padding: 14, alignItems: 'center', backgroundColor: '#ef4444', borderRadius: 8, width: '100%' },
-  logoutText: { color: '#fff', fontWeight: '600' },
-  logoutMini: { padding: 8 },
-  logoutTextMini: { color: '#ef4444', fontWeight: '500' },
-  adminText: { color: '#94a3b8', fontStyle: 'italic', width: '100%', marginTop: 12 }
+  feedbackCard: { marginTop: 32, padding: 20, backgroundColor: '#3b82f622', borderRadius: 16, borderWidth: 1, borderColor: '#3b82f644', alignItems: 'center' },
+  feedbackText: { color: '#3b82f6', fontWeight: '700', fontSize: 15 },
+  footerInfo: { marginTop: 40, alignItems: 'center' },
+  footerText: { color: '#334155', fontSize: 12, fontWeight: '600' }
 });

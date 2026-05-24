@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer, DefaultTheme, createNavigationContainerRef } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -12,6 +12,7 @@ import NotificacoesScreen from '../screens/NotificacoesScreen';
 import ChatListScreen from '../screens/ChatListScreen';
 import ChatDetailScreen from '../screens/ChatDetailScreen';
 import ComunicadosScreen from '../screens/ComunicadosScreen';
+import FeedbackScreen from '../screens/FeedbackScreen';
 import { setupNotificationListeners } from '../lib/notifications';
 
 const Tab = createBottomTabNavigator();
@@ -101,6 +102,7 @@ export default function RootNavigator() {
               })} 
             />
             <Stack.Screen name="Comunicados" component={ComunicadosScreen} options={{ title: 'Comunicados' }} />
+            <Stack.Screen name="Feedback" component={FeedbackScreen} options={{ title: 'Enviar Feedback' }} />
           </>
         ) : (
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
@@ -109,6 +111,7 @@ export default function RootNavigator() {
     </NavigationContainer>
   );
 }
+
 
 const s = StyleSheet.create({
   center: { flex: 1, backgroundColor: '#0F172A', justifyContent: 'center', alignItems: 'center', padding: 24 },
