@@ -25,20 +25,6 @@ function PontoEquilibrio() {
   );
 }
 
-function EmConstrucaoBanner() {
-  return (
-    <div
-      className="mb-4 rounded-md px-4 py-3 text-sm"
-      style={{
-        background: "#F5F7FA",
-        border: "1px dashed #B0BAC9",
-        color: "#6B7A90",
-      }}
-    >
-      Em construção — disponível em breve
-    </div>
-  );
-}
 
 function FluxoCaixaTab() {
   return <FluxoCaixaCard />;

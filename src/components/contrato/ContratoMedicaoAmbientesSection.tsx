@@ -188,7 +188,7 @@ export function ContratoMedicaoAmbientesSection({
           _descricao: `${lblPessoa} ${pessoaNome} — Ambiente ${a.nome} — ${fmtBRL(valor)}`,
         });
       } catch (e: any) {
-        console.warn("log inserir falhou", e?.message);
+        if (import.meta.env.DEV) console.warn("log inserir falhou", e?.message);
       }
 
       // 2) DRE — agora a vw_contratos_dre soma automaticamente os ambientes pagos
