@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Check, CheckCircle2, Plus, X, Paperclip } from "lucide-react";
+import { ArrowRight, Check, CheckCircle2, Plus, X, Paperclip, Send } from "lucide-react";
+import { ComunicacaoClienteDialog } from "@/components/portal/ComunicacaoClienteDialog";
 import OperationalAttachments from "@/components/operacional/OperationalAttachments";
 import confetti from "canvas-confetti";
 import { supabase } from "@/integrations/supabase/client";
