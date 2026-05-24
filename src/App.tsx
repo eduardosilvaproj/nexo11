@@ -219,6 +219,11 @@ const App = () => (
                   <ConfiguracaoInicial />
                 </ProtectedRoute>
               } />
+              <Route path="/campo" element={
+                <ProtectedRoute roles={["admin", "gerente", "tecnico", "medidor", "conferente", "logistico", "montador", "pos_venda", "almoxarife", "admin_master"]}>
+                  <ModoCampo />
+                </ProtectedRoute>
+              } />
               <Route path="/sem-permissao" element={<SemPermissao />} />
             </Route>
 
