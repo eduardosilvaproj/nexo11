@@ -525,9 +525,50 @@ export default function CentralComunicacao() {
               </div>
 
               <div className="space-y-2">
-                <Label>Remetente / Nome de Exibição</Label>
+                <Label>Provedor</Label>
+                <Select 
+                  value={editingConfig.provider || ""} 
+                  onValueChange={(val) => setEditingConfig({ ...editingConfig, provider: val })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o provedor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {editingConfig.canal === 'email' && (
+                      <>
+                        <SelectItem value="resend">Resend</SelectItem>
+                        <SelectItem value="sendgrid">SendGrid</SelectItem>
+                        <SelectItem value="amazon_ses">Amazon SES</SelectItem>
+                      </>
+                    )}
+                    {editingConfig.canal === 'whatsapp' && (
+                      <>
+                        <SelectItem value="meta">Meta (Official API)</SelectItem>
+                        <SelectItem value="twilio">Twilio</SelectItem>
+                        <SelectItem value="zapi">Z-API</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>API Key / Token (Será armazenado com segurança)</Label>
                 <Input 
-                  placeholder="Ex: NEXO Tecnologia" 
+                  type="password"
+                  placeholder="••••••••••••••••" 
+                  value={editingConfig.configuracao?.api_key || ""}
+                  onChange={(e) => setEditingConfig({ 
+                    ...editingConfig, 
+                    configuracao: { ...editingConfig.configuracao, api_key: e.target.value } 
+                  })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Remetente / E-mail / Número (ID)</Label>
+                <Input 
+                  placeholder={editingConfig.canal === 'email' ? "contato@sualoja.com.br" : "ID do Telefone (Meta)"} 
                   value={editingConfig.remetente || ""}
                   onChange={(e) => setEditingConfig({ ...editingConfig, remetente: e.target.value })}
                 />
@@ -560,7 +601,7 @@ export default function CentralComunicacao() {
                   value={editingConfig.limite_diario || ""}
                   onChange={(e) => setEditingConfig({ ...editingConfig, limite_diario: parseInt(e.target.value) || null })}
                 />
-                <p className="text-[10px] text-muted-foreground">Evite bloqueios no WhatsApp usando limites seguros.</p>
+                <p className="text-[10px] text-muted-foreground">Evite bloqueios usando limites seguros.</p>
               </div>
 
               <Button 
