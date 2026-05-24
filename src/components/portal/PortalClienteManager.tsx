@@ -14,8 +14,9 @@ interface Props {
   lojaId: string;
 }
 
-export function PortalClienteManager({ contratoId }: Props) {
+export function PortalClienteManager({ contratoId, clienteId, lojaId }: Props) {
   const qc = useQueryClient();
+  const [comunicarOpen, setComunicarOpen] = useState(false);
 
   const { data: acesso, isLoading } = useQuery({
     queryKey: ["portal-token", contratoId],
