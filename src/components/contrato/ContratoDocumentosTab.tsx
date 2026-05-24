@@ -117,6 +117,7 @@ export function ContratoDocumentosTab({ contratoId }: Props) {
                 <th className="px-4 py-3">Título / Nº</th>
                 <th className="px-4 py-3">Emitido em</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Portal</th>
                 <th className="px-4 py-3 text-right">Ações</th>
               </tr>
             </thead>
