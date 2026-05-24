@@ -7,7 +7,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { EditarComissaoDialog } from "./EditarComissaoDialog";
 
-type FuncaoUsuario = "vendedor" | "projetista" | "tecnico" | "conferente" | "montador" | "motorista" | "gerente" | "financeiro" | "admin" | "franqueador" | "medidor";
+type FuncaoUsuario = "vendedor" | "projetista" | "tecnico" | "conferente" | "montador" | "motorista" | "gerente" | "financeiro" | "admin" | "franqueador" | "medidor" | "comprador" | "almoxarife" | "logistico" | "pos_venda";
 
 type Membro = {
   id: string;
