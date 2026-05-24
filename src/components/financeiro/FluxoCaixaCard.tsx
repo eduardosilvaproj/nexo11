@@ -106,9 +106,9 @@ export function FluxoCaixaCard() {
   const totalEntradas = data.reduce((s, d) => s + d.entradas, 0);
   const totalSaidas = data.reduce((s, d) => s + d.saidas, 0);
   const saldoLiquido = totalEntradas - totalSaidas;
-  const mesAtual = data[data.length - 1];
-  const mesAnterior = data[data.length - 2];
-  const variacao = mesAnterior
+  const mesAtual = data.length > 0 ? data[data.length - 1] : null;
+  const mesAnterior = data.length > 1 ? data[data.length - 2] : null;
+  const variacao = (mesAtual && mesAnterior)
     ? ((mesAtual.saldo - mesAnterior.saldo) / Math.max(Math.abs(mesAnterior.saldo), 1)) * 100
     : 0;
 
@@ -303,31 +303,37 @@ export function FluxoCaixaCard() {
         </CardHeader>
         <CardContent>
           <div className="h-[320px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={dataSemanal} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
-                <CartesianGrid stroke="#E8ECF2" vertical={false} />
-                <XAxis dataKey="semana" tick={{ fill: "#6B7A90", fontSize: 12 }} axisLine={{ stroke: "#E8ECF2" }} tickLine={false} />
-                <YAxis tickFormatter={fmtAbrev} tick={{ fill: "#6B7A90", fontSize: 12 }} axisLine={false} tickLine={false} width={70} />
-                <Tooltip content={<SemanaTooltip />} cursor={{ fill: "#F5F7FA" }} />
-                <Legend
-                  wrapperStyle={{ fontSize: 12, color: "#6B7A90" }}
-                  formatter={(v) =>
-                    v === "entradas" ? "Entradas" : v === "saidas" ? "Saídas" : "Saldo acumulado"
-                  }
-                />
-                <ReferenceLine y={0} stroke="#B0BAC9" />
-                <Bar dataKey="entradas" fill="#1E6FBF" radius={[4, 4, 0, 0]} maxBarSize={28} />
-                <Bar dataKey="saidas" fill="#D85A30" radius={[4, 4, 0, 0]} maxBarSize={28} />
-                <Line
-                  type="monotone"
-                  dataKey="acumulado"
-                  stroke="#0D1117"
-                  strokeWidth={1.5}
-                  strokeDasharray="4 4"
-                  dot={{ r: 3, fill: "#0D1117" }}
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
+            {dataSemanal.length > 0 && dataSemanal.some(d => d.entradas > 0 || d.saidas > 0) ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={dataSemanal} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
+                  <CartesianGrid stroke="#E8ECF2" vertical={false} />
+                  <XAxis dataKey="semana" tick={{ fill: "#6B7A90", fontSize: 12 }} axisLine={{ stroke: "#E8ECF2" }} tickLine={false} />
+                  <YAxis tickFormatter={fmtAbrev} tick={{ fill: "#6B7A90", fontSize: 12 }} axisLine={false} tickLine={false} width={70} />
+                  <Tooltip content={<SemanaTooltip />} cursor={{ fill: "#F5F7FA" }} />
+                  <Legend
+                    wrapperStyle={{ fontSize: 12, color: "#6B7A90" }}
+                    formatter={(v) =>
+                      v === "entradas" ? "Entradas" : v === "saidas" ? "Saídas" : "Saldo acumulado"
+                    }
+                  />
+                  <ReferenceLine y={0} stroke="#B0BAC9" />
+                  <Bar dataKey="entradas" fill="#1E6FBF" radius={[4, 4, 0, 0]} maxBarSize={28} />
+                  <Bar dataKey="saidas" fill="#D85A30" radius={[4, 4, 0, 0]} maxBarSize={28} />
+                  <Line
+                    type="monotone"
+                    dataKey="acumulado"
+                    stroke="#0D1117"
+                    strokeWidth={1.5}
+                    strokeDasharray="4 4"
+                    dot={{ r: 3, fill: "#0D1117" }}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                Ainda não há dados financeiros suficientes para este período.
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

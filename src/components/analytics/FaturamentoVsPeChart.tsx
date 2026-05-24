@@ -83,70 +83,76 @@ export function FaturamentoVsPeChart() {
         Faturamento vs Ponto de equilíbrio
       </div>
       <div style={{ width: "100%", height: 280 }}>
-        <ResponsiveContainer>
-          <AreaChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-            <defs>
-              <linearGradient id="fatFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#1E6FBF" stopOpacity={0.2} />
-                <stop offset="100%" stopColor="#1E6FBF" stopOpacity={0.05} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#EEF1F5" vertical={false} />
-            <XAxis dataKey="mes" tick={{ fontSize: 12, fill: "#6B7A90" }} axisLine={false} tickLine={false} />
-            <YAxis tickFormatter={fmt} tick={{ fontSize: 12, fill: "#6B7A90" }} axisLine={false} tickLine={false} />
-            <Tooltip content={<CustomTooltip />} />
+        {data.length > 0 && data.some(d => d.faturamento > 0) ? (
+          <ResponsiveContainer>
+            <AreaChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="fatFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#1E6FBF" stopOpacity={0.2} />
+                  <stop offset="100%" stopColor="#1E6FBF" stopOpacity={0.05} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#EEF1F5" vertical={false} />
+              <XAxis dataKey="mes" tick={{ fontSize: 12, fill: "#6B7A90" }} axisLine={false} tickLine={false} />
+              <YAxis tickFormatter={fmt} tick={{ fontSize: 12, fill: "#6B7A90" }} axisLine={false} tickLine={false} />
+              <Tooltip content={<CustomTooltip />} />
 
-            {/* Invisible base for stacking the difference bands */}
-            <Area
-              type="monotone"
-              dataKey="bandBase"
-              stackId="band"
-              stroke="none"
-              fill="transparent"
-              isAnimationActive={false}
-              activeDot={false}
-            />
-            <Area
-              type="monotone"
-              dataKey="bandPos"
-              stackId="band"
-              stroke="none"
-              fill="#12B76A"
-              fillOpacity={0.18}
-              isAnimationActive={false}
-              activeDot={false}
-            />
-            <Area
-              type="monotone"
-              dataKey="bandNeg"
-              stackId="band"
-              stroke="none"
-              fill="#D92D20"
-              fillOpacity={0.15}
-              isAnimationActive={false}
-              activeDot={false}
-            />
+              {/* Invisible base for stacking the difference bands */}
+              <Area
+                type="monotone"
+                dataKey="bandBase"
+                stackId="band"
+                stroke="none"
+                fill="transparent"
+                isAnimationActive={false}
+                activeDot={false}
+              />
+              <Area
+                type="monotone"
+                dataKey="bandPos"
+                stackId="band"
+                stroke="none"
+                fill="#12B76A"
+                fillOpacity={0.18}
+                isAnimationActive={false}
+                activeDot={false}
+              />
+              <Area
+                type="monotone"
+                dataKey="bandNeg"
+                stackId="band"
+                stroke="none"
+                fill="#D92D20"
+                fillOpacity={0.15}
+                isAnimationActive={false}
+                activeDot={false}
+              />
 
-            {/* Faturamento area + line */}
-            <Area
-              type="monotone"
-              dataKey="faturamento"
-              stroke="#1E6FBF"
-              strokeWidth={2}
-              fill="url(#fatFill)"
-            />
+              {/* Faturamento area + line */}
+              <Area
+                type="monotone"
+                dataKey="faturamento"
+                stroke="#1E6FBF"
+                strokeWidth={2}
+                fill="url(#fatFill)"
+              />
 
-            {/* PE dotted line */}
-            <Line
-              type="monotone"
-              dataKey="pe"
-              stroke="#E8A020"
-              strokeWidth={2}
-              strokeDasharray="5 4"
-              dot={false}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+              {/* PE dotted line */}
+              <Line
+                type="monotone"
+                dataKey="pe"
+                stroke="#E8A020"
+                strokeWidth={2}
+                strokeDasharray="5 4"
+                dot={false}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="flex h-full items-center justify-center text-sm text-muted-foreground text-center px-4">
+            Ainda não há dados suficientes para exibir este gráfico.
+          </div>
+        )}
       </div>
     </div>
   );
