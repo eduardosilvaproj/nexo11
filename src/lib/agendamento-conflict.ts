@@ -81,11 +81,22 @@ export async function checkAgendamentoConflict(
     horasReservadas: 0,
     horasNovas,
     capacidade,
+    rhConflito: null,
   };
 
   if (!p.equipeId || !p.data) return base;
   if (p.horaInicio && p.horaFim && p.horaInicio >= p.horaFim) {
     return { ...base, error: "Hora fim deve ser maior que hora início" };
+  }
+
+  // RH Check
+  if (p.horaInicio && p.horaFim) {
+    const dataInicio = `${p.data}T${p.horaInicio}:00Z`; // Approximation, should consider timezone
+    const dataFim = `${p.data}T${p.horaFim}:00Z`;
+    const rhConflito = await checkRHAvailability(p.equipeId, dataInicio, dataFim);
+    if (rhConflito) {
+      return { ...base, rhConflito };
+    }
   }
 
   let q = supabase
