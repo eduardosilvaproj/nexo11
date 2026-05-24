@@ -407,6 +407,116 @@ export type Database = {
           },
         ]
       }
+      automacao_execucoes: {
+        Row: {
+          created_at: string | null
+          entidade_id: string
+          entidade_tipo: string
+          erro: string | null
+          executado_em: string | null
+          gatilho: string
+          id: string
+          loja_id: string
+          regra_id: string | null
+          resultado: Json
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          entidade_id: string
+          entidade_tipo: string
+          erro?: string | null
+          executado_em?: string | null
+          gatilho: string
+          id?: string
+          loja_id: string
+          regra_id?: string | null
+          resultado?: Json
+          status?: string
+        }
+        Update: {
+          created_at?: string | null
+          entidade_id?: string
+          entidade_tipo?: string
+          erro?: string | null
+          executado_em?: string | null
+          gatilho?: string
+          id?: string
+          loja_id?: string
+          regra_id?: string | null
+          resultado?: Json
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automacao_execucoes_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automacao_execucoes_regra_id_fkey"
+            columns: ["regra_id"]
+            isOneToOne: false
+            referencedRelation: "automacao_regras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automacao_regras: {
+        Row: {
+          acoes: Json
+          ativo: boolean
+          condicoes: Json
+          created_at: string | null
+          created_by: string | null
+          delay_minutos: number
+          descricao: string | null
+          gatilho: string
+          id: string
+          loja_id: string
+          nome: string
+          updated_at: string | null
+        }
+        Insert: {
+          acoes?: Json
+          ativo?: boolean
+          condicoes?: Json
+          created_at?: string | null
+          created_by?: string | null
+          delay_minutos?: number
+          descricao?: string | null
+          gatilho: string
+          id?: string
+          loja_id: string
+          nome: string
+          updated_at?: string | null
+        }
+        Update: {
+          acoes?: Json
+          ativo?: boolean
+          condicoes?: Json
+          created_at?: string | null
+          created_by?: string | null
+          delay_minutos?: number
+          descricao?: string | null
+          gatilho?: string
+          id?: string
+          loja_id?: string
+          nome?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automacao_regras_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chamados_pos_venda: {
         Row: {
           contrato_id: string
