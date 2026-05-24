@@ -124,7 +124,7 @@ export default function PortalCliente() {
   
   const [contracts, setContracts] = useState<any[]>([]);
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
-  const [currentTab, setCurrentTab] = useState<"inicio" | "chat" | "agenda" | "conta">("inicio");
+  const [currentTab, setCurrentTab] = useState<"inicio" | "chat" | "agenda" | "conta" | "documentos" | "pos-venda">("inicio");
   const [unreadMessages, setUnreadMessages] = useState(0);
 
   // States for the selected contract
