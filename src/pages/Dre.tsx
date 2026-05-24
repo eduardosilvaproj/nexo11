@@ -144,6 +144,7 @@ export default function Dre() {
         .order("nome");
       setVendedores((us as any) ?? []);
 
+
       // Evolução dos últimos 6 meses (margens médias ponderadas)
       const inicio6 = new Date(ano, mes - 5, 1).toISOString();
       const fim6 = new Date(ano, mes + 1, 1).toISOString();
