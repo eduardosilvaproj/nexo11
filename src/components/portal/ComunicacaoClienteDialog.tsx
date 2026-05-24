@@ -38,6 +38,7 @@ type TipoMensagem =
   | "entrega_agendada" 
   | "montagem_agendada" 
   | "pos_venda" 
+  | "satisfacao"
   | "aviso_geral";
 
 interface Props {
@@ -159,6 +160,9 @@ export function ComunicacaoClienteDialog({ open, onOpenChange, contratoId, clien
       case "pos_venda":
         msg = `Olá ${vars.cliente_nome}! Atualizamos o seu chamado de pós-venda. Confira as novidades no seu portal: ${vars.portal_link}`;
         break;
+      case "satisfacao":
+        msg = `Olá ${vars.cliente_nome}! Queremos muito saber sua opinião sobre o nosso atendimento. Responda nossa pesquisa rápida pelo link: ${vars.portal_link}`;
+        break;
       case "aviso_geral":
         msg = `Olá ${vars.cliente_nome}! Temos uma atualização sobre seu contrato ${vars.contrato_numero}. Acesse o portal para mais detalhes: ${vars.portal_link}`;
         break;
@@ -213,6 +217,26 @@ export function ComunicacaoClienteDialog({ open, onOpenChange, contratoId, clien
   });
 
   const handleSend = async () => {
+    // If it's a satisfaction survey, ensure a record is created in cliente_pesquisas first
+    if (tipo === "satisfacao") {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        const { error } = await supabase.from("cliente_pesquisas").insert({
+          loja_id: lojaId || contrato?.loja_id,
+          cliente_id: clienteId || contrato?.cliente_id,
+          contrato_id: contratoId,
+          portal_token_id: portalToken?.id,
+          etapa: "geral",
+          status: "enviada",
+          enviada_por: user?.id,
+        });
+        if (error) throw error;
+      } catch (e: any) {
+        toast.error("Erro ao criar registro de pesquisa: " + e.message);
+        return;
+      }
+    }
+
     if (canal === "whatsapp") {
       const phone = destinatario.replace(/\D/g, "");
       const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(mensagem)}`;
@@ -276,6 +300,7 @@ export function ComunicacaoClienteDialog({ open, onOpenChange, contratoId, clien
                   <SelectItem value="entrega_agendada">Lembrete de Entrega</SelectItem>
                   <SelectItem value="montagem_agendada">Lembrete de Montagem</SelectItem>
                   <SelectItem value="pos_venda">Pós-venda</SelectItem>
+                  <SelectItem value="satisfacao">Pesquisa de Satisfação</SelectItem>
                   <SelectItem value="aviso_geral">Aviso Geral</SelectItem>
                 </SelectContent>
               </Select>
