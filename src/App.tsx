@@ -41,6 +41,7 @@ import RH from "./pages/RH";
 import Execucao from "./pages/Execucao";
 import IndicadoresOperacionais from "./pages/IndicadoresOperacionais";
 import Automacoes from "./pages/Automacoes";
+import CentralComunicacao from "./pages/CentralComunicacao";
 
 import AcompanhamentoCriacao from "./pages/AcompanhamentoCriacao";
 import AcessoAcompanhamento from "./pages/AcessoAcompanhamento";
