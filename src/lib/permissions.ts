@@ -171,6 +171,7 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
     "rh.escalas.view", "rh.escalas.manage", "rh.disponibilidade.view", "rh.disponibilidade.manage",
     "agenda.equipe.view", "agenda.equipe.manage",
     "operacao.checkin.view", "operacao.ocorrencias.view", "operacao.execucao.view",
+    "operacao.indicadores.equipe.view", "rh.documentos_sensiveis.view", "rh.audit_logs.view",
     "equipe.view", "notificacoes.view"
   ],
   vendedor: [
