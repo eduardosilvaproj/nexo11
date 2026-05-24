@@ -20,6 +20,7 @@ export interface ContratoEventoParams {
   entidadeTipo?: string | null;
   entidadeId?: string | null;
   metadata?: Record<string, any>;
+  visivelCliente?: boolean;
 }
 
 export const registrarEventoContrato = async (params: ContratoEventoParams) => {
@@ -43,6 +44,7 @@ export const registrarEventoContrato = async (params: ContratoEventoParams) => {
       entidade_tipo: params.entidadeTipo,
       entidade_id: params.entidadeId,
       metadata: params.metadata || {},
+      visivel_cliente: params.visivelCliente || false,
       usuario_id: (await supabase.auth.getUser()).data.user?.id
     });
 

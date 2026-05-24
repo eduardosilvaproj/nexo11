@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Check, CheckCircle2, Plus, X, Paperclip } from "lucide-react";
+import { ArrowRight, Check, CheckCircle2, Plus, X, Paperclip, Send } from "lucide-react";
+import { ComunicacaoClienteDialog } from "@/components/portal/ComunicacaoClienteDialog";
 import OperationalAttachments from "@/components/operacional/OperationalAttachments";
 import confetti from "canvas-confetti";
 import { supabase } from "@/integrations/supabase/client";
@@ -93,6 +94,7 @@ const npsLabel = (n: number) => (n >= 9 ? "Promotor" : n >= 7 ? "Neutro" : "Detr
 
 export function ContratoPosVendaTab({ contratoId }: PosVendaTabProps) {
   const qc = useQueryClient();
+  const [comunicarOpen, setComunicarOpen] = useState(false);
   const numero = `#${contratoId.slice(0, 4).toUpperCase()}`;
 
   const { data: chamados = [] } = useQuery({
@@ -315,7 +317,16 @@ export function ContratoPosVendaTab({ contratoId }: PosVendaTabProps) {
       <Card
         title="Chamados"
         right={
-          <Dialog open={chamadoOpen} onOpenChange={setChamadoOpen}>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setComunicarOpen(true)}
+              className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-[#05873C] border border-[#05873C] hover:bg-green-50"
+              style={{ fontSize: 12 }}
+            >
+              <Send className="h-3 w-3" />
+              Notificar Cliente
+            </button>
+            <Dialog open={chamadoOpen} onOpenChange={setChamadoOpen}>
             <DialogTrigger asChild>
               <button
                 className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-white"
@@ -405,6 +416,7 @@ export function ContratoPosVendaTab({ contratoId }: PosVendaTabProps) {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         }
       >
         {chamados.length === 0 ? (
@@ -618,6 +630,13 @@ export function ContratoPosVendaTab({ contratoId }: PosVendaTabProps) {
         contratoId={contratoId} 
         modulo="pos_venda" 
         title="Evidências de Pós-venda e Atendimento" 
+      />
+      <ComunicacaoClienteDialog 
+        open={comunicarOpen}
+        onOpenChange={setComunicarOpen}
+        contratoId={contratoId}
+        lojaId={""} // Pass appropriately or fetch in dialog if needed
+        clienteId={null} // Optional
       />
     </div>
   );

@@ -3,9 +3,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ExternalLink, Copy, Link2Off, Eye, Loader2, RefreshCcw } from "lucide-react";
+import { ExternalLink, Copy, Link2Off, Eye, Loader2, RefreshCcw, Send } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { ComunicacaoClienteDialog } from "./ComunicacaoClienteDialog";
 
 interface Props {
   contratoId: string;
@@ -13,8 +14,9 @@ interface Props {
   lojaId: string;
 }
 
-export function PortalClienteManager({ contratoId }: Props) {
+export function PortalClienteManager({ contratoId, clienteId, lojaId }: Props) {
   const qc = useQueryClient();
+  const [comunicarOpen, setComunicarOpen] = useState(false);
 
   const { data: acesso, isLoading } = useQuery({
     queryKey: ["portal-token", contratoId],
@@ -122,6 +124,15 @@ export function PortalClienteManager({ contratoId }: Props) {
               </Button>
             </div>
 
+            <Button 
+              className="w-full bg-green-600 hover:bg-green-700 text-white" 
+              size="sm"
+              onClick={() => setComunicarOpen(true)}
+            >
+              <Send className="w-3 h-3 mr-2" />
+              Comunicar Cliente
+            </Button>
+
             <div className="pt-2 border-t border-slate-200 flex flex-col gap-2">
               <div className="flex justify-between text-[10px] text-slate-400">
                 <span>Criado em: {format(new Date(acesso.created_at), "dd/MM/yy")}</span>
@@ -142,6 +153,14 @@ export function PortalClienteManager({ contratoId }: Props) {
           </div>
         )}
       </CardContent>
+
+      <ComunicacaoClienteDialog 
+        open={comunicarOpen}
+        onOpenChange={setComunicarOpen}
+        contratoId={contratoId}
+        clienteId={clienteId}
+        lojaId={lojaId}
+      />
     </Card>
   );
 }
