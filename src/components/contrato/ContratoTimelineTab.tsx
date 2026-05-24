@@ -54,6 +54,8 @@ const MODULO_ICONS: Record<string, any> = {
   comissoes: CreditCard,
   pos_venda: Star,
   documentos: FileText,
+  automacao: Bot,
+  comunicacao: MessageSquare,
 };
 
 const MODULO_COLORS: Record<string, string> = {
