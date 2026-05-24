@@ -3,9 +3,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ExternalLink, Copy, Link2Off, Eye, Loader2, RefreshCcw } from "lucide-react";
+import { ExternalLink, Copy, Link2Off, Eye, Loader2, RefreshCcw, Send } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { ComunicacaoClienteDialog } from "./ComunicacaoClienteDialog";
 
 interface Props {
   contratoId: string;
