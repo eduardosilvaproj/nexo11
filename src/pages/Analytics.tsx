@@ -137,6 +137,9 @@ export default function Analytics() {
         <TabsContent value="posvenda" className="mt-4">
           <PosVendaSection periodo={periodo} lojaId={lojaId} />
         </TabsContent>
+        <TabsContent value="execucao_real" className="mt-4">
+          <ExecucaoRealSection lojaId={lojaId} />
+        </TabsContent>
       </Tabs>
     </div>
   );
