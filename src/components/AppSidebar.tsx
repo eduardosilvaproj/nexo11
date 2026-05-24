@@ -83,6 +83,7 @@ const inteligencia: MenuItem[] = [
   { title: "Integrações", url: "/integracoes", icon: Plug, roles: ["admin", "gerente", "admin_master"] },
   { title: "Estimativa PDF", url: "/estimativa-orcamento", icon: MessageSquare },
   { title: "Implantação", url: "/configuracao-inicial", icon: Rocket, roles: ["admin", "gerente", "franqueador", "admin_master"] },
+  { title: "Modo Campo", url: "/campo", icon: Smartphone, roles: ["admin", "gerente", "tecnico", "medidor", "conferente", "logistico", "montador", "pos_venda", "almoxarife", "admin_master"] },
 ];
 
 export function AppSidebar() {
