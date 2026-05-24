@@ -1,51 +1,87 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 
-type Item = { id: string; titulo: string; tipo: string; data: string };
+type Item = { id: string; titulo: string; tipo: string; data: string; status: string };
 
 export default function AgendaScreen() {
   const { profile } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     load();
-  }, [profile?.user_id]);
+  }, [profile?.id]);
 
   async function load() {
+    if (!profile?.id) return;
+    
     setLoading(true);
-    const hoje = new Date().toISOString().slice(0, 10);
-    const fim = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
-    // Lê tabelas reais; RLS já filtra por loja/usuário
+    const hoje = new Date().toISOString().split('T')[0];
+    const fim = new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0]; // Próximos 15 dias
+
     const result: Item[] = [];
+    
     try {
+      // Busca Montagens
       const { data: mont } = await supabase
-        .from('montagens')
-        .select('id, data_agendada, contrato_id')
-        .gte('data_agendada', hoje)
-        .lte('data_agendada', fim);
+        .from('agendamentos_montagem')
+        .select('id, data, status')
+        .gte('data', hoje)
+        .lte('data', fim)
+        .order('data', { ascending: true });
+
       mont?.forEach((m: any) =>
-        result.push({ id: m.id, titulo: `Montagem`, tipo: 'montagem', data: m.data_agendada })
+        result.push({ 
+          id: m.id, 
+          titulo: `Montagem Agendada`, 
+          tipo: 'montagem', 
+          data: m.data,
+          status: m.status 
+        })
       );
-    } catch {}
-    try {
+
+      // Busca Entregas
       const { data: ent } = await supabase
         .from('entregas')
-        .select('id, data_prevista')
+        .select('id, data_prevista, status')
         .gte('data_prevista', hoje)
-        .lte('data_prevista', fim);
+        .lte('data_prevista', fim)
+        .order('data_prevista', { ascending: true });
+
       ent?.forEach((e: any) =>
-        result.push({ id: e.id, titulo: `Entrega`, tipo: 'entrega', data: e.data_prevista })
+        result.push({ 
+          id: e.id, 
+          titulo: `Entrega Prevista`, 
+          tipo: 'entrega', 
+          data: e.data_prevista,
+          status: e.status 
+        })
       );
-    } catch {}
+    } catch (err) {
+      console.error('Erro ao carregar agenda:', err);
+    }
+
     result.sort((a, b) => a.data.localeCompare(b.data));
     setItems(result);
     setLoading(false);
+    setRefreshing(false);
   }
 
-  if (loading) return <ActivityIndicator style={{ flex: 1 }} color="#3b82f6" />;
+  const onRefresh = () => {
+    setRefreshing(true);
+    load();
+  };
+
+  if (loading && !refreshing) {
+    return (
+      <View style={[s.container, s.center]}>
+        <ActivityIndicator color="#3b82f6" />
+      </View>
+    );
+  }
 
   return (
     <View style={s.container}>
@@ -53,11 +89,17 @@ export default function AgendaScreen() {
         data={items}
         keyExtractor={(i) => `${i.tipo}-${i.id}`}
         contentContainerStyle={{ padding: 16 }}
-        ListEmptyComponent={<Text style={s.empty}>Sem itens na agenda.</Text>}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3b82f6" />}
+        ListEmptyComponent={<Text style={s.empty}>Nenhum agendamento para os próximos dias.</Text>}
         renderItem={({ item }) => (
-          <View style={s.card}>
-            <Text style={s.title}>{item.titulo}</Text>
-            <Text style={s.meta}>{item.data}</Text>
+          <View style={[s.card, { borderLeftColor: item.tipo === 'montagem' ? '#8b5cf6' : '#3b82f6' }]}>
+            <View style={s.cardHeader}>
+              <Text style={s.title}>{item.titulo}</Text>
+              <View style={[s.statusBadge, { backgroundColor: '#1e293b' }]}>
+                <Text style={s.statusText}>{item.status}</Text>
+              </View>
+            </View>
+            <Text style={s.meta}>Data: {new Date(item.data).toLocaleDateString('pt-BR')}</Text>
           </View>
         )}
       />
@@ -67,8 +109,12 @@ export default function AgendaScreen() {
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0F172A' },
-  card: { backgroundColor: '#1e293b', padding: 14, borderRadius: 10, marginBottom: 10 },
-  title: { color: '#fff', fontWeight: '600' },
-  meta: { color: '#94a3b8', marginTop: 4 },
-  empty: { color: '#64748b', textAlign: 'center', marginTop: 40 },
+  center: { justifyContent: 'center', alignItems: 'center' },
+  card: { backgroundColor: '#1e293b', padding: 16, borderRadius: 12, marginBottom: 12, borderLeftWidth: 5 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  title: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  meta: { color: '#94a3b8', fontSize: 14 },
+  statusBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 },
+  statusText: { color: '#cbd5e1', fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
+  empty: { color: '#64748b', textAlign: 'center', marginTop: 40, fontSize: 16 },
 });
