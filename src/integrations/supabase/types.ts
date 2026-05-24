@@ -1762,6 +1762,169 @@ export type Database = {
           },
         ]
       }
+      financeiro_contas_pagar: {
+        Row: {
+          categoria: string
+          contrato_id: string | null
+          created_at: string | null
+          data_pagamento: string | null
+          descricao: string
+          forma_pagamento: string | null
+          fornecedor_id: string | null
+          id: string
+          loja_id: string
+          observacoes: string | null
+          status: string
+          updated_at: string | null
+          valor: number
+          vencimento: string
+        }
+        Insert: {
+          categoria: string
+          contrato_id?: string | null
+          created_at?: string | null
+          data_pagamento?: string | null
+          descricao: string
+          forma_pagamento?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          loja_id: string
+          observacoes?: string | null
+          status?: string
+          updated_at?: string | null
+          valor?: number
+          vencimento: string
+        }
+        Update: {
+          categoria?: string
+          contrato_id?: string | null
+          created_at?: string | null
+          data_pagamento?: string | null
+          descricao?: string
+          forma_pagamento?: string | null
+          fornecedor_id?: string | null
+          id?: string
+          loja_id?: string
+          observacoes?: string | null
+          status?: string
+          updated_at?: string | null
+          valor?: number
+          vencimento?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financeiro_contas_pagar_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_contas_pagar_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_contas_pagar_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_contas_pagar_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financeiro_contas_receber: {
+        Row: {
+          cliente_id: string | null
+          contrato_id: string | null
+          created_at: string | null
+          data_pagamento: string | null
+          descricao: string
+          forma_pagamento: string | null
+          id: string
+          loja_id: string
+          observacoes: string | null
+          parcela_numero: number | null
+          parcela_total: number | null
+          status: string
+          updated_at: string | null
+          valor: number
+          vencimento: string
+        }
+        Insert: {
+          cliente_id?: string | null
+          contrato_id?: string | null
+          created_at?: string | null
+          data_pagamento?: string | null
+          descricao: string
+          forma_pagamento?: string | null
+          id?: string
+          loja_id: string
+          observacoes?: string | null
+          parcela_numero?: number | null
+          parcela_total?: number | null
+          status?: string
+          updated_at?: string | null
+          valor?: number
+          vencimento: string
+        }
+        Update: {
+          cliente_id?: string | null
+          contrato_id?: string | null
+          created_at?: string | null
+          data_pagamento?: string | null
+          descricao?: string
+          forma_pagamento?: string | null
+          id?: string
+          loja_id?: string
+          observacoes?: string | null
+          parcela_numero?: number | null
+          parcela_total?: number | null
+          status?: string
+          updated_at?: string | null
+          valor?: number
+          vencimento?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financeiro_contas_receber_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_contas_receber_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_contas_receber_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financeiro_contas_receber_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fornecedores: {
         Row: {
           ativo: boolean
@@ -4239,6 +4402,21 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      vw_fluxo_caixa: {
+        Row: {
+          categoria: string | null
+          contrato_id: string | null
+          created_at: string | null
+          data: string | null
+          descricao: string | null
+          id: string | null
+          loja_id: string | null
+          status: string | null
+          tipo: string | null
+          valor: number | null
+        }
+        Relationships: []
       }
       vw_ponto_equilibrio: {
         Row: {
