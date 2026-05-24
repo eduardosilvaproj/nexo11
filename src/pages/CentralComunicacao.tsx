@@ -153,6 +153,9 @@ export default function CentralComunicacao() {
       setEditingConfig(null);
       qc.invalidateQueries({ queryKey: ["communication_settings"] });
     },
+    onError: (err: any) => toast.error("Erro ao salvar: " + err.message),
+  });
+
   const sendTestMutation = useMutation({
     mutationFn: async (payload: { canal: string, destinatario: string, mensagem: string }) => {
       const { data, error } = await supabase
