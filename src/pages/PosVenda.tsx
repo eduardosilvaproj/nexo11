@@ -226,6 +226,23 @@ export default function PosVenda() {
       });
       if (error) throw error;
 
+      // Integrar com automação
+      try {
+        const { data: contratoInfo } = await supabase.from("contratos").select("loja_id, cliente_id").eq("id", contratoId).single();
+        if (contratoInfo) {
+          const { automationService } = await import("@/services/automationService");
+          await automationService.dispararGatilho(
+            "pos_venda_aberto",
+            "contrato",
+            contratoId,
+            contratoInfo.loja_id,
+            { cliente_id: contratoInfo.cliente_id, contrato_id: contratoId, titulo: tit }
+          );
+        }
+      } catch (err) {
+        console.error("Erro ao disparar gatilho de automação (pos_venda_aberto):", err);
+      }
+
       // Buscar loja_id do contrato para a notificação
       const { data: contrato } = await supabase.from("contratos").select("loja_id, cliente_nome").eq("id", contratoId).single();
 
@@ -301,6 +318,23 @@ export default function PosVenda() {
         })
         .eq("id", resolveTarget.id);
       if (error) throw error;
+
+      // Integrar com automação
+      try {
+        const { data: contratoInfo } = await supabase.from("contratos").select("loja_id, cliente_id").eq("id", resolveTarget.contrato_id).single();
+        if (contratoInfo) {
+          const { automationService } = await import("@/services/automationService");
+          await automationService.dispararGatilho(
+            "pos_venda_resolvido",
+            "contrato",
+            resolveTarget.contrato_id,
+            contratoInfo.loja_id,
+            { cliente_id: contratoInfo.cliente_id, contrato_id: resolveTarget.contrato_id }
+          );
+        }
+      } catch (err) {
+        console.error("Erro ao disparar gatilho de automação (pos_venda_resolvido):", err);
+      }
       await supabase.rpc("contrato_log_inserir", {
         _contrato_id: resolveTarget.contrato_id,
         _acao: "chamado_resolvido",
@@ -336,6 +370,39 @@ export default function PosVenda() {
         .update({ nps: n, nps_comentario: comentario || null })
         .eq("id", npsTarget.id);
       if (error) throw error;
+
+      // Integrar com automação
+      try {
+        const { data: chamado } = await supabase.from("chamados_pos_venda").select("contrato_id").eq("id", npsTarget.id).single();
+        if (chamado) {
+          const { data: contratoInfo } = await supabase.from("contratos").select("loja_id, cliente_id").eq("id", chamado.contrato_id).single();
+          if (contratoInfo) {
+            const { automationService } = await import("@/services/automationService");
+            
+            // NPS Respondido
+            await automationService.dispararGatilho(
+              "nps_respondido",
+              "contrato",
+              chamado.contrato_id,
+              contratoInfo.loja_id,
+              { cliente_id: contratoInfo.cliente_id, contrato_id: chamado.contrato_id, nota: n }
+            );
+
+            // NPS Detrator (<= 6)
+            if (n <= 6) {
+              await automationService.dispararGatilho(
+                "nps_detrator",
+                "contrato",
+                chamado.contrato_id,
+                contratoInfo.loja_id,
+                { cliente_id: contratoInfo.cliente_id, contrato_id: chamado.contrato_id, nota: n }
+              );
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Erro ao disparar gatilhos de NPS:", err);
+      }
     },
     onSuccess: () => {
       toast.success("NPS registrado");
