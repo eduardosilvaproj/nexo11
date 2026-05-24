@@ -94,6 +94,7 @@ const npsLabel = (n: number) => (n >= 9 ? "Promotor" : n >= 7 ? "Neutro" : "Detr
 
 export function ContratoPosVendaTab({ contratoId }: PosVendaTabProps) {
   const qc = useQueryClient();
+  const [comunicarOpen, setComunicarOpen] = useState(false);
   const numero = `#${contratoId.slice(0, 4).toUpperCase()}`;
 
   const { data: chamados = [] } = useQuery({
