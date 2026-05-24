@@ -136,6 +136,10 @@ export default function PortalCliente() {
   const [ambientes, setAmbientes] = useState<any[]>([]);
   const [orcamentos, setOrcamentos] = useState<any[]>([]);
   const [entregaPrevista, setEntregaPrevista] = useState<string | null>(null);
+  const [docsPortal, setDocsPortal] = useState<any[]>([]);
+  const [chamados, setChamados] = useState<any[]>([]);
+  const [isAbrirChamadoOpen, setIsAbrirChamadoOpen] = useState(false);
+  const [chamadoForm, setChamadoForm] = useState({ tipo: "assistencia", ambiente: "", descricao: "" });
   const [signing, setSigning] = useState(false);
   const [nomeAssinatura, setNomeAssinatura] = useState("");
   const [isModalAssinaturaOpen, setIsModalAssinaturaOpen] = useState(false);
