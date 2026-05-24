@@ -109,7 +109,7 @@ export function PagamentoConfirmDialog({ open, onOpenChange, transacao, onConfir
     let lojaId = null;
     const { data: lancamento } = await supabase
       .from('financeiro_contas_receber')
-      .select('loja_id, contrato_id, numero, total')
+      .select('loja_id, contrato_id, parcela_numero, total_parcelas')
       .eq('id', transacao.id)
       .single();
     
@@ -134,8 +134,8 @@ export function PagamentoConfirmDialog({ open, onOpenChange, transacao, onConfir
           valor: transacao.valor,
           data_pagamento: data,
           forma_pagamento: forma,
-          parcela: lancamento.numero,
-          total_parcelas: lancamento.total
+          parcela: lancamento.parcela_numero,
+          total_parcelas: lancamento.total_parcelas
         }
       });
       toast.success("Recibo gerado e registrado.");
