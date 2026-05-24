@@ -30,6 +30,7 @@ import { checkAgendamentoConflict } from "@/lib/agendamento-conflict";
 import { ContratoMedicaoAmbientesSection } from "./ContratoMedicaoAmbientesSection";
 import { useAuth } from "@/contexts/AuthContext";
 import { MateriaisMontagemResumo } from "@/components/montagem/MateriaisMontagemResumo";
+import OperationalAttachments from "@/components/operacional/OperationalAttachments";
 
 interface MontagemTabProps {
   contratoId: string;
@@ -574,6 +575,14 @@ export function ContratoMontagemTab({ contratoId, lojaId }: MontagemTabProps) {
           </ul>
         )}
       </Card>
+
+      <OperationalAttachments 
+        contratoId={contratoId} 
+        modulo="montagem" 
+        title="Evidências de Montagem (Antes/Depois)" 
+        entidadeId={agendamento?.id}
+        entidadeTipo="agendamentos_montagem"
+      />
     </div>
   );
 }

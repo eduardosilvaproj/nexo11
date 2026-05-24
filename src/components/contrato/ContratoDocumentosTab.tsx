@@ -8,7 +8,9 @@ import {
   AlertCircle, 
   Plus,
   Loader2,
-  Eye
+  Eye,
+  CheckCircle,
+  FileCheck
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -26,6 +28,13 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import DocumentAcceptanceDialog from "@/components/operacional/DocumentAcceptanceDialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Props {
   contratoId: string;
@@ -37,6 +46,19 @@ export function ContratoDocumentosTab({ contratoId }: Props) {
   const qc = useQueryClient();
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [motivo, setMotivo] = useState("");
+  const [acceptDoc, setAcceptDoc] = useState<{ id: string, titulo: string } | null>(null);
+
+  const { data: aceites = [] } = useQuery({
+    queryKey: ["documento_aceites", contratoId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("documento_aceites")
+        .select("*")
+        .eq("contrato_id", contratoId);
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const { data: documentos = [], isLoading } = useQuery({
     queryKey: ["contrato_documentos", contratoId],
@@ -52,6 +74,7 @@ export function ContratoDocumentosTab({ contratoId }: Props) {
   });
 
   const canCancel = canPerform(roles, "documentos.cancel");
+  const canAccept = canPerform(roles, "documentos.accept");
 
   const handleCancelar = async () => {
     if (!cancelId || !motivo) return;
@@ -113,35 +136,82 @@ export function ContratoDocumentosTab({ contratoId }: Props) {
                     {format(new Date(doc.emitido_em), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                   </td>
                   <td className="px-4 py-3">
-                    {doc.status === "emitido" ? (
-                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none">
-                        Emitido
-                      </Badge>
-                    ) : (
-                      <Badge variant="destructive" className="bg-red-100 text-red-700 hover:bg-red-100 border-none">
-                        Cancelado
-                      </Badge>
-                    )}
+                    <div className="flex flex-col gap-1">
+                      {doc.status === "emitido" ? (
+                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none w-fit">
+                          Emitido
+                        </Badge>
+                      ) : doc.status === "aceito" ? (
+                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none w-fit">
+                          Aceito / Assinado
+                        </Badge>
+                      ) : (
+                        <Badge variant="destructive" className="bg-red-100 text-red-700 hover:bg-red-100 border-none w-fit">
+                          Cancelado
+                        </Badge>
+                      )}
+                      
+                      {aceites.find(a => a.documento_id === doc.id) && (
+                        <div className="flex items-center gap-1 text-[10px] text-blue-600 font-medium">
+                          <CheckCircle className="h-3 w-3" />
+                          Assinado por {aceites.find(a => a.documento_id === doc.id)?.nome_responsavel}
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Visualizar">
-                        <Eye className="h-4 w-4 text-slate-400" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" title="Baixar">
-                        <Download className="h-4 w-4 text-slate-400" />
-                      </Button>
-                      {doc.status === "emitido" && canCancel && (
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 hover:text-red-600"
-                          onClick={() => setCancelId(doc.id)}
-                          title="Cancelar"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
+                      <TooltipProvider>
+                        {doc.status === "emitido" && canAccept && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                onClick={() => setAcceptDoc({ id: doc.id, titulo: doc.titulo })}
+                              >
+                                <FileCheck className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Registrar Aceite / Assinatura</TooltipContent>
+                          </Tooltip>
+                        )}
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Eye className="h-4 w-4 text-slate-400" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Visualizar</TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Download className="h-4 w-4 text-slate-400" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>Baixar PDF</TooltipContent>
+                        </Tooltip>
+
+                        {doc.status !== "cancelado" && canCancel && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 hover:text-red-600 hover:bg-red-50"
+                                onClick={() => setCancelId(doc.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Cancelar Documento</TooltipContent>
+                          </Tooltip>
+                        )}
+                      </TooltipProvider>
                     </div>
                   </td>
                 </tr>
@@ -181,6 +251,22 @@ export function ContratoDocumentosTab({ contratoId }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de Aceite/Assinatura */}
+      {acceptDoc && (
+        <DocumentAcceptanceDialog
+          open={!!acceptDoc}
+          onOpenChange={(open) => !open && setAcceptDoc(null)}
+          documentoId={acceptDoc.id}
+          documentoTitulo={acceptDoc.titulo}
+          contratoId={contratoId}
+          onSuccess={() => {
+            qc.invalidateQueries({ queryKey: ["contrato_documentos", contratoId] });
+            qc.invalidateQueries({ queryKey: ["documento_aceites", contratoId] });
+            qc.invalidateQueries({ queryKey: ["contrato_eventos", contratoId] });
+          }}
+        />
+      )}
     </div>
   );
 }

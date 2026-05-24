@@ -2,7 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Check, Clock, AlertCircle } from "lucide-react";
+import { Check, Clock, AlertCircle, Paperclip } from "lucide-react";
+import OperationalAttachments from "@/components/operacional/OperationalAttachments";
+import { useAuth } from "@/contexts/AuthContext";
+import { canPerform } from "@/lib/permissions";
 
 interface Props {
   contratoId: string;
@@ -12,6 +15,8 @@ const formatBRL = (n: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
 
 export function ContratoFinanceiroTab({ contratoId }: Props) {
+  const { roles } = useAuth();
+  const canViewFinancialEvidences = canPerform(roles, "financeiro.evidencias.view");
   const { data: receber, isLoading: loadingR } = useQuery({
     queryKey: ["contrato_receber", contratoId],
     queryFn: async () => {
@@ -174,6 +179,16 @@ export function ContratoFinanceiroTab({ contratoId }: Props) {
           </CardContent>
         </Card>
       </div>
+
+      {canViewFinancialEvidences && (
+        <div className="mt-6">
+          <OperationalAttachments 
+            contratoId={contratoId} 
+            modulo="financeiro" 
+            title="Comprovantes e Evidências Financeiras" 
+          />
+        </div>
+      )}
     </div>
   );
 }

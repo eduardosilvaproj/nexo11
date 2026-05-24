@@ -22,6 +22,7 @@ import { ContratoFinanceiroTab } from "@/components/contrato/ContratoFinanceiroT
 import { ContratoTimelineTab } from "@/components/contrato/ContratoTimelineTab";
 import { ContratoDocumentosTab } from "@/components/contrato/ContratoDocumentosTab";
 import { ReadOnlyContext } from "@/components/contrato/ReadOnlyContext";
+import OperationalAttachments from "@/components/operacional/OperationalAttachments";
 
 
 const STAGE_TO_TAB: Record<string, ContratoTabKey> = {
@@ -428,6 +429,8 @@ export default function ContratoDetail() {
               <ContratoTimelineTab contratoId={contrato.id} />
             ) : active === "documentos" ? (
               <ContratoDocumentosTab contratoId={contrato.id} />
+            ) : active === "anexos" ? (
+              <OperationalAttachments contratoId={contrato.id} />
             ) : (
 
               <div className="text-sm text-muted-foreground">

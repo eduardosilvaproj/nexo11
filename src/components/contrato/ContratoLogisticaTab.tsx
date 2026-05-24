@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { EntregaCreateDialog } from "@/components/logistica/EntregaCreateDialog";
 import { EntregaConfirmDialog } from "@/components/logistica/EntregaConfirmDialog";
+import OperationalAttachments from "@/components/operacional/OperationalAttachments";
 
 interface Props { contratoId: string }
 
@@ -293,6 +294,16 @@ export function ContratoLogisticaTab({ contratoId }: Props) {
           </Card>
         </div>
       )}
+
+      <div className="mt-6">
+        <OperationalAttachments 
+          contratoId={contratoId} 
+          modulo="logistica" 
+          title="Evidências de Entrega e Logística" 
+          entidadeId={entrega?.id}
+          entidadeTipo="entrega"
+        />
+      </div>
     </>
   );
 }

@@ -324,6 +324,89 @@ export type Database = {
           },
         ]
       }
+      anexos_operacionais: {
+        Row: {
+          arquivo_url: string
+          contrato_id: string | null
+          created_at: string
+          descricao: string | null
+          documento_id: string | null
+          entidade_id: string | null
+          entidade_tipo: string
+          enviado_por: string | null
+          id: string
+          loja_id: string
+          mime_type: string | null
+          modulo: string
+          tamanho_bytes: number | null
+          tipo: string
+          titulo: string
+        }
+        Insert: {
+          arquivo_url: string
+          contrato_id?: string | null
+          created_at?: string
+          descricao?: string | null
+          documento_id?: string | null
+          entidade_id?: string | null
+          entidade_tipo: string
+          enviado_por?: string | null
+          id?: string
+          loja_id: string
+          mime_type?: string | null
+          modulo: string
+          tamanho_bytes?: number | null
+          tipo?: string
+          titulo: string
+        }
+        Update: {
+          arquivo_url?: string
+          contrato_id?: string | null
+          created_at?: string
+          descricao?: string | null
+          documento_id?: string | null
+          entidade_id?: string | null
+          entidade_tipo?: string
+          enviado_por?: string | null
+          id?: string
+          loja_id?: string
+          mime_type?: string | null
+          modulo?: string
+          tamanho_bytes?: number | null
+          tipo?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anexos_operacionais_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anexos_operacionais_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anexos_operacionais_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "documentos_emitidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anexos_operacionais_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chamados_pos_venda: {
         Row: {
           contrato_id: string
@@ -1316,6 +1399,86 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "custos_fixos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documento_aceites: {
+        Row: {
+          aceito_em: string
+          assinatura_url: string | null
+          contrato_id: string | null
+          created_at: string
+          documento_id: string
+          documento_responsavel: string | null
+          id: string
+          ip_origem: string | null
+          loja_id: string
+          nome_responsavel: string
+          observacoes: string | null
+          tipo: string
+          user_agent: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          aceito_em?: string
+          assinatura_url?: string | null
+          contrato_id?: string | null
+          created_at?: string
+          documento_id: string
+          documento_responsavel?: string | null
+          id?: string
+          ip_origem?: string | null
+          loja_id: string
+          nome_responsavel: string
+          observacoes?: string | null
+          tipo?: string
+          user_agent?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          aceito_em?: string
+          assinatura_url?: string | null
+          contrato_id?: string | null
+          created_at?: string
+          documento_id?: string
+          documento_responsavel?: string | null
+          id?: string
+          ip_origem?: string | null
+          loja_id?: string
+          nome_responsavel?: string
+          observacoes?: string | null
+          tipo?: string
+          user_agent?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documento_aceites_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documento_aceites_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documento_aceites_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "documentos_emitidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documento_aceites_loja_id_fkey"
             columns: ["loja_id"]
             isOneToOne: false
             referencedRelation: "lojas"
