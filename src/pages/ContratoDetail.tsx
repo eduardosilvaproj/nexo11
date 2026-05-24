@@ -25,6 +25,7 @@ import { ReadOnlyContext } from "@/components/contrato/ReadOnlyContext";
 import OperationalAttachments from "@/components/operacional/OperationalAttachments";
 import { ContratoIndicadoresTab } from "@/components/contrato/ContratoIndicadoresTab";
 import { PortalClienteManager } from "@/components/portal/PortalClienteManager";
+import { ContratoComunicacoesTab } from "@/components/contrato/ContratoComunicacoesTab";
 
 
 const STAGE_TO_TAB: Record<string, ContratoTabKey> = {
