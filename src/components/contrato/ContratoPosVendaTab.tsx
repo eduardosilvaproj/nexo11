@@ -167,6 +167,7 @@ export function ContratoPosVendaTab({ contratoId }: PosVendaTabProps) {
       setChamadoForm({ tipo: "assistencia", titulo: "", descricao: "", custo: "" });
       qc.invalidateQueries({ queryKey: ["chamados", contratoId] });
       qc.invalidateQueries({ queryKey: ["dre", contratoId] });
+      qc.invalidateQueries({ queryKey: ["contrato_eventos", contratoId] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -178,11 +179,23 @@ export function ContratoPosVendaTab({ contratoId }: PosVendaTabProps) {
         .update({ status: "resolvido", data_fechamento: new Date().toISOString() })
         .eq("id", id);
       if (error) throw error;
+
+      const { registrarEventoContrato } = await import("@/services/contratoEventos");
+      await registrarEventoContrato({
+        contratoId,
+        tipo: "chamado_resolvido",
+        modulo: "pos_venda",
+        titulo: "Chamado Resolvido",
+        descricao: `ID do chamado: ${id}`,
+        entidadeTipo: "chamados_pos_venda",
+        entidadeId: id
+      });
     },
     onSuccess: () => {
       toast.success("Chamado resolvido");
       qc.invalidateQueries({ queryKey: ["chamados", contratoId] });
       qc.invalidateQueries({ queryKey: ["dre", contratoId] });
+      qc.invalidateQueries({ queryKey: ["contrato_eventos", contratoId] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -221,6 +234,7 @@ export function ContratoPosVendaTab({ contratoId }: PosVendaTabProps) {
       setNpsNota(null);
       setNpsComentario("");
       qc.invalidateQueries({ queryKey: ["chamados", contratoId] });
+      qc.invalidateQueries({ queryKey: ["contrato_eventos", contratoId] });
     },
     onError: (e: Error) => toast.error(e.message),
   });

@@ -68,12 +68,24 @@ export function EntregaConfirmDialog({ open, onOpenChange, entregaId, contratoId
             link: "/montagem"
           }
         ]);
+
+        const { registrarEventoContrato } = await import("@/services/contratoEventos");
+        await registrarEventoContrato({
+          contratoId,
+          tipo: "material_entregue",
+          modulo: "logistica",
+          titulo: "Material Entregue",
+          descricao: `Materiais entregues via ${entregaId}`,
+          entidadeTipo: "entregas",
+          entidadeId: entregaId
+        });
       }
     },
     onSuccess: () => {
       toast.success("Entrega confirmada! Montagem liberada para agendamento.");
       qc.invalidateQueries({ queryKey: ["entrega", contratoId] });
       qc.invalidateQueries({ queryKey: ["logistica-list"] });
+      qc.invalidateQueries({ queryKey: ["contrato_eventos", contratoId] });
       onOpenChange(false);
       setFile(null);
     },

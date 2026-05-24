@@ -319,9 +319,21 @@ export default function ContratoDetail() {
       toast.error(result?.erro ?? "Não foi possível avançar a etapa");
       return;
     }
+
+    // Registrar evento de avanço de contrato
+    const { registrarEventoContrato } = await import("@/services/contratoEventos");
+    await registrarEventoContrato({
+      contratoId: id,
+      tipo: "status_alterado",
+      modulo: "comercial",
+      titulo: `Contrato avançado para ${result.status_novo}`,
+      descricao: `A etapa do contrato foi alterada para ${result.status_novo}.`
+    });
+
     toast.success(`Contrato avançado para "${result.status_novo}"`);
     qc.invalidateQueries({ queryKey: ["contrato_dre_view", id] });
     qc.invalidateQueries({ queryKey: ["contrato_logs", id] });
+    qc.invalidateQueries({ queryKey: ["contrato_eventos", id] });
   }
 
   // Margem para faixa final
