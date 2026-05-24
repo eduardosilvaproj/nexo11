@@ -3,13 +3,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FileText, Loader2 } from "lucide-react";
+import { useDocumentos } from "@/hooks/useDocumentos";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  transacao: { id: string; descricao: string; valor: number; tipo: 'receita' | 'despesa'; status?: string } | null;
+  transacao: { id: string; descricao: string; valor: number; tipo: 'receita' | 'despesa'; status?: string; contrato_id?: string | null } | null;
   onConfirmed: () => void;
 }
 
@@ -17,6 +20,8 @@ export function PagamentoConfirmDialog({ open, onOpenChange, transacao, onConfir
   const [data, setData] = useState(new Date().toISOString().slice(0, 10));
   const [forma, setForma] = useState("");
   const [loading, setLoading] = useState(false);
+  const { emitirDocumento, loading: docLoading } = useDocumentos();
+  const { user } = useAuth();
 
   async function handleConfirmar() {
     if (!transacao) return;
@@ -95,6 +100,46 @@ export function PagamentoConfirmDialog({ open, onOpenChange, transacao, onConfir
     } finally {
       setLoading(false);
     }
+  async function handleGerarRecibo() {
+    if (!transacao || transacao.tipo !== 'receita') return;
+    
+    // Buscar loja_id do contrato ou transação se não estiver disponível
+    let lojaId = null;
+    const { data: lancamento } = await supabase
+      .from('financeiro_contas_receber')
+      .select('loja_id, contrato_id, numero, total')
+      .eq('id', transacao.id)
+      .single();
+    
+    if (!lancamento?.loja_id) {
+      toast.error("Loja não encontrada para gerar recibo.");
+      return;
+    }
+
+    try {
+      await emitirDocumento({
+        loja_id: lancamento.loja_id,
+        contrato_id: lancamento.contrato_id,
+        entidade_tipo: 'parcela',
+        entidade_id: transacao.id,
+        tipo: 'recibo_pagamento',
+        titulo: `Recibo de Pagamento - ${transacao.descricao}`,
+        numero: `REC-${new Date().getFullYear()}-${transacao.id.slice(0, 4)}`,
+        status: 'emitido',
+        emitido_por: user?.id,
+        dados_snapshot: {
+          cliente_nome: transacao.descricao, // simplificado, ideal buscar cliente real
+          valor: transacao.valor,
+          data_pagamento: data,
+          forma_pagamento: forma,
+          parcela: lancamento.numero,
+          total_parcelas: lancamento.total
+        }
+      });
+      toast.success("Recibo gerado e registrado.");
+    } catch (e) {
+      // toast already shown by hook
+    }
   }
 
   const isPago = transacao?.status === 'pago';
@@ -125,6 +170,17 @@ export function PagamentoConfirmDialog({ open, onOpenChange, transacao, onConfir
           </div>
         </div>
         <DialogFooter className="flex-col gap-2 sm:flex-row">
+          {isPago && transacao?.tipo === 'receita' && (
+            <Button 
+              variant="outline" 
+              className="sm:flex-1 border-blue-200 text-blue-700 hover:bg-blue-50" 
+              onClick={handleGerarRecibo}
+              disabled={docLoading}
+            >
+              {docLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FileText className="h-4 w-4 mr-2" />}
+              Gerar Recibo
+            </Button>
+          )}
           <Button variant="outline" className="sm:flex-1" onClick={() => onOpenChange(false)}>
             {isPago ? 'Fechar' : 'Cancelar'}
           </Button>
