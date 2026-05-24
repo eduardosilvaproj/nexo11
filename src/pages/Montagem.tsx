@@ -172,6 +172,12 @@ export default function Montagem() {
 
         {/* AGENDA */}
         <TabsContent value="agenda" className="mt-4">
+          <div className="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <IndicadorCard label="Liberadas para montagem" value={indicadores.liberadas} color="#05873C" icon={CheckCircle2} />
+            <IndicadorCard label="Aguardando materiais" value={indicadores.aguardando} color="#B91C1C" icon={AlertTriangle} />
+            <IndicadorCard label="Parcialmente entregues" value={indicadores.parciais} color="#92400E" icon={ClockIcon} />
+            <IndicadorCard label="Sem materiais vinculados" value={indicadores.sem} color="#6B7A90" icon={Package} />
+          </div>
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <button
