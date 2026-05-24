@@ -62,6 +62,28 @@ export function IndicadoresVisaoGeral() {
     }
   });
 
+  const exportCSV = () => {
+    if (!stats) return;
+    const headers = ["Indicador", "Valor"];
+    const rows = [
+      ["Total de Atividades", stats.total],
+      ["Concluidas", stats.concluidos],
+      ["Em Execucao", stats.emCurso],
+      ["Ocorrencias", stats.comOcorrencia],
+      ["Taxa de Conclusao", `${stats.taxaConclusao}%`]
+    ];
+
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `indicadores_operacionais_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const cards = [
     { title: "Total de Atividades", value: stats?.total, icon: Zap, color: "text-blue-600", bg: "bg-blue-100" },
     { title: "Concluídas", value: stats?.concluidos, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-100" },
