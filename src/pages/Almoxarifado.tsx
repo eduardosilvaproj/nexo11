@@ -39,14 +39,9 @@ export default function Almoxarifado() {
         query = query.or(`descricao.ilike.%${search}%,codigo.ilike.%${search}%,categoria.ilike.%${search}%`);
       }
 
-      if (filter === "baixo_estoque") {
-        query = query.lte("quantidade_total", supabase.raw("estoque_minimo"));
-      } else if (filter === "sem_estoque") {
-        query = query.lte("quantidade_total", 0);
-      } else if (filter === "inativos") {
+      if (filter === "inativos") {
         query = query.eq("ativo", false);
       } else {
-        // Por padrão mostra apenas ativos, a menos que filtre por inativos
         query = query.eq("ativo", true);
       }
 
@@ -55,7 +50,16 @@ export default function Almoxarifado() {
         toast.error("Erro ao carregar estoque");
         throw error;
       }
-      return data || [];
+
+      let filteredData = data || [];
+
+      if (filter === "baixo_estoque") {
+        filteredData = filteredData.filter(item => (item.quantidade_total || 0) <= (item.estoque_minimo || 0));
+      } else if (filter === "sem_estoque") {
+        filteredData = filteredData.filter(item => (item.quantidade_total || 0) <= 0);
+      }
+
+      return filteredData;
     },
   });
 
