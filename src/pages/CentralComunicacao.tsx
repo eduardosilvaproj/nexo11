@@ -271,6 +271,13 @@ export default function CentralComunicacao() {
                         </div>
                       </TableCell>
                       <TableCell>
+                        {msg.dry_run ? (
+                          <Badge variant="outline" className="text-[10px] uppercase border-orange-200 text-orange-700 bg-orange-50">Dry Run</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px] uppercase border-green-200 text-green-700 bg-green-50">Real</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         {getStatusBadge(msg.status)}
                       </TableCell>
                       <TableCell className="text-right">
