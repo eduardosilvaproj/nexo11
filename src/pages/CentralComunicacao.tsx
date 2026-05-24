@@ -50,6 +50,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export default function CentralComunicacao() {
   const { perfil } = useAuth();
@@ -59,6 +61,7 @@ export default function CentralComunicacao() {
   const [selectedMsg, setSelectedMsg] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [editingConfig, setEditingConfig] = useState<any>(null);
 
   // Query Outbox
   const { data: outbox = [], isLoading: loadingOutbox } = useQuery({
@@ -127,6 +130,30 @@ export default function CentralComunicacao() {
       qc.invalidateQueries({ queryKey: ["communication_outbox"] });
     },
     onError: (err: any) => toast.error("Erro ao cancelar: " + err.message),
+  });
+
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (config: any) => {
+      const { id, ...rest } = config;
+      if (id) {
+        const { error } = await supabase
+          .from("communication_settings")
+          .update(rest)
+          .eq("id", id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("communication_settings")
+          .insert([{ ...rest, loja_id: lojaId }]);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success("Configurações atualizadas");
+      setEditingConfig(null);
+      qc.invalidateQueries({ queryKey: ["communication_settings"] });
+    },
+    onError: (err: any) => toast.error("Erro ao salvar: " + err.message),
   });
 
   const filteredOutbox = outbox.filter(msg => 
@@ -244,6 +271,7 @@ export default function CentralComunicacao() {
                     <TableHead>Canal</TableHead>
                     <TableHead>Destinatário</TableHead>
                     <TableHead>Cliente / Contrato</TableHead>
+                    <TableHead>Modo</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
@@ -268,6 +296,13 @@ export default function CentralComunicacao() {
                           <span className="text-sm">{(msg.cliente as any)?.nome || "N/A"}</span>
                           <span className="text-[10px] text-muted-foreground">Contrato: {(msg.contrato as any)?.id?.slice(0,8) || "N/A"}</span>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        {msg.dry_run ? (
+                          <Badge variant="outline" className="text-[10px] uppercase border-orange-200 text-orange-700 bg-orange-50">Dry Run</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px] uppercase border-green-200 text-green-700 bg-green-50">Real</Badge>
+                        )}
                       </TableCell>
                       <TableCell>
                         {getStatusBadge(msg.status)}
@@ -359,7 +394,11 @@ export default function CentralComunicacao() {
                         Aguardando integração oficial
                       </div>
                     )}
-                    <Button variant="outline" className="w-full gap-2" onClick={() => toast.info("Funcionalidade de configuração em breve")}>
+                    <Button 
+                      variant="outline" 
+                      className="w-full gap-2" 
+                      onClick={() => setEditingConfig(config || { canal: canal, ativo: false, dry_run: true })}
+                    >
                       <Settings2 className="h-4 w-4" />
                       Configurar
                     </Button>
@@ -445,6 +484,92 @@ export default function CentralComunicacao() {
                   <span>ID Provedor: {selectedMsg.provider_message_id}</span>
                 )}
               </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Settings Dialog */}
+      <Dialog open={!!editingConfig} onOpenChange={() => setEditingConfig(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 capitalize">
+              Configurar Canal: {editingConfig?.canal}
+            </DialogTitle>
+            <DialogDescription>
+              Ajuste as regras de envio para este canal.
+            </DialogDescription>
+          </DialogHeader>
+          {editingConfig && (
+            <div className="space-y-4 py-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Ativar Canal</Label>
+                  <p className="text-[12px] text-muted-foreground">Permitir envios automáticos por este canal.</p>
+                </div>
+                <Switch 
+                  checked={editingConfig.ativo} 
+                  onCheckedChange={(val) => setEditingConfig({ ...editingConfig, ativo: val })}
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-3 rounded-md bg-orange-50 border border-orange-100">
+                <div className="space-y-0.5">
+                  <Label className="text-orange-900">Modo Dry Run (Simulado)</Label>
+                  <p className="text-[12px] text-orange-700">Gera o log de envio sem disparar para o cliente real.</p>
+                </div>
+                <Switch 
+                  checked={editingConfig.dry_run} 
+                  onCheckedChange={(val) => setEditingConfig({ ...editingConfig, dry_run: val })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Remetente / Nome de Exibição</Label>
+                <Input 
+                  placeholder="Ex: NEXO Tecnologia" 
+                  value={editingConfig.remetente || ""}
+                  onChange={(e) => setEditingConfig({ ...editingConfig, remetente: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Horário Início</Label>
+                  <Input 
+                    type="time" 
+                    value={editingConfig.horario_inicio || ""}
+                    onChange={(e) => setEditingConfig({ ...editingConfig, horario_inicio: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Horário Fim</Label>
+                  <Input 
+                    type="time" 
+                    value={editingConfig.horario_fim || ""}
+                    onChange={(e) => setEditingConfig({ ...editingConfig, horario_fim: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Limite Diário de Mensagens</Label>
+                <Input 
+                  type="number" 
+                  placeholder="Ex: 500" 
+                  value={editingConfig.limite_diario || ""}
+                  onChange={(e) => setEditingConfig({ ...editingConfig, limite_diario: parseInt(e.target.value) || null })}
+                />
+                <p className="text-[10px] text-muted-foreground">Evite bloqueios no WhatsApp usando limites seguros.</p>
+              </div>
+
+              <Button 
+                className="w-full mt-4" 
+                onClick={() => updateSettingsMutation.mutate(editingConfig)}
+                disabled={updateSettingsMutation.isPending}
+              >
+                {updateSettingsMutation.isPending ? "Salvando..." : "Salvar Configurações"}
+              </Button>
             </div>
           )}
         </DialogContent>

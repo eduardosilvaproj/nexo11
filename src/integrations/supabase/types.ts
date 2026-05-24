@@ -1284,6 +1284,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           destinatario: string
+          dry_run: boolean | null
           entregue_em: string | null
           enviado_em: string | null
           erro: string | null
@@ -1292,6 +1293,7 @@ export type Database = {
           loja_id: string
           max_tentativas: number
           mensagem: string
+          metadata: Json | null
           payload: Json
           processado_em: string | null
           provider: string | null
@@ -1311,6 +1313,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           destinatario: string
+          dry_run?: boolean | null
           entregue_em?: string | null
           enviado_em?: string | null
           erro?: string | null
@@ -1319,6 +1322,7 @@ export type Database = {
           loja_id: string
           max_tentativas?: number
           mensagem: string
+          metadata?: Json | null
           payload?: Json
           processado_em?: string | null
           provider?: string | null
@@ -1338,6 +1342,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           destinatario?: string
+          dry_run?: boolean | null
           entregue_em?: string | null
           enviado_em?: string | null
           erro?: string | null
@@ -1346,6 +1351,7 @@ export type Database = {
           loja_id?: string
           max_tentativas?: number
           mensagem?: string
+          metadata?: Json | null
           payload?: Json
           processado_em?: string | null
           provider?: string | null
@@ -1401,6 +1407,7 @@ export type Database = {
           configuracao: Json
           created_at: string | null
           created_by: string | null
+          dry_run: boolean | null
           horario_fim: string | null
           horario_inicio: string | null
           id: string
@@ -1416,6 +1423,7 @@ export type Database = {
           configuracao?: Json
           created_at?: string | null
           created_by?: string | null
+          dry_run?: boolean | null
           horario_fim?: string | null
           horario_inicio?: string | null
           id?: string
@@ -1431,6 +1439,7 @@ export type Database = {
           configuracao?: Json
           created_at?: string | null
           created_by?: string | null
+          dry_run?: boolean | null
           horario_fim?: string | null
           horario_inicio?: string | null
           id?: string
@@ -6389,6 +6398,10 @@ export type Database = {
       }
       check_cliente_opt_in: {
         Args: { p_canal: string; p_cliente_id: string; p_loja_id: string }
+        Returns: boolean
+      }
+      check_communication_quota: {
+        Args: { p_canal: string; p_loja_id: string }
         Returns: boolean
       }
       confirmar_pagamento_comissao:
