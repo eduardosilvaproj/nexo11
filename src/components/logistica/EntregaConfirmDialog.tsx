@@ -41,6 +41,34 @@ export function EntregaConfirmDialog({ open, onOpenChange, entregaId, contratoId
         })
         .eq("id", entregaId);
       if (error) throw error;
+
+      // Buscar dados para notificação
+      const { data: contrato } = await supabase.from("contratos").select("loja_id, cliente_nome").eq("id", contratoId).single();
+      
+      if (contrato) {
+        await supabase.from("notificacoes").insert([
+          {
+            loja_id: contrato.loja_id,
+            perfil_destino: "gerente",
+            titulo: "Material Entregue",
+            mensagem: `Materiais do contrato de ${contrato.cliente_nome} foram entregues.`,
+            modulo: "logistica",
+            prioridade: "media",
+            tipo: "material_entregue",
+            link: `/contratos/${contratoId}`
+          },
+          {
+            loja_id: contrato.loja_id,
+            perfil_destino: "montador",
+            titulo: "Montagem Liberada",
+            mensagem: `Montagem liberada para o cliente ${contrato.cliente_nome} (Material entregue).`,
+            modulo: "montagem",
+            prioridade: "alta",
+            tipo: "montagem_liberada",
+            link: "/montagem"
+          }
+        ]);
+      }
     },
     onSuccess: () => {
       toast.success("Entrega confirmada! Montagem liberada para agendamento.");

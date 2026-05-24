@@ -179,6 +179,8 @@ export function ComissoesRelatorioTab({
     if (!alvoPagar || processando) return;
     setProcessando(true);
     try {
+      const { data: comissao } = await supabase.from("comissoes").select("usuario_id, valor, loja_id, contrato_id").eq("id", alvoPagar.id).single();
+      
       const { error } = await supabase.rpc('confirmar_pagamento_comissao', {
         p_comissao_id: alvoPagar.id,
         p_data_pagamento: dataPagamento
@@ -187,6 +189,20 @@ export function ComissoesRelatorioTab({
       if (error) throw error;
 
       toast.success("Comissão paga e integrada ao financeiro");
+      
+      if (comissao) {
+        await supabase.from("notificacoes").insert({
+          loja_id: comissao.loja_id,
+          usuario_id: comissao.usuario_id,
+          titulo: "Comissão Paga",
+          mensagem: `Sua comissão no valor de ${fmtBRL(comissao.valor)} foi paga.`,
+          modulo: "financeiro",
+          prioridade: "baixa",
+          tipo: "comissao_paga",
+          link: "/comissoes"
+        });
+      }
+
       setAlvoPagar(null);
       await carregar();
     } catch (e) {
