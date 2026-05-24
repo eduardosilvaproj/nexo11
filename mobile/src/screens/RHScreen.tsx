@@ -209,4 +209,15 @@ const s = StyleSheet.create({
   documentInfo: { flex: 1, marginLeft: 12 },
   documentTitle: { color: '#fff', fontSize: 14, fontWeight: '600' },
   documentType: { color: '#64748b', fontSize: 12 },
+  scaleButton: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: '#3b82f615', 
+    padding: 16, 
+    borderRadius: 12, 
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#3b82f633'
+  },
+  scaleButtonText: { color: '#3b82f6', fontWeight: '700', flex: 1, marginLeft: 12 },
 });
