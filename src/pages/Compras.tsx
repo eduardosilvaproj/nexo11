@@ -340,7 +340,7 @@ function RequisicaoDrawer({
                     size="sm"
                     variant={it.origem === "comprar" ? "default" : "outline"}
                     onClick={() => toggleOrigem(idx)}
-                    disabled={!!it.reserva_estoque_id || it.estoque_baixado || !props.podeGerenciar}
+                    disabled={!!it.reserva_estoque_id || it.estoque_baixado || !podeGerenciar}
                   >
                     {it.origem === "comprar" ? "🛒 Comprar" : "📦 Almoxarifado"}
                   </Button>
@@ -348,7 +348,7 @@ function RequisicaoDrawer({
                     size="sm"
                     variant={it.status === "concluido" ? "default" : "outline"}
                     onClick={() => toggleStatus(idx)}
-                    disabled={(it.origem === "almoxarifado" && !it.estoque_baixado) || !props.podeGerenciar}
+                    disabled={(it.origem === "almoxarifado" && !it.estoque_baixado) || !podeGerenciar}
                   >
                     {it.status === "concluido" ? "✓ Concluído" : "Pendente"}
                   </Button>
@@ -369,7 +369,7 @@ function RequisicaoDrawer({
         </div>
 
         <div className="mt-6 flex items-center justify-between gap-2">
-          {props.podeGerenciar && (
+          {podeGerenciar && (
             <>
               <Button variant="outline" onClick={salvar}>Salvar alterações</Button>
               <Button onClick={concluir} disabled={!allDone}>
