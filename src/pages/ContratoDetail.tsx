@@ -26,6 +26,7 @@ import OperationalAttachments from "@/components/operacional/OperationalAttachme
 import { ContratoIndicadoresTab } from "@/components/contrato/ContratoIndicadoresTab";
 import { PortalClienteManager } from "@/components/portal/PortalClienteManager";
 import { ContratoComunicacoesTab } from "@/components/contrato/ContratoComunicacoesTab";
+import { ContratoSatisfacaoTab } from "@/components/contrato/ContratoSatisfacaoTab";
 
 
 const STAGE_TO_TAB: Record<string, ContratoTabKey> = {
@@ -173,6 +174,20 @@ export default function ContratoDetail() {
     enabled: !!id,
   });
 
+  const { data: pesquisas } = useQuery({
+    queryKey: ["pesquisas_status", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("cliente_pesquisas")
+        .select("status, nota")
+        .eq("contrato_id", id!)
+        .eq("status", "respondida");
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!id,
+  });
+
   // Ambientes do contrato
   const { data: ambientes } = useQuery({
     queryKey: ["contrato_ambientes", id],
@@ -294,7 +309,7 @@ export default function ContratoDetail() {
       }
     } else if (contrato.status === "pos_venda") {
       const abertos = (chamados ?? []).filter((c) => c.status !== "resolvido").length;
-      const npsOk = (chamados ?? []).some((c) => c.nps !== null && c.nps !== undefined);
+      const npsOk = (chamados ?? []).some((c) => c.nps !== null && c.nps !== undefined) || (pesquisas ?? []).length > 0;
       if (abertos > 0 || !npsOk) {
         travaMensagem = abertos > 0
           ? `Há ${abertos} chamado${abertos === 1 ? "" : "s"} em aberto. Resolva e registre o NPS.`
@@ -438,6 +453,8 @@ export default function ContratoDetail() {
                <ContratoIndicadoresTab contratoId={contrato.id} />
             ) : active === "comunicacoes" ? (
                <ContratoComunicacoesTab contratoId={contrato.id} />
+            ) : active === "satisfacao" ? (
+               <ContratoSatisfacaoTab contratoId={contrato.id} />
             ) : (
 
               <div className="text-sm text-muted-foreground">

@@ -15,6 +15,7 @@ export type ContratoTabKey =
   | "documentos"
   | "anexos"
   | "indicadores"
+  | "satisfacao"
   | "comunicacoes";
 
 const TABS: { key: ContratoTabKey; label: string }[] = [
@@ -32,6 +33,7 @@ const TABS: { key: ContratoTabKey; label: string }[] = [
   { key: "documentos", label: "Documentos" },
   { key: "anexos", label: "Evidências" },
   { key: "indicadores", label: "Indicadores" },
+  { key: "satisfacao", label: "Satisfação" },
   { key: "comunicacoes", label: "Comunicações" },
 ];
 

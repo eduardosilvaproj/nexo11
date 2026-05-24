@@ -34,7 +34,21 @@ export function PosVendaSection({ periodo, lojaId }: { periodo: Periodo; lojaId:
       ).length;
 
       const notas = arr.map((c) => Number(c.nps)).filter((n) => Number.isFinite(n) && n >= 0);
-      const nps = notas.length ? notas.reduce((a, b) => a + b, 0) / notas.length : null;
+      
+      let qP = supabase
+        .from("cliente_pesquisas")
+        .select("nota")
+        .eq("status", "respondida")
+        .gte("respondida_em", start.toISOString())
+        .lt("respondida_em", end.toISOString());
+      
+      if (lojaId !== "all") qP = qP.eq("loja_id", lojaId);
+      const { data: ps } = await qP;
+      const psNotas = (ps ?? []).map(p => p.nota).filter(n => n !== null) as number[];
+      
+      const allNotas = [...notas, ...psNotas];
+      const consolidatedNps = allNotas.length ? allNotas.reduce((a, b) => a + b, 0) / allNotas.length : null;
+      const consolidatedCount = allNotas.length;
 
       const resolvidosComDatas = arr.filter((c) => c.status === "resolvido" && c.data_abertura && c.data_fechamento);
       const tempoMedio = resolvidosComDatas.length
@@ -44,7 +58,7 @@ export function PosVendaSection({ periodo, lojaId }: { periodo: Periodo; lojaId:
           }, 0) / resolvidosComDatas.length
         : null;
 
-      return { abertos, andamento, resolvidos, novosPeriodo, nps, npsCount: notas.length, tempoMedio };
+      return { abertos, andamento, resolvidos, novosPeriodo, nps: consolidatedNps, npsCount: consolidatedCount, tempoMedio };
     },
   });
 

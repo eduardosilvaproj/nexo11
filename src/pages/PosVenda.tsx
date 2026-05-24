@@ -156,6 +156,7 @@ export default function PosVenda() {
     let abertos = 0;
     let andamento = 0;
     let resolvidosHoje = 0;
+    let detratores = 0;
     const npsMes: number[] = [];
 
     for (const c of chamados ?? []) {
@@ -169,6 +170,7 @@ export default function PosVenda() {
       if (typeof c.nps === "number") {
         const ref = new Date(c.data_fechamento ?? c.updated_at);
         if (ref >= monthStart) npsMes.push(c.nps);
+        if (c.nps <= 6) detratores++;
       }
     }
 
@@ -177,7 +179,7 @@ export default function PosVenda() {
         ? npsMes.reduce((s, n) => s + n, 0) / npsMes.length
         : null;
 
-    return { abertos, andamento, resolvidosHoje, npsAvg };
+    return { abertos, andamento, resolvidosHoje, npsAvg, detratores };
   }, [chamados]);
 
   const npsColor = (n: number | null) =>
@@ -375,6 +377,11 @@ export default function PosVenda() {
               <Plus className="h-4 w-4" /> Abrir chamado
             </button>
           </DialogTrigger>
+          <div className="flex gap-4 mb-6">
+            <MetricCard label="Chamados abertos" value={String(metrics.abertos)} borderTop="#E53935" />
+            <MetricCard label="NPS médio (mês)" value={metrics.npsAvg != null ? metrics.npsAvg.toFixed(1) : "—"} borderTop={npsColor(metrics.npsAvg)} />
+            <MetricCard label="Detratores (críticos)" value={String(metrics.detratores)} borderTop="#E53935" valueColor="#E53935" />
+          </div>
           <DialogContent className="sm:max-w-[480px]">
             <DialogHeader>
               <DialogTitle>Abrir chamado</DialogTitle>

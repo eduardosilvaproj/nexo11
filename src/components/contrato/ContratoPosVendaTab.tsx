@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Check, CheckCircle2, Plus, X, Paperclip, Send } from "lucide-react";
+import { ArrowRight, Check, CheckCircle2, Plus, X, Paperclip, Send, Star } from "lucide-react";
 import { ComunicacaoClienteDialog } from "@/components/portal/ComunicacaoClienteDialog";
 import OperationalAttachments from "@/components/operacional/OperationalAttachments";
 import confetti from "canvas-confetti";
@@ -110,7 +110,20 @@ export function ContratoPosVendaTab({ contratoId }: PosVendaTabProps) {
     },
   });
 
-  const npsRow = chamados.find((c) => c.nps !== null && c.nps !== undefined);
+  const { data: pesquisas = [] } = useQuery({
+    queryKey: ["cliente_pesquisas_status", contratoId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("cliente_pesquisas")
+        .select("*")
+        .eq("contrato_id", contratoId)
+        .eq("status", "respondida");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const npsRow = (chamados.find((c) => c.nps !== null && c.nps !== undefined) as any) || (pesquisas[0] ? { ...pesquisas[0], nps: pesquisas[0].nota, nps_comentario: pesquisas[0].comentario } : null);
   const chamadosAbertos = chamados.filter((c) => c.status !== "resolvido").length;
   const npsOk = !!npsRow;
   const travaOk = chamadosAbertos === 0 && npsOk;
@@ -319,8 +332,19 @@ export function ContratoPosVendaTab({ contratoId }: PosVendaTabProps) {
         right={
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setComunicarOpen(true)}
+              onClick={() => {
+                // If it's for NPS/Satisfaction, we should set the type to satisfaction
+                setComunicarOpen(true);
+              }}
               className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-[#05873C] border border-[#05873C] hover:bg-green-50"
+              style={{ fontSize: 12 }}
+            >
+              <Star className="h-3 w-3" />
+              Enviar Pesquisa (NPS)
+            </button>
+            <button
+              onClick={() => setComunicarOpen(true)}
+              className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-slate-600 border border-slate-300 hover:bg-slate-50"
               style={{ fontSize: 12 }}
             >
               <Send className="h-3 w-3" />

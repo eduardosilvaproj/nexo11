@@ -862,6 +862,99 @@ export type Database = {
           },
         ]
       }
+      cliente_pesquisas: {
+        Row: {
+          classificacao: string | null
+          cliente_id: string
+          comentario: string | null
+          contrato_id: string
+          created_at: string | null
+          enviada_em: string | null
+          enviada_por: string | null
+          etapa: string
+          id: string
+          loja_id: string
+          motivos: string[] | null
+          nota: number | null
+          portal_token_id: string | null
+          respondida_em: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          classificacao?: string | null
+          cliente_id: string
+          comentario?: string | null
+          contrato_id: string
+          created_at?: string | null
+          enviada_em?: string | null
+          enviada_por?: string | null
+          etapa: string
+          id?: string
+          loja_id: string
+          motivos?: string[] | null
+          nota?: number | null
+          portal_token_id?: string | null
+          respondida_em?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          classificacao?: string | null
+          cliente_id?: string
+          comentario?: string | null
+          contrato_id?: string
+          created_at?: string | null
+          enviada_em?: string | null
+          enviada_por?: string | null
+          etapa?: string
+          id?: string
+          loja_id?: string
+          motivos?: string[] | null
+          nota?: number | null
+          portal_token_id?: string | null
+          respondida_em?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_pesquisas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_pesquisas_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_pesquisas_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_pesquisas_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_pesquisas_portal_token_id_fkey"
+            columns: ["portal_token_id"]
+            isOneToOne: false
+            referencedRelation: "portal_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clientes: {
         Row: {
           celular: string | null
@@ -6060,6 +6153,42 @@ export type Database = {
             }
             Returns: Json
           }
+      portal_cliente_obter_pesquisas: {
+        Args: never
+        Returns: {
+          classificacao: string | null
+          cliente_id: string
+          comentario: string | null
+          contrato_id: string
+          created_at: string | null
+          enviada_em: string | null
+          enviada_por: string | null
+          etapa: string
+          id: string
+          loja_id: string
+          motivos: string[] | null
+          nota: number | null
+          portal_token_id: string | null
+          respondida_em: string | null
+          status: string
+          updated_at: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "cliente_pesquisas"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      portal_cliente_responder_pesquisa: {
+        Args: {
+          p_comentario?: string
+          p_motivos?: string[]
+          p_nota: number
+          p_pesquisa_id: string
+        }
+        Returns: Json
+      }
       portal_registrar_nps: {
         Args: { _comentario?: string; _nota: number; _token: string }
         Returns: Json

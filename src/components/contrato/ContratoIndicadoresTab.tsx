@@ -6,9 +6,10 @@ import {
   Clock, 
   AlertTriangle, 
   FileCheck, 
-  Timer,
-  Info
-} from "lucide-react";
+   Timer,
+   Info,
+   Star
+ } from "lucide-react";
 import { format } from "date-fns";
 
 interface Props {
@@ -29,6 +30,12 @@ export function ContratoIndicadoresTab({ contratoId }: Props) {
         .select("*")
         .eq("contrato_id", contratoId);
 
+       const { data: pesquisas } = await supabase
+        .from("cliente_pesquisas")
+        .select("*")
+        .eq("contrato_id", contratoId)
+        .eq("status", "respondida");
+
       const concluidos = checkins?.filter(c => c.status === "concluido") || [];
       const totalDuracao = concluidos.reduce((acc, c) => acc + (c.duracao_minutos || 0), 0);
       
@@ -36,8 +43,10 @@ export function ContratoIndicadoresTab({ contratoId }: Props) {
         checkins: checkins || [],
         ocorrencias: ocorrencias || [],
         totalDuracao,
-        numOcorrencias: ocorrencias?.length || 0,
-        numCheckins: checkins?.length || 0
+         numOcorrencias: ocorrencias?.length || 0,
+        numCheckins: checkins?.length || 0,
+        pesquisas: pesquisas || [],
+        mediaNps: pesquisas?.length ? pesquisas.reduce((a, b) => a + (b.nota || 0), 0) / pesquisas.length : null
       };
     }
   });
@@ -83,6 +92,19 @@ export function ContratoIndicadoresTab({ contratoId }: Props) {
           <CardContent>
             <div className="text-2xl font-bold">{stats?.numCheckins}</div>
             <p className="text-[10px] text-slate-400 mt-1">Registros de início/fim de atividade.</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-bold uppercase text-slate-500 flex items-center gap-2">
+              <Star className="w-3 h-3" />
+              Satisfação (Média)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats?.mediaNps !== null ? stats?.mediaNps.toFixed(1) : "—"}</div>
+            <p className="text-[10px] text-slate-400 mt-1">Média das pesquisas respondidas.</p>
           </CardContent>
         </Card>
       </div>
