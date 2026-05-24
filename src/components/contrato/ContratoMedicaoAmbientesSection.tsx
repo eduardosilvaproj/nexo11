@@ -168,6 +168,22 @@ export function ContratoMedicaoAmbientesSection({
     const ok = await updateAmbiente(a.id, { [F.status]: novo });
     if (!ok) return;
 
+    // Integrar com automação para Montagem Concluída
+    if (funcao === "montador" && novo === "concluido") {
+      try {
+        const { automationService } = await import("@/services/automationService");
+        await automationService.dispararGatilho(
+          "montagem_concluida",
+          "contrato",
+          contratoId,
+          lojaId!,
+          { cliente_id: a.cliente_id, contrato_id: contratoId, ambiente_id: a.id, ambiente_nome: a.nome }
+        );
+      } catch (err) {
+        console.error("Erro ao disparar gatilho de automação (montagem_concluida):", err);
+      }
+    }
+
     if (novo === "pago") {
       const valor = Number(a[F.valor]) || 0;
       const pessoaId = a[F.pessoaId] as string | null;
