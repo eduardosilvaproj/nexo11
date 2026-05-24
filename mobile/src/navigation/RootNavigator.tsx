@@ -106,6 +106,7 @@ export default function RootNavigator() {
             <Stack.Screen name="Comunicados" component={ComunicadosScreen} options={{ title: 'Comunicados' }} />
             <Stack.Screen name="Feedback" component={FeedbackScreen} options={{ title: 'Enviar Feedback' }} />
             <Stack.Screen name="RH" component={RHScreen} options={{ title: 'Meu RH' }} />
+            <Stack.Screen name="MinhaEscala" component={MinhaEscalaScreen} options={{ title: 'Minha Escala' }} />
           </>
         ) : (
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
