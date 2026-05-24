@@ -372,6 +372,30 @@ export default function Montagem() {
 
 // =================== DIALOGS ===================
 
+function IndicadorCard({
+  label,
+  value,
+  color,
+  icon: Icon,
+}: {
+  label: string;
+  value: number;
+  color: string;
+  icon: any;
+}) {
+  return (
+    <div className="rounded-xl bg-white p-4" style={{ border: "0.5px solid #E8ECF2", borderTop: `3px solid ${color}` }}>
+      <div className="flex items-center gap-2">
+        <Icon className="h-4 w-4" style={{ color }} />
+        <span style={{ fontSize: 11, color: "#6B7A90", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          {label}
+        </span>
+      </div>
+      <div style={{ fontSize: 24, fontWeight: 600, color: "#0D1117", marginTop: 4 }}>{value}</div>
+    </div>
+  );
+}
+
 function AgendarDialog({
   equipes,
   onCreated,
