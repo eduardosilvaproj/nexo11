@@ -429,6 +429,8 @@ export default function ContratoDetail() {
               <ContratoTimelineTab contratoId={contrato.id} />
             ) : active === "documentos" ? (
               <ContratoDocumentosTab contratoId={contrato.id} />
+            ) : active === "anexos" ? (
+              <OperationalAttachments contratoId={contrato.id} />
             ) : (
 
               <div className="text-sm text-muted-foreground">
