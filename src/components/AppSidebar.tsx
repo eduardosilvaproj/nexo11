@@ -87,6 +87,7 @@ const inteligencia: MenuItem[] = [
   { title: "Acompanhamento", url: "/acompanhamento-criacao", icon: LayoutDashboard, roles: ["admin", "admin_master"] },
   { title: "Analytics", url: "/analytics", icon: BarChart3, roles: ["admin", "gerente", "franqueador", "admin_master"] },
   { title: "Integrações", url: "/integracoes", icon: Plug, roles: ["admin", "gerente", "admin_master"] },
+  { title: "Central de Envios", url: "/comunicacoes/envios", icon: Send, roles: ["admin", "gerente", "admin_master"] },
   { title: "Estimativa PDF", url: "/estimativa-orcamento", icon: MessageSquare },
   { title: "Automações", url: "/configuracoes/automacoes", icon: Bot, roles: ["admin", "gerente", "franqueador", "admin_master"] },
   { title: "Implantação", url: "/configuracao-inicial", icon: Rocket, roles: ["admin", "gerente", "franqueador", "admin_master"] },
