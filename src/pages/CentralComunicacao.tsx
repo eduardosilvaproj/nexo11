@@ -69,8 +69,8 @@ export default function CentralComunicacao() {
         .from("communication_outbox")
         .select(`
           *,
-          cliente:clientes(nome_completo),
-          contrato:contratos(numero)
+          cliente:clientes(nome),
+          contrato:contratos(id)
         `)
         .eq("loja_id", lojaId!)
         .order("created_at", { ascending: false });
