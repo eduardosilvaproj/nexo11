@@ -70,217 +70,72 @@ export function EstoqueItemSelector({
 
   const handleReservar = async (estoqueItem: any) => {
     try {
-      if (item.quantidade <= 0) {
-        return toast.error("Quantidade solicitada deve ser maior que zero.");
-      }
-
-      const disponivel = (estoqueItem.quantidade_total || 0) - (estoqueItem.quantidade_reservada || 0);
-      if (disponivel < item.quantidade) {
-        return toast.error("Saldo insuficiente no almoxarifado.");
-      }
-
-      // 1. Criar reserva
-      const { data: reserva, error: resError } = await sb
-        .from("estoque_reservas")
-        .insert({
-          item_id: estoqueItem.id,
-          contrato_id: contratoId,
-          loja_id: lojaId,
-          quantidade: item.quantidade,
-          origem_conferencia_id: item.id || null,
-          observacoes: `Reserva para requisição de compras`,
-          status: "reservada",
-        })
-        .select()
-        .single();
-
-      if (resError) throw resError;
-
-      // 2. Atualizar estoque_itens.quantidade_reservada
-      const { error: updError } = await sb
-        .from("estoque_itens")
-        .update({
-          quantidade_reservada: (estoqueItem.quantidade_reservada || 0) + item.quantidade,
-        })
-        .eq("id", estoqueItem.id);
-
-      if (updError) throw updError;
-
-      // 3. Atualizar item local e se houver ambiente_itens_extras
-      onUpdateItem({
-        item_estoque_id: estoqueItem.id,
-        reserva_estoque_id: reserva.id,
-        quantidade_em_estoque: estoqueItem.quantidade_total,
-        divergencia_estoque: false,
+      const { data, error } = await supabase.rpc("reservar_estoque_requisicao", {
+        p_requisicao_id: item.requisicao_id || item.id_requisicao, // Need to make sure we have the req ID
+        p_item_id_ou_idx: item.id || "0", 
+        p_item_estoque_id: estoqueItem.id,
+        p_quantidade: item.quantidade,
+        p_contrato_id: contratoId,
+        p_loja_id: lojaId,
+        p_usuario_id: (await supabase.auth.getUser()).data.user?.id
       });
 
-      if (item.id) {
-        await sb
-          .from("ambiente_itens_extras")
-          .update({
-            origem: "almoxarifado",
-            item_estoque_id: estoqueItem.id,
-            reserva_id: reserva.id,
-            quantidade_em_estoque: estoqueItem.quantidade_total,
-            divergencia_estoque: false,
-          })
-          .eq("id", item.id);
-      }
+      if (error) throw error;
+      
+      const result = data as any;
+      if (!result.success) throw new Error("Falha na reserva");
 
       toast.success("Estoque reservado com sucesso.");
       onRefresh();
     } catch (error: any) {
-      toast.error("Erro ao reservar estoque: " + error.message);
+      toast.error("Erro ao reservar estoque: " + (error.details || error.message));
     }
   };
 
   const handleBaixar = async () => {
     try {
-      if (!item.reserva_estoque_id || !item.item_estoque_id) return;
+      if (!item.reserva_estoque_id) return;
 
-      const { data: reserva, error: resFetchError } = await sb
-        .from("estoque_reservas")
-        .select("*")
-        .eq("id", item.reserva_estoque_id)
-        .single();
-
-      if (resFetchError) throw resFetchError;
-      if (reserva.status !== "reservada") {
-        return toast.error("Reserva não está mais ativa.");
-      }
-
-      const { data: estoqueItem, error: itemFetchError } = await sb
-        .from("estoque_itens")
-        .select("*")
-        .eq("id", item.item_estoque_id)
-        .single();
-
-      if (itemFetchError) throw itemFetchError;
-
-      if (estoqueItem.quantidade_total < reserva.quantidade) {
-        return toast.error("Saldo total insuficiente para baixa.");
-      }
-
-      // 1. Movimentação de saída
-      const { error: movError } = await sb.from("estoque_movimentacoes").insert({
-        tipo: "saida",
-        subtipo: "separacao_requisicao",
-        item_id: item.item_estoque_id,
-        loja_id: lojaId,
-        contrato_id: contratoId,
-        quantidade: reserva.quantidade,
-        valor_unitario: estoqueItem.custo_medio_unitario || 0,
-        valor_total: (estoqueItem.custo_medio_unitario || 0) * reserva.quantidade,
-        motivo: "Separação de item reservado para requisição",
-        observacoes: "Baixa automática via Compras",
-        data: new Date().toISOString(),
+      const { data, error } = await supabase.rpc("baixar_estoque_requisicao", {
+        p_requisicao_id: item.requisicao_id || item.id_requisicao,
+        p_reserva_id: item.reserva_estoque_id,
+        p_item_id_ou_idx: item.id || "0",
+        p_usuario_id: (await supabase.auth.getUser()).data.user?.id
       });
 
-      if (movError) throw movError;
+      if (error) throw error;
 
-      // 2. Atualizar estoque_itens
-      const { error: updItemError } = await sb
-        .from("estoque_itens")
-        .update({
-          quantidade_total: (estoqueItem.quantidade_total || 0) - reserva.quantidade,
-          quantidade_reservada: (estoqueItem.quantidade_reservada || 0) - reserva.quantidade,
-        })
-        .eq("id", item.item_estoque_id);
-
-      if (updItemError) throw updItemError;
-
-      // 3. Atualizar reserva
-      const { error: updResError } = await sb
-        .from("estoque_reservas")
-        .update({
-          status: "baixada",
-          liberada_at: new Date().toISOString(),
-        })
-        .eq("id", item.reserva_estoque_id);
-
-      if (updResError) throw updResError;
-
-      // 4. Atualizar item
-      onUpdateItem({
-        status: "concluido",
-        estoque_baixado: true,
-      });
-
-      if (item.id) {
-        await sb
-          .from("ambiente_itens_extras")
-          .update({
-            status_compra: "recebido",
-          })
-          .eq("id", item.id);
-      }
+      const result = data as any;
+      if (!result.success) throw new Error("Falha na baixa");
 
       toast.success("Item baixado do estoque com sucesso.");
       setIsConfirmBaixaOpen(false);
       onRefresh();
     } catch (error: any) {
-      toast.error("Erro ao baixar estoque: " + error.message);
+      toast.error("Erro ao baixar estoque: " + (error.details || error.message));
     }
   };
 
   const handleCancelarReserva = async () => {
     try {
-      if (!item.reserva_estoque_id || !item.item_estoque_id) return;
+      if (!item.reserva_estoque_id) return;
 
-      const { data: reserva, error: resError } = await sb
-        .from("estoque_reservas")
-        .select("*")
-        .eq("id", item.reserva_estoque_id)
-        .single();
-
-      if (resError) throw resError;
-
-      const { data: estoqueItem, error: itemError } = await sb
-        .from("estoque_itens")
-        .select("*")
-        .eq("id", item.item_estoque_id)
-        .single();
-
-      if (itemError) throw itemError;
-
-      // 1. Atualizar quantidade reservada
-      await sb
-        .from("estoque_itens")
-        .update({
-          quantidade_reservada: Math.max(0, (estoqueItem.quantidade_reservada || 0) - reserva.quantidade),
-        })
-        .eq("id", item.item_estoque_id);
-
-      // 2. Cancelar reserva
-      await sb
-        .from("estoque_reservas")
-        .update({ status: "cancelada" })
-        .eq("id", item.reserva_estoque_id);
-
-      // 3. Limpar item
-      onUpdateItem({
-        item_estoque_id: null,
-        reserva_estoque_id: null,
-        quantidade_em_estoque: null,
-        divergencia_estoque: false,
+      const { data, error } = await supabase.rpc("cancelar_reserva_estoque_requisicao", {
+        p_requisicao_id: item.requisicao_id || item.id_requisicao,
+        p_reserva_id: item.reserva_estoque_id,
+        p_item_id_ou_idx: item.id || "0",
+        p_usuario_id: (await supabase.auth.getUser()).data.user?.id
       });
 
-      if (item.id) {
-        await sb
-          .from("ambiente_itens_extras")
-          .update({
-            item_estoque_id: null,
-            reserva_id: null,
-            quantidade_em_estoque: null,
-            divergencia_estoque: false,
-          })
-          .eq("id", item.id);
-      }
+      if (error) throw error;
+
+      const result = data as any;
+      if (!result.success) throw new Error("Falha ao cancelar reserva");
 
       toast.success("Reserva cancelada.");
       onRefresh();
     } catch (error: any) {
-      toast.error("Erro ao cancelar reserva: " + error.message);
+      toast.error("Erro ao cancelar reserva: " + (error.details || error.message));
     }
   };
 
