@@ -58,12 +58,17 @@ export function ModalLiberarDesconto({
       if (error) throw error;
 
       // Também enviar notificação se possível (opcional, já que registramos a solicitação)
+      const { data: userData } = await supabase.from("usuarios").select("loja_id").eq("id", user.id).maybeSingle();
+
       await supabase.from("notificacoes").insert({
-        user_id: user.id, // Notifica o próprio usuário que a solicitação foi enviada? 
-        // Em um cenário real, deveríamos buscar o gerente da loja.
+        loja_id: userData?.loja_id,
+        usuario_id: user.id, 
+        titulo: "Solicitação de Desconto",
+        modulo: "comercial",
+        prioridade: "media",
         tipo: "solicitacao_desconto",
         mensagem: `Solicitação de desconto de ${percentual}% enviada para aprovação.`,
-        link: orcamentoId ? `/orcamentos/${orcamentoId}` : undefined
+        link: orcamentoId ? `/orcamentos/${orcamentoId}/negociacao` : undefined
       });
 
       setStatusRemoto("enviado");

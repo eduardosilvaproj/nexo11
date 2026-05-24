@@ -11,8 +11,12 @@ import { toast } from "sonner";
 interface Notif {
   id: string;
   mensagem: string;
+  titulo: string;
+  prioridade: string;
+  modulo: string;
   link: string | null;
-  lida_em: string | null;
+  lida: boolean;
+  lida_at: string | null;
   created_at: string;
 }
 
@@ -26,11 +30,11 @@ export function NotificationsBell() {
     queryFn: async (): Promise<Notif[]> => {
       const { data, error } = await supabase
         .from("notificacoes")
-        .select("id, mensagem, link, lida_em, created_at")
+        .select("id, titulo, mensagem, link, lida, lida_at, prioridade, modulo, created_at")
         .order("created_at", { ascending: false })
-        .limit(20);
+        .limit(10);
       if (error) throw error;
-      return data ?? [];
+      return (data as any) ?? [];
     },
   });
 
@@ -47,7 +51,7 @@ export function NotificationsBell() {
           event: "INSERT",
           schema: "public",
           table: "notificacoes",
-          filter: `user_id=eq.${user.id}`,
+          filter: `usuario_id=eq.${user.id}`,
         },
         (payload) => {
           const n = payload.new as Notif;
@@ -65,7 +69,7 @@ export function NotificationsBell() {
     mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("notificacoes")
-        .update({ lida_em: new Date().toISOString() })
+        .update({ lida: true, lida_at: new Date().toISOString() })
         .eq("id", id);
       if (error) throw error;
     },
@@ -76,8 +80,8 @@ export function NotificationsBell() {
     mutationFn: async () => {
       const { error } = await supabase
         .from("notificacoes")
-        .update({ lida_em: new Date().toISOString() })
-        .is("lida_em", null);
+        .update({ lida: true, lida_at: new Date().toISOString() })
+        .eq("lida", false);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["notificacoes", user?.id] }),
@@ -124,17 +128,32 @@ export function NotificationsBell() {
           {notifs.map((n) => (
             <Link
               key={n.id}
-              to={n.link ?? "#"}
-              onClick={() => !n.lida_em && marcarLida.mutate(n.id)}
+              to={n.link ?? "/notificacoes"}
+              onClick={() => !n.lida && marcarLida.mutate(n.id)}
               className="block border-b px-3 py-2.5 last:border-0 hover:bg-[#F5F7FA]"
-              style={{ backgroundColor: !n.lida_em ? "#EFF6FF" : undefined }}
+              style={{ backgroundColor: !n.lida ? "#EFF6FF" : undefined }}
             >
-              <p className="text-sm text-[#0D1117]">{n.mensagem}</p>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-semibold text-[#1E6FBF]">{n.titulo}</span>
+                <span className={`text-[10px] px-1 rounded font-medium ${
+                  n.prioridade === 'critica' ? 'bg-red-100 text-red-700' :
+                  n.prioridade === 'alta' ? 'bg-orange-100 text-orange-700' :
+                  'bg-blue-100 text-blue-700'
+                }`}>
+                  {n.prioridade.toUpperCase()}
+                </span>
+              </div>
+              <p className="text-sm text-[#0D1117] mt-1">{n.mensagem}</p>
               <p className="mt-0.5 text-[11px] text-[#6B7A90]">
                 {new Date(n.created_at).toLocaleString("pt-BR")}
               </p>
             </Link>
           ))}
+        </div>
+        <div className="border-t p-2 text-center">
+          <Link to="/notificacoes" className="text-xs text-[#1E6FBF] hover:underline font-medium">
+            Ver todas as notificações
+          </Link>
         </div>
       </PopoverContent>
     </Popover>
