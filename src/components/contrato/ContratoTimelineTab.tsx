@@ -70,6 +70,7 @@ const MODULO_COLORS: Record<string, string> = {
 };
 
 export function ContratoTimelineTab({ contratoId }: Props) {
+  const qc = useQueryClient();
   const [filter, setFilter] = useState<string>("all");
   const { roles } = useAuth();
   
