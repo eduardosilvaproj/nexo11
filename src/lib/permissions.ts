@@ -160,42 +160,50 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
   vendedor: [
     "comercial.view", "clientes.view", "contratos.view", "pos_venda.view", "notificacoes.view",
     "documentos.view", "documentos.accept", "documentos.sign", "evidencias.view", "evidencias.create",
-    "rh.solicitacoes.create", "rh.solicitacoes.view", "rh.escalas.view"
+    "rh.solicitacoes.create", "rh.solicitacoes.view", "rh.escalas.view",
+    "operacao.checkin.view", "operacao.checkin.create", "operacao.ocorrencias.view", "operacao.ocorrencias.create"
   ],
   tecnico: [
     "contratos.view", "tecnico.view", "producao.view", "logistica.view", "montagem.view", 
     "notificacoes.view", "documentos.view", "evidencias.view", "evidencias.create",
-    "campo.view", "campo.medicoes", "rh.solicitacoes.create", "rh.solicitacoes.view", "rh.escalas.view"
+    "campo.view", "campo.medicoes", "rh.solicitacoes.create", "rh.solicitacoes.view", "rh.escalas.view",
+    "operacao.checkin.view", "operacao.checkin.create", "operacao.ocorrencias.view", "operacao.ocorrencias.create"
   ],
   medidor: [
     "contratos.view", "tecnico.view", "notificacoes.view", "documentos.view", 
     "evidencias.view", "evidencias.create", "campo.view", "campo.medicoes",
-    "rh.solicitacoes.create", "rh.solicitacoes.view", "rh.escalas.view"
+    "rh.solicitacoes.create", "rh.solicitacoes.view", "rh.escalas.view",
+    "operacao.checkin.view", "operacao.checkin.create", "operacao.ocorrencias.view", "operacao.ocorrencias.create"
   ],
   conferente: [
     "contratos.view", "tecnico.view", "notificacoes.view", "documentos.view", 
     "evidencias.view", "evidencias.create", "campo.view", "campo.medicoes",
-    "rh.solicitacoes.create", "rh.solicitacoes.view", "rh.escalas.view"
+    "rh.solicitacoes.create", "rh.solicitacoes.view", "rh.escalas.view",
+    "operacao.checkin.view", "operacao.checkin.create", "operacao.ocorrencias.view", "operacao.ocorrencias.create"
   ],
   montador: [
     "montagem.view", "montagem.update", "notificacoes.view", "documentos.view", 
     "documentos.accept", "documentos.sign", "evidencias.view", "evidencias.create",
-    "campo.view", "campo.montagens", "rh.solicitacoes.create", "rh.solicitacoes.view", "rh.escalas.view"
+    "campo.view", "campo.montagens", "rh.solicitacoes.create", "rh.solicitacoes.view", "rh.escalas.view",
+    "operacao.checkin.view", "operacao.checkin.create", "operacao.ocorrencias.view", "operacao.ocorrencias.create"
   ],
   comprador: [
     "compras.view", "compras.manage", "almoxarifado.view", "notificacoes.view",
     "documentos.view", "documentos.emit", "evidencias.view", "evidencias.create",
-    "rh.solicitacoes.create", "rh.solicitacoes.view", "rh.escalas.view"
+    "rh.solicitacoes.create", "rh.solicitacoes.view", "rh.escalas.view",
+    "operacao.checkin.view", "operacao.checkin.create", "operacao.ocorrencias.view", "operacao.ocorrencias.create"
   ],
   almoxarife: [
     "almoxarifado.view", "almoxarifado.manage", "compras.view", "notificacoes.view",
     "documentos.view", "documentos.emit", "evidencias.view", "evidencias.create",
-    "campo.view", "campo.almoxarifado", "rh.solicitacoes.create", "rh.solicitacoes.view", "rh.escalas.view"
+    "campo.view", "campo.almoxarifado", "rh.solicitacoes.create", "rh.solicitacoes.view", "rh.escalas.view",
+    "operacao.checkin.view", "operacao.checkin.create", "operacao.ocorrencias.view", "operacao.ocorrencias.create"
   ],
   logistico: [
     "logistica.view", "logistica.update", "notificacoes.view", "documentos.view", 
     "documentos.emit", "documentos.accept", "documentos.sign", "evidencias.view", "evidencias.create",
-    "campo.view", "campo.entregas", "rh.solicitacoes.create", "rh.solicitacoes.view", "rh.escalas.view"
+    "campo.view", "campo.entregas", "rh.solicitacoes.create", "rh.solicitacoes.view", "rh.escalas.view",
+    "operacao.checkin.view", "operacao.checkin.create", "operacao.ocorrencias.view", "operacao.ocorrencias.create"
   ],
   financeiro: [
     "financeiro.view", "financeiro.manage", "comissoes.view", "comissoes.manage", "dre.view", 
@@ -206,7 +214,8 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
   pos_venda: [
     "pos_venda.view", "clientes.view", "contratos.view", "notificacoes.view", "documentos.view",
     "evidencias.view", "evidencias.create", "campo.view", "campo.pos_venda",
-    "rh.solicitacoes.create", "rh.solicitacoes.view", "rh.escalas.view"
+    "rh.solicitacoes.create", "rh.solicitacoes.view", "rh.escalas.view",
+    "operacao.checkin.view", "operacao.checkin.create", "operacao.ocorrencias.view", "operacao.ocorrencias.create"
   ]
 };
 
