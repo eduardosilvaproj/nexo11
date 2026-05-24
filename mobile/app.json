@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "NEXO Operacional",
+    "slug": "nexo-operacional",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F172A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nexo.operacional"
+    },
+    "android": {
+      "package": "com.nexo.operacional",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F172A"
+      }
+    },
+    "plugins": ["expo-secure-store", "expo-notifications"],
+    "extra": {
+      "supabaseUrl": "https://pllvwcszoyjhfvnzshzw.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsbHZ3Y3N6b3lqaGZ2bnpzaHp3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzODI0NTgsImV4cCI6MjA5MTk1ODQ1OH0.gE6tpIUNvdvPYlYgboAnnH_OAyojlggoFWMg8jHI3-o"
+    }
+  }
+}
