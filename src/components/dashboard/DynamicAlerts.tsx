@@ -10,7 +10,8 @@ import {
   Truck, 
   Wrench, 
   MessageSquare,
-  ArrowRight
+  ArrowRight,
+  CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -145,43 +146,55 @@ export function DynamicAlerts() {
 
       // 5. Montagem
       if (canPerform(roles, "montagem.view")) {
-        const { count: montagensHoje } = await supabase
-          .from("agendamentos_montagem")
-          .select("*", { count: 'exact', head: true })
-          .eq("status", "agendado")
-          .eq("data_inicio", new Date().toISOString().split('T')[0]);
+        // Obter contratos da loja primeiro para filtrar
+        const { data: storeContratos } = await supabase.from("contratos").select("id").eq("loja_id", tiendaId);
+        const contratoIds = (storeContratos ?? []).map(c => c.id);
 
-        if (montagensHoje && montagensHoje > 0) {
-          activeAlerts.push({
-            id: 'mon-hoje',
-            type: 'warning',
-            icon: Wrench,
-            title: `${montagensHoje} Montagens para Hoje`,
-            description: 'Confira o cronograma de montagens do dia.',
-            link: '/montagem',
-            modulo: 'montagem'
-          });
+        if (contratoIds.length > 0) {
+          const { count: montagensHoje } = await supabase
+            .from("agendamentos_montagem")
+            .select("*", { count: 'exact', head: true })
+            .in("contrato_id", contratoIds)
+            .eq("status", "agendado")
+            .eq("data", new Date().toISOString().split('T')[0]);
+
+          if (montagensHoje && montagensHoje > 0) {
+            activeAlerts.push({
+              id: 'mon-hoje',
+              type: 'warning',
+              icon: Wrench,
+              title: `${montagensHoje} Montagens para Hoje`,
+              description: 'Confira o cronograma de montagens do dia.',
+              link: '/montagem',
+              modulo: 'montagem'
+            });
+          }
         }
       }
 
       // 6. Pós-venda
       if (canPerform(roles, "pos_venda.view")) {
-        const { count: chamadosAbertos } = await supabase
-          .from("chamados_pos_venda")
-          .select("*", { count: 'exact', head: true })
-          .eq("loja_id", tiendaId)
-          .eq("status", "aberto");
+        const { data: storeContratos } = await supabase.from("contratos").select("id").eq("loja_id", tiendaId);
+        const contratoIds = (storeContratos ?? []).map(c => c.id);
 
-        if (chamadosAbertos && chamadosAbertos > 0) {
-          activeAlerts.push({
-            id: 'pos-chamados',
-            type: 'info',
-            icon: MessageSquare,
-            title: `${chamadosAbertos} Chamados de Pós-venda`,
-            description: 'Novos chamados aguardando atendimento.',
-            link: '/pos-venda',
-            modulo: 'pos_venda'
-          });
+        if (contratoIds.length > 0) {
+          const { count: chamadosAbertos } = await supabase
+            .from("chamados_pos_venda")
+            .select("*", { count: 'exact', head: true })
+            .in("contrato_id", contratoIds)
+            .eq("status", "aberto");
+
+          if (chamadosAbertos && chamadosAbertos > 0) {
+            activeAlerts.push({
+              id: 'pos-chamados',
+              type: 'info',
+              icon: MessageSquare,
+              title: `${chamadosAbertos} Chamados de Pós-venda`,
+              description: 'Novos chamados aguardando atendimento.',
+              link: '/pos-venda',
+              modulo: 'pos_venda'
+            });
+          }
         }
       }
 
