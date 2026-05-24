@@ -54,6 +54,14 @@ export default function RHPage() {
               <Calendar className="w-4 h-4" />
               Ausências
             </TabsTrigger>
+            <TabsTrigger value="escalas" className="flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              Escalas
+            </TabsTrigger>
+            <TabsTrigger value="agenda-equipe" className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Agenda da Equipe
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -75,6 +83,14 @@ export default function RHPage() {
 
         <TabsContent value="ausencias">
           <RHAusencias />
+        </TabsContent>
+
+        <TabsContent value="escalas">
+          <RHEscalas />
+        </TabsContent>
+
+        <TabsContent value="agenda-equipe">
+          <RHAgendaEquipe />
         </TabsContent>
       </Tabs>
     </div>
