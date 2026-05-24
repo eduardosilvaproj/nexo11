@@ -237,7 +237,7 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
 };
 
 export function canPerform(userRoles: AppRole[], action: PermissionAction): boolean {
-  if (userRoles.includes("admin_master")) return true;
+  if (userRoles.includes("admin_master") || userRoles.includes("admin")) return true;
   return userRoles.some(role => ROLE_PERMISSIONS[role]?.includes(action));
 }
 
