@@ -88,15 +88,50 @@ export default function CentralComunicacao() {
     },
   });
 
-  // Query Settings
+  // Query Settings - Using masked view for security
   const { data: settings = [], isLoading: loadingSettings } = useQuery({
-    queryKey: ["communication_settings", lojaId],
+    queryKey: ["v_communication_settings", lojaId],
     enabled: !!lojaId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("communication_settings")
+        .from("v_communication_settings")
         .select("*")
         .eq("loja_id", lojaId!);
+      if (error) throw error;
+      // Map configuracao_masked to configuracao for component compatibility
+      return data.map(s => ({
+        ...s,
+        configuracao: (s as any).configuracao_masked
+      }));
+    },
+  });
+
+  // Query Metrics
+  const { data: metrics = [] } = useQuery({
+    queryKey: ["v_communication_metrics", lojaId],
+    enabled: !!lojaId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("v_communication_metrics")
+        .select("*")
+        .eq("loja_id", lojaId!);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Query Alerts
+  const { data: alerts = [] } = useQuery({
+    queryKey: ["communication_alerts", lojaId],
+    enabled: !!lojaId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("communication_alerts")
+        .select("*")
+        .eq("loja_id", lojaId!)
+        .eq("resolvido", false)
+        .order("created_at", { ascending: false })
+        .limit(5);
       if (error) throw error;
       return data;
     },
