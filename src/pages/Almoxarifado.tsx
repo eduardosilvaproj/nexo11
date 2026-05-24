@@ -20,7 +20,7 @@ import { toast } from "sonner";
 
 export default function Almoxarifado() {
   const { perfil, roles, loading: authLoading } = useAuth();
-  const { canPerform } = await import("@/lib/permissions"); // Import dinâmico ou fixo no topo se preferir
+  const { canPerform } = require("@/lib/permissions"); // Fix build error TS1308
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("todos");
   const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
