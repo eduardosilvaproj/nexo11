@@ -397,9 +397,9 @@ export function ComunicacaoClienteDialog({ open, onOpenChange, contratoId, clien
             {registrarComunicacao.isPending ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
-              canal === "whatsapp" ? <MessageSquare className="w-4 h-4 mr-2" /> : <Send className="w-4 h-4 mr-2" />
+              (canal === "whatsapp" || canal === "whatsapp_oficial") ? <MessageSquare className="w-4 h-4 mr-2" /> : <Send className="w-4 h-4 mr-2" />
             )}
-            {canal === "whatsapp" ? "Abrir WhatsApp" : "Registrar Envio"}
+            {canal === "whatsapp" ? "Abrir WhatsApp" : (canal.includes("oficial") ? "Agendar Envio Oficial" : "Registrar Envio")}
           </Button>
         </DialogFooter>
         {!portalToken && (
