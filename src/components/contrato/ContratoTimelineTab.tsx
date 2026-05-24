@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { 
   Activity, 
   CreditCard, 
-  Tool, 
+  Wrench, 
   Truck, 
   Package, 
   CheckCircle2, 
@@ -42,7 +42,7 @@ type Evento = {
 
 const MODULO_ICONS: Record<string, any> = {
   comercial: ShoppingBag,
-  tecnico: Tool,
+  tecnico: Wrench,
   compras: ShoppingBag,
   almoxarifado: Package,
   logistica: Truck,
@@ -87,7 +87,7 @@ export function ContratoTimelineTab({ contratoId }: Props) {
       if (error) throw error;
       
       // Filtrar eventos sensíveis se não tiver permissão
-      return (data as Evento[]).filter(e => {
+      return (data as any[]).filter(e => {
         if (!hasFinanceAccess && (e.modulo === 'financeiro' || e.modulo === 'comissoes')) {
           // Ocultar valores ou o evento inteiro? Por padrão vamos filtrar o evento
           return false;
