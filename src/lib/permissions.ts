@@ -80,7 +80,10 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
     "documentos.accept", "documentos.sign", "documentos.attach", "documentos.financeiro.view", 
     "documentos.financeiro.emit", "evidencias.view", "evidencias.create", "evidencias.delete", 
     "financeiro.evidencias.view", "campo.view", "campo.medicoes", "campo.entregas", 
-    "campo.montagens", "campo.pos_venda", "campo.almoxarifado"
+    "campo.montagens", "campo.pos_venda", "campo.almoxarifado",
+    "rh.view", "rh.manage", "rh.funcionarios.view", "rh.funcionarios.manage", 
+    "rh.solicitacoes.view", "rh.solicitacoes.create", "rh.solicitacoes.approve", 
+    "rh.documentos.view", "rh.documentos.manage", "rh.ausencias.view", "rh.ausencias.manage"
   ],
   admin: [
     "comercial.view", "clientes.view", "contratos.view", "tecnico.view", "producao.view",
@@ -93,13 +96,16 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
     "documentos.accept", "documentos.sign", "documentos.attach", "documentos.financeiro.view", 
     "documentos.financeiro.emit", "evidencias.view", "evidencias.create", "evidencias.delete", 
     "financeiro.evidencias.view", "campo.view", "campo.medicoes", "campo.entregas", 
-    "campo.montagens", "campo.pos_venda", "campo.almoxarifado"
+    "campo.montagens", "campo.pos_venda", "campo.almoxarifado",
+    "rh.view", "rh.manage", "rh.funcionarios.view", "rh.funcionarios.manage", 
+    "rh.solicitacoes.view", "rh.solicitacoes.create", "rh.solicitacoes.approve", 
+    "rh.documentos.view", "rh.documentos.manage", "rh.ausencias.view", "rh.ausencias.manage"
   ],
   franqueador: [
     "comercial.view", "clientes.view", "contratos.view", "pos_venda.view",
     "dre.view", "financeiro.view", "comissoes.view", "lojas.view", "equipe.view", 
     "analytics.view", "notificacoes.view", "documentos.view", "documentos.financeiro.view",
-    "evidencias.view"
+    "evidencias.view", "rh.view", "rh.funcionarios.view"
   ],
   gerente: [
     "comercial.view", "clientes.view", "contratos.view", "tecnico.view", "producao.view",
@@ -112,53 +118,67 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
     "documentos.sign", "documentos.attach", "documentos.financeiro.view", 
     "documentos.financeiro.emit", "evidencias.view", "evidencias.create", "evidencias.delete", 
     "financeiro.evidencias.view", "campo.view", "campo.medicoes", "campo.entregas", 
-    "campo.montagens", "campo.pos_venda", "campo.almoxarifado"
+    "campo.montagens", "campo.pos_venda", "campo.almoxarifado",
+    "rh.view", "rh.manage", "rh.funcionarios.view", "rh.funcionarios.manage", 
+    "rh.solicitacoes.view", "rh.solicitacoes.create", "rh.solicitacoes.approve", 
+    "rh.documentos.view", "rh.documentos.manage", "rh.ausencias.view", "rh.ausencias.manage"
+  ],
+  rh: [
+    "rh.view", "rh.manage", "rh.funcionarios.view", "rh.funcionarios.manage", 
+    "rh.solicitacoes.view", "rh.solicitacoes.create", "rh.solicitacoes.approve", 
+    "rh.documentos.view", "rh.documentos.manage", "rh.ausencias.view", "rh.ausencias.manage",
+    "equipe.view", "notificacoes.view"
   ],
   vendedor: [
     "comercial.view", "clientes.view", "contratos.view", "pos_venda.view", "notificacoes.view",
-    "documentos.view", "documentos.accept", "documentos.sign", "evidencias.view", "evidencias.create"
+    "documentos.view", "documentos.accept", "documentos.sign", "evidencias.view", "evidencias.create",
+    "rh.solicitacoes.create", "rh.solicitacoes.view"
   ],
   tecnico: [
     "contratos.view", "tecnico.view", "producao.view", "logistica.view", "montagem.view", 
     "notificacoes.view", "documentos.view", "evidencias.view", "evidencias.create",
-    "campo.view", "campo.medicoes"
+    "campo.view", "campo.medicoes", "rh.solicitacoes.create", "rh.solicitacoes.view"
   ],
   medidor: [
     "contratos.view", "tecnico.view", "notificacoes.view", "documentos.view", 
-    "evidencias.view", "evidencias.create", "campo.view", "campo.medicoes"
+    "evidencias.view", "evidencias.create", "campo.view", "campo.medicoes",
+    "rh.solicitacoes.create", "rh.solicitacoes.view"
   ],
   conferente: [
     "contratos.view", "tecnico.view", "notificacoes.view", "documentos.view", 
-    "evidencias.view", "evidencias.create", "campo.view", "campo.medicoes"
+    "evidencias.view", "evidencias.create", "campo.view", "campo.medicoes",
+    "rh.solicitacoes.create", "rh.solicitacoes.view"
   ],
   montador: [
     "montagem.view", "montagem.update", "notificacoes.view", "documentos.view", 
     "documentos.accept", "documentos.sign", "evidencias.view", "evidencias.create",
-    "campo.view", "campo.montagens"
+    "campo.view", "campo.montagens", "rh.solicitacoes.create", "rh.solicitacoes.view"
   ],
   comprador: [
     "compras.view", "compras.manage", "almoxarifado.view", "notificacoes.view",
-    "documentos.view", "documentos.emit", "evidencias.view", "evidencias.create"
+    "documentos.view", "documentos.emit", "evidencias.view", "evidencias.create",
+    "rh.solicitacoes.create", "rh.solicitacoes.view"
   ],
   almoxarife: [
     "almoxarifado.view", "almoxarifado.manage", "compras.view", "notificacoes.view",
     "documentos.view", "documentos.emit", "evidencias.view", "evidencias.create",
-    "campo.view", "campo.almoxarifado"
+    "campo.view", "campo.almoxarifado", "rh.solicitacoes.create", "rh.solicitacoes.view"
   ],
   logistico: [
     "logistica.view", "logistica.update", "notificacoes.view", "documentos.view", 
     "documentos.emit", "documentos.accept", "documentos.sign", "evidencias.view", "evidencias.create",
-    "campo.view", "campo.entregas"
+    "campo.view", "campo.entregas", "rh.solicitacoes.create", "rh.solicitacoes.view"
   ],
   financeiro: [
     "financeiro.view", "financeiro.manage", "comissoes.view", "comissoes.manage", "dre.view", 
     "contratos.view", "notificacoes.view", "documentos.view", "documentos.emit", 
     "documentos.financeiro.view", "documentos.financeiro.emit", "evidencias.view", 
-    "evidencias.create", "financeiro.evidencias.view"
+    "evidencias.create", "financeiro.evidencias.view", "rh.solicitacoes.create", "rh.solicitacoes.view"
   ],
   pos_venda: [
     "pos_venda.view", "clientes.view", "contratos.view", "notificacoes.view", "documentos.view",
-    "evidencias.view", "evidencias.create", "campo.view", "campo.pos_venda"
+    "evidencias.view", "evidencias.create", "campo.view", "campo.pos_venda",
+    "rh.solicitacoes.create", "rh.solicitacoes.view"
   ]
 };
 
