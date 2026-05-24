@@ -41,8 +41,15 @@ export type PermissionAction =
   | "documentos.view"
   | "documentos.emit"
   | "documentos.cancel"
+  | "documentos.accept"
+  | "documentos.sign"
+  | "documentos.attach"
   | "documentos.financeiro.view"
-  | "documentos.financeiro.emit";
+  | "documentos.financeiro.emit"
+  | "evidencias.view"
+  | "evidencias.create"
+  | "evidencias.delete"
+  | "financeiro.evidencias.view";
 
 const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
   admin_master: [
