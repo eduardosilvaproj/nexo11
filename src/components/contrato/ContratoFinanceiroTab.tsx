@@ -15,6 +15,8 @@ const formatBRL = (n: number) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(n || 0);
 
 export function ContratoFinanceiroTab({ contratoId }: Props) {
+  const { roles } = useAuth();
+  const canViewFinancialEvidences = canPerform(roles, "financeiro.evidencias.view");
   const { data: receber, isLoading: loadingR } = useQuery({
     queryKey: ["contrato_receber", contratoId],
     queryFn: async () => {
