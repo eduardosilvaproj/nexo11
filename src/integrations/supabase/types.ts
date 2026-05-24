@@ -2877,34 +2877,75 @@ export type Database = {
         Row: {
           contrato_id: string | null
           created_at: string
+          entidade_id: string | null
+          entidade_tipo: string | null
           id: string
-          lida_em: string | null
+          lida: boolean
+          lida_at: string | null
           link: string | null
+          loja_id: string | null
           mensagem: string
+          modulo: string
+          perfil_destino: string | null
+          prioridade: string
+          resolvida: boolean
+          resolvida_at: string | null
           tipo: string
-          user_id: string
+          titulo: string
+          updated_at: string
+          usuario_id: string | null
         }
         Insert: {
           contrato_id?: string | null
           created_at?: string
+          entidade_id?: string | null
+          entidade_tipo?: string | null
           id?: string
-          lida_em?: string | null
+          lida?: boolean
+          lida_at?: string | null
           link?: string | null
+          loja_id?: string | null
           mensagem: string
+          modulo?: string
+          perfil_destino?: string | null
+          prioridade?: string
+          resolvida?: boolean
+          resolvida_at?: string | null
           tipo: string
-          user_id: string
+          titulo?: string
+          updated_at?: string
+          usuario_id?: string | null
         }
         Update: {
           contrato_id?: string | null
           created_at?: string
+          entidade_id?: string | null
+          entidade_tipo?: string | null
           id?: string
-          lida_em?: string | null
+          lida?: boolean
+          lida_at?: string | null
           link?: string | null
+          loja_id?: string | null
           mensagem?: string
+          modulo?: string
+          perfil_destino?: string | null
+          prioridade?: string
+          resolvida?: boolean
+          resolvida_at?: string | null
           tipo?: string
-          user_id?: string
+          titulo?: string
+          updated_at?: string
+          usuario_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notificacoes_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       orcamentos: {
         Row: {
