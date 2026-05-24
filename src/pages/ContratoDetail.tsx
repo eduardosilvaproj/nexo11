@@ -23,6 +23,7 @@ import { ContratoTimelineTab } from "@/components/contrato/ContratoTimelineTab";
 import { ContratoDocumentosTab } from "@/components/contrato/ContratoDocumentosTab";
 import { ReadOnlyContext } from "@/components/contrato/ReadOnlyContext";
 import OperationalAttachments from "@/components/operacional/OperationalAttachments";
+import { ContratoIndicadoresTab } from "@/components/contrato/ContratoIndicadoresTab";
 
 
 const STAGE_TO_TAB: Record<string, ContratoTabKey> = {
