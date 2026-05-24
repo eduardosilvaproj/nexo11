@@ -28,7 +28,8 @@ export function ContratoComunicacoesTab({ contratoId }: Props) {
         .from("cliente_comunicacoes")
         .select(`
           *,
-          enviado_por_user:usuarios!cliente_comunicacoes_enviado_por_fkey(nome)
+          enviado_por_user:usuarios!cliente_comunicacoes_enviado_por_fkey(nome),
+          outbox:communication_outbox(id, status, erro, enviado_em)
         `)
         .eq("contrato_id", contratoId)
         .order("created_at", { ascending: false });
@@ -124,6 +125,20 @@ export function ContratoComunicacoesTab({ contratoId }: Props) {
                   <div className="mt-2 text-[10px] text-red-500 flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" />
                     {comm.erro}
+                  </div>
+                )}
+
+                {(comm as any).outbox?.[0] && (
+                  <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-400 font-medium">Status Oficial:</span>
+                      {getStatusBadge((comm as any).outbox[0].status)}
+                    </div>
+                    {(comm as any).outbox[0].enviado_em && (
+                      <span className="text-[10px] text-slate-400">
+                        Processado em: {format(new Date((comm as any).outbox[0].enviado_em), "dd/MM HH:mm")}
+                      </span>
+                    )}
                   </div>
                 )}
               </CardContent>

@@ -16,7 +16,8 @@ import {
   DollarSign,
   Star,
   ShoppingBag,
-  FileText
+  FileText,
+  Bot
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -54,6 +55,8 @@ const MODULO_ICONS: Record<string, any> = {
   comissoes: CreditCard,
   pos_venda: Star,
   documentos: FileText,
+  automacao: Bot,
+  comunicacao: MessageSquare,
 };
 
 const MODULO_COLORS: Record<string, string> = {

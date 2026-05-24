@@ -49,7 +49,7 @@ export const automationService = {
     loja_id: string,
     metadata: Record<string, any> = {}
   ) {
-    console.log(`[Automation] Gatilho disparado: ${gatilho} para ${entidade_tipo}:${entidade_id}`);
+    console.log(`[Automation] Gatilho disparado: ${gatilho} for ${entidade_tipo}:${entidade_id}`);
 
     const { data: regras, error: errorRegras } = await supabase
       .from("automacao_regras")
@@ -168,7 +168,7 @@ export const automationService = {
           descricao: params.descricao || "Executado via motor de automações",
           visivel_cliente: params.visivel_cliente || false,
           metadata: { regra_id: execucao.regra_id } as any,
-          loja_id: loja_id // Assuming contrato_eventos might need loja_id or it's inferred
+          loja_id: loja_id
         } as any]);
 
       case "criar_pesquisa_nps":
@@ -180,18 +180,47 @@ export const automationService = {
           status: "enviada"
         } as any]);
 
-      case "criar_comunicacao_cliente":
-        return await supabase.from("cliente_comunicacoes").insert([{
-          loja_id,
-          contrato_id: entidade_tipo === "contrato" ? entidade_id : metadata.contrato_id,
-          cliente_id: metadata.cliente_id,
-          canal: params.canal || "manual",
-          tipo: params.tipo || "aviso_geral",
-          destinatario: metadata.cliente_contato || "Cliente",
-          assunto: params.assunto || "Atualização do seu projeto",
-          mensagem: params.mensagem || "Olá! Temos novidades sobre seu projeto.",
-          status: "preparado"
-        } as any]);
+      case "criar_comunicacao_cliente": {
+        const { data: comunicacao, error: errorCom } = await supabase
+          .from("cliente_comunicacoes")
+          .insert([{
+            loja_id,
+            contrato_id: entidade_tipo === "contrato" ? entidade_id : metadata.contrato_id,
+            cliente_id: metadata.cliente_id,
+            canal: params.canal || "manual",
+            tipo: params.tipo || "aviso_geral",
+            destinatario: metadata.cliente_contato || "Cliente",
+            assunto: params.assunto || "Atualização do seu projeto",
+            mensagem: params.mensagem || "Olá! Temos novidades sobre seu projeto.",
+            status: "preparado"
+          } as any])
+          .select()
+          .single();
+
+        if (errorCom) throw errorCom;
+
+        // Se canal não for manual, criar entrada na outbox
+        if (params.canal && params.canal !== "manual") {
+          const { error: errorOutbox } = await supabase
+            .from("communication_outbox")
+            .insert([{
+              loja_id,
+              cliente_id: metadata.cliente_id,
+              contrato_id: entidade_tipo === "contrato" ? entidade_id : metadata.contrato_id,
+              comunicacao_id: comunicacao.id,
+              canal: params.canal,
+              destinatario: metadata.cliente_contato || "Cliente",
+              assunto: params.assunto,
+              mensagem: params.mensagem || comunicacao.mensagem,
+              status: "pendente",
+              template_key: params.template_key
+            } as any]);
+          
+          if (errorOutbox) console.error("[Automation] Erro ao criar outbox:", errorOutbox);
+        }
+
+        return comunicacao;
+      }
 
       case "alertar_gerente":
         return await supabase.from("notificacoes").insert([{

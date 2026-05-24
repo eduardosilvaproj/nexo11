@@ -30,7 +30,7 @@ import {
 import { toast } from "sonner";
 import { format } from "date-fns";
 
-type Canal = "whatsapp" | "email" | "manual";
+type Canal = "whatsapp" | "email" | "manual" | "whatsapp_oficial" | "email_oficial";
 type TipoMensagem = 
   | "portal_link" 
   | "documento" 
@@ -181,22 +181,47 @@ export function ComunicacaoClienteDialog({ open, onOpenChange, contratoId, clien
       const finalLojaId = lojaId || contrato?.loja_id;
       if (!finalLojaId) throw new Error("ID da loja não encontrado");
 
-      const { error } = await supabase
+      // Se canal oficial, status começa como 'preparado' para a outbox
+      const statusCom = (canal === "whatsapp_oficial" || canal === "email_oficial") ? "preparado" : status;
+
+      const { data: comunicacao, error } = await supabase
         .from("cliente_comunicacoes")
         .insert({
           loja_id: finalLojaId,
           cliente_id: clienteId || contrato?.cliente_id,
           contrato_id: contratoId,
           portal_token_id: portalToken?.id,
-          canal,
+          canal: canal.replace("_oficial", ""), // normaliza para a tabela existente
           tipo,
           destinatario,
           mensagem,
-          status,
+          status: statusCom,
           enviado_por: user?.id,
           enviado_em: new Date().toISOString(),
-        } as any);
+        } as any)
+        .select()
+        .single();
+
       if (error) throw error;
+
+      // Se canal oficial, criar entrada na outbox
+      if (canal === "whatsapp_oficial" || canal === "email_oficial") {
+        const { error: errorOutbox } = await supabase
+          .from("communication_outbox")
+          .insert({
+            loja_id: finalLojaId,
+            cliente_id: clienteId || contrato?.cliente_id,
+            contrato_id: contratoId,
+            comunicacao_id: comunicacao.id,
+            canal: canal.replace("_oficial", ""),
+            destinatario,
+            mensagem,
+            status: "pendente",
+            created_by: user?.id
+          } as any);
+        
+        if (errorOutbox) console.error("Erro ao criar outbox:", errorOutbox);
+      }
 
       // Registrar na timeline
       const { registrarEventoContrato } = await import("@/services/contratoEventos");
@@ -242,6 +267,8 @@ export function ComunicacaoClienteDialog({ open, onOpenChange, contratoId, clien
       const url = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(mensagem)}`;
       window.open(url, "_blank");
       registrarComunicacao.mutate("enviado");
+    } else if (canal === "whatsapp_oficial" || canal === "email_oficial") {
+      registrarComunicacao.mutate("preparado");
     } else {
       // Logic for email or manual
       registrarComunicacao.mutate("enviado");
@@ -275,12 +302,22 @@ export function ComunicacaoClienteDialog({ open, onOpenChange, contratoId, clien
                 <SelectContent>
                   <SelectItem value="whatsapp">
                     <div className="flex items-center gap-2">
-                      <Smartphone className="w-4 h-4" /> WhatsApp
+                      <Smartphone className="w-4 h-4" /> WhatsApp (Manual)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="whatsapp_oficial">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4 text-primary" /> WhatsApp API (Oficial)
                     </div>
                   </SelectItem>
                   <SelectItem value="email">
                     <div className="flex items-center gap-2">
                       <Mail className="w-4 h-4" /> E-mail (Manual)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="email_oficial">
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-primary" /> E-mail Transacional (Oficial)
                     </div>
                   </SelectItem>
                   <SelectItem value="manual">Registro Manual</SelectItem>
@@ -360,9 +397,9 @@ export function ComunicacaoClienteDialog({ open, onOpenChange, contratoId, clien
             {registrarComunicacao.isPending ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
-              canal === "whatsapp" ? <MessageSquare className="w-4 h-4 mr-2" /> : <Send className="w-4 h-4 mr-2" />
+              (canal === "whatsapp" || canal === "whatsapp_oficial") ? <MessageSquare className="w-4 h-4 mr-2" /> : <Send className="w-4 h-4 mr-2" />
             )}
-            {canal === "whatsapp" ? "Abrir WhatsApp" : "Registrar Envio"}
+            {canal === "whatsapp" ? "Abrir WhatsApp" : (canal.includes("oficial") ? "Agendar Envio Oficial" : "Registrar Envio")}
           </Button>
         </DialogFooter>
         {!portalToken && (

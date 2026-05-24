@@ -1065,6 +1065,63 @@ export type Database = {
           },
         ]
       }
+      cliente_preferencias_comunicacao: {
+        Row: {
+          canal_preferido: string | null
+          cliente_id: string
+          email_opt_in: boolean
+          email_validado: boolean
+          id: string
+          loja_id: string
+          opt_out_em: string | null
+          sms_opt_in: boolean
+          telefone_validado: boolean
+          updated_at: string | null
+          whatsapp_opt_in: boolean
+        }
+        Insert: {
+          canal_preferido?: string | null
+          cliente_id: string
+          email_opt_in?: boolean
+          email_validado?: boolean
+          id?: string
+          loja_id: string
+          opt_out_em?: string | null
+          sms_opt_in?: boolean
+          telefone_validado?: boolean
+          updated_at?: string | null
+          whatsapp_opt_in?: boolean
+        }
+        Update: {
+          canal_preferido?: string | null
+          cliente_id?: string
+          email_opt_in?: boolean
+          email_validado?: boolean
+          id?: string
+          loja_id?: string
+          opt_out_em?: string | null
+          sms_opt_in?: boolean
+          telefone_validado?: boolean
+          updated_at?: string | null
+          whatsapp_opt_in?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cliente_preferencias_comunicacao_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cliente_preferencias_comunicacao_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clientes: {
         Row: {
           celular: string | null
@@ -1213,6 +1270,182 @@ export type Database = {
             columns: ["papel_id"]
             isOneToOne: false
             referencedRelation: "papeis_comissao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communication_outbox: {
+        Row: {
+          assunto: string | null
+          canal: string
+          cliente_id: string | null
+          comunicacao_id: string | null
+          contrato_id: string | null
+          created_at: string | null
+          created_by: string | null
+          destinatario: string
+          entregue_em: string | null
+          enviado_em: string | null
+          erro: string | null
+          id: string
+          lido_em: string | null
+          loja_id: string
+          max_tentativas: number
+          mensagem: string
+          payload: Json
+          processado_em: string | null
+          provider: string | null
+          provider_message_id: string | null
+          proxima_tentativa_em: string | null
+          status: string
+          template_key: string | null
+          tentativas: number
+          updated_at: string | null
+        }
+        Insert: {
+          assunto?: string | null
+          canal: string
+          cliente_id?: string | null
+          comunicacao_id?: string | null
+          contrato_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          destinatario: string
+          entregue_em?: string | null
+          enviado_em?: string | null
+          erro?: string | null
+          id?: string
+          lido_em?: string | null
+          loja_id: string
+          max_tentativas?: number
+          mensagem: string
+          payload?: Json
+          processado_em?: string | null
+          provider?: string | null
+          provider_message_id?: string | null
+          proxima_tentativa_em?: string | null
+          status?: string
+          template_key?: string | null
+          tentativas?: number
+          updated_at?: string | null
+        }
+        Update: {
+          assunto?: string | null
+          canal?: string
+          cliente_id?: string | null
+          comunicacao_id?: string | null
+          contrato_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          destinatario?: string
+          entregue_em?: string | null
+          enviado_em?: string | null
+          erro?: string | null
+          id?: string
+          lido_em?: string | null
+          loja_id?: string
+          max_tentativas?: number
+          mensagem?: string
+          payload?: Json
+          processado_em?: string | null
+          provider?: string | null
+          provider_message_id?: string | null
+          proxima_tentativa_em?: string | null
+          status?: string
+          template_key?: string | null
+          tentativas?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_outbox_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_outbox_comunicacao_id_fkey"
+            columns: ["comunicacao_id"]
+            isOneToOne: false
+            referencedRelation: "cliente_comunicacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_outbox_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_outbox_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communication_outbox_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communication_settings: {
+        Row: {
+          ativo: boolean
+          canal: string
+          configuracao: Json
+          created_at: string | null
+          created_by: string | null
+          horario_fim: string | null
+          horario_inicio: string | null
+          id: string
+          limite_diario: number | null
+          loja_id: string
+          provider: string
+          remetente: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          canal: string
+          configuracao?: Json
+          created_at?: string | null
+          created_by?: string | null
+          horario_fim?: string | null
+          horario_inicio?: string | null
+          id?: string
+          limite_diario?: number | null
+          loja_id: string
+          provider: string
+          remetente?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          canal?: string
+          configuracao?: Json
+          created_at?: string | null
+          created_by?: string | null
+          horario_fim?: string | null
+          horario_inicio?: string | null
+          id?: string
+          limite_diario?: number | null
+          loja_id?: string
+          provider?: string
+          remetente?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_settings_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
             referencedColumns: ["id"]
           },
         ]

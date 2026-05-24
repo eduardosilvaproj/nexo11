@@ -41,6 +41,7 @@ import RH from "./pages/RH";
 import Execucao from "./pages/Execucao";
 import IndicadoresOperacionais from "./pages/IndicadoresOperacionais";
 import Automacoes from "./pages/Automacoes";
+import CentralComunicacao from "./pages/CentralComunicacao";
 
 import AcompanhamentoCriacao from "./pages/AcompanhamentoCriacao";
 import AcessoAcompanhamento from "./pages/AcessoAcompanhamento";
@@ -219,6 +220,11 @@ const App = () => (
               <Route path="/integracoes" element={
                 <ProtectedRoute roles={["admin","gerente","admin_master"]}>
                   <Integracoes />
+                </ProtectedRoute>
+              } />
+              <Route path="/comunicacoes/envios" element={
+                <ProtectedRoute roles={["admin","gerente","admin_master"]}>
+                  <CentralComunicacao />
                 </ProtectedRoute>
               } />
               <Route path="/configuracoes/pagamento" element={
