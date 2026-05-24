@@ -52,7 +52,7 @@ export function PagamentoConfirmDialog({ open, onOpenChange, transacao, onConfir
     try {
       const { error } = await supabase.rpc('estornar_lancamento', {
         p_id: transacao.id,
-        p_type: transacao.tipo === 'receita' ? 'receita' : 'despesa'
+        p_tipo: transacao.tipo === 'receita' ? 'receita' : 'despesa'
       });
       if (error) throw error;
       toast.success("Pagamento estornado com sucesso");
@@ -65,11 +65,13 @@ export function PagamentoConfirmDialog({ open, onOpenChange, transacao, onConfir
     }
   }
 
+  const isPago = transacao?.status === 'pago';
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle>{transacao?.status === 'pago' ? 'Detalhes do Pagamento' : 'Confirmar Pagamento'}</DialogTitle>
+          <DialogTitle>{isPago ? 'Detalhes do Pagamento' : 'Confirmar Pagamento'}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="rounded-lg bg-slate-50 p-4 border border-slate-100">
@@ -82,23 +84,36 @@ export function PagamentoConfirmDialog({ open, onOpenChange, transacao, onConfir
 
           <div className="space-y-1.5">
             <Label>Data do Pagamento</Label>
-            <Input type="date" value={data} onChange={(e) => setData(e.target.value)} />
+            <Input type="date" value={data} onChange={(e) => setData(e.target.value)} disabled={isPago} />
           </div>
 
           <div className="space-y-1.5">
             <Label>Forma de Pagamento</Label>
-            <Input placeholder="Ex: Pix, Cartão, Dinheiro..." value={forma} onChange={(e) => setForma(e.target.value)} />
+            <Input placeholder="Ex: Pix, Cartão, Dinheiro..." value={forma} onChange={(e) => setForma(e.target.value)} disabled={isPago} />
           </div>
         </div>
         <DialogFooter className="flex-col gap-2 sm:flex-row">
-          <Button variant="outline" className="sm:flex-1" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button 
-            className="bg-[#1E6FBF] hover:bg-[#1E6FBF]/90 text-white sm:flex-1" 
-            onClick={handleConfirmar}
-            disabled={loading}
-          >
-            {loading ? "Confirmando..." : "Confirmar Pagamento"}
+          <Button variant="outline" className="sm:flex-1" onClick={() => onOpenChange(false)}>
+            {isPago ? 'Fechar' : 'Cancelar'}
           </Button>
+          {isPago ? (
+            <Button 
+              variant="destructive"
+              className="sm:flex-1" 
+              onClick={handleEstornar}
+              disabled={loading}
+            >
+              {loading ? "Estornando..." : "Estornar Pagamento"}
+            </Button>
+          ) : (
+            <Button 
+              className="bg-[#1E6FBF] hover:bg-[#1E6FBF]/90 text-white sm:flex-1" 
+              onClick={handleConfirmar}
+              disabled={loading}
+            >
+              {loading ? "Confirmando..." : "Confirmar Pagamento"}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
