@@ -230,6 +230,7 @@ export default function Montagem() {
                       {items.map((a) => {
                         const eq = a.equipes ?? null;
                         const badge = STATUS_BADGE[a.status];
+                        const libStatus = statusPorContrato[a.contrato_id];
                         return (
                           <button
                             key={a.id}
@@ -253,16 +254,19 @@ export default function Montagem() {
                             <div style={{ fontSize: 11, color: "#6B7A90" }}>
                               {a.hora_inicio?.slice(0, 5) ?? "--"}–{a.hora_fim?.slice(0, 5) ?? "--"}
                             </div>
-                            <span
-                              className="mt-1.5 inline-flex rounded-full px-2 py-0.5"
-                              style={{
-                                fontSize: 10,
-                                backgroundColor: badge?.bg,
-                                color: badge?.fg,
-                              }}
-                            >
-                              {badge?.label}
-                            </span>
+                            <div className="mt-1.5 flex flex-wrap gap-1">
+                              <span
+                                className="inline-flex rounded-full px-2 py-0.5"
+                                style={{
+                                  fontSize: 10,
+                                  backgroundColor: badge?.bg,
+                                  color: badge?.fg,
+                                }}
+                              >
+                                {badge?.label}
+                              </span>
+                              {libStatus && <LiberacaoBadge status={libStatus} />}
+                            </div>
                           </button>
                         );
                       })}
