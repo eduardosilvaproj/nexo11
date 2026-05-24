@@ -436,6 +436,8 @@ export default function ContratoDetail() {
                <OperationalAttachments contratoId={contrato.id} />
             ) : active === "indicadores" ? (
                <ContratoIndicadoresTab contratoId={contrato.id} />
+            ) : active === "comunicacoes" ? (
+               <ContratoComunicacoesTab contratoId={contrato.id} />
             ) : (
 
               <div className="text-sm text-muted-foreground">
