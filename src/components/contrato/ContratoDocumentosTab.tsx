@@ -175,6 +175,26 @@ export function ContratoDocumentosTab({ contratoId }: Props) {
                           else {
                             toast.success(val ? "Documento liberado no portal" : "Documento ocultado do portal");
                             qc.invalidateQueries({ queryKey: ["contrato_documentos", contratoId] });
+
+                            // Integrar com automação para Documento Pendente de Assinatura
+                            if (val) {
+                              try {
+                                const { data: docInfo } = await supabase.from("documentos_emitidos").select("id, titulo, loja_id, contrato_id").eq("id", doc.id).single();
+                                if (docInfo) {
+                                  const { data: contratoInfo } = await supabase.from("contratos").select("cliente_id").eq("id", contratoId).single();
+                                  const { automationService } = await import("@/services/automationService");
+                                  await automationService.dispararGatilho(
+                                    "documento_pendente_assinatura",
+                                    "contrato",
+                                    contratoId,
+                                    docInfo.loja_id,
+                                    { cliente_id: contratoInfo?.cliente_id, contrato_id: contratoId, documento_id: doc.id, documento_titulo: doc.titulo }
+                                  );
+                                }
+                              } catch (err) {
+                                console.error("Erro ao disparar gatilho de automação (documento_pendente):", err);
+                              }
+                            }
                           }
                         }}
                       />
