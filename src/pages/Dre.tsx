@@ -187,6 +187,7 @@ export default function Dre() {
     load();
 
 
+
   }, [mes, ano, vendedor, statusFiltro]);
 
   const fmt = (n: number | null) =>
