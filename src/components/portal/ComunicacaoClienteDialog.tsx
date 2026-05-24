@@ -302,12 +302,22 @@ export function ComunicacaoClienteDialog({ open, onOpenChange, contratoId, clien
                 <SelectContent>
                   <SelectItem value="whatsapp">
                     <div className="flex items-center gap-2">
-                      <Smartphone className="w-4 h-4" /> WhatsApp
+                      <Smartphone className="w-4 h-4" /> WhatsApp (Manual)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="whatsapp_oficial">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4 text-primary" /> WhatsApp API (Oficial)
                     </div>
                   </SelectItem>
                   <SelectItem value="email">
                     <div className="flex items-center gap-2">
                       <Mail className="w-4 h-4" /> E-mail (Manual)
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="email_oficial">
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-primary" /> E-mail Transacional (Oficial)
                     </div>
                   </SelectItem>
                   <SelectItem value="manual">Registro Manual</SelectItem>
