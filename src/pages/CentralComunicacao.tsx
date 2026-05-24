@@ -130,6 +130,30 @@ export default function CentralComunicacao() {
     onError: (err: any) => toast.error("Erro ao cancelar: " + err.message),
   });
 
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (config: any) => {
+      const { id, ...rest } = config;
+      if (id) {
+        const { error } = await supabase
+          .from("communication_settings")
+          .update(rest)
+          .eq("id", id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("communication_settings")
+          .insert([{ ...rest, loja_id: lojaId }]);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success("Configurações atualizadas");
+      setEditingConfig(null);
+      qc.invalidateQueries({ queryKey: ["communication_settings"] });
+    },
+    onError: (err: any) => toast.error("Erro ao salvar: " + err.message),
+  });
+
   const filteredOutbox = outbox.filter(msg => 
     msg.destinatario.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (msg.cliente as any)?.nome?.toLowerCase().includes(searchTerm.toLowerCase()) ||
