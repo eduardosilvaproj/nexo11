@@ -124,6 +124,23 @@ export function NovaEntregaDialog({ open, onOpenChange, defaultDate, defaultTurn
         status_visual: "agendado",
       });
       if (error) throw error;
+
+      // Integrar com automação
+      try {
+        const { data: contratoInfo } = await supabase.from("contratos").select("loja_id, cliente_id").eq("id", contratoId).single();
+        if (contratoInfo) {
+          const { automationService } = await import("@/services/automationService");
+          await automationService.dispararGatilho(
+            "entrega_agendada",
+            "contrato",
+            contratoId,
+            contratoInfo.loja_id,
+            { cliente_id: contratoInfo.cliente_id, contrato_id: contratoId, data_prevista: data, turno }
+          );
+        }
+      } catch (err) {
+        console.error("Erro ao disparar gatilho de automação (entrega_agendada):", err);
+      }
     },
     onSuccess: () => {
       toast.success("Entrega agendada");
