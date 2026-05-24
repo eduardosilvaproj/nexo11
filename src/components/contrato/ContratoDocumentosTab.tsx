@@ -136,15 +136,28 @@ export function ContratoDocumentosTab({ contratoId }: Props) {
                     {format(new Date(doc.emitido_em), "dd/MM/yyyy HH:mm", { locale: ptBR })}
                   </td>
                   <td className="px-4 py-3">
-                    {doc.status === "emitido" ? (
-                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none">
-                        Emitido
-                      </Badge>
-                    ) : (
-                      <Badge variant="destructive" className="bg-red-100 text-red-700 hover:bg-red-100 border-none">
-                        Cancelado
-                      </Badge>
-                    )}
+                    <div className="flex flex-col gap-1">
+                      {doc.status === "emitido" ? (
+                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none w-fit">
+                          Emitido
+                        </Badge>
+                      ) : doc.status === "aceito" ? (
+                        <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none w-fit">
+                          Aceito / Assinado
+                        </Badge>
+                      ) : (
+                        <Badge variant="destructive" className="bg-red-100 text-red-700 hover:bg-red-100 border-none w-fit">
+                          Cancelado
+                        </Badge>
+                      )}
+                      
+                      {aceites.find(a => a.documento_id === doc.id) && (
+                        <div className="flex items-center gap-1 text-[10px] text-blue-600 font-medium">
+                          <CheckCircle className="h-3 w-3" />
+                          Assinado por {aceites.find(a => a.documento_id === doc.id)?.nome_responsavel}
+                        </div>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
