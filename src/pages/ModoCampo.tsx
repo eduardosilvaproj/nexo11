@@ -134,13 +134,13 @@ export default function ModoCampo() {
               <h1 className="text-xl font-bold text-slate-900 leading-tight">Olá, {perfil?.nome?.split(" ")[0]}</h1>
               <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
                 <Building2 size={12} />
-                <span>Unidade: {perfil?.loja_nome || "Loja Piloto"}</span>
+                <span>Unidade Piloto</span>
               </div>
             </div>
           </div>
           <Badge variant="outline" className="bg-white text-blue-600 border-blue-200 px-2 py-1 h-fit flex gap-1 items-center">
             <Clock size={12} />
-            <span>{totalPendencias} Pendências</span>
+            <span>{(totalPendencias as number) || 0} Pendências</span>
           </Badge>
         </div>
       </div>
