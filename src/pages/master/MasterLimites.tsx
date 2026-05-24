@@ -22,9 +22,10 @@ export default function MasterLimites() {
               status,
               saas_plans (
                 nome,
-                limite_lojas,
+                limite_filiais,
                 limite_usuarios
               )
+
             )
           `);
 
@@ -67,8 +68,9 @@ export default function MasterLimites() {
         ) : stats.map(s => {
           const sub = s.saas_subscriptions?.[0];
           const plan = sub?.saas_plans;
-          const limitStores = plan?.limite_lojas || 1;
+          const limitStores = plan?.limite_filiais || 1;
           const usageStoresPercent = Math.min((s.lojas_count / limitStores) * 100, 100);
+
 
           return (
             <Card key={s.id} className="overflow-hidden">
