@@ -201,14 +201,24 @@ export default function PortalCliente() {
     if (!token || !contrato) return;
     setLoading(true);
     try {
-      const { data, error } = await portalClient.rpc('portal_cliente_abrir_chamado', {
-        p_token: token,
-        p_tipo: chamadoForm.tipo,
-        p_ambiente: chamadoForm.ambiente || null,
-        p_descricao: chamadoForm.descricao,
-        p_contato: contrato.cliente_contato || ""
+      const { error } = await portalClient.from("chamados_pos_venda").insert({
+        contrato_id: contrato.id,
+        tipo: chamadoForm.tipo as any,
+        descricao: chamadoForm.descricao,
+        status: 'aberto',
       });
       if (error) throw error;
+
+      // Registrar evento visível na timeline do cliente
+      await portalClient.from("contrato_eventos").insert({
+        contrato_id: contrato.id,
+        loja_id: contrato.loja_id,
+        tipo: 'chamado_aberto',
+        modulo: 'pos_venda',
+        titulo: 'Novo chamado aberto',
+        descricao: chamadoForm.descricao.slice(0, 200),
+        visivel_cliente: true,
+      });
       toast.success("Chamado aberto com sucesso!");
       setIsAbrirChamadoOpen(false);
       loadContractDetails(contrato.id);
