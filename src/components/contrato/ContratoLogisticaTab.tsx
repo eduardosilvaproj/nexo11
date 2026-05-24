@@ -294,6 +294,16 @@ export function ContratoLogisticaTab({ contratoId }: Props) {
           </Card>
         </div>
       )}
+
+      <div className="mt-6">
+        <OperationalAttachments 
+          contratoId={contratoId} 
+          modulo="logistica" 
+          title="Evidências de Entrega e Logística" 
+          entidadeId={entrega?.id}
+          entidadeTipo="entrega"
+        />
+      </div>
     </>
   );
 }
