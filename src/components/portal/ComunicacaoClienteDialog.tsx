@@ -147,13 +147,13 @@ export function ComunicacaoClienteDialog({ open, onOpenChange, contratoId, clien
         msg = `Olá ${vars.cliente_nome}! Temos uma solicitação de assinatura pendente no seu portal. Por favor, acesse e realize o aceite digital: ${vars.portal_link}`;
         break;
       case "entrega_agendada":
-        const entrega = agendamentos?.find(a => a.tipo === "entrega") || agendamentos?.[0];
-        const dataE = entrega ? format(new Date(entrega.data_agendamento), "dd/MM/yyyy") : "[data]";
+        const entrega = agendamentos?.find(a => (a as any).tipo === "entrega") || agendamentos?.[0];
+        const dataE = entrega ? format(new Date(entrega.data), "dd/MM/yyyy") : "[data]";
         msg = `Olá ${vars.cliente_nome}! Sua entrega foi agendada para o dia ${dataE}. Detalhes no seu portal: ${vars.portal_link}`;
         break;
       case "montagem_agendada":
-        const montagem = agendamentos?.find(a => a.tipo === "montagem") || agendamentos?.[0];
-        const dataM = montagem ? format(new Date(montagem.data_agendamento), "dd/MM/yyyy") : "[data]";
+        const montagem = agendamentos?.find(a => (a as any).tipo === "montagem") || agendamentos?.[0];
+        const dataM = montagem ? format(new Date(montagem.data), "dd/MM/yyyy") : "[data]";
         msg = `Olá ${vars.cliente_nome}! Sua montagem foi agendada para o dia ${dataM}. Detalhes no seu portal: ${vars.portal_link}`;
         break;
       case "pos_venda":
