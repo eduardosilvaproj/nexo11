@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Package, Plus, Search, Filter } from "lucide-react";
@@ -17,10 +16,10 @@ import { AlmoxarifadoStats } from "@/components/almoxarifado/AlmoxarifadoStats";
 import { AlmoxarifadoTable } from "@/components/almoxarifado/AlmoxarifadoTable";
 import { ItemFormDialog } from "@/components/almoxarifado/ItemFormDialog";
 import { toast } from "sonner";
+import { canPerform } from "@/lib/permissions";
 
 export default function Almoxarifado() {
   const { perfil, roles, loading: authLoading } = useAuth();
-  const { canPerform } = require("@/lib/permissions"); // Fix build error TS1308
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("todos");
   const [isItemDialogOpen, setIsItemDialogOpen] = useState(false);
