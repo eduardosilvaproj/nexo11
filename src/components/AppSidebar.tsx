@@ -24,6 +24,7 @@ import {
   Settings,
   LogOut,
   MessageSquare,
+  Package,
 } from "lucide-react";
 import {
   Sidebar,
@@ -67,6 +68,7 @@ const gestao: MenuItem[] = [
   { title: "Financeiro", url: "/financeiro", icon: DollarSign },
   { title: "Comissões", url: "/comissoes", icon: Percent },
   { title: "Compras", url: "/compras", icon: ShoppingCart },
+  { title: "Almoxarifado", url: "/almoxarifado", icon: Package, roles: ["admin", "gerente", "franqueador"] },
   { title: "Equipe", url: "/equipe", icon: UserCog },
   { title: "Lojas", url: "/lojas", icon: Building2, roles: ["admin", "franqueador"] },
   { title: "Cond. Pagamento", url: "/configuracoes/pagamento", icon: Settings, roles: ["admin", "gerente"] },
