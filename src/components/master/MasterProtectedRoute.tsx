@@ -4,8 +4,9 @@ import { usePlatformAdmin } from "@/hooks/usePlatformAdmin";
 import { useAuth } from "@/contexts/AuthContext";
 
 export function MasterProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, roles, loading: authLoading } = useAuth();
   const { isAdmin, isSupport, loading } = usePlatformAdmin();
+  const hasMasterRole = roles.includes("admin_master" as never) || roles.includes("admin" as never);
 
   if (authLoading || loading) {
     return (
@@ -15,7 +16,7 @@ export function MasterProtectedRoute({ children }: { children: React.ReactNode }
     );
   }
   if (!user) return <Navigate to="/login" replace />;
-  if (!isAdmin && !isSupport) return <Navigate to="/sem-permissao" replace />;
+  if (!isAdmin && !isSupport && !hasMasterRole) return <Navigate to="/sem-permissao" replace />;
 
   return <>{children}</>;
 }
