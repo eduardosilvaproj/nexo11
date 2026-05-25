@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export function MasterProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, roles, loading: authLoading } = useAuth();
   const { isAdmin, isSupport, loading } = usePlatformAdmin();
-  const hasMasterRole = roles.includes("admin_master" as never) || roles.includes("admin" as never);
+  const hasMasterRole = roles.includes("admin_master") || roles.includes("admin");
 
   if (authLoading || loading) {
     return (
