@@ -12,10 +12,9 @@ serve(async (req) => {
 
   try {
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    console.log("OpenAI key starts with:", OPENAI_API_KEY?.substring(0, 7));
     if (!OPENAI_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "OPENAI_API_KEY não configurada no servidor" }),
+        JSON.stringify({ error: "OPENAI_API_KEY não configurada" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -28,6 +27,32 @@ serve(async (req) => {
       );
     }
 
+    // 1. Upload do PDF como file
+    const pdfBytes = Uint8Array.from(atob(pdf_base64), c => c.charCodeAt(0));
+    const blob = new Blob([pdfBytes], { type: "application/pdf" });
+    const formData = new FormData();
+    formData.append("file", blob, "projeto.pdf");
+    formData.append("purpose", "assistants");
+
+    const uploadRes = await fetch("https://api.openai.com/v1/files", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${OPENAI_API_KEY}` },
+      body: formData,
+    });
+
+    const uploadText = await uploadRes.text();
+    if (!uploadRes.ok) {
+      console.error("Upload error:", uploadRes.status, uploadText);
+      return new Response(
+        JSON.stringify({ error: `Erro no upload: ${uploadText.substring(0, 200)}` }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const uploadData = JSON.parse(uploadText);
+    const fileId = uploadData.id;
+
+    // 2. Chamar GPT-4o com o file anexado
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -42,14 +67,11 @@ serve(async (req) => {
             content: [
               {
                 type: "text",
-                text: 'Analise este PDF de projeto de móveis planejados. Identifique todos os móveis presentes. Retorne APENAS um JSON válido neste formato: {"moveis":[{"ambiente":"nome do ambiente","tipo":"aereo|base|torre|painel|nicho|gaveta|outro","descricao":"descrição do móvel","largura":0,"altura":0,"profundidade":0,"quantidade":1}],"observacoes_gerais":["observação 1"]}. Medidas em centímetros.',
+                text: 'Analise este PDF de projeto de móveis planejados. Identifique todos os móveis presentes com suas medidas. Retorne APENAS um JSON válido neste formato: {"moveis":[{"ambiente":"nome do ambiente","tipo":"aereo|base|torre|painel|nicho|gaveta|outro","descricao":"descrição do móvel","largura":0,"altura":0,"profundidade":0,"quantidade":1}],"observacoes_gerais":["observação 1"]}. Medidas em centímetros. Se não conseguir identificar uma medida, use 0.',
               },
               {
-                type: "image_url",
-                image_url: {
-                  url: `data:application/pdf;base64,${pdf_base64}`,
-                  detail: "high",
-                },
+                type: "file",
+                file: { file_id: fileId },
               },
             ],
           },
@@ -60,6 +82,12 @@ serve(async (req) => {
     });
 
     const responseText = await response.text();
+
+    // 3. Limpar: deletar o file após uso
+    fetch(`https://api.openai.com/v1/files/${fileId}`, {
+      method: "DELETE",
+      headers: { "Authorization": `Bearer ${OPENAI_API_KEY}` },
+    }).catch(() => {});
 
     if (!response.ok) {
       console.error("OpenAI API error:", response.status, responseText);
