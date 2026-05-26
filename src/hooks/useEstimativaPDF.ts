@@ -24,18 +24,22 @@ export const useEstimativaPDF = () => {
         .from('estimativas')
         .getPublicUrl(fileName);
 
-      setProgress('Analisando projeto...');
+      setProgress('Analisando projeto com IA...');
 
-      const { data, error: fnError } = await supabase.functions.invoke('estimativa-pdf', {
-        body: { file_path: fileName },
-      });
+      const { data: resposta, error: fnError } = await supabase.functions.invoke(
+        'estimativa-pdf',
+        { body: { file_path: fileName } }
+      );
 
-      if (fnError) throw fnError;
-      if (!data || data.error) {
-        throw new Error(data?.error || 'Erro na análise do PDF');
+      if (fnError) {
+        const detail = typeof fnError === 'object' && 'context' in fnError
+          ? JSON.stringify(fnError)
+          : fnError.message;
+        throw new Error(`Edge Function erro: ${detail}`);
       }
+      if (resposta?.error) throw new Error(resposta.error);
 
-      const analise = data;
+      const analise = resposta;
 
       setProgress('Calculando estimativas...');
       const moveis: MovelIdentificado[] = analise.moveis.map((m: any, idx: number) => ({
@@ -51,16 +55,31 @@ export const useEstimativaPDF = () => {
       }));
 
       const estimativas = moveis.map(movel => {
-        const area = ((movel.largura || 0) * (movel.altura || 0)) / 10000;
-        const preco_m2_min = getTabelaPreco(movel.tipo).min;
-        const preco_m2_max = getTabelaPreco(movel.tipo).max;
+        let largura = movel.largura || 0;
+        let altura = movel.altura || 0;
+
+        if (largura > 0 && largura < 10) largura = largura * 100;
+        if (altura > 0 && altura < 10) altura = altura * 100;
+
+        const area = (largura * altura) / 10000;
+        const tabela = getTabelaPreco(movel.tipo);
+
+        if (area < 0.1) {
+          return {
+            movel_id: movel.id,
+            preco_minimo: tabela.fixo_min * movel.quantidade,
+            preco_maximo: tabela.fixo_max * movel.quantidade,
+            preco_medio: ((tabela.fixo_min + tabela.fixo_max) / 2) * movel.quantidade,
+            base_calculo: `Estimativa por tipo (${movel.tipo}) × ${movel.quantidade} un`
+          };
+        }
 
         return {
           movel_id: movel.id,
-          preco_minimo: area * preco_m2_min * movel.quantidade,
-          preco_maximo: area * preco_m2_max * movel.quantidade,
-          preco_medio: area * ((preco_m2_min + preco_m2_max) / 2) * movel.quantidade,
-          base_calculo: `${area.toFixed(2)}m² × R$ ${preco_m2_min}-${preco_m2_max}/m²`
+          preco_minimo: area * tabela.min * movel.quantidade,
+          preco_maximo: area * tabela.max * movel.quantidade,
+          preco_medio: area * ((tabela.min + tabela.max) / 2) * movel.quantidade,
+          base_calculo: `${area.toFixed(2)}m² × R$ ${tabela.min}-${tabela.max}/m²`
         };
       });
 
@@ -97,20 +116,43 @@ export const useEstimativaPDF = () => {
   return { analisarPDF, loading, progress, error };
 };
 
-function getTabelaPreco(tipo: string): { min: number; max: number } {
-  const tabela: Record<string, { min: number; max: number }> = {
-    aereo: { min: 800, max: 1500 },
-    base: { min: 1000, max: 1800 },
-    torre: { min: 1200, max: 2200 },
-    painel: { min: 600, max: 1200 },
-    nicho: { min: 500, max: 1000 },
-    gaveta: { min: 400, max: 800 },
-    prateleira: { min: 300, max: 700 },
-    guarda_roupa: { min: 900, max: 1600 },
-    bancada: { min: 1100, max: 2000 },
-    rack: { min: 700, max: 1300 },
-    divisoria: { min: 500, max: 1000 },
-    outro: { min: 700, max: 1400 }
+function getTabelaPreco(tipo: string): { min: number; max: number; fixo_min: number; fixo_max: number } {
+  const normalizado = normalizarTipo(tipo);
+  const tabela: Record<string, { min: number; max: number; fixo_min: number; fixo_max: number }> = {
+    aereo:        { min: 1200, max: 2250, fixo_min: 1800, fixo_max: 3750 },
+    base:         { min: 1500, max: 2700, fixo_min: 3000, fixo_max: 6750 },
+    torre:        { min: 1800, max: 3300, fixo_min: 4500, fixo_max: 9000 },
+    painel:       { min: 900,  max: 1800, fixo_min: 2250, fixo_max: 5250 },
+    nicho:        { min: 750,  max: 1500, fixo_min: 900,  fixo_max: 2250 },
+    gaveta:       { min: 600,  max: 1200, fixo_min: 1200, fixo_max: 2700 },
+    prateleira:   { min: 450,  max: 1050, fixo_min: 600,  fixo_max: 1500 },
+    guarda_roupa: { min: 1800, max: 3300, fixo_min: 5500, fixo_max: 12000 },
+    bancada:      { min: 1200, max: 2400, fixo_min: 2500, fixo_max: 5500 },
+    rack:         { min: 1000, max: 2000, fixo_min: 2000, fixo_max: 4500 },
+    divisoria:    { min: 900,  max: 1800, fixo_min: 2000, fixo_max: 5000 },
+    outro:        { min: 1050, max: 2100, fixo_min: 2250, fixo_max: 5250 }
   };
-  return tabela[tipo] || tabela.outro;
+  return tabela[normalizado] || tabela.outro;
+}
+
+function normalizarTipo(tipo: string): string {
+  const t = (tipo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  const mapa: Record<string, string> = {
+    'aereo': 'aereo', 'suspenso': 'aereo',
+    'base': 'base', 'balcao': 'base',
+    'bancada': 'bancada',
+    'torre': 'torre', 'coluna': 'torre', 'despenseiro': 'torre',
+    'painel': 'painel',
+    'rack': 'rack',
+    'nicho': 'nicho',
+    'gaveta': 'gaveta', 'gaveteiro': 'gaveta',
+    'prateleira': 'prateleira',
+    'guarda roupa': 'guarda_roupa', 'guarda-roupa': 'guarda_roupa', 'roupeiro': 'guarda_roupa', 'armario': 'guarda_roupa',
+    'divisoria': 'divisoria',
+  };
+  if (mapa[t]) return mapa[t];
+  for (const [chave, valor] of Object.entries(mapa)) {
+    if (t.includes(chave) || chave.includes(t)) return valor;
+  }
+  return 'outro';
 }
