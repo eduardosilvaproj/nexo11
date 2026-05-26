@@ -106,6 +106,10 @@ function getTabelaPreco(tipo: string): { min: number; max: number } {
     nicho: { min: 500, max: 1000 },
     gaveta: { min: 400, max: 800 },
     prateleira: { min: 300, max: 700 },
+    guarda_roupa: { min: 900, max: 1600 },
+    bancada: { min: 1100, max: 2000 },
+    rack: { min: 700, max: 1300 },
+    divisoria: { min: 500, max: 1000 },
     outro: { min: 700, max: 1400 }
   };
   return tabela[tipo] || tabela.outro;

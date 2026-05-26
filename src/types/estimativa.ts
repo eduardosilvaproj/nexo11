@@ -3,7 +3,7 @@
 export interface MovelIdentificado {
   id: string;
   ambiente: string;
-  tipo: 'aereo' | 'base' | 'torre' | 'painel' | 'nicho' | 'gaveta' | 'prateleira' | 'outro';
+  tipo: 'aereo' | 'base' | 'torre' | 'painel' | 'nicho' | 'gaveta' | 'prateleira' | 'guarda_roupa' | 'bancada' | 'rack' | 'divisoria' | 'outro';
   descricao: string;
   largura?: number;
   altura?: number;
