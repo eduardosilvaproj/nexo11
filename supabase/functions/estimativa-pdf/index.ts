@@ -90,7 +90,7 @@ serve(async (req) => {
             content: [
               {
                 type: "text",
-                text: 'Analise este PDF de projeto executivo de móveis planejados. Extraia:\n\n1. DADOS DO PROJETO (se disponíveis no carimbo, capa ou legendas):\n   - nome_cliente: nome do cliente/proprietário\n   - nome_obra: nome da obra ou endereço\n   - arquiteto: nome do arquiteto(a) ou escritório\n   - data_projeto: data do projeto\n\n2. MÓVEIS: Para cada módulo/peça identificada:\n   - ambiente, tipo, quantidade\n   - Tipos válidos: aereo, base, torre, painel, nicho, gaveta, prateleira, guarda_roupa, bancada, rack, divisoria, outro\n   - Identifique o MÁXIMO de peças possível — cada módulo separado conta como um item\n\nRetorne APENAS JSON: {"dados_projeto":{"nome_cliente":"","nome_obra":"","arquiteto":"","data_projeto":""},"moveis":[{"ambiente":"","tipo":"","descricao":"","largura":0,"altura":0,"profundidade":0,"quantidade":1}],"observacoes_gerais":[]}\n\nSe algum dado do projeto não estiver visível, deixe string vazia.',
+                text: 'Analise este PDF de projeto executivo de móveis planejados. Extraia:\n\n1. DADOS DO PROJETO (se disponíveis no carimbo, capa ou legendas):\n   - nome_cliente: nome do cliente/proprietário\n   - nome_obra: nome da obra ou endereço\n   - arquiteto: nome do arquiteto(a) ou escritório\n   - data_projeto: data do projeto\n\n2. MÓVEIS: Para cada módulo/peça identificada:\n   - ambiente, tipo, quantidade\n   - Tipos válidos: aereo, base, torre, painel, nicho, gaveta, prateleira, guarda_roupa, bancada, rack, divisoria, outro\n   - Identifique o MÁXIMO de peças possível — cada módulo separado conta como um item\n\nIMPORTANTE: Liste CADA módulo/peça separadamente. Um ambiente pode ter 5, 10 ou mais itens. NÃO agrupe múltiplos módulos em um único item. Por exemplo, uma cozinha típica tem: 3-5 aéreos + 2-3 bases + 1 torre + bancada = 7-10 itens separados.\n\nRetorne APENAS JSON: {"dados_projeto":{"nome_cliente":"","nome_obra":"","arquiteto":"","data_projeto":""},"moveis":[{"ambiente":"","tipo":"","descricao":"","largura":0,"altura":0,"profundidade":0,"quantidade":1}],"observacoes_gerais":[]}\n\nSe algum dado do projeto não estiver visível, deixe string vazia.',
               },
               {
                 type: "file",
@@ -140,8 +140,61 @@ serve(async (req) => {
 
     const analise = JSON.parse(jsonMatch[0]);
 
+    const PRECOS: Record<string, { min: number; max: number }> = {
+      aereo: { min: 3600, max: 7500 },
+      base: { min: 6000, max: 13500 },
+      torre: { min: 9000, max: 18000 },
+      painel: { min: 4500, max: 10500 },
+      nicho: { min: 1800, max: 4500 },
+      gaveta: { min: 2400, max: 5400 },
+      prateleira: { min: 1200, max: 3000 },
+      guarda_roupa: { min: 11000, max: 24000 },
+      bancada: { min: 5000, max: 11000 },
+      rack: { min: 4000, max: 9000 },
+      divisoria: { min: 4000, max: 10000 },
+      outro: { min: 4500, max: 10500 },
+    };
+
+    function normalizarTipo(tipo: string): string {
+      const t = (tipo || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      const mapa: Record<string, string> = {
+        aereo: "aereo", suspenso: "aereo",
+        base: "base", balcao: "base",
+        bancada: "bancada",
+        torre: "torre", coluna: "torre", despenseiro: "torre",
+        painel: "painel",
+        rack: "rack",
+        nicho: "nicho",
+        gaveta: "gaveta", gaveteiro: "gaveta",
+        prateleira: "prateleira",
+        "guarda roupa": "guarda_roupa", "guarda-roupa": "guarda_roupa", roupeiro: "guarda_roupa", armario: "guarda_roupa",
+        divisoria: "divisoria",
+      };
+      if (mapa[t]) return mapa[t];
+      for (const [chave, valor] of Object.entries(mapa)) {
+        if (t.includes(chave) || chave.includes(t)) return valor;
+      }
+      return "outro";
+    }
+
+    const estimativas = (analise.moveis || []).map((m: any, idx: number) => {
+      const tipoNorm = normalizarTipo(m.tipo);
+      const preco = PRECOS[tipoNorm] || PRECOS.outro;
+      const qtd = m.quantidade || 1;
+      return {
+        movel_id: `movel_${idx}`,
+        preco_minimo: preco.min * qtd,
+        preco_maximo: preco.max * qtd,
+        preco_medio: ((preco.min + preco.max) / 2) * qtd,
+      };
+    });
+
+    const total_minimo = estimativas.reduce((s: number, e: any) => s + e.preco_minimo, 0);
+    const total_maximo = estimativas.reduce((s: number, e: any) => s + e.preco_maximo, 0);
+    const total_medio = estimativas.reduce((s: number, e: any) => s + e.preco_medio, 0);
+
     return new Response(
-      JSON.stringify(analise),
+      JSON.stringify({ ...analise, estimativas, total_minimo, total_maximo, total_medio }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {

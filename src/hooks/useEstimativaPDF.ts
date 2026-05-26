@@ -55,38 +55,17 @@ export const useEstimativaPDF = () => {
         alertas: []
       }));
 
-      const estimativas = moveis.map(movel => {
-        let largura = movel.largura || 0;
-        let altura = movel.altura || 0;
+      const estimativas = (analise.estimativas || []).map((e: any) => ({
+        movel_id: e.movel_id,
+        preco_minimo: e.preco_minimo,
+        preco_maximo: e.preco_maximo,
+        preco_medio: e.preco_medio,
+        base_calculo: e.base_calculo || '',
+      }));
 
-        if (largura > 0 && largura < 10) largura = largura * 100;
-        if (altura > 0 && altura < 10) altura = altura * 100;
-
-        const area = (largura * altura) / 10000;
-        const tabela = getTabelaPreco(movel.tipo);
-
-        if (area < 0.1) {
-          return {
-            movel_id: movel.id,
-            preco_minimo: tabela.fixo_min * movel.quantidade,
-            preco_maximo: tabela.fixo_max * movel.quantidade,
-            preco_medio: ((tabela.fixo_min + tabela.fixo_max) / 2) * movel.quantidade,
-            base_calculo: `Estimativa por tipo × ${movel.quantidade} un`
-          };
-        }
-
-        return {
-          movel_id: movel.id,
-          preco_minimo: area * tabela.min * movel.quantidade,
-          preco_maximo: area * tabela.max * movel.quantidade,
-          preco_medio: area * ((tabela.min + tabela.max) / 2) * movel.quantidade,
-          base_calculo: `${area.toFixed(2)}m² × R$ ${tabela.min}-${tabela.max}/m²`
-        };
-      });
-
-      const total_minimo = estimativas.reduce((sum, e) => sum + e.preco_minimo, 0);
-      const total_maximo = estimativas.reduce((sum, e) => sum + e.preco_maximo, 0);
-      const total_medio = estimativas.reduce((sum, e) => sum + e.preco_medio, 0);
+      const total_minimo = analise.total_minimo ?? estimativas.reduce((s: number, e: any) => s + e.preco_minimo, 0);
+      const total_maximo = analise.total_maximo ?? estimativas.reduce((s: number, e: any) => s + e.preco_maximo, 0);
+      const total_medio = analise.total_medio ?? estimativas.reduce((s: number, e: any) => s + e.preco_medio, 0);
 
       const relatorio: RelatorioEstimativa = {
         id: crypto.randomUUID(),
