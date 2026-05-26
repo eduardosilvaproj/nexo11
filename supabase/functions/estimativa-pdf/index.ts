@@ -140,8 +140,61 @@ serve(async (req) => {
 
     const analise = JSON.parse(jsonMatch[0]);
 
+    const PRECOS: Record<string, { min: number; max: number }> = {
+      aereo: { min: 3600, max: 7500 },
+      base: { min: 6000, max: 13500 },
+      torre: { min: 9000, max: 18000 },
+      painel: { min: 4500, max: 10500 },
+      nicho: { min: 1800, max: 4500 },
+      gaveta: { min: 2400, max: 5400 },
+      prateleira: { min: 1200, max: 3000 },
+      guarda_roupa: { min: 11000, max: 24000 },
+      bancada: { min: 5000, max: 11000 },
+      rack: { min: 4000, max: 9000 },
+      divisoria: { min: 4000, max: 10000 },
+      outro: { min: 4500, max: 10500 },
+    };
+
+    function normalizarTipo(tipo: string): string {
+      const t = (tipo || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      const mapa: Record<string, string> = {
+        aereo: "aereo", suspenso: "aereo",
+        base: "base", balcao: "base",
+        bancada: "bancada",
+        torre: "torre", coluna: "torre", despenseiro: "torre",
+        painel: "painel",
+        rack: "rack",
+        nicho: "nicho",
+        gaveta: "gaveta", gaveteiro: "gaveta",
+        prateleira: "prateleira",
+        "guarda roupa": "guarda_roupa", "guarda-roupa": "guarda_roupa", roupeiro: "guarda_roupa", armario: "guarda_roupa",
+        divisoria: "divisoria",
+      };
+      if (mapa[t]) return mapa[t];
+      for (const [chave, valor] of Object.entries(mapa)) {
+        if (t.includes(chave) || chave.includes(t)) return valor;
+      }
+      return "outro";
+    }
+
+    const estimativas = (analise.moveis || []).map((m: any, idx: number) => {
+      const tipoNorm = normalizarTipo(m.tipo);
+      const preco = PRECOS[tipoNorm] || PRECOS.outro;
+      const qtd = m.quantidade || 1;
+      return {
+        movel_id: `movel_${idx}`,
+        preco_minimo: preco.min * qtd,
+        preco_maximo: preco.max * qtd,
+        preco_medio: ((preco.min + preco.max) / 2) * qtd,
+      };
+    });
+
+    const total_minimo = estimativas.reduce((s: number, e: any) => s + e.preco_minimo, 0);
+    const total_maximo = estimativas.reduce((s: number, e: any) => s + e.preco_maximo, 0);
+    const total_medio = estimativas.reduce((s: number, e: any) => s + e.preco_medio, 0);
+
     return new Response(
-      JSON.stringify(analise),
+      JSON.stringify({ ...analise, estimativas, total_minimo, total_maximo, total_medio }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
