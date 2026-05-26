@@ -168,79 +168,80 @@ const gerarHTML = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup[]): str
   .eyebrow{font-family:'Inter',sans-serif;font-size:10px;font-weight:500;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);}
 
   /* HERO */
-  .hero{position:relative;height:760px;overflow:hidden;color:#F5F3EF;}
+  .hero{position:relative;overflow:hidden;color:#F5F3EF;}
   .hero-img{position:absolute;inset:0;background:url('${HERO_IMG}') center/cover no-repeat;}
   .hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,18,15,.55) 0%,rgba(20,18,15,.45) 40%,rgba(20,18,15,.85) 100%);}
-  .hero-inner{position:relative;height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:56px 72px;}
+  .hero-inner{position:relative;display:flex;flex-direction:column;gap:24px;padding:32px 40px 24px;}
   .hero-top{display:flex;justify-content:space-between;align-items:center;}
-  .brand{font-family:'Inter',sans-serif;font-size:18px;font-weight:600;letter-spacing:.5em;}
-  .hero-tag{font-family:'Inter',sans-serif;font-size:10px;letter-spacing:.3em;text-transform:uppercase;opacity:.75;}
+  .brand{font-family:'Inter',sans-serif;font-size:14px;font-weight:600;letter-spacing:.5em;}
+  .hero-tag{font-family:'Inter',sans-serif;font-size:9px;letter-spacing:.3em;text-transform:uppercase;opacity:.75;}
   .hero-body{max-width:780px;}
-  .hero-eyebrow{color:rgba(245,243,239,.7);font-family:'Inter',sans-serif;font-size:11px;letter-spacing:.4em;text-transform:uppercase;margin-bottom:28px;}
-  .hero h1{font-family:'Manrope',sans-serif;font-weight:200;font-size:84px;line-height:.98;letter-spacing:-.02em;margin-bottom:28px;}
+  .hero-eyebrow{color:rgba(245,243,239,.7);font-family:'Inter',sans-serif;font-size:9px;letter-spacing:.4em;text-transform:uppercase;margin-bottom:10px;}
+  .hero h1{font-family:'Manrope',sans-serif;font-weight:200;font-size:24px;line-height:1.05;letter-spacing:-.02em;margin-bottom:8px;}
   .hero h1 em{font-style:italic;font-weight:300;color:var(--champagne);}
-  .hero p{font-size:16px;font-weight:300;line-height:1.6;max-width:560px;color:rgba(245,243,239,.82);}
-  .hero-bottom{display:flex;justify-content:space-between;align-items:flex-end;gap:48px;}
-  .hero-date{font-family:'Inter',sans-serif;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:rgba(245,243,239,.6);}
-  .meta-row{display:flex;gap:14px;}
-  .meta-card{backdrop-filter:blur(14px);background:rgba(245,243,239,.08);border:1px solid rgba(245,243,239,.15);padding:18px 24px;min-width:180px;display:flex;flex-direction:column;gap:6px;}
-  .meta-lbl{font-family:'Inter',sans-serif;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:rgba(245,243,239,.6);}
-  .meta-val{font-size:15px;font-weight:400;color:#F5F3EF;}
+  .hero h2{font-family:'Manrope',sans-serif;font-weight:300;font-size:13px;line-height:1.5;color:rgba(245,243,239,.82);}
+  .hero p{font-size:12px;font-weight:300;line-height:1.5;max-width:560px;color:rgba(245,243,239,.82);}
+  .hero-bottom{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;}
+  .hero-date{font-family:'Inter',sans-serif;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:rgba(245,243,239,.6);}
+  .meta-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .meta-card{background:rgba(245,243,239,.08);border:1px solid rgba(245,243,239,.15);padding:8px 12px;min-width:120px;display:flex;flex-direction:column;gap:2px;}
+  .meta-lbl{font-family:'Inter',sans-serif;font-size:7px;letter-spacing:.3em;text-transform:uppercase;color:rgba(245,243,239,.6);}
+  .meta-val{font-size:11px;font-weight:400;color:#F5F3EF;}
 
   /* SECTION SHELL */
-  section{padding:120px 72px;}
-  .section-head{display:flex;flex-direction:column;gap:18px;margin-bottom:64px;max-width:720px;}
-  .section-head h2{font-family:'Manrope',sans-serif;font-weight:200;font-size:54px;line-height:1.05;letter-spacing:-.02em;color:var(--ink);}
+  section{padding:20px 40px;}
+  .section-head{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;max-width:720px;}
+  .section-head h2{font-family:'Manrope',sans-serif;font-weight:200;font-size:20px;line-height:1.05;letter-spacing:-.02em;color:var(--ink);}
   .section-head h2 em{font-style:italic;color:var(--olive);font-weight:300;}
-  .section-head p{font-size:15px;color:var(--ink-soft);max-width:520px;}
+  .section-head p{font-size:11px;color:var(--ink-soft);max-width:520px;line-height:1.5;}
 
   /* FAIXA */
-  .faixa-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
-  .tier{background:var(--paper);border:1px solid var(--line);padding:48px 36px;display:flex;flex-direction:column;gap:14px;transition:all .4s ease;}
-  .tier .tier-lbl{font-family:'Inter',sans-serif;font-size:10px;font-weight:500;letter-spacing:.35em;text-transform:uppercase;color:var(--muted);}
-  .tier .tier-val{font-family:'Manrope',sans-serif;font-size:38px;font-weight:300;color:var(--ink);letter-spacing:-.02em;margin-top:8px;}
-  .tier-line{width:32px;height:1px;background:var(--line);margin-top:18px;}
-  .tier.featured{background:var(--olive-deep);color:#F5F3EF;border-color:var(--olive-deep);box-shadow:0 30px 80px -30px rgba(42,51,28,.5);}
+  .faixa-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .tier{background:var(--paper);border:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;gap:6px;}
+  .tier .tier-lbl{font-family:'Inter',sans-serif;font-size:8px;font-weight:500;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);}
+  .tier .tier-val{font-family:'Manrope',sans-serif;font-size:18px;font-weight:300;color:var(--ink);letter-spacing:-.02em;margin-top:4px;}
+  .tier-line{width:24px;height:1px;background:var(--line);margin-top:6px;}
+  .tier.featured{background:var(--olive-deep);color:#F5F3EF;border-color:var(--olive-deep);}
   .tier.featured .tier-lbl{color:rgba(245,243,239,.6);}
   .tier.featured .tier-val{color:#F5F3EF;}
   .tier.featured .tier-line{background:var(--champagne);}
-  .faixa-note{margin-top:48px;padding:28px 32px;border-left:2px solid var(--champagne);background:var(--paper);font-size:13.5px;color:var(--ink-soft);line-height:1.7;max-width:820px;}
+  .faixa-note{margin-top:10px;padding:10px 12px;border-left:2px solid var(--champagne);background:var(--paper);font-size:10px;color:var(--ink-soft);line-height:1.5;}
 
   /* AMBIENTES */
-  .amb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
-  .amb-card{background:var(--paper);border:1px solid var(--line);padding:36px 32px;display:flex;flex-direction:column;gap:8px;transition:all .35s ease;}
-  .amb-icon{width:36px;height:36px;color:var(--olive);margin-bottom:18px;display:flex;align-items:center;justify-content:center;}
-  .amb-icon svg{width:28px;height:28px;}
-  .amb-nome{font-family:'Manrope',sans-serif;font-weight:400;font-size:20px;color:var(--ink);}
-  .amb-faixa{font-family:'Inter',sans-serif;font-size:12px;color:var(--muted);letter-spacing:.04em;}
-  .amb-med{font-family:'Manrope',sans-serif;font-size:28px;font-weight:300;color:var(--olive);margin-top:18px;letter-spacing:-.01em;}
-  .amb-lbl{font-family:'Inter',sans-serif;font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);}
+  .amb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+  .amb-card{background:var(--paper);border:1px solid var(--line);padding:10px 12px;display:flex;flex-direction:column;gap:2px;}
+  .amb-icon{width:20px;height:20px;color:var(--olive);margin-bottom:4px;display:flex;align-items:center;justify-content:center;}
+  .amb-icon svg{width:16px;height:16px;}
+  .amb-nome{font-family:'Manrope',sans-serif;font-weight:400;font-size:12px;color:var(--ink);}
+  .amb-faixa{font-family:'Inter',sans-serif;font-size:9px;color:var(--muted);letter-spacing:.04em;}
+  .amb-med{font-family:'Manrope',sans-serif;font-size:14px;font-weight:300;color:var(--olive);margin-top:4px;letter-spacing:-.01em;}
+  .amb-lbl{font-family:'Inter',sans-serif;font-size:7px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);}
 
   /* SOBRE */
   .sobre-section{background:var(--paper);}
   .sobre-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);}
-  .sobre-card{background:var(--paper);padding:44px 40px;display:flex;flex-direction:column;gap:14px;}
-  .sobre-ico{width:28px;height:28px;color:var(--champagne);margin-bottom:6px;}
-  .sobre-ico svg{width:24px;height:24px;}
-  .sobre-card h4{font-family:'Manrope',sans-serif;font-weight:500;font-size:18px;color:var(--ink);}
-  .sobre-card p{font-size:14px;color:var(--ink-soft);line-height:1.65;}
+  .sobre-card{background:var(--paper);padding:12px 14px;display:flex;flex-direction:column;gap:4px;}
+  .sobre-ico{width:18px;height:18px;color:var(--champagne);margin-bottom:2px;}
+  .sobre-ico svg{width:14px;height:14px;}
+  .sobre-card h4{font-family:'Manrope',sans-serif;font-weight:500;font-size:11px;color:var(--ink);}
+  .sobre-card p{font-size:10px;color:var(--ink-soft);line-height:1.5;}
 
   /* TIMELINE */
   .timeline{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--line);}
-  .tl-item{display:grid;grid-template-columns:120px 1fr;gap:48px;padding:32px 0;border-bottom:1px solid var(--line);align-items:baseline;}
-  .tl-num{font-family:'Manrope',sans-serif;font-weight:200;font-size:42px;color:var(--olive);letter-spacing:-.02em;}
-  .tl-body h4{font-family:'Manrope',sans-serif;font-weight:500;font-size:20px;color:var(--ink);margin-bottom:6px;}
-  .tl-body p{font-size:14px;color:var(--ink-soft);max-width:520px;}
+  .tl-item{display:grid;grid-template-columns:48px 1fr;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);align-items:baseline;}
+  .tl-num{font-family:'Manrope',sans-serif;font-weight:200;font-size:18px;color:var(--olive);letter-spacing:-.02em;}
+  .tl-body h4{font-family:'Manrope',sans-serif;font-weight:500;font-size:11px;color:var(--ink);margin-bottom:2px;}
+  .tl-body p{font-size:9.5px;color:var(--ink-soft);line-height:1.45;}
 
   /* FOOTER */
-  .footer{position:relative;background:#16140F;color:#F5F3EF;padding:96px 72px 48px;overflow:hidden;}
+  .footer{position:relative;background:#16140F;color:#F5F3EF;padding:20px 40px;overflow:hidden;}
   .footer-img{position:absolute;inset:0;background:url('${FOOTER_IMG}') center/cover no-repeat;opacity:.12;}
-  .footer-inner{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:end;}
-  .footer-left .brand{font-size:22px;letter-spacing:.5em;margin-bottom:28px;display:block;}
-  .footer-left p{font-family:'Manrope',sans-serif;font-weight:200;font-size:24px;line-height:1.4;letter-spacing:-.01em;max-width:380px;color:rgba(245,243,239,.85);}
-  .footer-right{display:flex;flex-direction:column;gap:12px;font-family:'Inter',sans-serif;font-size:13px;color:rgba(245,243,239,.75);}
-  .footer-right .lbl{font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:rgba(245,243,239,.45);margin-bottom:4px;}
-  .footer-base{position:relative;margin-top:72px;padding-top:24px;border-top:1px solid rgba(245,243,239,.1);display:flex;justify-content:space-between;font-family:'Inter',sans-serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(245,243,239,.45);}
+  .footer-inner{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:end;}
+  .footer-left .brand{font-size:13px;letter-spacing:.5em;margin-bottom:8px;display:block;}
+  .footer-left p{font-family:'Manrope',sans-serif;font-weight:200;font-size:12px;line-height:1.4;color:rgba(245,243,239,.85);}
+  .footer-right{display:flex;flex-direction:column;gap:4px;font-family:'Inter',sans-serif;font-size:10px;color:rgba(245,243,239,.75);}
+  .footer-right .lbl{font-size:7px;letter-spacing:.3em;text-transform:uppercase;color:rgba(245,243,239,.45);margin-bottom:1px;}
+  .footer-base{position:relative;margin-top:12px;padding-top:8px;border-top:1px solid rgba(245,243,239,.1);display:flex;justify-content:space-between;font-family:'Inter',sans-serif;font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:rgba(245,243,239,.45);}
 
   @media(max-width:780px){
     .hero{height:auto;}
@@ -367,35 +368,42 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
     container.style.position = 'absolute';
     container.style.left = '-9999px';
     container.style.top = '0';
-    container.style.width = '800px';
+    container.style.width = '760px';
     container.innerHTML = html;
     document.body.appendChild(container);
 
     try {
-      await new Promise((r) => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 800));
       const canvas = await html2canvas(container, {
         scale: 2,
         useCORS: true,
         logging: false,
-        width: 800,
+        width: 760,
+        windowWidth: 760,
         backgroundColor: '#F5F3EF',
       });
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      const pageHeight = pdf.internal.pageSize.getHeight();
 
-      if (pdfHeight <= pageHeight) {
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-      } else {
-        let position = 0;
-        while (position < pdfHeight) {
-          pdf.addImage(imgData, 'JPEG', 0, -position, pdfWidth, pdfHeight);
-          position += pageHeight;
-          if (position < pdfHeight) pdf.addPage();
-        }
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const margin = 10;
+      const usableWidth = 210 - margin * 2;
+      const usableHeight = 297 - margin * 2;
+
+      const imgWidth = usableWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let finalWidth = imgWidth;
+      let finalHeight = imgHeight;
+      if (imgHeight > usableHeight) {
+        const ratio = usableHeight / imgHeight;
+        finalHeight = usableHeight;
+        finalWidth = imgWidth * ratio;
       }
+
+      const offsetX = margin + (usableWidth - finalWidth) / 2;
+      const offsetY = margin;
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      pdf.addImage(imgData, 'JPEG', offsetX, offsetY, finalWidth, finalHeight);
       pdf.save(`estimativa-nexo-${Date.now()}.pdf`);
     } finally {
       document.body.removeChild(container);
