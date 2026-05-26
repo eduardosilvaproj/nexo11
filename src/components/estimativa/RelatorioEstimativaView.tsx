@@ -368,35 +368,42 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
     container.style.position = 'absolute';
     container.style.left = '-9999px';
     container.style.top = '0';
-    container.style.width = '800px';
+    container.style.width = '760px';
     container.innerHTML = html;
     document.body.appendChild(container);
 
     try {
-      await new Promise((r) => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 800));
       const canvas = await html2canvas(container, {
         scale: 2,
         useCORS: true,
         logging: false,
-        width: 800,
+        width: 760,
+        windowWidth: 760,
         backgroundColor: '#F5F3EF',
       });
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      const pageHeight = pdf.internal.pageSize.getHeight();
 
-      if (pdfHeight <= pageHeight) {
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-      } else {
-        let position = 0;
-        while (position < pdfHeight) {
-          pdf.addImage(imgData, 'JPEG', 0, -position, pdfWidth, pdfHeight);
-          position += pageHeight;
-          if (position < pdfHeight) pdf.addPage();
-        }
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const margin = 10;
+      const usableWidth = 210 - margin * 2;
+      const usableHeight = 297 - margin * 2;
+
+      const imgWidth = usableWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let finalWidth = imgWidth;
+      let finalHeight = imgHeight;
+      if (imgHeight > usableHeight) {
+        const ratio = usableHeight / imgHeight;
+        finalHeight = usableHeight;
+        finalWidth = imgWidth * ratio;
       }
+
+      const offsetX = margin + (usableWidth - finalWidth) / 2;
+      const offsetY = margin;
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      pdf.addImage(imgData, 'JPEG', offsetX, offsetY, finalWidth, finalHeight);
       pdf.save(`estimativa-nexo-${Date.now()}.pdf`);
     } finally {
       document.body.removeChild(container);
