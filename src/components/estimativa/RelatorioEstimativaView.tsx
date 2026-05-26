@@ -1,6 +1,8 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download, User, Building2, PenTool, Calendar } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import type { RelatorioEstimativa, MovelIdentificado } from '@/types/estimativa';
 
 interface RelatorioEstimativaViewProps {
