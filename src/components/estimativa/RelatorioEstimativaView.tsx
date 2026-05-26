@@ -103,11 +103,6 @@ const gerarHTML = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup[]): str
   .tier .nome{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#9ca3af;font-weight:600;}
   .tier .preco{font-size:24px;font-weight:800;margin-top:10px;color:#111;}
   .tier .sub{font-size:11px;color:#9ca3af;margin-top:6px;}
-  .tier.recomendado{background:linear-gradient(135deg,#0a0a0a,#1a1a2e);color:#fff;border-color:#0a0a0a;transform:scale(1.03);}
-  .tier.recomendado .nome{color:#fbbf24;}
-  .tier.recomendado .preco{color:#fff;font-size:28px;}
-  .tier.recomendado .sub{color:#9ca3af;}
-  .tier.recomendado .badge{display:inline-block;background:#fbbf24;color:#0a0a0a;font-size:9px;padding:3px 8px;border-radius:10px;font-weight:700;letter-spacing:1px;margin-bottom:8px;}
   .ambiente{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:10px;}
   .ambiente h3{font-size:16px;font-weight:700;}
   .ambiente .faixa{font-size:12px;color:#9ca3af;margin-top:3px;}
@@ -130,11 +125,11 @@ const gerarHTML = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup[]): str
     ${projetoHero}
   </div>
 
-  <h2 class="section">Investimento Estimado</h2>
+  <h2 class="section">Faixa de Investimento</h2>
   <div class="invest">
-    <div class="tier"><div class="nome">Essencial</div><div class="preco">${formatCurrency(relatorio.total_minimo)}</div><div class="sub">Acabamentos padrão</div></div>
-    <div class="tier recomendado"><span class="badge">Recomendado</span><div class="nome">Recomendado</div><div class="preco">${formatCurrency(relatorio.total_medio)}</div><div class="sub">Melhor custo-benefício</div></div>
-    <div class="tier"><div class="nome">Premium</div><div class="preco">${formatCurrency(relatorio.total_maximo)}</div><div class="sub">Acabamentos premium</div></div>
+    <div class="tier"><div class="nome">Mínimo</div><div class="preco">${formatCurrency(relatorio.total_minimo * 1.4)}</div></div>
+    <div class="tier"><div class="nome">Médio</div><div class="preco">${formatCurrency(relatorio.total_medio * 1.1)}</div></div>
+    <div class="tier"><div class="nome">Máximo</div><div class="preco">${formatCurrency(relatorio.total_maximo * 1.2)}</div></div>
   </div>
 
   <h2 class="section">Detalhamento por Ambiente</h2>
@@ -236,23 +231,19 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
       )}
 
       <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Investimento Estimado</h3>
+        <h3 className="text-lg font-semibold mb-4">Faixa de Investimento</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="text-center p-6 border rounded-lg">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Essencial</p>
-            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorio.total_minimo)}</p>
-            <p className="text-xs text-muted-foreground mt-2">Acabamentos padrão</p>
-          </div>
-          <div className="text-center p-6 rounded-lg bg-gradient-to-br from-slate-900 to-slate-800 text-white md:scale-105 shadow-lg">
-            <span className="inline-block bg-amber-400 text-slate-900 text-[10px] px-2 py-0.5 rounded-full font-bold tracking-wider mb-2">RECOMENDADO</span>
-            <p className="text-xs uppercase tracking-widest text-amber-400 font-semibold">Recomendado</p>
-            <p className="text-3xl font-bold mt-3">{formatCurrency(relatorio.total_medio)}</p>
-            <p className="text-xs text-slate-400 mt-2">Melhor custo-benefício</p>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Mínimo</p>
+            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorio.total_minimo * 1.4)}</p>
           </div>
           <div className="text-center p-6 border rounded-lg">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Premium</p>
-            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorio.total_maximo)}</p>
-            <p className="text-xs text-muted-foreground mt-2">Acabamentos premium</p>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Médio</p>
+            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorio.total_medio * 1.1)}</p>
+          </div>
+          <div className="text-center p-6 border rounded-lg">
+            <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Máximo</p>
+            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorio.total_maximo * 1.2)}</p>
           </div>
         </div>
       </Card>
