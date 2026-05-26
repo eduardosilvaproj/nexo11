@@ -1,7 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download, User, Building2, PenTool, Calendar } from 'lucide-react';
-import html2pdf from 'html2pdf.js';
 import type { RelatorioEstimativa, MovelIdentificado } from '@/types/estimativa';
 
 interface RelatorioEstimativaViewProps {
@@ -360,30 +359,15 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
   const d = relatorio.dados_projeto;
   const mostrarProjeto = temDadosProjeto(relatorio);
 
-  const baixarPDF = async () => {
+  const baixarPDF = () => {
     const html = gerarHTML(relatorio, grupos);
-    const container = document.createElement('div');
-    container.innerHTML = html;
-    container.style.position = 'fixed';
-    container.style.left = '-10000px';
-    container.style.top = '0';
-    container.style.width = '1100px';
-    document.body.appendChild(container);
-    try {
-      await (html2pdf as unknown as () => {
-        set: (o: Record<string, unknown>) => { from: (e: HTMLElement) => { save: () => Promise<void> } };
-      })()
-        .set({
-          margin: 0,
-          filename: `estimativa-nexo-${Date.now()}.pdf`,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, backgroundColor: '#F5F3EF' },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        })
-        .from(container)
-        .save();
-    } finally {
-      document.body.removeChild(container);
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, '_blank');
+    if (win) {
+      win.onload = () => {
+        setTimeout(() => win.print(), 500);
+      };
     }
   };
 
