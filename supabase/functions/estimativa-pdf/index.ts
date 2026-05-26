@@ -90,7 +90,7 @@ serve(async (req) => {
             content: [
               {
                 type: "text",
-                text: 'Analise este PDF de projeto executivo de móveis planejados. Identifique cada peça/módulo de mobiliário por ambiente.\n\nPara cada item, classifique o tipo como: aereo, base, torre, painel, nicho, gaveta, prateleira, guarda_roupa, bancada, rack, divisoria ou outro.\n\nUse descrições curtas e objetivas (ex: "guarda-roupa 6 portas", "torre quente", "bancada com cuba", "painel TV com LED").\n\nRetorne APENAS um JSON válido: {"moveis":[{"ambiente":"Nome do Ambiente","tipo":"tipo_aqui","descricao":"descrição curta e objetiva","largura":0,"altura":0,"profundidade":0,"quantidade":1}],"observacoes_gerais":["observação relevante"]}',
+                text: 'Analise este PDF de projeto executivo de móveis planejados. Para cada móvel/módulo identificado, extraia:\n- O ambiente onde está (ex: Cozinha, Sala de TV, Quarto Casal, Suite, Hall, Escritório)\n- O tipo: aereo, base, torre, painel, nicho, gaveta, prateleira, guarda_roupa, bancada, rack, divisoria ou outro\n- Quantidade\n\nIdentifique o MÁXIMO de peças possível — cada módulo separado conta como um item (ex: se a cozinha tem 3 aéreos, 2 bases e 1 torre, são 6 itens).\n\nRetorne APENAS JSON: {"moveis":[{"ambiente":"","tipo":"","descricao":"","largura":0,"altura":0,"profundidade":0,"quantidade":1}],"observacoes_gerais":[]}',
               },
               {
                 type: "file",
