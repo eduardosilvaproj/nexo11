@@ -75,6 +75,42 @@ const COMO_FUNCIONA = [
 const HERO_IMG = 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1600&q=80';
 const FOOTER_IMG = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=60';
 
+const SVG = {
+  cozinha: '<path d="M6 2v6M10 2v6M8 8v14M14 22V10a4 4 0 0 1 4-4v16"/>',
+  sala: '<path d="M3 12v6a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-6"/><path d="M5 12V9a3 3 0 0 1 3-3h8a3 3 0 0 1 3 3v3"/><path d="M5 19v2M19 19v2"/>',
+  tv: '<rect x="2" y="5" width="20" height="13" rx="2"/><path d="M8 21h8M12 18v3"/>',
+  closet: '<path d="M12 3a2 2 0 1 0 0 4"/><path d="M3 21l9-6 9 6"/><path d="M12 7v8"/>',
+  dormitorio: '<path d="M2 17v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4"/><path d="M2 17h20v4M6 11V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v3"/>',
+  escritorio: '<rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/>',
+  lavanderia: '<rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="14" r="4"/><path d="M8 7h.01M12 7h.01"/>',
+  banheiro: '<path d="M4 12h16v4a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path d="M6 12V6a2 2 0 0 1 4 0M6 20l-1 2M19 20l1 2"/>',
+  academia: '<path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"/>',
+  gourmet: '<path d="M14 11V3l4 4-4 4z"/><path d="M6 3v18M6 11h4M10 3v8"/>',
+  hall: '<rect x="5" y="3" width="14" height="18" rx="1"/><path d="M15 12h.01"/>',
+  varanda: '<path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"/>',
+  default: '<rect x="4" y="4" width="16" height="16" rx="1"/><path d="M4 10h16M10 4v16"/>',
+};
+
+const iconForAmbiente = (nome: string): string => {
+  const n = nome.toLowerCase();
+  if (/cozinh/.test(n)) return SVG.cozinha;
+  if (/tv|home|cinema/.test(n)) return SVG.tv;
+  if (/sala|estar|living/.test(n)) return SVG.sala;
+  if (/closet|vestidor/.test(n)) return SVG.closet;
+  if (/dormit|quart|suíte|suite/.test(n)) return SVG.dormitorio;
+  if (/escrit|home.?office|office/.test(n)) return SVG.escritorio;
+  if (/lavand|área de serviço|area de servico/.test(n)) return SVG.lavanderia;
+  if (/banh|wc|lavabo|toilet/.test(n)) return SVG.banheiro;
+  if (/academ|fitness|ginás/.test(n)) return SVG.academia;
+  if (/gourm|churras|bar/.test(n)) return SVG.gourmet;
+  if (/hall|entrada|foy/.test(n)) return SVG.hall;
+  if (/varand|terra|sacad|jard/.test(n)) return SVG.varanda;
+  return SVG.default;
+};
+
+const renderIcon = (paths: string) =>
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
+
 const gerarHTML = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup[]): string => {
   const data = new Date(relatorio.data_analise).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
   const d = relatorio.dados_projeto || {};
@@ -89,7 +125,7 @@ const gerarHTML = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup[]): str
     .map(
       (g) => `
       <article class="amb-card">
-        <div class="amb-icon">◇</div>
+        <div class="amb-icon">${renderIcon(iconForAmbiente(g.ambiente))}</div>
         <h3 class="amb-nome">${g.ambiente}</h3>
         <p class="amb-faixa">${formatCurrency(g.total_min)} — ${formatCurrency(g.total_max)}</p>
         <div class="amb-med">${formatCurrency(g.total_med)}</div>
@@ -98,8 +134,15 @@ const gerarHTML = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup[]): str
     )
     .join('');
 
+  const sobreIcons = [
+    '<circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/>',
+    '<path d="M3 12h4l3-9 4 18 3-9h4"/>',
+    '<path d="M4 4h16v16H4z"/><path d="M4 4l16 16"/>',
+    '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  ];
+
   const sobreHTML = SOBRE_ESTIMATIVA.map(
-    (s) => `<div class="sobre-card"><div class="sobre-dot"></div><h4>${s.titulo}</h4><p>${s.texto}</p></div>`
+    (s, i) => `<div class="sobre-card"><div class="sobre-ico">${renderIcon(sobreIcons[i])}</div><h4>${s.titulo}</h4><p>${s.texto}</p></div>`
   ).join('');
 
   const timelineHTML = COMO_FUNCIONA.map(
@@ -164,7 +207,8 @@ const gerarHTML = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup[]): str
   /* AMBIENTES */
   .amb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
   .amb-card{background:var(--paper);border:1px solid var(--line);padding:36px 32px;display:flex;flex-direction:column;gap:8px;transition:all .35s ease;}
-  .amb-icon{font-size:18px;color:var(--olive);margin-bottom:14px;}
+  .amb-icon{width:36px;height:36px;color:var(--olive);margin-bottom:18px;display:flex;align-items:center;justify-content:center;}
+  .amb-icon svg{width:28px;height:28px;}
   .amb-nome{font-family:'Manrope',sans-serif;font-weight:400;font-size:20px;color:var(--ink);}
   .amb-faixa{font-family:'Inter',sans-serif;font-size:12px;color:var(--muted);letter-spacing:.04em;}
   .amb-med{font-family:'Manrope',sans-serif;font-size:28px;font-weight:300;color:var(--olive);margin-top:18px;letter-spacing:-.01em;}
@@ -174,7 +218,8 @@ const gerarHTML = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup[]): str
   .sobre-section{background:var(--paper);}
   .sobre-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);}
   .sobre-card{background:var(--paper);padding:44px 40px;display:flex;flex-direction:column;gap:14px;}
-  .sobre-dot{width:6px;height:6px;background:var(--champagne);border-radius:50%;}
+  .sobre-ico{width:28px;height:28px;color:var(--champagne);margin-bottom:6px;}
+  .sobre-ico svg{width:24px;height:24px;}
   .sobre-card h4{font-family:'Manrope',sans-serif;font-weight:500;font-size:18px;color:var(--ink);}
   .sobre-card p{font-size:14px;color:var(--ink-soft);line-height:1.65;}
 
