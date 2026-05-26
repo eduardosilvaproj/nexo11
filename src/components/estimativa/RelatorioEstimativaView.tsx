@@ -1,7 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download, User, Building2, PenTool, Calendar } from 'lucide-react';
-// @ts-expect-error - html2pdf.js has no types
 import html2pdf from 'html2pdf.js';
 import type { RelatorioEstimativa, MovelIdentificado } from '@/types/estimativa';
 
