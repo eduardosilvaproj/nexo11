@@ -360,17 +360,30 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
   const d = relatorio.dados_projeto;
   const mostrarProjeto = temDadosProjeto(relatorio);
 
-  const baixarPDF = () => {
+  const baixarPDF = async () => {
     const html = gerarHTML(relatorio, grupos);
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `estimativa-nexo-${Date.now()}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    container.style.position = 'fixed';
+    container.style.left = '-10000px';
+    container.style.top = '0';
+    container.style.width = '1100px';
+    document.body.appendChild(container);
+    try {
+      await html2pdf()
+        .set({
+          margin: 0,
+          filename: `estimativa-nexo-${Date.now()}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, backgroundColor: '#F5F3EF' },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+        })
+        .from(container)
+        .save();
+    } finally {
+      document.body.removeChild(container);
+    }
   };
 
   return (
