@@ -11,11 +11,11 @@ serve(async (req) => {
   }
 
   try {
-    const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
-    console.log("GROQ key starts with:", GROQ_API_KEY?.substring(0, 8));
-    if (!GROQ_API_KEY) {
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    console.log("OpenAI key starts with:", OPENAI_API_KEY?.substring(0, 7));
+    if (!OPENAI_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "GROQ_API_KEY não configurada no servidor" }),
+        JSON.stringify({ error: "OPENAI_API_KEY não configurada no servidor" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -28,30 +28,33 @@ serve(async (req) => {
       );
     }
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${GROQ_API_KEY}`,
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "llama-3.2-90b-vision-preview",
+        model: "gpt-4o",
         messages: [
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: 'Analise este PDF de projeto e identifique móveis planejados. Retorne JSON: {"moveis":[{"ambiente":"","tipo":"aereo|base|torre|painel|nicho|gaveta|outro","descricao":"","largura":0,"altura":0,"profundidade":0,"quantidade":1}],"observacoes_gerais":[]}',
+                text: 'Analise este PDF de projeto de móveis planejados. Identifique todos os móveis presentes. Retorne APENAS um JSON válido neste formato: {"moveis":[{"ambiente":"nome do ambiente","tipo":"aereo|base|torre|painel|nicho|gaveta|outro","descricao":"descrição do móvel","largura":0,"altura":0,"profundidade":0,"quantidade":1}],"observacoes_gerais":["observação 1"]}. Medidas em centímetros.',
               },
               {
                 type: "image_url",
-                image_url: { url: `data:application/pdf;base64,${pdf_base64}` },
+                image_url: {
+                  url: `data:application/pdf;base64,${pdf_base64}`,
+                  detail: "high",
+                },
               },
             ],
           },
         ],
-        temperature: 0.3,
+        temperature: 0.2,
         max_tokens: 4000,
       }),
     });
@@ -59,8 +62,8 @@ serve(async (req) => {
     const responseText = await response.text();
 
     if (!response.ok) {
-      console.error("Groq API error:", response.status, responseText);
-      let errorMsg = `Groq API retornou status ${response.status}`;
+      console.error("OpenAI API error:", response.status, responseText);
+      let errorMsg = `OpenAI API retornou status ${response.status}`;
       try {
         const errorJson = JSON.parse(responseText);
         errorMsg = errorJson.error?.message || errorMsg;
