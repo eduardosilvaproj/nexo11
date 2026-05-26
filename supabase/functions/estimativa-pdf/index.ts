@@ -29,7 +29,7 @@ serve(async (req) => {
       );
     }
 
-    const { file_path } = await req.json();
+    const { file_path, file_hash } = await req.json();
     if (!file_path) {
       return new Response(
         JSON.stringify({ error: "Campo file_path é obrigatório" }),
@@ -39,11 +39,13 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // 0. Verificar cache
+    const cacheKey = file_hash || file_path;
+
+    // 0. Verificar cache pelo hash do conteúdo quando disponível
     const { data: cached } = await supabase
       .from("estimativas_cache")
       .select("resultado")
-      .eq("file_path", file_path)
+      .eq("file_path", cacheKey)
       .maybeSingle();
 
     if (cached) {
@@ -212,7 +214,7 @@ serve(async (req) => {
 
     // Salvar no cache
     await supabase.from("estimativas_cache").insert({
-      file_path,
+      file_path: cacheKey,
       resultado: resultadoFinal,
     });
 
