@@ -119,18 +119,18 @@ export const useEstimativaPDF = () => {
 function getTabelaPreco(tipo: string): { min: number; max: number; fixo_min: number; fixo_max: number } {
   const normalizado = normalizarTipo(tipo);
   const tabela: Record<string, { min: number; max: number; fixo_min: number; fixo_max: number }> = {
-    aereo:        { min: 1200, max: 2250, fixo_min: 1800, fixo_max: 3750 },
-    base:         { min: 1500, max: 2700, fixo_min: 3000, fixo_max: 6750 },
-    torre:        { min: 1800, max: 3300, fixo_min: 4500, fixo_max: 9000 },
-    painel:       { min: 900,  max: 1800, fixo_min: 2250, fixo_max: 5250 },
-    nicho:        { min: 750,  max: 1500, fixo_min: 900,  fixo_max: 2250 },
-    gaveta:       { min: 600,  max: 1200, fixo_min: 1200, fixo_max: 2700 },
-    prateleira:   { min: 450,  max: 1050, fixo_min: 600,  fixo_max: 1500 },
-    guarda_roupa: { min: 1800, max: 3300, fixo_min: 5500, fixo_max: 12000 },
-    bancada:      { min: 1200, max: 2400, fixo_min: 2500, fixo_max: 5500 },
-    rack:         { min: 1000, max: 2000, fixo_min: 2000, fixo_max: 4500 },
-    divisoria:    { min: 900,  max: 1800, fixo_min: 2000, fixo_max: 5000 },
-    outro:        { min: 1050, max: 2100, fixo_min: 2250, fixo_max: 5250 }
+    aereo:        { min: 1200, max: 2250, fixo_min: 3600,  fixo_max: 7500 },
+    base:         { min: 1500, max: 2700, fixo_min: 6000,  fixo_max: 13500 },
+    torre:        { min: 1800, max: 3300, fixo_min: 9000,  fixo_max: 18000 },
+    painel:       { min: 900,  max: 1800, fixo_min: 4500,  fixo_max: 10500 },
+    nicho:        { min: 750,  max: 1500, fixo_min: 1800,  fixo_max: 4500 },
+    gaveta:       { min: 600,  max: 1200, fixo_min: 2400,  fixo_max: 5400 },
+    prateleira:   { min: 450,  max: 1050, fixo_min: 1200,  fixo_max: 3000 },
+    guarda_roupa: { min: 1800, max: 3300, fixo_min: 11000, fixo_max: 24000 },
+    bancada:      { min: 1200, max: 2400, fixo_min: 5000,  fixo_max: 11000 },
+    rack:         { min: 1000, max: 2000, fixo_min: 4000,  fixo_max: 9000 },
+    divisoria:    { min: 900,  max: 1800, fixo_min: 4000,  fixo_max: 10000 },
+    outro:        { min: 1050, max: 2100, fixo_min: 4500,  fixo_max: 10500 }
   };
   return tabela[normalizado] || tabela.outro;
 }
