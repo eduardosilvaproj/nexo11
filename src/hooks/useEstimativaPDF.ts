@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { RelatorioEstimativa, MovelIdentificado } from '@/types/estimativa';
 
-const GROQ_API_KEY = 'gsk_NOVA_CHAVE_AQUI'; // gere em console.groq.com
-
 export const useEstimativaPDF = () => {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState('');
@@ -41,38 +39,16 @@ export const useEstimativaPDF = () => {
 
       setProgress('Analisando projeto...');
       
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${GROQ_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: 'llama-3.2-90b-vision-preview',
-          messages: [{
-            role: 'user',
-            content: [
-              { type: 'text', text: 'Analise este PDF de projeto e identifique móveis planejados. Retorne JSON: {"moveis":[{"ambiente":"","tipo":"aereo|base|torre|painel|nicho|gaveta|outro","descricao":"","largura":0,"altura":0,"profundidade":0,"quantidade":1}],"observacoes_gerais":[]}' },
-              { type: 'image_url', image_url: { url: `data:application/pdf;base64,${base64}` } }
-            ]
-          }],
-          temperature: 0.3,
-          max_tokens: 4000
-        })
+      const { data, error: fnError } = await supabase.functions.invoke('estimativa-pdf', {
+        body: { pdf_base64: base64 },
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || 'Erro na API');
+      if (fnError) throw fnError;
+      if (!data || data.error) {
+        throw new Error(data?.error || 'Erro na análise do PDF');
       }
 
-      const result = await response.json();
-      const text = result.choices[0].message.content;
-
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error('Resposta inválida');
-
-      const analise = JSON.parse(jsonMatch[0]);
+      const analise = data;
 
       setProgress('Calculando estimativas...');
       const moveis: MovelIdentificado[] = analise.moveis.map((m: any, idx: number) => ({
