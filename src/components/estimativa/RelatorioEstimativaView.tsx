@@ -207,7 +207,8 @@ const gerarHTML = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup[]): str
   /* AMBIENTES */
   .amb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
   .amb-card{background:var(--paper);border:1px solid var(--line);padding:36px 32px;display:flex;flex-direction:column;gap:8px;transition:all .35s ease;}
-  .amb-icon{font-size:18px;color:var(--olive);margin-bottom:14px;}
+  .amb-icon{width:36px;height:36px;color:var(--olive);margin-bottom:18px;display:flex;align-items:center;justify-content:center;}
+  .amb-icon svg{width:28px;height:28px;}
   .amb-nome{font-family:'Manrope',sans-serif;font-weight:400;font-size:20px;color:var(--ink);}
   .amb-faixa{font-family:'Inter',sans-serif;font-size:12px;color:var(--muted);letter-spacing:.04em;}
   .amb-med{font-family:'Manrope',sans-serif;font-size:28px;font-weight:300;color:var(--olive);margin-top:18px;letter-spacing:-.01em;}
