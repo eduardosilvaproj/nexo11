@@ -12,6 +12,7 @@ serve(async (req) => {
 
   try {
     const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
+    console.log("GROQ key starts with:", GROQ_API_KEY?.substring(0, 8));
     if (!GROQ_API_KEY) {
       return new Response(
         JSON.stringify({ error: "GROQ_API_KEY não configurada no servidor" }),
