@@ -24,23 +24,10 @@ export const useEstimativaPDF = () => {
         .from('estimativas')
         .getPublicUrl(fileName);
 
-      setProgress('Processando PDF...');
-      const arrayBuffer = await file.arrayBuffer();
-      const bytes = new Uint8Array(arrayBuffer);
-      let binary = '';
-      const chunkSize = 8192;
-      
-      for (let i = 0; i < bytes.length; i += chunkSize) {
-        const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
-        binary += String.fromCharCode(...chunk);
-      }
-      
-      const base64 = btoa(binary);
-
       setProgress('Analisando projeto...');
-      
+
       const { data, error: fnError } = await supabase.functions.invoke('estimativa-pdf', {
-        body: { pdf_base64: base64 },
+        body: { file_path: fileName },
       });
 
       if (fnError) throw fnError;
