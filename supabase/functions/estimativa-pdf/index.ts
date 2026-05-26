@@ -90,7 +90,7 @@ serve(async (req) => {
             content: [
               {
                 type: "text",
-                text: 'Analise este PDF de projeto de móveis planejados. Identifique todos os móveis presentes com suas medidas. Retorne APENAS um JSON válido neste formato: {"moveis":[{"ambiente":"nome do ambiente","tipo":"aereo|base|torre|painel|nicho|gaveta|outro","descricao":"descrição do móvel","largura":0,"altura":0,"profundidade":0,"quantidade":1}],"observacoes_gerais":["observação 1"]}. Medidas em centímetros. Se não conseguir identificar uma medida, use 0.',
+                text: 'Analise este PDF de projeto executivo de móveis planejados. Para cada móvel identificado, extraia:\n- O ambiente onde está (ex: Cozinha, Sala de TV, Quarto)\n- O tipo: aereo, base, torre, painel, nicho, gaveta, prateleira ou outro\n- Descrição breve\n- Medidas em centímetros (largura, altura, profundidade) — procure nas cotas, legendas ou tabelas do projeto\n- Quantidade\nIMPORTANTE: Faça o máximo esforço para extrair as medidas das cotas do desenho técnico. Se uma medida específica não estiver visível, estime com base no tipo de móvel e proporções do desenho (ex: aéreo padrão ~120x70x35cm, base padrão ~120x85x55cm, torre padrão ~60x220x55cm).\n\nRetorne APENAS um JSON válido: {"moveis":[{"ambiente":"","tipo":"aereo|base|torre|painel|nicho|gaveta|prateleira|outro","descricao":"","largura":0,"altura":0,"profundidade":0,"quantidade":1}],"observacoes_gerais":[]}',
               },
               {
                 type: "file",
