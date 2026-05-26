@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { RelatorioEstimativa, MovelIdentificado } from '@/types/estimativa';
+import type { RelatorioEstimativa, MovelIdentificado, DadosProjeto } from '@/types/estimativa';
 
 export const useEstimativaPDF = () => {
   const [loading, setLoading] = useState(false);
@@ -40,6 +40,7 @@ export const useEstimativaPDF = () => {
       if (resposta?.error) throw new Error(resposta.error);
 
       const analise = resposta;
+      const dados_projeto: DadosProjeto = analise.dados_projeto || {};
 
       setProgress('Calculando estimativas...');
       const moveis: MovelIdentificado[] = analise.moveis.map((m: any, idx: number) => ({
@@ -70,7 +71,7 @@ export const useEstimativaPDF = () => {
             preco_minimo: tabela.fixo_min * movel.quantidade,
             preco_maximo: tabela.fixo_max * movel.quantidade,
             preco_medio: ((tabela.fixo_min + tabela.fixo_max) / 2) * movel.quantidade,
-            base_calculo: `Estimativa por tipo (${movel.tipo}) × ${movel.quantidade} un`
+            base_calculo: `Estimativa por tipo × ${movel.quantidade} un`
           };
         }
 
@@ -92,7 +93,7 @@ export const useEstimativaPDF = () => {
         pdf_url: publicUrl,
         data_analise: new Date().toISOString(),
         status: 'concluido',
-        dados_projeto: analise.dados_projeto || {},
+        dados_projeto,
         moveis,
         estimativas,
         validacoes: [],
@@ -120,18 +121,18 @@ export const useEstimativaPDF = () => {
 function getTabelaPreco(tipo: string): { min: number; max: number; fixo_min: number; fixo_max: number } {
   const normalizado = normalizarTipo(tipo);
   const tabela: Record<string, { min: number; max: number; fixo_min: number; fixo_max: number }> = {
-    aereo:        { min: 1200, max: 2250, fixo_min: 3600,  fixo_max: 7500 },
-    base:         { min: 1500, max: 2700, fixo_min: 6000,  fixo_max: 13500 },
-    torre:        { min: 1800, max: 3300, fixo_min: 9000,  fixo_max: 18000 },
-    painel:       { min: 900,  max: 1800, fixo_min: 4500,  fixo_max: 10500 },
-    nicho:        { min: 750,  max: 1500, fixo_min: 1800,  fixo_max: 4500 },
-    gaveta:       { min: 600,  max: 1200, fixo_min: 2400,  fixo_max: 5400 },
-    prateleira:   { min: 450,  max: 1050, fixo_min: 1200,  fixo_max: 3000 },
-    guarda_roupa: { min: 1800, max: 3300, fixo_min: 11000, fixo_max: 24000 },
-    bancada:      { min: 1200, max: 2400, fixo_min: 5000,  fixo_max: 11000 },
-    rack:         { min: 1000, max: 2000, fixo_min: 4000,  fixo_max: 9000 },
-    divisoria:    { min: 900,  max: 1800, fixo_min: 4000,  fixo_max: 10000 },
-    outro:        { min: 1050, max: 2100, fixo_min: 4500,  fixo_max: 10500 }
+    aereo:        { min: 2400, max: 4500, fixo_min: 3600, fixo_max: 7500 },
+    base:         { min: 3000, max: 5400, fixo_min: 6000, fixo_max: 13500 },
+    torre:        { min: 3600, max: 6600, fixo_min: 9000, fixo_max: 18000 },
+    painel:       { min: 1800, max: 3600, fixo_min: 4500, fixo_max: 10500 },
+    nicho:        { min: 1500, max: 3000, fixo_min: 1800, fixo_max: 4500 },
+    gaveta:       { min: 1200, max: 2400, fixo_min: 2400, fixo_max: 5400 },
+    prateleira:   { min: 900,  max: 2100, fixo_min: 1200, fixo_max: 3000 },
+    guarda_roupa: { min: 3600, max: 6600, fixo_min: 11000, fixo_max: 24000 },
+    bancada:      { min: 2400, max: 4800, fixo_min: 5000, fixo_max: 11000 },
+    rack:         { min: 2000, max: 4000, fixo_min: 4000, fixo_max: 9000 },
+    divisoria:    { min: 1800, max: 3600, fixo_min: 4000, fixo_max: 10000 },
+    outro:        { min: 2100, max: 4200, fixo_min: 4500, fixo_max: 10500 }
   };
   return tabela[normalizado] || tabela.outro;
 }
