@@ -13,6 +13,11 @@ export const useEstimativaPDF = () => {
 
     try {
       setProgress('Enviando PDF...');
+      const arrayBuffer = await file.arrayBuffer();
+      const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const fileHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
       const fileName = `${Date.now()}_${file.name}`;
       const { error: uploadError } = await supabase.storage
         .from('estimativas')
@@ -28,7 +33,7 @@ export const useEstimativaPDF = () => {
 
       const { data: resposta, error: fnError } = await supabase.functions.invoke(
         'estimativa-pdf',
-        { body: { file_path: fileName } }
+        { body: { file_path: fileName, file_hash: fileHash } }
       );
 
       if (fnError) {
