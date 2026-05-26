@@ -231,23 +231,19 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
       )}
 
       <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Investimento Estimado</h3>
+        <h3 className="text-lg font-semibold mb-4">Faixa de Investimento</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="text-center p-6 border rounded-lg">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Essencial</p>
-            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorio.total_minimo)}</p>
-            <p className="text-xs text-muted-foreground mt-2">Acabamentos padrão</p>
-          </div>
-          <div className="text-center p-6 rounded-lg bg-gradient-to-br from-slate-900 to-slate-800 text-white md:scale-105 shadow-lg">
-            <span className="inline-block bg-amber-400 text-slate-900 text-[10px] px-2 py-0.5 rounded-full font-bold tracking-wider mb-2">RECOMENDADO</span>
-            <p className="text-xs uppercase tracking-widest text-amber-400 font-semibold">Recomendado</p>
-            <p className="text-3xl font-bold mt-3">{formatCurrency(relatorio.total_medio)}</p>
-            <p className="text-xs text-slate-400 mt-2">Melhor custo-benefício</p>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Mínimo</p>
+            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorio.total_minimo * 1.4)}</p>
           </div>
           <div className="text-center p-6 border rounded-lg">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Premium</p>
-            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorio.total_maximo)}</p>
-            <p className="text-xs text-muted-foreground mt-2">Acabamentos premium</p>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Médio</p>
+            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorio.total_medio * 1.1)}</p>
+          </div>
+          <div className="text-center p-6 border rounded-lg">
+            <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Máximo</p>
+            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorio.total_maximo * 1.2)}</p>
           </div>
         </div>
       </Card>
