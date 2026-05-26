@@ -204,9 +204,9 @@ serve(async (req) => {
       };
     });
 
-    const total_minimo = estimativas.reduce((s: number, e: any) => s + e.preco_minimo, 0);
-    const total_maximo = estimativas.reduce((s: number, e: any) => s + e.preco_maximo, 0);
-    const total_medio = estimativas.reduce((s: number, e: any) => s + e.preco_medio, 0);
+    const total_minimo = estimativas.reduce((s: number, e: any) => s + e.preco_minimo, 0) * 1.4;
+    const total_maximo = estimativas.reduce((s: number, e: any) => s + e.preco_maximo, 0) * 1.2;
+    const total_medio = estimativas.reduce((s: number, e: any) => s + e.preco_medio, 0) * 1.1;
 
     const resultadoFinal = { ...analise, estimativas, total_minimo, total_maximo, total_medio };
 
