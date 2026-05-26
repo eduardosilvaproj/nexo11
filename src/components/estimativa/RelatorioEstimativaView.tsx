@@ -142,7 +142,7 @@ const gerarHTML = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup[]): str
   ];
 
   const sobreHTML = SOBRE_ESTIMATIVA.map(
-    (s) => `<div class="sobre-card"><div class="sobre-dot"></div><h4>${s.titulo}</h4><p>${s.texto}</p></div>`
+    (s, i) => `<div class="sobre-card"><div class="sobre-ico">${renderIcon(sobreIcons[i])}</div><h4>${s.titulo}</h4><p>${s.texto}</p></div>`
   ).join('');
 
   const timelineHTML = COMO_FUNCIONA.map(
