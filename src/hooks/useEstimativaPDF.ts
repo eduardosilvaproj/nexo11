@@ -92,6 +92,7 @@ export const useEstimativaPDF = () => {
         pdf_url: publicUrl,
         data_analise: new Date().toISOString(),
         status: 'concluido',
+        dados_projeto: analise.dados_projeto || {},
         moveis,
         estimativas,
         validacoes: [],
