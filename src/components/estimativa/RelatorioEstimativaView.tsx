@@ -181,19 +181,13 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
         </div>
         <div className="space-y-3">
           {grupos.map((g) => (
-            <div key={g.ambiente} className="p-4 border rounded-lg">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1">
-                  <p className="font-semibold text-base">{g.ambiente}</p>
-                  <p className="text-sm text-muted-foreground mt-1">{resumoAmbiente(g.moveis)}</p>
-                </div>
-                <div className="text-right ml-4">
-                  <p className="text-xs text-muted-foreground">Estimativa</p>
-                  <p className="font-semibold text-primary">{formatCurrency(g.total_med)}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatCurrency(g.total_min)} — {formatCurrency(g.total_max)}
-                  </p>
-                </div>
+            <div key={g.ambiente} className="p-4 border rounded-lg flex items-center justify-between">
+              <p className="font-semibold text-base">{g.ambiente}</p>
+              <div className="text-right">
+                <p className="font-semibold text-primary text-lg">{formatCurrency(g.total_med)}</p>
+                <p className="text-xs text-muted-foreground">
+                  {formatCurrency(g.total_min)} — {formatCurrency(g.total_max)}
+                </p>
               </div>
             </div>
           ))}
