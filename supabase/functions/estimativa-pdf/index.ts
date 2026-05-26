@@ -12,6 +12,7 @@ serve(async (req) => {
 
   try {
     const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
+    console.log("GROQ key starts with:", GROQ_API_KEY?.substring(0, 8));
     if (!GROQ_API_KEY) {
       return new Response(
         JSON.stringify({ error: "GROQ_API_KEY não configurada no servidor" }),
@@ -55,15 +56,24 @@ serve(async (req) => {
       }),
     });
 
+    const responseText = await response.text();
+
     if (!response.ok) {
-      const errorData = await response.json();
+      console.error("Groq API error:", response.status, responseText);
+      let errorMsg = `Groq API retornou status ${response.status}`;
+      try {
+        const errorJson = JSON.parse(responseText);
+        errorMsg = errorJson.error?.message || errorMsg;
+      } catch {
+        errorMsg += ` - ${responseText.substring(0, 200)}`;
+      }
       return new Response(
-        JSON.stringify({ error: errorData.error?.message || "Erro na API Groq" }),
-        { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: errorMsg }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const result = await response.json();
+    const result = JSON.parse(responseText);
     const text = result.choices[0].message.content;
 
     const jsonMatch = text.match(/\{[\s\S]*\}/);
