@@ -377,8 +377,7 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
           image: { type: 'jpeg', quality: 0.98 },
           html2canvas: { scale: 2, useCORS: true, backgroundColor: '#F5F3EF' },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
-        })
+        } as Parameters<ReturnType<typeof html2pdf>['set']>[0])
         .from(container)
         .save();
     } finally {
