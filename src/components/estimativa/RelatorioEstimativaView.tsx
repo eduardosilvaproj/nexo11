@@ -113,248 +113,243 @@ const iconForAmbiente = (nome: string): string => {
 const renderIcon = (paths: string) =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
 
-const gerarHTML = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup[]): string => {
-  const data = new Date(relatorio.data_analise).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
-  const d = relatorio.dados_projeto || {};
+// === PDF: A4 portrait @ 96dpi → 794 x 1123 px ===
+const PAGE_W = 794;
+const PAGE_H = 1123;
 
-  const cards: string[] = [];
-  if (d.nome_obra) cards.push(`<div class="meta-card"><span class="meta-lbl">Obra</span><span class="meta-val">${d.nome_obra}</span></div>`);
-  if (d.arquiteto) cards.push(`<div class="meta-card"><span class="meta-lbl">Arquiteto</span><span class="meta-val">${d.arquiteto}</span></div>`);
-  if (d.nome_cliente) cards.push(`<div class="meta-card"><span class="meta-lbl">Cliente</span><span class="meta-val">${d.nome_cliente}</span></div>`);
-  const metaHTML = cards.length ? `<div class="meta-row">${cards.join('')}</div>` : '';
+const SHARED_CSS = `
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{font-family:'Manrope',-apple-system,sans-serif;font-weight:300;color:#1C1C1A;-webkit-font-smoothing:antialiased;}
+  .pdf-page{width:${PAGE_W}px;height:${PAGE_H}px;position:relative;overflow:hidden;background:#F5F3EF;}
+  .eyebrow{font-family:'Inter',sans-serif;font-size:9px;font-weight:500;letter-spacing:.34em;text-transform:uppercase;color:#8A867E;}
+  em{font-style:italic;font-weight:300;color:#3D4A2A;}
+`;
 
-  const ambientesHTML = grupos
-    .map(
-      (g) => `
-      <article class="amb-card">
-        <div class="amb-icon">${renderIcon(iconForAmbiente(g.ambiente))}</div>
-        <h3 class="amb-nome">${g.ambiente}</h3>
-        <p class="amb-faixa">${formatCurrency(g.total_min)} — ${formatCurrency(g.total_max)}</p>
-        <div class="amb-med">${formatCurrency(g.total_med)}</div>
-        <span class="amb-lbl">valor médio estimado</span>
-      </article>`
-    )
-    .join('');
-
-  const sobreIcons = [
-    '<circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/>',
-    '<path d="M3 12h4l3-9 4 18 3-9h4"/>',
-    '<path d="M4 4h16v16H4z"/><path d="M4 4l16 16"/>',
-    '<path d="M5 12h14M13 6l6 6-6 6"/>',
-  ];
-
-  const sobreHTML = SOBRE_ESTIMATIVA.map(
-    (s, i) => `<div class="sobre-card"><div class="sobre-ico">${renderIcon(sobreIcons[i])}</div><h4>${s.titulo}</h4><p>${s.texto}</p></div>`
-  ).join('');
-
-  const timelineHTML = COMO_FUNCIONA.map(
-    (s) => `<div class="tl-item"><div class="tl-num">${s.n}</div><div class="tl-body"><h4>${s.t}</h4><p>${s.d}</p></div></div>`
-  ).join('');
-
-  return `<!DOCTYPE html>
-<html lang="pt-BR"><head><meta charset="UTF-8"><title>NEXO — Estimativa de Investimento</title>
+const FONT_LINKS = `
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg:#F5F3EF; --ink:#1C1C1A; --ink-soft:#3A3A36; --muted:#8A867E;
-    --line:#E4DFD6; --olive:#3D4A2A; --olive-deep:#2A331C; --champagne:#C9A961;
-    --paper:#FBFAF7;
-  }
-  *{box-sizing:border-box;margin:0;padding:0;}
-  html,body{background:var(--bg);color:var(--ink);font-family:'Manrope',-apple-system,sans-serif;font-weight:300;line-height:1.55;-webkit-font-smoothing:antialiased;}
-  .page{max-width:1100px;margin:0 auto;background:var(--bg);}
-  .eyebrow{font-family:'Inter',sans-serif;font-size:10px;font-weight:500;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);}
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+`;
 
-  /* HERO */
-  .hero{position:relative;overflow:hidden;color:#F5F3EF;}
-  .hero-img{position:absolute;inset:0;background:url('${HERO_IMG}') center/cover no-repeat;}
-  .hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,18,15,.55) 0%,rgba(20,18,15,.45) 40%,rgba(20,18,15,.85) 100%);}
-  .hero-inner{position:relative;display:flex;flex-direction:column;gap:24px;padding:32px 40px 24px;}
-  .hero-top{display:flex;justify-content:space-between;align-items:center;}
-  .brand{font-family:'Inter',sans-serif;font-size:14px;font-weight:600;letter-spacing:.5em;}
-  .hero-tag{font-family:'Inter',sans-serif;font-size:9px;letter-spacing:.3em;text-transform:uppercase;opacity:.75;}
-  .hero-body{max-width:780px;}
-  .hero-eyebrow{color:rgba(245,243,239,.7);font-family:'Inter',sans-serif;font-size:9px;letter-spacing:.4em;text-transform:uppercase;margin-bottom:10px;}
-  .hero h1{font-family:'Manrope',sans-serif;font-weight:200;font-size:24px;line-height:1.05;letter-spacing:-.02em;margin-bottom:8px;}
-  .hero h1 em{font-style:italic;font-weight:300;color:var(--champagne);}
-  .hero h2{font-family:'Manrope',sans-serif;font-weight:300;font-size:13px;line-height:1.5;color:rgba(245,243,239,.82);}
-  .hero p{font-size:12px;font-weight:300;line-height:1.5;max-width:560px;color:rgba(245,243,239,.82);}
-  .hero-bottom{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;}
-  .hero-date{font-family:'Inter',sans-serif;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:rgba(245,243,239,.6);}
-  .meta-row{display:flex;gap:8px;flex-wrap:wrap;}
-  .meta-card{background:rgba(245,243,239,.08);border:1px solid rgba(245,243,239,.15);padding:8px 12px;min-width:120px;display:flex;flex-direction:column;gap:2px;}
-  .meta-lbl{font-family:'Inter',sans-serif;font-size:7px;letter-spacing:.3em;text-transform:uppercase;color:rgba(245,243,239,.6);}
-  .meta-val{font-size:11px;font-weight:400;color:#F5F3EF;}
+// ───────── PÁGINA 1 — CAPA ─────────
+const gerarCapa = (relatorio: RelatorioEstimativa): string => {
+  const d = relatorio.dados_projeto || {};
+  const data = new Date(relatorio.data_analise).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const metaItems: string[] = [];
+  if (d.nome_obra) metaItems.push(`<div class="m-item"><span class="m-lbl">Obra</span><span class="m-val">${d.nome_obra}</span></div>`);
+  if (d.arquiteto) metaItems.push(`<div class="m-item"><span class="m-lbl">Arquiteto</span><span class="m-val">${d.arquiteto}</span></div>`);
+  if (d.nome_cliente) metaItems.push(`<div class="m-item"><span class="m-lbl">Cliente</span><span class="m-val">${d.nome_cliente}</span></div>`);
 
-  /* SECTION SHELL */
-  section{padding:20px 40px;}
-  .section-head{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;max-width:720px;}
-  .section-head h2{font-family:'Manrope',sans-serif;font-weight:200;font-size:20px;line-height:1.05;letter-spacing:-.02em;color:var(--ink);}
-  .section-head h2 em{font-style:italic;color:var(--olive);font-weight:300;}
-  .section-head p{font-size:11px;color:var(--ink-soft);max-width:520px;line-height:1.5;}
-
-  /* FAIXA */
-  .faixa-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-  .tier{background:var(--paper);border:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;gap:6px;}
-  .tier .tier-lbl{font-family:'Inter',sans-serif;font-size:8px;font-weight:500;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);}
-  .tier .tier-val{font-family:'Manrope',sans-serif;font-size:18px;font-weight:300;color:var(--ink);letter-spacing:-.02em;margin-top:4px;}
-  .tier-line{width:24px;height:1px;background:var(--line);margin-top:6px;}
-  .tier.featured{background:var(--olive-deep);color:#F5F3EF;border-color:var(--olive-deep);}
-  .tier.featured .tier-lbl{color:rgba(245,243,239,.6);}
-  .tier.featured .tier-val{color:#F5F3EF;}
-  .tier.featured .tier-line{background:var(--champagne);}
-  .faixa-note{margin-top:10px;padding:10px 12px;border-left:2px solid var(--champagne);background:var(--paper);font-size:10px;color:var(--ink-soft);line-height:1.5;}
-
-  /* AMBIENTES */
-  .amb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
-  .amb-card{background:var(--paper);border:1px solid var(--line);padding:10px 12px;display:flex;flex-direction:column;gap:2px;}
-  .amb-icon{width:20px;height:20px;color:var(--olive);margin-bottom:4px;display:flex;align-items:center;justify-content:center;}
-  .amb-icon svg{width:16px;height:16px;}
-  .amb-nome{font-family:'Manrope',sans-serif;font-weight:400;font-size:12px;color:var(--ink);}
-  .amb-faixa{font-family:'Inter',sans-serif;font-size:9px;color:var(--muted);letter-spacing:.04em;}
-  .amb-med{font-family:'Manrope',sans-serif;font-size:14px;font-weight:300;color:var(--olive);margin-top:4px;letter-spacing:-.01em;}
-  .amb-lbl{font-family:'Inter',sans-serif;font-size:7px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);}
-
-  /* SOBRE */
-  .sobre-section{background:var(--paper);}
-  .sobre-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);}
-  .sobre-card{background:var(--paper);padding:12px 14px;display:flex;flex-direction:column;gap:4px;}
-  .sobre-ico{width:18px;height:18px;color:var(--champagne);margin-bottom:2px;}
-  .sobre-ico svg{width:14px;height:14px;}
-  .sobre-card h4{font-family:'Manrope',sans-serif;font-weight:500;font-size:11px;color:var(--ink);}
-  .sobre-card p{font-size:10px;color:var(--ink-soft);line-height:1.5;}
-
-  /* TIMELINE */
-  .timeline{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--line);}
-  .tl-item{display:grid;grid-template-columns:48px 1fr;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);align-items:baseline;}
-  .tl-num{font-family:'Manrope',sans-serif;font-weight:200;font-size:18px;color:var(--olive);letter-spacing:-.02em;}
-  .tl-body h4{font-family:'Manrope',sans-serif;font-weight:500;font-size:11px;color:var(--ink);margin-bottom:2px;}
-  .tl-body p{font-size:9.5px;color:var(--ink-soft);line-height:1.45;}
-
-  /* FOOTER */
-  .footer{position:relative;background:#16140F;color:#F5F3EF;padding:20px 40px;overflow:hidden;}
-  .footer-img{position:absolute;inset:0;background:url('${FOOTER_IMG}') center/cover no-repeat;opacity:.12;}
-  .footer-inner{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:end;}
-  .footer-left .brand{font-size:13px;letter-spacing:.5em;margin-bottom:8px;display:block;}
-  .footer-left p{font-family:'Manrope',sans-serif;font-weight:200;font-size:12px;line-height:1.4;color:rgba(245,243,239,.85);}
-  .footer-right{display:flex;flex-direction:column;gap:4px;font-family:'Inter',sans-serif;font-size:10px;color:rgba(245,243,239,.75);}
-  .footer-right .lbl{font-size:7px;letter-spacing:.3em;text-transform:uppercase;color:rgba(245,243,239,.45);margin-bottom:1px;}
-  .footer-base{position:relative;margin-top:12px;padding-top:8px;border-top:1px solid rgba(245,243,239,.1);display:flex;justify-content:space-between;font-family:'Inter',sans-serif;font-size:8px;letter-spacing:.18em;text-transform:uppercase;color:rgba(245,243,239,.45);}
-
-  @media(max-width:780px){
-    .hero{height:auto;}
-    .hero-inner{padding:40px 28px;gap:64px;}
-    .hero h1{font-size:48px;}
-    section{padding:72px 28px;}
-    .section-head h2{font-size:36px;}
-    .faixa-grid,.amb-grid,.sobre-grid,.footer-inner{grid-template-columns:1fr;}
-    .meta-row{flex-direction:column;}
-    .tl-item{grid-template-columns:1fr;gap:8px;}
-    .footer{padding:64px 28px 32px;}
-  }
-  @media print{
-    body{background:#fff;}
-    .hero{height:auto;page-break-after:always;}
-    section{page-break-inside:avoid;}
-  }
-</style></head><body>
-<div class="page">
-
-  <header class="hero">
-    <div class="hero-img"></div>
-    <div class="hero-overlay"></div>
-    <div class="hero-inner">
-      <div class="hero-top">
-        <div class="brand">NEXO</div>
-        <div class="hero-tag">Móveis Planejados — Alto Padrão</div>
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONT_LINKS}<style>${SHARED_CSS}
+    .cover{color:#F5F3EF;}
+    .cover-img{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1600&q=80') center/cover no-repeat;}
+    .cover-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,13,10,.45) 0%,rgba(15,13,10,.55) 50%,rgba(15,13,10,.92) 100%);}
+    .cover-inner{position:relative;height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:64px 72px;}
+    .cv-top{display:flex;justify-content:space-between;align-items:flex-start;}
+    .cv-brand{font-family:'Inter',sans-serif;font-size:16px;font-weight:600;letter-spacing:.55em;}
+    .cv-tag{font-family:'Inter',sans-serif;font-size:9px;letter-spacing:.32em;text-transform:uppercase;opacity:.7;text-align:right;line-height:1.6;}
+    .cv-mid{max-width:620px;}
+    .cv-eyebrow{font-family:'Inter',sans-serif;font-size:10px;letter-spacing:.42em;text-transform:uppercase;color:rgba(245,243,239,.65);margin-bottom:24px;}
+    .cv-title{font-family:'Manrope',sans-serif;font-weight:200;font-size:68px;line-height:1;letter-spacing:-.025em;margin-bottom:20px;}
+    .cv-title em{color:#C9A961;font-style:italic;font-weight:200;}
+    .cv-sub{font-family:'Manrope',sans-serif;font-weight:300;font-size:15px;line-height:1.6;color:rgba(245,243,239,.78);max-width:480px;}
+    .cv-bottom{display:flex;flex-direction:column;gap:24px;}
+    .cv-investimento{padding:20px 0;border-top:1px solid rgba(245,243,239,.18);border-bottom:1px solid rgba(245,243,239,.18);display:flex;justify-content:space-between;align-items:baseline;}
+    .cv-inv-lbl{font-family:'Inter',sans-serif;font-size:9px;letter-spacing:.34em;text-transform:uppercase;color:rgba(245,243,239,.6);}
+    .cv-inv-val{font-family:'Manrope',sans-serif;font-weight:200;font-size:26px;color:#F5F3EF;letter-spacing:-.01em;}
+    .cv-inv-val em{color:#C9A961;font-style:normal;font-weight:300;}
+    .cv-meta{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;}
+    .cv-date{font-family:'Inter',sans-serif;font-size:9px;letter-spacing:.32em;text-transform:uppercase;color:rgba(245,243,239,.55);}
+    .cv-meta-row{display:flex;gap:32px;}
+    .m-item{display:flex;flex-direction:column;gap:4px;min-width:120px;}
+    .m-lbl{font-family:'Inter',sans-serif;font-size:8px;letter-spacing:.34em;text-transform:uppercase;color:rgba(245,243,239,.5);}
+    .m-val{font-family:'Manrope',sans-serif;font-weight:400;font-size:13px;color:#F5F3EF;}
+  </style></head><body>
+  <div class="pdf-page cover">
+    <div class="cover-img"></div>
+    <div class="cover-overlay"></div>
+    <div class="cover-inner">
+      <div class="cv-top">
+        <div class="cv-brand">NEXO</div>
+        <div class="cv-tag">Móveis Planejados<br>Alto Padrão</div>
       </div>
-      <div class="hero-body">
-        <div class="hero-eyebrow">Apresentação Confidencial</div>
-        <h1>Estimativa de <em>Investimento</em></h1>
-        <p>Estimativa preliminar para validação da expectativa orçamentária antes do desenvolvimento do projeto executivo.</p>
+      <div class="cv-mid">
+        <div class="cv-eyebrow">Apresentação Confidencial</div>
+        <div class="cv-title">Estimativa de<br><em>Investimento</em></div>
+        <div class="cv-sub">Estimativa preliminar para validação da expectativa orçamentária antes do desenvolvimento do projeto executivo.</div>
       </div>
-      <div class="hero-bottom">
-        <div class="hero-date">${data}</div>
-        ${metaHTML}
+      <div class="cv-bottom">
+        <div class="cv-investimento">
+          <span class="cv-inv-lbl">Faixa de Investimento</span>
+          <span class="cv-inv-val">${formatCurrency(relatorio.total_minimo)} <em>—</em> ${formatCurrency(relatorio.total_maximo)}</span>
+        </div>
+        <div class="cv-meta">
+          <div class="cv-date">${data}</div>
+          <div class="cv-meta-row">${metaItems.join('')}</div>
+        </div>
       </div>
     </div>
-  </header>
+  </div>
+  </body></html>`;
+};
 
-  <section>
-    <div class="section-head">
-      <span class="eyebrow">01 — Investimento</span>
-      <h2>Faixa de Investimento <em>Estimada</em></h2>
-      <p>Transparência para decisões seguras. Três cenários que delimitam a expectativa de investimento conforme acabamentos e especificações.</p>
-    </div>
-    <div class="faixa-grid">
-      <div class="tier">
-        <span class="tier-lbl">Mínimo Estimado</span>
-        <div class="tier-val">${formatCurrency(relatorio.total_minimo)}</div>
-        <div class="tier-line"></div>
+// ───────── PÁGINA 2 — INVESTIMENTO + AMBIENTES ─────────
+const gerarInvestimento = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup[]): string => {
+  const ambientesHTML = grupos.map((g) => `
+    <article class="amb-card">
+      <div class="amb-icon">${renderIcon(iconForAmbiente(g.ambiente))}</div>
+      <div class="amb-body">
+        <h3 class="amb-nome">${g.ambiente}</h3>
+        <p class="amb-faixa">${formatCurrency(g.total_min)} — ${formatCurrency(g.total_max)}</p>
       </div>
-      <div class="tier featured">
-        <span class="tier-lbl">Média Prevista</span>
-        <div class="tier-val">${formatCurrency(relatorio.total_medio)}</div>
-        <div class="tier-line"></div>
-      </div>
-      <div class="tier">
-        <span class="tier-lbl">Máximo Estimado</span>
-        <div class="tier-val">${formatCurrency(relatorio.total_maximo)}</div>
-        <div class="tier-line"></div>
-      </div>
-    </div>
-    <p class="faixa-note">Os valores apresentados representam uma estimativa preliminar baseada nas informações atuais do projeto e poderão variar conforme definições técnicas, acabamentos e especificações finais.</p>
-  </section>
+      <div class="amb-med">${formatCurrency(g.total_med)}</div>
+    </article>`).join('');
 
-  <section style="padding-top:0;">
-    <div class="section-head">
-      <span class="eyebrow">02 — Detalhamento</span>
-      <h2>Por <em>Ambiente</em></h2>
-      <p>Composição da estimativa por ambiente projetado, com faixa mínima, máxima e valor médio referencial.</p>
-    </div>
-    <div class="amb-grid">${ambientesHTML}</div>
-  </section>
-
-  <section class="sobre-section">
-    <div class="section-head">
-      <span class="eyebrow">03 — Esclarecimentos</span>
-      <h2>Sobre esta <em>Estimativa</em></h2>
-    </div>
-    <div class="sobre-grid">${sobreHTML}</div>
-  </section>
-
-  <section>
-    <div class="section-head">
-      <span class="eyebrow">04 — Processo</span>
-      <h2>Como <em>Funciona</em></h2>
-      <p>Da estimativa inicial à entrega final — um processo conduzido com precisão técnica e cuidado editorial.</p>
-    </div>
-    <div class="timeline">${timelineHTML}</div>
-  </section>
-
-  <footer class="footer">
-    <div class="footer-img"></div>
-    <div class="footer-inner">
-      <div class="footer-left">
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONT_LINKS}<style>${SHARED_CSS}
+    .p2{padding:60px 64px;display:flex;flex-direction:column;gap:36px;}
+    .p2-head{display:flex;justify-content:space-between;align-items:baseline;padding-bottom:16px;border-bottom:1px solid #E4DFD6;}
+    .p2-head .brand{font-family:'Inter',sans-serif;font-size:12px;font-weight:600;letter-spacing:.5em;color:#1C1C1A;}
+    .p2-head .pg{font-family:'Inter',sans-serif;font-size:9px;letter-spacing:.32em;text-transform:uppercase;color:#8A867E;}
+    .sec-head{display:flex;flex-direction:column;gap:8px;}
+    .sec-head h2{font-family:'Manrope',sans-serif;font-weight:200;font-size:32px;line-height:1.05;letter-spacing:-.022em;color:#1C1C1A;}
+    .sec-head h2 em{color:#3D4A2A;}
+    .sec-head p{font-size:12px;color:#3A3A36;line-height:1.55;max-width:520px;}
+    .tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+    .tier{background:#FBFAF7;border:1px solid #E4DFD6;padding:24px 20px;display:flex;flex-direction:column;gap:10px;}
+    .tier-lbl{font-family:'Inter',sans-serif;font-size:9px;font-weight:500;letter-spacing:.32em;text-transform:uppercase;color:#8A867E;}
+    .tier-val{font-family:'Manrope',sans-serif;font-size:24px;font-weight:300;color:#1C1C1A;letter-spacing:-.02em;}
+    .tier-line{width:28px;height:1px;background:#E4DFD6;margin-top:4px;}
+    .tier.featured{background:#2A331C;color:#F5F3EF;border-color:#2A331C;}
+    .tier.featured .tier-lbl{color:rgba(245,243,239,.6);}
+    .tier.featured .tier-val{color:#F5F3EF;}
+    .tier.featured .tier-line{background:#C9A961;}
+    .amb-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 12px;}
+    .amb-card{background:#FBFAF7;border:1px solid #E4DFD6;padding:14px 16px;display:flex;align-items:center;gap:14px;}
+    .amb-icon{width:28px;height:28px;color:#3D4A2A;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+    .amb-icon svg{width:22px;height:22px;}
+    .amb-body{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;}
+    .amb-nome{font-family:'Manrope',sans-serif;font-weight:500;font-size:13px;color:#1C1C1A;letter-spacing:-.005em;}
+    .amb-faixa{font-family:'Inter',sans-serif;font-size:9.5px;color:#8A867E;letter-spacing:.02em;}
+    .amb-med{font-family:'Manrope',sans-serif;font-size:15px;font-weight:400;color:#3D4A2A;letter-spacing:-.015em;}
+  </style></head><body>
+  <div class="pdf-page">
+    <div class="p2">
+      <div class="p2-head">
         <span class="brand">NEXO</span>
-        <p>Transformando ambientes em experiências de morar refinadas.</p>
+        <span class="pg">02 — Investimento &amp; Ambientes</span>
       </div>
-      <div class="footer-right">
-        <div><span class="lbl">Contato</span>contato@nexo.com.br</div>
-        <div><span class="lbl">Telefone</span>+55 (00) 00000-0000</div>
-        <div><span class="lbl">Instagram</span>@nexo.planejados</div>
+      <div>
+        <div class="sec-head" style="margin-bottom:18px;">
+          <span class="eyebrow">01 — Investimento</span>
+          <h2>Faixa de Investimento <em>Estimada</em></h2>
+          <p>Três cenários que delimitam a expectativa de investimento conforme acabamentos e especificações.</p>
+        </div>
+        <div class="tiers">
+          <div class="tier"><span class="tier-lbl">Mínimo</span><div class="tier-val">${formatCurrency(relatorio.total_minimo)}</div><div class="tier-line"></div></div>
+          <div class="tier featured"><span class="tier-lbl">Média Prevista</span><div class="tier-val">${formatCurrency(relatorio.total_medio)}</div><div class="tier-line"></div></div>
+          <div class="tier"><span class="tier-lbl">Máximo</span><div class="tier-val">${formatCurrency(relatorio.total_maximo)}</div><div class="tier-line"></div></div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-head" style="margin-bottom:16px;">
+          <span class="eyebrow">02 — Detalhamento</span>
+          <h2>Por <em>Ambiente</em></h2>
+        </div>
+        <div class="amb-grid">${ambientesHTML}</div>
       </div>
     </div>
-    <div class="footer-base">
-      <span>NEXO — Móveis Planejados</span>
-      <span>${data}</span>
-    </div>
-  </footer>
+  </div>
+  </body></html>`;
+};
 
-</div>
-</body></html>`;
+// ───────── PÁGINA 3 — PROCESSO + OBSERVAÇÕES + FOOTER ─────────
+const gerarProcesso = (relatorio: RelatorioEstimativa): string => {
+  const data = new Date(relatorio.data_analise).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+  const sobreHTML = SOBRE_ESTIMATIVA.map((s) => `
+    <div class="sobre-card"><h4>${s.titulo}</h4><p>${s.texto}</p></div>`).join('');
+  const inclusosHTML = INCLUSOS.map((i) => `<li>${i}</li>`).join('');
+  const proximosHTML = PROXIMOS_PASSOS.map((p, i) => `<li><span>${String(i + 1).padStart(2, '0')}</span>${p}</li>`).join('');
+  const timelineHTML = COMO_FUNCIONA.map((s) => `
+    <div class="tl-item"><div class="tl-num">${s.n}</div><div class="tl-body"><h4>${s.t}</h4><p>${s.d}</p></div></div>`).join('');
+
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONT_LINKS}<style>${SHARED_CSS}
+    .pdf-page{display:flex;flex-direction:column;}
+    .p3{padding:50px 64px 24px;display:flex;flex-direction:column;gap:24px;flex:1;}
+    .p3-head{display:flex;justify-content:space-between;align-items:baseline;padding-bottom:14px;border-bottom:1px solid #E4DFD6;}
+    .p3-head .brand{font-family:'Inter',sans-serif;font-size:12px;font-weight:600;letter-spacing:.5em;color:#1C1C1A;}
+    .p3-head .pg{font-family:'Inter',sans-serif;font-size:9px;letter-spacing:.32em;text-transform:uppercase;color:#8A867E;}
+    .sec-head h2{font-family:'Manrope',sans-serif;font-weight:200;font-size:22px;line-height:1.05;letter-spacing:-.022em;color:#1C1C1A;}
+    .sec-head h2 em{color:#3D4A2A;}
+    .sec-head{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+    .sobre-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:#E4DFD6;border:1px solid #E4DFD6;}
+    .sobre-card{background:#FBFAF7;padding:12px 14px;}
+    .sobre-card h4{font-family:'Manrope',sans-serif;font-weight:500;font-size:11px;color:#1C1C1A;margin-bottom:3px;}
+    .sobre-card p{font-size:10px;color:#3A3A36;line-height:1.5;}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+    .col h3{font-family:'Manrope',sans-serif;font-weight:500;font-size:13px;color:#1C1C1A;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #E4DFD6;}
+    .col ul{list-style:none;display:flex;flex-direction:column;gap:6px;}
+    .col li{font-size:10.5px;color:#3A3A36;line-height:1.5;padding-left:14px;position:relative;}
+    .col.incl li:before{content:'';position:absolute;left:0;top:8px;width:6px;height:1px;background:#C9A961;}
+    .col.prox li{display:flex;gap:10px;padding-left:0;align-items:baseline;}
+    .col.prox li span{font-family:'Manrope',sans-serif;font-size:10px;color:#3D4A2A;font-weight:500;min-width:18px;}
+    .timeline{display:flex;flex-direction:column;border-top:1px solid #E4DFD6;}
+    .tl-item{display:grid;grid-template-columns:48px 1fr;gap:14px;padding:10px 0;border-bottom:1px solid #E4DFD6;align-items:baseline;}
+    .tl-num{font-family:'Manrope',sans-serif;font-weight:200;font-size:20px;color:#3D4A2A;letter-spacing:-.02em;}
+    .tl-body h4{font-family:'Manrope',sans-serif;font-weight:500;font-size:11.5px;color:#1C1C1A;margin-bottom:2px;}
+    .tl-body p{font-size:10px;color:#3A3A36;line-height:1.45;}
+    .footer{background:#16140F;color:#F5F3EF;padding:24px 64px;}
+    .footer-row{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;}
+    .footer .brand{font-family:'Inter',sans-serif;font-size:13px;font-weight:600;letter-spacing:.55em;display:block;margin-bottom:8px;}
+    .footer p{font-family:'Manrope',sans-serif;font-weight:200;font-size:11px;line-height:1.4;color:rgba(245,243,239,.78);max-width:280px;}
+    .footer-right{display:flex;flex-direction:column;gap:4px;font-family:'Inter',sans-serif;font-size:10px;color:rgba(245,243,239,.75);text-align:right;}
+    .footer-right .lbl{font-size:7.5px;letter-spacing:.32em;text-transform:uppercase;color:rgba(245,243,239,.45);}
+    .footer-base{margin-top:14px;padding-top:10px;border-top:1px solid rgba(245,243,239,.12);display:flex;justify-content:space-between;font-family:'Inter',sans-serif;font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:rgba(245,243,239,.5);}
+  </style></head><body>
+  <div class="pdf-page">
+    <div class="p3">
+      <div class="p3-head">
+        <span class="brand">NEXO</span>
+        <span class="pg">03 — Processo &amp; Esclarecimentos</span>
+      </div>
+
+      <div>
+        <div class="sec-head"><span class="eyebrow">03 — Esclarecimentos</span><h2>Sobre esta <em>Estimativa</em></h2></div>
+        <div class="sobre-grid">${sobreHTML}</div>
+      </div>
+
+      <div>
+        <div class="sec-head"><span class="eyebrow">04 — Escopo</span><h2>O que está <em>incluso</em> &amp; próximos passos</h2></div>
+        <div class="two-col">
+          <div class="col incl"><h3>Incluso no investimento</h3><ul>${inclusosHTML}</ul></div>
+          <div class="col prox"><h3>Próximos passos</h3><ul>${proximosHTML}</ul></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="sec-head"><span class="eyebrow">05 — Processo</span><h2>Como <em>Funciona</em></h2></div>
+        <div class="timeline">${timelineHTML}</div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div class="footer-row">
+        <div>
+          <span class="brand">NEXO</span>
+          <p>Transformando ambientes em experiências de morar refinadas.</p>
+        </div>
+        <div class="footer-right">
+          <div><span class="lbl">Contato</span><br>contato@nexo.com.br</div>
+          <div><span class="lbl">Telefone</span><br>+55 (00) 00000-0000</div>
+          <div><span class="lbl">Instagram</span><br>@nexo.planejados</div>
+        </div>
+      </div>
+      <div class="footer-base">
+        <span>NEXO — Móveis Planejados</span>
+        <span>${data}</span>
+      </div>
+    </footer>
+  </div>
+  </body></html>`;
 };
 
 export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewProps) => {
@@ -363,51 +358,50 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
   const mostrarProjeto = temDadosProjeto(relatorio);
 
   const baixarPDF = async () => {
-    const html = gerarHTML(relatorio, grupos);
-    const container = document.createElement('div');
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
-    container.style.top = '0';
-    container.style.width = '760px';
-    container.innerHTML = html;
-    document.body.appendChild(container);
+    const grupos = agruparPorAmbiente(relatorio);
+    const paginas = [
+      gerarCapa(relatorio),
+      gerarInvestimento(relatorio, grupos),
+      gerarProcesso(relatorio),
+    ];
 
-    try {
-      await new Promise((r) => setTimeout(r, 800));
-      const canvas = await html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        width: 760,
-        windowWidth: 760,
-        backgroundColor: '#F5F3EF',
-      });
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfW = 210;
+    const pdfH = 297;
 
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const margin = 10;
-      const usableWidth = 210 - margin * 2;
-      const usableHeight = 297 - margin * 2;
+    for (let i = 0; i < paginas.length; i++) {
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.left = '-10000px';
+      container.style.top = '0';
+      container.style.width = `${PAGE_W}px`;
+      container.style.height = `${PAGE_H}px`;
+      container.innerHTML = paginas[i];
+      document.body.appendChild(container);
 
-      const imgWidth = usableWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      let finalWidth = imgWidth;
-      let finalHeight = imgHeight;
-      if (imgHeight > usableHeight) {
-        const ratio = usableHeight / imgHeight;
-        finalHeight = usableHeight;
-        finalWidth = imgWidth * ratio;
+      try {
+        await new Promise((r) => setTimeout(r, 600));
+        const target = container.querySelector('.pdf-page') as HTMLElement;
+        const canvas = await html2canvas(target, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          logging: false,
+          width: PAGE_W,
+          height: PAGE_H,
+          windowWidth: PAGE_W,
+          windowHeight: PAGE_H,
+          backgroundColor: '#F5F3EF',
+        });
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        if (i > 0) pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfW, pdfH);
+      } finally {
+        document.body.removeChild(container);
       }
-
-      const offsetX = margin + (usableWidth - finalWidth) / 2;
-      const offsetY = margin;
-
-      const imgData = canvas.toDataURL('image/jpeg', 0.95);
-      pdf.addImage(imgData, 'JPEG', offsetX, offsetY, finalWidth, finalHeight);
-      pdf.save(`estimativa-nexo-${Date.now()}.pdf`);
-    } finally {
-      document.body.removeChild(container);
     }
+
+    pdf.save(`estimativa-nexo-${Date.now()}.pdf`);
   };
 
   return (
