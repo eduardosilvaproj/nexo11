@@ -90,7 +90,7 @@ serve(async (req) => {
             content: [
               {
                 type: "text",
-                text: 'Analise este PDF de projeto executivo de móveis planejados. Para cada móvel/módulo identificado, extraia:\n- O ambiente onde está (ex: Cozinha, Sala de TV, Quarto Casal, Suite, Hall, Escritório)\n- O tipo: aereo, base, torre, painel, nicho, gaveta, prateleira, guarda_roupa, bancada, rack, divisoria ou outro\n- Quantidade\n\nIdentifique o MÁXIMO de peças possível — cada módulo separado conta como um item (ex: se a cozinha tem 3 aéreos, 2 bases e 1 torre, são 6 itens).\n\nRetorne APENAS JSON: {"moveis":[{"ambiente":"","tipo":"","descricao":"","largura":0,"altura":0,"profundidade":0,"quantidade":1}],"observacoes_gerais":[]}',
+                text: 'Analise este PDF de projeto executivo de móveis planejados. Extraia:\n\n1. DADOS DO PROJETO (se disponíveis no carimbo, capa ou legendas):\n   - nome_cliente: nome do cliente/proprietário\n   - nome_obra: nome da obra ou endereço\n   - arquiteto: nome do arquiteto(a) ou escritório\n   - data_projeto: data do projeto\n\n2. MÓVEIS: Para cada módulo/peça identificada:\n   - ambiente, tipo, quantidade\n   - Tipos válidos: aereo, base, torre, painel, nicho, gaveta, prateleira, guarda_roupa, bancada, rack, divisoria, outro\n   - Identifique o MÁXIMO de peças possível — cada módulo separado conta como um item\n\nRetorne APENAS JSON: {"dados_projeto":{"nome_cliente":"","nome_obra":"","arquiteto":"","data_projeto":""},"moveis":[{"ambiente":"","tipo":"","descricao":"","largura":0,"altura":0,"profundidade":0,"quantidade":1}],"observacoes_gerais":[]}\n\nSe algum dado do projeto não estiver visível, deixe string vazia.',
               },
               {
                 type: "file",

@@ -28,11 +28,19 @@ export interface ValidacaoTecnica {
   recomendacoes: string[];
 }
 
+export interface DadosProjeto {
+  nome_cliente?: string;
+  nome_obra?: string;
+  arquiteto?: string;
+  data_projeto?: string;
+}
+
 export interface RelatorioEstimativa {
   id: string;
   pdf_url: string;
   data_analise: string;
   status: 'processando' | 'concluido' | 'erro';
+  dados_projeto?: DadosProjeto;
   moveis: MovelIdentificado[];
   estimativas: EstimativaPreco[];
   validacoes: ValidacaoTecnica[];
