@@ -37,8 +37,23 @@ serve(async (req) => {
       );
     }
 
-    // 1. Baixar o PDF do Storage
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // 0. Verificar cache
+    const { data: cached } = await supabase
+      .from("estimativas_cache")
+      .select("resultado")
+      .eq("file_path", file_path)
+      .maybeSingle();
+
+    if (cached) {
+      return new Response(
+        JSON.stringify(cached.resultado),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // 1. Baixar o PDF do Storage
     const { data: fileData, error: downloadError } = await supabase.storage
       .from("estimativas")
       .download(file_path);
