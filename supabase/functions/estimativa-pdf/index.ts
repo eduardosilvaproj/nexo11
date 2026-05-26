@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,24 +13,46 @@ serve(async (req) => {
 
   try {
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
     if (!OPENAI_API_KEY) {
       return new Response(
         JSON.stringify({ error: "OPENAI_API_KEY não configurada" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    const { pdf_base64 } = await req.json();
-    if (!pdf_base64) {
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
       return new Response(
-        JSON.stringify({ error: "Campo pdf_base64 é obrigatório" }),
+        JSON.stringify({ error: "Credenciais do Supabase não configuradas" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { file_path } = await req.json();
+    if (!file_path) {
+      return new Response(
+        JSON.stringify({ error: "Campo file_path é obrigatório" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // 1. Upload do PDF como file
-    const pdfBytes = Uint8Array.from(atob(pdf_base64), c => c.charCodeAt(0));
-    const blob = new Blob([pdfBytes], { type: "application/pdf" });
+    // 1. Baixar o PDF do Storage
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { data: fileData, error: downloadError } = await supabase.storage
+      .from("estimativas")
+      .download(file_path);
+
+    if (downloadError || !fileData) {
+      console.error("Storage download error:", downloadError);
+      return new Response(
+        JSON.stringify({ error: `Erro ao baixar PDF: ${downloadError?.message || "arquivo não encontrado"}` }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // 2. Upload do PDF como file para OpenAI
+    const blob = new Blob([await fileData.arrayBuffer()], { type: "application/pdf" });
     const formData = new FormData();
     formData.append("file", blob, "projeto.pdf");
     formData.append("purpose", "assistants");
@@ -52,7 +75,7 @@ serve(async (req) => {
     const uploadData = JSON.parse(uploadText);
     const fileId = uploadData.id;
 
-    // 2. Chamar GPT-4o com o file anexado
+    // 3. Chamar GPT-4o com o file anexado
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -83,7 +106,7 @@ serve(async (req) => {
 
     const responseText = await response.text();
 
-    // 3. Limpar: deletar o file após uso
+    // 4. Limpar: deletar o file após uso
     fetch(`https://api.openai.com/v1/files/${fileId}`, {
       method: "DELETE",
       headers: { "Authorization": `Bearer ${OPENAI_API_KEY}` },
