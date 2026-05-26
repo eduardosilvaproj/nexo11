@@ -1884,7 +1884,7 @@ export type Database = {
             foreignKeyName: "contrato_ambientes_conferente_id_fkey"
             columns: ["conferente_id"]
             isOneToOne: false
-            referencedRelation: "tecnicos_montadores"
+            referencedRelation: "pessoas"
             referencedColumns: ["id"]
           },
           {
@@ -1912,14 +1912,14 @@ export type Database = {
             foreignKeyName: "contrato_ambientes_medidor_id_fkey"
             columns: ["medidor_id"]
             isOneToOne: false
-            referencedRelation: "tecnicos_montadores"
+            referencedRelation: "pessoas"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "contrato_ambientes_montador_id_fkey"
             columns: ["montador_id"]
             isOneToOne: false
-            referencedRelation: "tecnicos_montadores"
+            referencedRelation: "pessoas"
             referencedColumns: ["id"]
           },
         ]
@@ -4850,6 +4850,75 @@ export type Database = {
             columns: ["loja_id"]
             isOneToOne: false
             referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pessoas: {
+        Row: {
+          ativo: boolean
+          auth_user_id: string | null
+          comissao_percentual: number | null
+          created_at: string
+          email: string | null
+          funcoes: string[]
+          funcoes_app_habilitadas: string[] | null
+          id: string
+          loja_id: string | null
+          nome: string
+          papel_comissao_id: string | null
+          percentual_padrao: number
+          telefone: string | null
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          auth_user_id?: string | null
+          comissao_percentual?: number | null
+          created_at?: string
+          email?: string | null
+          funcoes?: string[]
+          funcoes_app_habilitadas?: string[] | null
+          id?: string
+          loja_id?: string | null
+          nome: string
+          papel_comissao_id?: string | null
+          percentual_padrao?: number
+          telefone?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          auth_user_id?: string | null
+          comissao_percentual?: number | null
+          created_at?: string
+          email?: string | null
+          funcoes?: string[]
+          funcoes_app_habilitadas?: string[] | null
+          id?: string
+          loja_id?: string | null
+          nome?: string
+          papel_comissao_id?: string | null
+          percentual_padrao?: number
+          telefone?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pessoas_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pessoas_papel_comissao_id_fkey"
+            columns: ["papel_comissao_id"]
+            isOneToOne: false
+            referencedRelation: "papeis_comissao"
             referencedColumns: ["id"]
           },
         ]
