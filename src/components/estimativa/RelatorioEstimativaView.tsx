@@ -361,15 +361,44 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
   const d = relatorio.dados_projeto;
   const mostrarProjeto = temDadosProjeto(relatorio);
 
-  const baixarPDF = () => {
+  const baixarPDF = async () => {
     const html = gerarHTML(relatorio, grupos);
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const win = window.open(url, '_blank');
-    if (win) {
-      win.onload = () => {
-        setTimeout(() => win.print(), 500);
-      };
+    const container = document.createElement('div');
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
+    container.style.top = '0';
+    container.style.width = '800px';
+    container.innerHTML = html;
+    document.body.appendChild(container);
+
+    try {
+      await new Promise((r) => setTimeout(r, 500));
+      const canvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        width: 800,
+        backgroundColor: '#F5F3EF',
+      });
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      if (pdfHeight <= pageHeight) {
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+      } else {
+        let position = 0;
+        while (position < pdfHeight) {
+          pdf.addImage(imgData, 'JPEG', 0, -position, pdfWidth, pdfHeight);
+          position += pageHeight;
+          if (position < pdfHeight) pdf.addPage();
+        }
+      }
+      pdf.save(`estimativa-nexo-${Date.now()}.pdf`);
+    } finally {
+      document.body.removeChild(container);
     }
   };
 
