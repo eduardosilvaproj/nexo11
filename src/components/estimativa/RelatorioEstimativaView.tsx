@@ -103,11 +103,6 @@ const gerarHTML = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup[]): str
   .tier .nome{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#9ca3af;font-weight:600;}
   .tier .preco{font-size:24px;font-weight:800;margin-top:10px;color:#111;}
   .tier .sub{font-size:11px;color:#9ca3af;margin-top:6px;}
-  .tier.recomendado{background:linear-gradient(135deg,#0a0a0a,#1a1a2e);color:#fff;border-color:#0a0a0a;transform:scale(1.03);}
-  .tier.recomendado .nome{color:#fbbf24;}
-  .tier.recomendado .preco{color:#fff;font-size:28px;}
-  .tier.recomendado .sub{color:#9ca3af;}
-  .tier.recomendado .badge{display:inline-block;background:#fbbf24;color:#0a0a0a;font-size:9px;padding:3px 8px;border-radius:10px;font-weight:700;letter-spacing:1px;margin-bottom:8px;}
   .ambiente{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:10px;}
   .ambiente h3{font-size:16px;font-weight:700;}
   .ambiente .faixa{font-size:12px;color:#9ca3af;margin-top:3px;}
