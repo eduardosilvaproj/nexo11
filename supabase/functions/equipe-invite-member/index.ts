@@ -68,7 +68,15 @@ app.post("/equipe-invite-member", async (c) => {
       },
     );
   }
-  const { nome, email, role, equipe_id, papel_comissao_id, comissao_percentual } = parsed.data;
+  const { nome, email, funcoes, funcoes_app_habilitadas, role, equipe_id, papel_comissao_id, comissao_percentual } = parsed.data;
+  const funcoesList = funcoes ?? (role ? [role] : []);
+  if (funcoesList.length === 0) {
+    return new Response(JSON.stringify({ error: "Informe ao menos uma função" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const primaryRole = (role ?? funcoesList[0]) as "vendedor" | "tecnico" | "montador" | "gerente" | "admin";
 
   // Authorization: caller must be admin or gerente
   const [{ data: isAdmin }, { data: isGerente }] = await Promise.all([
