@@ -352,6 +352,11 @@ const gerarProcesso = (relatorio: RelatorioEstimativa): string => {
   </body></html>`;
 };
 
+export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewProps) => {
+  const grupos = agruparPorAmbiente(relatorio);
+  const d = relatorio.dados_projeto;
+  const mostrarProjeto = temDadosProjeto(relatorio);
+
   const baixarPDF = async () => {
     const grupos = agruparPorAmbiente(relatorio);
     const paginas = [
