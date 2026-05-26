@@ -10,7 +10,9 @@ app.options("/*", () => new Response("ok", { headers: corsHeaders }));
 const BodySchema = z.object({
   nome: z.string().trim().min(1).max(120),
   email: z.string().trim().email().max(255),
-  role: z.enum(["vendedor", "tecnico", "montador", "gerente", "admin"]),
+  funcoes: z.array(z.string()).min(1).optional(),
+  funcoes_app_habilitadas: z.array(z.string()).optional(),
+  role: z.enum(["vendedor", "tecnico", "montador", "gerente", "admin"]).optional(),
   equipe_id: z.string().uuid().optional().nullable(),
   papel_comissao_id: z.string().uuid().optional().nullable(),
   comissao_percentual: z.number().min(0).max(100).optional().nullable(),
@@ -66,7 +68,15 @@ app.post("/equipe-invite-member", async (c) => {
       },
     );
   }
-  const { nome, email, role, equipe_id, papel_comissao_id, comissao_percentual } = parsed.data;
+  const { nome, email, funcoes, funcoes_app_habilitadas, role, equipe_id, papel_comissao_id, comissao_percentual } = parsed.data;
+  const funcoesList = funcoes ?? (role ? [role] : []);
+  if (funcoesList.length === 0) {
+    return new Response(JSON.stringify({ error: "Informe ao menos uma função" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const primaryRole = (role ?? funcoesList[0]) as "vendedor" | "tecnico" | "montador" | "gerente" | "admin";
 
   // Authorization: caller must be admin or gerente
   const [{ data: isAdmin }, { data: isGerente }] = await Promise.all([
@@ -163,6 +173,7 @@ app.post("/equipe-invite-member", async (c) => {
   }
 
   // Upsert usuarios row scoped to caller's loja
+  // Upsert usuarios row (mantido temporariamente como backup)
   const { error: upsertErr } = await admin.from("usuarios").upsert({
     id: userId,
     nome,
@@ -178,18 +189,39 @@ app.post("/equipe-invite-member", async (c) => {
     });
   }
 
+  // Upsert na tabela unificada pessoas (fonte única)
+  const { error: pessoaErr } = await admin.from("pessoas").upsert({
+    id: userId,
+    auth_user_id: userId,
+    nome,
+    email,
+    loja_id: lojaId,
+    tipo: "colaborador",
+    funcoes: funcoesList,
+    funcoes_app_habilitadas: funcoes_app_habilitadas ?? [],
+    papel_comissao_id: safePapelId,
+    comissao_percentual: comissao_percentual ?? null,
+    ativo: true,
+  }, { onConflict: "id" });
+  if (pessoaErr) {
+    return new Response(JSON.stringify({ error: pessoaErr.message }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   // Insert role (avoid duplicate)
   const { data: existingRole } = await admin
     .from("user_roles")
     .select("id")
     .eq("user_id", userId)
-    .eq("role", role)
+    .eq("role", primaryRole)
     .eq("loja_id", lojaId)
     .maybeSingle();
   if (!existingRole) {
     const { error: roleErr } = await admin.from("user_roles").insert({
       user_id: userId,
-      role,
+      role: primaryRole,
       loja_id: lojaId,
     });
     if (roleErr) {
