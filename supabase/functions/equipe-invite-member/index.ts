@@ -10,7 +10,9 @@ app.options("/*", () => new Response("ok", { headers: corsHeaders }));
 const BodySchema = z.object({
   nome: z.string().trim().min(1).max(120),
   email: z.string().trim().email().max(255),
-  role: z.enum(["vendedor", "tecnico", "montador", "gerente", "admin"]),
+  funcoes: z.array(z.string()).min(1).optional(),
+  funcoes_app_habilitadas: z.array(z.string()).optional(),
+  role: z.enum(["vendedor", "tecnico", "montador", "gerente", "admin"]).optional(),
   equipe_id: z.string().uuid().optional().nullable(),
   papel_comissao_id: z.string().uuid().optional().nullable(),
   comissao_percentual: z.number().min(0).max(100).optional().nullable(),
