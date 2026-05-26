@@ -218,7 +218,8 @@ const gerarHTML = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup[]): str
   .sobre-section{background:var(--paper);}
   .sobre-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);}
   .sobre-card{background:var(--paper);padding:44px 40px;display:flex;flex-direction:column;gap:14px;}
-  .sobre-dot{width:6px;height:6px;background:var(--champagne);border-radius:50%;}
+  .sobre-ico{width:28px;height:28px;color:var(--champagne);margin-bottom:6px;}
+  .sobre-ico svg{width:24px;height:24px;}
   .sobre-card h4{font-family:'Manrope',sans-serif;font-weight:500;font-size:18px;color:var(--ink);}
   .sobre-card p{font-size:14px;color:var(--ink-soft);line-height:1.65;}
 
