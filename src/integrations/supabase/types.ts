@@ -2649,6 +2649,27 @@ export type Database = {
           },
         ]
       }
+      estimativas_cache: {
+        Row: {
+          created_at: string
+          file_path: string
+          id: string
+          resultado: Json
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          id?: string
+          resultado: Json
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          id?: string
+          resultado?: Json
+        }
+        Relationships: []
+      }
       estoque_itens: {
         Row: {
           ativo: boolean
