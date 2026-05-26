@@ -173,6 +173,7 @@ app.post("/equipe-invite-member", async (c) => {
   }
 
   // Upsert usuarios row scoped to caller's loja
+  // Upsert usuarios row (mantido temporariamente como backup)
   const { error: upsertErr } = await admin.from("usuarios").upsert({
     id: userId,
     nome,
@@ -188,18 +189,39 @@ app.post("/equipe-invite-member", async (c) => {
     });
   }
 
+  // Upsert na tabela unificada pessoas (fonte única)
+  const { error: pessoaErr } = await admin.from("pessoas").upsert({
+    id: userId,
+    auth_user_id: userId,
+    nome,
+    email,
+    loja_id: lojaId,
+    tipo: "colaborador",
+    funcoes: funcoesList,
+    funcoes_app_habilitadas: funcoes_app_habilitadas ?? [],
+    papel_comissao_id: safePapelId,
+    comissao_percentual: comissao_percentual ?? null,
+    ativo: true,
+  }, { onConflict: "id" });
+  if (pessoaErr) {
+    return new Response(JSON.stringify({ error: pessoaErr.message }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   // Insert role (avoid duplicate)
   const { data: existingRole } = await admin
     .from("user_roles")
     .select("id")
     .eq("user_id", userId)
-    .eq("role", role)
+    .eq("role", primaryRole)
     .eq("loja_id", lojaId)
     .maybeSingle();
   if (!existingRole) {
     const { error: roleErr } = await admin.from("user_roles").insert({
       user_id: userId,
-      role,
+      role: primaryRole,
       loja_id: lojaId,
     });
     if (roleErr) {
