@@ -37,8 +37,23 @@ serve(async (req) => {
       );
     }
 
-    // 1. Baixar o PDF do Storage
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // 0. Verificar cache
+    const { data: cached } = await supabase
+      .from("estimativas_cache")
+      .select("resultado")
+      .eq("file_path", file_path)
+      .maybeSingle();
+
+    if (cached) {
+      return new Response(
+        JSON.stringify(cached.resultado),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // 1. Baixar o PDF do Storage
     const { data: fileData, error: downloadError } = await supabase.storage
       .from("estimativas")
       .download(file_path);
@@ -193,8 +208,16 @@ serve(async (req) => {
     const total_maximo = estimativas.reduce((s: number, e: any) => s + e.preco_maximo, 0);
     const total_medio = estimativas.reduce((s: number, e: any) => s + e.preco_medio, 0);
 
+    const resultadoFinal = { ...analise, estimativas, total_minimo, total_maximo, total_medio };
+
+    // Salvar no cache
+    await supabase.from("estimativas_cache").insert({
+      file_path,
+      resultado: resultadoFinal,
+    });
+
     return new Response(
-      JSON.stringify({ ...analise, estimativas, total_minimo, total_maximo, total_medio }),
+      JSON.stringify(resultadoFinal),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
