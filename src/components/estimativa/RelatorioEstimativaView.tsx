@@ -235,15 +235,15 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="text-center p-6 border rounded-lg">
             <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Mínimo</p>
-            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorio.total_minimo * 1.4)}</p>
+            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorio.total_minimo)}</p>
           </div>
           <div className="text-center p-6 border rounded-lg">
             <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Médio</p>
-            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorio.total_medio * 1.1)}</p>
+            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorio.total_medio)}</p>
           </div>
           <div className="text-center p-6 border rounded-lg">
             <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Máximo</p>
-            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorio.total_maximo * 1.2)}</p>
+            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorio.total_maximo)}</p>
           </div>
         </div>
       </Card>
