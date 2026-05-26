@@ -125,11 +125,11 @@ const gerarHTML = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup[]): str
     ${projetoHero}
   </div>
 
-  <h2 class="section">Investimento Estimado</h2>
+  <h2 class="section">Faixa de Investimento</h2>
   <div class="invest">
-    <div class="tier"><div class="nome">Essencial</div><div class="preco">${formatCurrency(relatorio.total_minimo)}</div><div class="sub">Acabamentos padrão</div></div>
-    <div class="tier recomendado"><span class="badge">Recomendado</span><div class="nome">Recomendado</div><div class="preco">${formatCurrency(relatorio.total_medio)}</div><div class="sub">Melhor custo-benefício</div></div>
-    <div class="tier"><div class="nome">Premium</div><div class="preco">${formatCurrency(relatorio.total_maximo)}</div><div class="sub">Acabamentos premium</div></div>
+    <div class="tier"><div class="nome">Mínimo</div><div class="preco">${formatCurrency(relatorio.total_minimo * 1.4)}</div></div>
+    <div class="tier"><div class="nome">Médio</div><div class="preco">${formatCurrency(relatorio.total_medio * 1.1)}</div></div>
+    <div class="tier"><div class="nome">Máximo</div><div class="preco">${formatCurrency(relatorio.total_maximo * 1.2)}</div></div>
   </div>
 
   <h2 class="section">Detalhamento por Ambiente</h2>
