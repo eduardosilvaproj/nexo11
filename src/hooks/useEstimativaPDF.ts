@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 import type { RelatorioEstimativa, MovelIdentificado, DadosProjeto } from '@/types/estimativa';
 
 export const useEstimativaPDF = () => {
@@ -12,13 +13,27 @@ export const useEstimativaPDF = () => {
     setError(null);
 
     try {
+      const MAX_SIZE = 50 * 1024 * 1024;
+      if (file.size > MAX_SIZE) {
+        const msg = 'PDF muito grande (máximo 50MB). Reduza o tamanho do arquivo ou envie menos páginas.';
+        toast({ title: 'Arquivo muito grande', description: msg, variant: 'destructive' });
+        setError(msg);
+        setLoading(false);
+        return null;
+      }
+
       setProgress('Enviando PDF...');
       const arrayBuffer = await file.arrayBuffer();
       const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       const fileHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-      const fileName = `${Date.now()}_${file.name}`;
+      const safeName = file.name
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9._-]+/g, '_')
+        .replace(/_+/g, '_');
+      const fileName = `${Date.now()}_${safeName}`;
       const { error: uploadError } = await supabase.storage
         .from('estimativas')
         .upload(fileName, file);
