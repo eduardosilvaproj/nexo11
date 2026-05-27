@@ -67,55 +67,48 @@ function isLargePdfFailure(status: number, body: string) {
   return status === 413 || status === 408 || status === 504 || /context_length|too large|payload|timeout/i.test(body);
 }
 
-async function criarSignedUrl(supabase: any, filePath: string) {
-  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(filePath, 900);
-  if (error || !data?.signedUrl) {
-    console.error("Storage signed URL error:", error);
-    throw new AppError("Erro ao gerar URL do arquivo", 400);
+async function baixarPdfBase64(supabase: any, filePath: string): Promise<string> {
+  const { data, error } = await supabase.storage.from(BUCKET).download(filePath);
+  if (error || !data) {
+    console.error("Storage download error:", error);
+    throw new AppError("Erro ao baixar arquivo do storage", 400);
   }
-  return data.signedUrl;
+  const bytes = new Uint8Array(await data.arrayBuffer());
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
 }
 
-async function chamarGemini(LOVABLE_API_KEY: string, fileUrl: string) {
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+async function chamarGemini(GEMINI_API_KEY: string, pdfBase64: string) {
+  const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${GEMINI_API_KEY}`;
+
+  const response = await fetch(geminiUrl, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-2.5-pro",
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "text", text: promptText },
-            { type: "file_url", file_url: { url: fileUrl } },
-          ],
-        },
-      ],
+      contents: [{
+        parts: [
+          { text: promptText },
+          { inline_data: { mime_type: "application/pdf", data: pdfBase64 } },
+        ],
+      }],
+      generationConfig: { temperature: 0, maxOutputTokens: 4000 },
     }),
   });
 
   const responseText = await response.text();
   if (!response.ok) {
-    console.error("Lovable AI error:", response.status, responseText);
-    if (response.status === 429) throw new AppError("Limite de requisições excedido. Tente novamente em instantes.", 429);
-    if (response.status === 402) throw new AppError("Créditos de IA esgotados. Adicione créditos em Settings > Workspace > Usage.", 402);
+    console.error("Gemini API error:", response.status, responseText.substring(0, 500));
+    if (response.status === 429) throw new AppError("Limite de requisições do Gemini excedido. Tente novamente em instantes.", 429);
     if (isLargePdfFailure(response.status, responseText)) throw new AppError(LARGE_PDF_ERROR, 413);
-
-    let errorMsg = `Lovable AI retornou status ${response.status}`;
-    try {
-      const errorJson = JSON.parse(responseText);
-      errorMsg = errorJson.error?.message || errorJson.error || errorMsg;
-    } catch {
-      errorMsg += ` - ${responseText.substring(0, 200)}`;
-    }
-    throw new AppError(errorMsg, 502);
+    throw new AppError(`Gemini retornou status ${response.status}: ${responseText.substring(0, 200)}`, 502);
   }
 
   const result = JSON.parse(responseText);
-  const text = result.choices?.[0]?.message?.content ?? "";
+  const text = result.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new AppError("Resposta da IA não contém JSON válido", 422);
   return JSON.parse(jsonMatch[0]);
