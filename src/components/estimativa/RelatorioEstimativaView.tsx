@@ -177,7 +177,11 @@ const gerarCapa = (relatorio: RelatorioEstimativa): string => {
     .cv-inv-val em{color:#C9A961;font-style:normal;font-weight:300;}
     .cv-meta{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;}
     .cv-date{font-family:'Inter',sans-serif;font-size:9px;letter-spacing:.32em;text-transform:uppercase;color:rgba(245,243,239,.55);}
-    .cv-meta-row{display:flex;gap:32px;}
+    .cv-meta-row{display:flex;gap:32px;flex-wrap:wrap;}
+    .cv-comparacao{display:flex;flex-direction:column;gap:6px;padding:14px 0;border-bottom:1px solid rgba(245,243,239,.18);}
+    .cv-comp-row{display:flex;justify-content:space-between;align-items:baseline;}
+    .cv-comp-lbl{font-family:'Inter',sans-serif;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:rgba(245,243,239,.55);}
+    .cv-comp-val{font-family:'Manrope',sans-serif;font-weight:300;font-size:14px;color:#F5F3EF;}
     .m-item{display:flex;flex-direction:column;gap:4px;min-width:120px;}
     .m-lbl{font-family:'Inter',sans-serif;font-size:8px;letter-spacing:.34em;text-transform:uppercase;color:rgba(245,243,239,.5);}
     .m-val{font-family:'Manrope',sans-serif;font-weight:400;font-size:13px;color:#F5F3EF;}
