@@ -266,9 +266,9 @@ const gerarInvestimento = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup
           <p>Três cenários que delimitam a expectativa de investimento conforme acabamentos e especificações.</p>
         </div>
         <div class="tiers">
-          <div class="tier"><span class="tier-lbl">Mínimo</span><div class="tier-val">${formatCurrency(relatorio.total_minimo)}</div><div class="tier-line"></div></div>
-          <div class="tier featured"><span class="tier-lbl">Média Prevista</span><div class="tier-val">${formatCurrency(relatorio.total_medio)}</div><div class="tier-line"></div></div>
-          <div class="tier"><span class="tier-lbl">Máximo</span><div class="tier-val">${formatCurrency(relatorio.total_maximo)}</div><div class="tier-line"></div></div>
+          <div class="tier"><span class="tier-lbl">Mínimo</span><div class="tier-val">${formatCurrency(relatorio.total_minimo)}</div><div class="tier-line"></div><p class="tier-desc">Acabamento padrão, ferragens básicas, sem acessórios especiais</p></div>
+          <div class="tier featured"><span class="tier-lbl">Média Prevista</span><div class="tier-val">${formatCurrency(relatorio.total_medio)}</div><div class="tier-line"></div><p class="tier-desc">Acabamento intermediário, ferragens soft-close, acessórios selecionados</p></div>
+          <div class="tier"><span class="tier-lbl">Máximo</span><div class="tier-val">${formatCurrency(relatorio.total_maximo)}</div><div class="tier-line"></div><p class="tier-desc">Alto padrão, ferragens premium, acessórios completos, iluminação LED</p></div>
         </div>
       </div>
       <div>
@@ -611,14 +611,17 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
           <div className="text-center p-6 border rounded-lg">
             <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Mínimo</p>
             <p className="text-2xl font-bold mt-3">{formatCurrency(relatorioFiltrado.total_minimo)}</p>
+            <p className="text-xs text-muted-foreground mt-2">Acabamento padrão, ferragens básicas, sem acessórios especiais</p>
           </div>
           <div className="text-center p-6 border rounded-lg">
             <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Médio</p>
             <p className="text-2xl font-bold mt-3">{formatCurrency(relatorioFiltrado.total_medio)}</p>
+            <p className="text-xs text-muted-foreground mt-2">Acabamento intermediário, ferragens soft-close, acessórios selecionados</p>
           </div>
           <div className="text-center p-6 border rounded-lg">
             <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Máximo</p>
             <p className="text-2xl font-bold mt-3">{formatCurrency(relatorioFiltrado.total_maximo)}</p>
+            <p className="text-xs text-muted-foreground mt-2">Alto padrão, ferragens premium, acessórios completos, iluminação LED</p>
           </div>
         </div>
       </Card>
