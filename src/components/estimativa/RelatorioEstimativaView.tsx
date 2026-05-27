@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Download, User, Building2, PenTool, Calendar } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Download, User, Building2, PenTool, Calendar, Pencil } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import type { RelatorioEstimativa, MovelIdentificado } from '@/types/estimativa';
@@ -359,6 +360,9 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
   const [selecionados, setSelecionados] = useState<Set<string>>(
     () => new Set(gruposCompletos.map((g) => g.ambiente)),
   );
+  // Overrides do valor médio por ambiente (editado manualmente)
+  const [overrides, setOverrides] = useState<Record<string, number>>({});
+  const [editando, setEditando] = useState<string | null>(null);
 
   const toggleAmbiente = (ambiente: string) => {
     setSelecionados((prev) => {
@@ -369,12 +373,48 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
     });
   };
 
+  // Grupos com overrides aplicados (escala min/max proporcionalmente ao médio)
+  const gruposEfetivos = useMemo(() => {
+    return gruposCompletos.map((g) => {
+      const override = overrides[g.ambiente];
+      if (override == null || !g.total_med || g.total_med === 0) return g;
+      const ratio = override / g.total_med;
+      return {
+        ambiente: g.ambiente,
+        total_med: override,
+        total_min: g.total_min * ratio,
+        total_max: g.total_max * ratio,
+      };
+    });
+  }, [gruposCompletos, overrides]);
+
   const relatorioFiltrado = useMemo<RelatorioEstimativa>(() => {
     const moveisFiltrados = relatorio.moveis.filter((m) =>
       selecionados.has(m.ambiente || 'Outros'),
     );
     const idsValidos = new Set(moveisFiltrados.map((m) => m.id));
-    const estimativasFiltradas = relatorio.estimativas.filter((e) => idsValidos.has(e.movel_id));
+
+    // Mapa de ratio por ambiente para escalar estimativas individuais
+    const ratioMap = new Map<string, number>();
+    gruposCompletos.forEach((g) => {
+      const override = overrides[g.ambiente];
+      ratioMap.set(g.ambiente, override != null && g.total_med > 0 ? override / g.total_med : 1);
+    });
+
+    const estimativasFiltradas = relatorio.estimativas
+      .filter((e) => idsValidos.has(e.movel_id))
+      .map((e) => {
+        const movel = relatorio.moveis.find((m) => m.id === e.movel_id);
+        const amb = movel?.ambiente || 'Outros';
+        const r = ratioMap.get(amb) ?? 1;
+        return {
+          ...e,
+          preco_minimo: e.preco_minimo * r,
+          preco_maximo: e.preco_maximo * r,
+          preco_medio: e.preco_medio * r,
+        };
+      });
+
     const total_minimo = estimativasFiltradas.reduce((s, e) => s + e.preco_minimo, 0) * 1.4;
     const total_maximo = estimativasFiltradas.reduce((s, e) => s + e.preco_maximo, 0) * 1.2;
     const total_medio = estimativasFiltradas.reduce((s, e) => s + e.preco_medio, 0) * 1.1;
@@ -386,9 +426,12 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
       total_maximo,
       total_medio,
     };
-  }, [relatorio, selecionados]);
+  }, [relatorio, selecionados, overrides, gruposCompletos]);
 
-  const gruposFiltrados = useMemo(() => agruparPorAmbiente(relatorioFiltrado), [relatorioFiltrado]);
+  const gruposFiltrados = useMemo(
+    () => gruposEfetivos.filter((g) => selecionados.has(g.ambiente)),
+    [gruposEfetivos, selecionados],
+  );
   const d = relatorio.dados_projeto;
   const mostrarProjeto = temDadosProjeto(relatorio);
 
@@ -525,16 +568,19 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
             Ambientes ({selecionados.size}/{gruposCompletos.length})
           </h3>
           <p className="text-xs text-muted-foreground">
-            Desmarque ambientes duplicados ou que não deseja incluir
+            Desmarque ou clique no valor para editar
           </p>
         </div>
         <div className="space-y-2">
-          {gruposCompletos.map((g) => {
+          {gruposEfetivos.map((g) => {
             const checked = selecionados.has(g.ambiente);
+            const isEdit = editando === g.ambiente;
+            const original = gruposCompletos.find((x) => x.ambiente === g.ambiente)?.total_med ?? 0;
+            const foiEditado = overrides[g.ambiente] != null;
             return (
-              <label
+              <div
                 key={g.ambiente}
-                className={`p-4 border rounded-lg flex items-center gap-4 cursor-pointer transition-colors ${
+                className={`p-4 border rounded-lg flex items-center gap-4 transition-colors ${
                   checked ? 'bg-background' : 'bg-muted/40 opacity-60'
                 }`}
               >
@@ -544,12 +590,42 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
                 />
                 <p className="font-semibold text-base flex-1">{g.ambiente}</p>
                 <div className="text-right">
-                  <p className="font-semibold text-primary text-lg">{formatCurrency(g.total_med)}</p>
+                  {isEdit ? (
+                    <ValorEditavel
+                      valorInicial={g.total_med}
+                      onSalvar={(v) => {
+                        if (v <= 0 || Math.abs(v - original) < 0.005) {
+                          setOverrides((prev) => {
+                            const next = { ...prev };
+                            delete next[g.ambiente];
+                            return next;
+                          });
+                        } else {
+                          setOverrides((prev) => ({ ...prev, [g.ambiente]: v }));
+                        }
+                        setEditando(null);
+                      }}
+                      onCancelar={() => setEditando(null)}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setEditando(g.ambiente)}
+                      className="group inline-flex items-center gap-2 px-2 py-1 -mr-2 rounded-md hover:bg-muted transition-colors"
+                      title="Clique para editar"
+                    >
+                      <span className={`font-semibold text-lg ${foiEditado ? 'text-emerald-600' : 'text-primary'}`}>
+                        {formatCurrency(g.total_med)}
+                      </span>
+                      <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </button>
+                  )}
                   <p className="text-xs text-muted-foreground">
                     {formatCurrency(g.total_min)} — {formatCurrency(g.total_max)}
+                    {foiEditado && <span className="ml-1 text-emerald-600">• editado</span>}
                   </p>
                 </div>
-              </label>
+              </div>
             );
           })}
         </div>
@@ -560,6 +636,48 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
           <strong>Importante:</strong> Estimativa preliminar. Orçamento final deve ser feito no Promob após medição técnica.
         </p>
       </Card>
+    </div>
+  );
+};
+
+interface ValorEditavelProps {
+  valorInicial: number;
+  onSalvar: (v: number) => void;
+  onCancelar: () => void;
+}
+
+const ValorEditavel = ({ valorInicial, onSalvar, onCancelar }: ValorEditavelProps) => {
+  const [valor, setValor] = useState<string>(() =>
+    valorInicial.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+  );
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    ref.current?.focus();
+    ref.current?.select();
+  }, []);
+
+  const confirmar = () => {
+    const limpo = valor.replace(/\./g, '').replace(',', '.').replace(/[^\d.]/g, '');
+    const num = parseFloat(limpo);
+    if (isNaN(num)) onCancelar();
+    else onSalvar(num);
+  };
+
+  return (
+    <div className="inline-flex items-center gap-1">
+      <span className="text-sm text-muted-foreground">R$</span>
+      <Input
+        ref={ref}
+        value={valor}
+        onChange={(e) => setValor(e.target.value)}
+        onBlur={confirmar}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') confirmar();
+          if (e.key === 'Escape') onCancelar();
+        }}
+        className="h-8 w-32 text-right font-semibold text-base"
+        inputMode="decimal"
+      />
     </div>
   );
 };
