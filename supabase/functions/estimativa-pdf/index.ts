@@ -199,8 +199,8 @@ serve(async (req) => {
 
     if (cached) return jsonResponse(cached.resultado);
 
-    const pdfBase64 = await baixarPdfBase64(supabase, file_path);
-    const analise = await chamarGemini(GEMINI_API_KEY, pdfBase64);
+    const fileUri = await uploadParaGeminiFileAPI(supabase, GEMINI_API_KEY, file_path);
+    const analise = await chamarGemini(GEMINI_API_KEY, fileUri);
     const resultadoFinal = calcularResultado(analise);
 
     await supabase.from("estimativas_cache").insert({
