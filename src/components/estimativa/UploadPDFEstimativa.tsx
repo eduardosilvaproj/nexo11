@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select';
 import { useEstimativaPDF } from '@/hooks/useEstimativaPDF';
 import type {
-  RelatorioEstimativa, ContextoEstimativa, TipoProjeto, PadraoAcabamento,
+  RelatorioEstimativa, ContextoEstimativa, TipoProjeto,
 } from '@/types/estimativa';
 
 interface UploadPDFEstimativaProps {
@@ -22,12 +22,9 @@ export const UploadPDFEstimativa = ({ onRelatorioGerado }: UploadPDFEstimativaPr
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [tipoProjeto, setTipoProjeto] = useState<TipoProjeto | ''>('');
-  const [padrao, setPadrao] = useState<PadraoAcabamento | ''>('');
   const [orcamentoStr, setOrcamentoStr] = useState('');
   const [observacoes, setObservacoes] = useState('');
   const { analisarPDF, loading, progress, error } = useEstimativaPDF();
-
-  const contextoValido = !!tipoProjeto && !!padrao;
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -50,11 +47,10 @@ export const UploadPDFEstimativa = ({ onRelatorioGerado }: UploadPDFEstimativaPr
   }, []);
 
   const handleAnalisar = async () => {
-    if (!selectedFile || !contextoValido) return;
+    if (!selectedFile) return;
     const orcamentoNum = parseFloat(orcamentoStr.replace(/\./g, '').replace(',', '.'));
     const contexto: ContextoEstimativa = {
-      tipo_projeto: tipoProjeto as TipoProjeto,
-      padrao: padrao as PadraoAcabamento,
+      tipo_projeto: tipoProjeto || undefined,
       orcamento_cliente: !isNaN(orcamentoNum) && orcamentoNum > 0 ? orcamentoNum : undefined,
       observacoes: observacoes.trim() || undefined,
     };
@@ -72,7 +68,7 @@ export const UploadPDFEstimativa = ({ onRelatorioGerado }: UploadPDFEstimativaPr
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Tipo de projeto <span className="text-destructive">*</span></Label>
+            <Label>Tipo de projeto <span className="text-muted-foreground">(opcional)</span></Label>
             <Select value={tipoProjeto} onValueChange={(v) => setTipoProjeto(v as TipoProjeto)}>
               <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
               <SelectContent>
@@ -84,20 +80,7 @@ export const UploadPDFEstimativa = ({ onRelatorioGerado }: UploadPDFEstimativaPr
           </div>
 
           <div className="space-y-2">
-            <Label>Padrão de acabamento <span className="text-destructive">*</span></Label>
-            <Select value={padrao} onValueChange={(v) => setPadrao(v as PadraoAcabamento)}>
-              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="economico">Econômico (×0.7)</SelectItem>
-                <SelectItem value="medio">Médio (×1.0)</SelectItem>
-                <SelectItem value="alto">Alto Padrão (×1.3)</SelectItem>
-                <SelectItem value="luxo">Luxo (×1.6)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Orçamento do cliente (opcional)</Label>
+            <Label>Orçamento do cliente <span className="text-muted-foreground">(opcional)</span></Label>
             <Input
               inputMode="decimal"
               placeholder="R$ Valor que o cliente deseja investir"
@@ -106,8 +89,8 @@ export const UploadPDFEstimativa = ({ onRelatorioGerado }: UploadPDFEstimativaPr
             />
           </div>
 
-          <div className="space-y-2 md:col-span-1">
-            <Label>Observações (opcional)</Label>
+          <div className="space-y-2 md:col-span-2">
+            <Label>Observações <span className="text-muted-foreground">(opcional)</span></Label>
             <Textarea
               rows={3}
               placeholder="Ex: cliente quer investir pouco, prédio para locação, projeto de arquiteta renomada..."
@@ -123,16 +106,10 @@ export const UploadPDFEstimativa = ({ onRelatorioGerado }: UploadPDFEstimativaPr
             <h3 className="text-lg font-semibold">Projeto PDF</h3>
           </div>
 
-          {!contextoValido && (
-            <p className="text-sm text-muted-foreground">
-              Preencha tipo de projeto e padrão de acabamento para liberar o upload.
-            </p>
-          )}
-
           <div
             className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-              !contextoValido ? 'opacity-50 pointer-events-none' : ''
-            } ${dragActive ? 'border-primary bg-primary/5' : 'border-border'}`}
+              dragActive ? 'border-primary bg-primary/5' : 'border-border'
+            }`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
@@ -150,10 +127,9 @@ export const UploadPDFEstimativa = ({ onRelatorioGerado }: UploadPDFEstimativaPr
                   onChange={handleFileInput}
                   className="hidden"
                   id="pdf-upload"
-                  disabled={!contextoValido}
                 />
                 <label htmlFor="pdf-upload">
-                  <Button variant="outline" className="cursor-pointer" asChild disabled={!contextoValido}>
+                  <Button variant="outline" className="cursor-pointer" asChild>
                     <span>Selecionar PDF</span>
                   </Button>
                 </label>
@@ -166,7 +142,7 @@ export const UploadPDFEstimativa = ({ onRelatorioGerado }: UploadPDFEstimativaPr
                 </div>
                 <p className="text-sm text-muted-foreground">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
                 <div className="flex gap-2 justify-center">
-                  <Button onClick={handleAnalisar} disabled={loading || !contextoValido}>
+                  <Button onClick={handleAnalisar} disabled={loading}>
                     {loading ? 'Analisando...' : 'Analisar Projeto'}
                   </Button>
                   <Button variant="outline" onClick={() => setSelectedFile(null)} disabled={loading}>

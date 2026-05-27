@@ -3,11 +3,11 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Download, User, Building2, PenTool, Calendar, Pencil, Briefcase, Sparkles, Target } from 'lucide-react';
+import { Download, User, Building2, PenTool, Calendar, Pencil, Briefcase, Target } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import type { RelatorioEstimativa, MovelIdentificado } from '@/types/estimativa';
-import { LABEL_TIPO_PROJETO, LABEL_PADRAO } from '@/types/estimativa';
+import { LABEL_TIPO_PROJETO } from '@/types/estimativa';
 
 interface RelatorioEstimativaViewProps {
   relatorio: RelatorioEstimativa;
@@ -143,9 +143,8 @@ const gerarCapa = (relatorio: RelatorioEstimativa): string => {
   if (d.nome_obra) metaItems.push(`<div class="m-item"><span class="m-lbl">Obra</span><span class="m-val">${d.nome_obra}</span></div>`);
   if (d.arquiteto) metaItems.push(`<div class="m-item"><span class="m-lbl">Arquiteto</span><span class="m-val">${d.arquiteto}</span></div>`);
   if (d.nome_cliente) metaItems.push(`<div class="m-item"><span class="m-lbl">Cliente</span><span class="m-val">${d.nome_cliente}</span></div>`);
-  if (relatorio.contexto) {
+  if (relatorio.contexto?.tipo_projeto) {
     metaItems.push(`<div class="m-item"><span class="m-lbl">Tipo</span><span class="m-val">${LABEL_TIPO_PROJETO[relatorio.contexto.tipo_projeto]}</span></div>`);
-    metaItems.push(`<div class="m-item"><span class="m-lbl">Padrão</span><span class="m-val">${LABEL_PADRAO[relatorio.contexto.padrao]}</span></div>`);
   }
 
   const c = relatorio.comparacao_orcamento;
@@ -241,10 +240,12 @@ const gerarInvestimento = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup
     .tier-lbl{font-family:'Inter',sans-serif;font-size:9px;font-weight:500;letter-spacing:.32em;text-transform:uppercase;color:#8A867E;}
     .tier-val{font-family:'Manrope',sans-serif;font-size:24px;font-weight:300;color:#1C1C1A;letter-spacing:-.02em;}
     .tier-line{width:28px;height:1px;background:#E4DFD6;margin-top:4px;}
+    .tier-desc{font-family:'Inter',sans-serif;font-size:9px;line-height:1.45;color:#8A867E;margin-top:2px;}
     .tier.featured{background:#2A331C;color:#F5F3EF;border-color:#2A331C;}
     .tier.featured .tier-lbl{color:rgba(245,243,239,.6);}
     .tier.featured .tier-val{color:#F5F3EF;}
     .tier.featured .tier-line{background:#C9A961;}
+    .tier.featured .tier-desc{color:rgba(245,243,239,.55);}
     .amb-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 12px;}
     .amb-card{background:#FBFAF7;border:1px solid #E4DFD6;padding:14px 16px;display:flex;align-items:center;gap:14px;}
     .amb-icon{width:28px;height:28px;color:#3D4A2A;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
@@ -267,9 +268,9 @@ const gerarInvestimento = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup
           <p>Três cenários que delimitam a expectativa de investimento conforme acabamentos e especificações.</p>
         </div>
         <div class="tiers">
-          <div class="tier"><span class="tier-lbl">Mínimo</span><div class="tier-val">${formatCurrency(relatorio.total_minimo)}</div><div class="tier-line"></div></div>
-          <div class="tier featured"><span class="tier-lbl">Média Prevista</span><div class="tier-val">${formatCurrency(relatorio.total_medio)}</div><div class="tier-line"></div></div>
-          <div class="tier"><span class="tier-lbl">Máximo</span><div class="tier-val">${formatCurrency(relatorio.total_maximo)}</div><div class="tier-line"></div></div>
+          <div class="tier"><span class="tier-lbl">Mínimo</span><div class="tier-val">${formatCurrency(relatorio.total_minimo)}</div><div class="tier-line"></div><p class="tier-desc">Acabamento padrão, ferragens básicas, sem acessórios especiais</p></div>
+          <div class="tier featured"><span class="tier-lbl">Média Prevista</span><div class="tier-val">${formatCurrency(relatorio.total_medio)}</div><div class="tier-line"></div><p class="tier-desc">Acabamento intermediário, ferragens soft-close, acessórios selecionados</p></div>
+          <div class="tier"><span class="tier-lbl">Máximo</span><div class="tier-val">${formatCurrency(relatorio.total_maximo)}</div><div class="tier-line"></div><p class="tier-desc">Alto padrão, ferragens premium, acessórios completos, iluminação LED</p></div>
         </div>
       </div>
       <div>
@@ -567,20 +568,15 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Contexto da Estimativa</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-              <Briefcase className="h-4 w-4 text-primary mt-0.5" />
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Tipo de Projeto</p>
-                <p className="font-medium">{LABEL_TIPO_PROJETO[relatorio.contexto.tipo_projeto]}</p>
+            {relatorio.contexto.tipo_projeto && (
+              <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
+                <Briefcase className="h-4 w-4 text-primary mt-0.5" />
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Tipo de Projeto</p>
+                  <p className="font-medium">{LABEL_TIPO_PROJETO[relatorio.contexto.tipo_projeto]}</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-              <Sparkles className="h-4 w-4 text-primary mt-0.5" />
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Padrão</p>
-                <p className="font-medium">{LABEL_PADRAO[relatorio.contexto.padrao]}</p>
-              </div>
-            </div>
+            )}
             {relatorio.contexto.orcamento_cliente != null && (
               <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
                 <Target className="h-4 w-4 text-primary mt-0.5" />
@@ -617,14 +613,17 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
           <div className="text-center p-6 border rounded-lg">
             <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Mínimo</p>
             <p className="text-2xl font-bold mt-3">{formatCurrency(relatorioFiltrado.total_minimo)}</p>
+            <p className="text-xs text-muted-foreground mt-2">Acabamento padrão, ferragens básicas, sem acessórios especiais</p>
           </div>
           <div className="text-center p-6 border rounded-lg">
             <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Médio</p>
             <p className="text-2xl font-bold mt-3">{formatCurrency(relatorioFiltrado.total_medio)}</p>
+            <p className="text-xs text-muted-foreground mt-2">Acabamento intermediário, ferragens soft-close, acessórios selecionados</p>
           </div>
           <div className="text-center p-6 border rounded-lg">
             <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Máximo</p>
             <p className="text-2xl font-bold mt-3">{formatCurrency(relatorioFiltrado.total_maximo)}</p>
+            <p className="text-xs text-muted-foreground mt-2">Alto padrão, ferragens premium, acessórios completos, iluminação LED</p>
           </div>
         </div>
       </Card>

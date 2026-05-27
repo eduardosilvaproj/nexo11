@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import type {
   RelatorioEstimativa, MovelIdentificado, DadosProjeto, ContextoEstimativa,
 } from '@/types/estimativa';
-import { MULTIPLICADOR_PADRAO } from '@/types/estimativa';
 
 const CHUNK_THRESHOLD_BYTES = 100 * 1024 * 1024;
 const PAGES_PER_CHUNK = 10;
@@ -185,7 +184,6 @@ export const useEstimativaPDF = () => {
       }
 
       const dados_projeto: DadosProjeto = analise.dados_projeto || {};
-      const multPadrao = MULTIPLICADOR_PADRAO[contexto.padrao] ?? 1;
 
       setProgress('Calculando estimativas...');
       const moveis: MovelIdentificado[] = (analise.moveis || []).map((m: any, idx: number) => ({
@@ -205,9 +203,9 @@ export const useEstimativaPDF = () => {
         const qtd = m.quantidade || 1;
         return {
           movel_id: `movel_${idx}`,
-          preco_minimo: preco.fixo_min * qtd * multPadrao,
-          preco_maximo: preco.fixo_max * qtd * multPadrao,
-          preco_medio: ((preco.fixo_min + preco.fixo_max) / 2) * qtd * multPadrao,
+          preco_minimo: preco.fixo_min * qtd,
+          preco_maximo: preco.fixo_max * qtd,
+          preco_medio: ((preco.fixo_min + preco.fixo_max) / 2) * qtd,
           base_calculo: '',
         };
       });
