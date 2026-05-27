@@ -639,3 +639,45 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
     </div>
   );
 };
+
+interface ValorEditavelProps {
+  valorInicial: number;
+  onSalvar: (v: number) => void;
+  onCancelar: () => void;
+}
+
+const ValorEditavel = ({ valorInicial, onSalvar, onCancelar }: ValorEditavelProps) => {
+  const [valor, setValor] = useState<string>(() =>
+    valorInicial.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+  );
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    ref.current?.focus();
+    ref.current?.select();
+  }, []);
+
+  const confirmar = () => {
+    const limpo = valor.replace(/\./g, '').replace(',', '.').replace(/[^\d.]/g, '');
+    const num = parseFloat(limpo);
+    if (isNaN(num)) onCancelar();
+    else onSalvar(num);
+  };
+
+  return (
+    <div className="inline-flex items-center gap-1">
+      <span className="text-sm text-muted-foreground">R$</span>
+      <Input
+        ref={ref}
+        value={valor}
+        onChange={(e) => setValor(e.target.value)}
+        onBlur={confirmar}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') confirmar();
+          if (e.key === 'Escape') onCancelar();
+        }}
+        className="h-8 w-32 text-right font-semibold text-base"
+        inputMode="decimal"
+      />
+    </div>
+  );
+};
