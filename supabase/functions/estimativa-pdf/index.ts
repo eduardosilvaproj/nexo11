@@ -95,7 +95,7 @@ async function chamarGemini(GEMINI_API_KEY: string, pdfBase64: string) {
           { inline_data: { mime_type: "application/pdf", data: pdfBase64 } },
         ],
       }],
-      generationConfig: { temperature: 0, maxOutputTokens: 4000 },
+      generationConfig: { temperature: 0, maxOutputTokens: 32000 },
     }),
   });
 
@@ -109,9 +109,24 @@ async function chamarGemini(GEMINI_API_KEY: string, pdfBase64: string) {
 
   const result = JSON.parse(responseText);
   const text = result.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  const finishReason = result.candidates?.[0]?.finishReason;
+  console.log("Gemini finishReason:", finishReason, "| text length:", text.length);
   const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new AppError("Resposta da IA não contém JSON válido", 422);
-  return JSON.parse(jsonMatch[0]);
+  if (!jsonMatch) {
+    console.error("Resposta sem JSON. Texto bruto:", text.substring(0, 1000));
+    throw new AppError("Resposta da IA não contém JSON válido", 422);
+  }
+  try {
+    const parsed = JSON.parse(jsonMatch[0]);
+    console.log("Gemini parseado: ambientes únicos =",
+      new Set((parsed.moveis || []).map((m: any) => m.ambiente)).size,
+      "| total móveis =", (parsed.moveis || []).length,
+      "| finishReason =", finishReason);
+    return parsed;
+  } catch (e) {
+    console.error("JSON inválido (provável truncamento). finishReason:", finishReason, "| tamanho:", jsonMatch[0].length, "| fim:", jsonMatch[0].substring(Math.max(0, jsonMatch[0].length - 300)));
+    throw new AppError("Resposta da IA truncada ou JSON inválido", 422);
+  }
 }
 
 function calcularResultado(analise: any) {
