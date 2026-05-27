@@ -1,1 +1,4 @@
 project_id = "pllvwcszoyjhfvnzshzw"
+
+[functions.estimativa-pdf]
+wall_clock_timeout = 300
