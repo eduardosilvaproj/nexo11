@@ -1,5 +1,7 @@
+import { useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Download, User, Building2, PenTool, Calendar } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
