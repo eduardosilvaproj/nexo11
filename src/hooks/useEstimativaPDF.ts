@@ -107,38 +107,57 @@ export const useEstimativaPDF = () => {
 
         const analises: any[] = [];
         const chunkPaths: string[] = [];
+        let chunksComErro = 0;
+        const errosDetalhes: string[] = [];
 
         for (let i = 0; i < total; i++) {
           setProgress(`Processando parte ${i + 1} de ${total}...`);
           const chunkPath = `chunks/${fileHash}_parte_${i + 1}_${Date.now()}.pdf`;
           chunkPaths.push(chunkPath);
 
-          const chunkBlob = new Blob([chunks[i] as BlobPart], { type: 'application/pdf' });
-          const { error: upErr } = await supabase.storage
-            .from('estimativas').upload(chunkPath, chunkBlob, { upsert: true, contentType: 'application/pdf' });
-          if (upErr) throw upErr;
+          try {
+            const chunkBlob = new Blob([chunks[i] as BlobPart], { type: 'application/pdf' });
+            const { error: upErr } = await supabase.storage
+              .from('estimativas').upload(chunkPath, chunkBlob, { upsert: true, contentType: 'application/pdf' });
+            if (upErr) throw upErr;
 
-          if (i === 0) {
-            publicUrl = supabase.storage.from('estimativas').getPublicUrl(chunkPath).data.publicUrl;
+            if (i === 0) {
+              publicUrl = supabase.storage.from('estimativas').getPublicUrl(chunkPath).data.publicUrl;
+            }
+
+            const chunkHash = `${fileHash}_parte_${i + 1}`;
+            const { data, error: fnError } = await supabase.functions.invoke(
+              'estimativa-pdf',
+              { body: { file_path: chunkPath, file_hash: chunkHash } }
+            );
+            if (fnError) throw new Error(fnError.message);
+            if (data?.error) throw new Error(data.error);
+            analises.push(data);
+          } catch (err) {
+            chunksComErro++;
+            const msg = err instanceof Error ? err.message : String(err);
+            errosDetalhes.push(`Parte ${i + 1}: ${msg}`);
+            console.warn(`Chunk ${i + 1} falhou, pulando...`, msg);
           }
+        }
 
-          const chunkHash = `${fileHash}_parte_${i + 1}`;
-          const { data, error: fnError } = await supabase.functions.invoke(
-            'estimativa-pdf',
-            { body: { file_path: chunkPath, file_hash: chunkHash } }
-          );
-          if (fnError) throw new Error(`Edge Function erro (parte ${i + 1}): ${fnError.message}`);
-          if (data?.error) throw new Error(`Parte ${i + 1}: ${data.error}`);
-          analises.push(data);
+        if (analises.length === 0) {
+          throw new Error(`Nenhuma parte foi processada. Erros: ${errosDetalhes.slice(0, 3).join(' | ')}`);
         }
 
         setProgress('Juntando resultados...');
         const moveisCombinados = removerDuplicatas(analises.flatMap((a) => a?.moveis || []));
+        const observacoes = analises.flatMap((a) => a?.observacoes_gerais || []);
+        if (chunksComErro > 0) {
+          observacoes.unshift(
+            `⚠️ ${analises.length} de ${total} partes processadas com sucesso. ${chunksComErro} ${chunksComErro === 1 ? 'parte não pôde ser analisada' : 'partes não puderam ser analisadas'} (páginas em branco, imagens complexas ou erro temporário da IA).`
+          );
+        }
         analise = {
           dados_projeto: juntarDadosProjeto(analises),
           moveis: moveisCombinados,
           estimativas: [],
-          observacoes_gerais: analises.flatMap((a) => a?.observacoes_gerais || []),
+          observacoes_gerais: observacoes,
         };
 
         // Limpa os chunks do storage
