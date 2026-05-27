@@ -13,9 +13,9 @@ export const useEstimativaPDF = () => {
     setError(null);
 
     try {
-      const MAX_SIZE = 500 * 1024 * 1024;
+      const MAX_SIZE = 100 * 1024 * 1024;
       if (file.size > MAX_SIZE) {
-        const msg = 'PDF muito grande (máximo 500MB). Comprima o arquivo em ilovepdf.com ou exporte apenas as pranchas de layout.';
+        const msg = 'PDF muito grande (máximo 100MB). Comprima em ilovepdf.com ou exporte apenas as pranchas de layout do projeto.';
         toast({ title: 'Arquivo muito grande', description: msg, variant: 'destructive' });
         setError(msg);
         setLoading(false);
