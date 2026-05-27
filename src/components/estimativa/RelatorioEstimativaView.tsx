@@ -568,16 +568,19 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
             Ambientes ({selecionados.size}/{gruposCompletos.length})
           </h3>
           <p className="text-xs text-muted-foreground">
-            Desmarque ambientes duplicados ou que não deseja incluir
+            Desmarque ou clique no valor para editar
           </p>
         </div>
         <div className="space-y-2">
-          {gruposCompletos.map((g) => {
+          {gruposEfetivos.map((g) => {
             const checked = selecionados.has(g.ambiente);
+            const isEdit = editando === g.ambiente;
+            const original = gruposCompletos.find((x) => x.ambiente === g.ambiente)?.total_med ?? 0;
+            const foiEditado = overrides[g.ambiente] != null;
             return (
-              <label
+              <div
                 key={g.ambiente}
-                className={`p-4 border rounded-lg flex items-center gap-4 cursor-pointer transition-colors ${
+                className={`p-4 border rounded-lg flex items-center gap-4 transition-colors ${
                   checked ? 'bg-background' : 'bg-muted/40 opacity-60'
                 }`}
               >
@@ -587,12 +590,42 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
                 />
                 <p className="font-semibold text-base flex-1">{g.ambiente}</p>
                 <div className="text-right">
-                  <p className="font-semibold text-primary text-lg">{formatCurrency(g.total_med)}</p>
+                  {isEdit ? (
+                    <ValorEditavel
+                      valorInicial={g.total_med}
+                      onSalvar={(v) => {
+                        if (v <= 0 || Math.abs(v - original) < 0.005) {
+                          setOverrides((prev) => {
+                            const next = { ...prev };
+                            delete next[g.ambiente];
+                            return next;
+                          });
+                        } else {
+                          setOverrides((prev) => ({ ...prev, [g.ambiente]: v }));
+                        }
+                        setEditando(null);
+                      }}
+                      onCancelar={() => setEditando(null)}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setEditando(g.ambiente)}
+                      className="group inline-flex items-center gap-2 px-2 py-1 -mr-2 rounded-md hover:bg-muted transition-colors"
+                      title="Clique para editar"
+                    >
+                      <span className={`font-semibold text-lg ${foiEditado ? 'text-emerald-600' : 'text-primary'}`}>
+                        {formatCurrency(g.total_med)}
+                      </span>
+                      <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </button>
+                  )}
                   <p className="text-xs text-muted-foreground">
                     {formatCurrency(g.total_min)} — {formatCurrency(g.total_max)}
+                    {foiEditado && <span className="ml-1 text-emerald-600">• editado</span>}
                   </p>
                 </div>
-              </label>
+              </div>
             );
           })}
         </div>
