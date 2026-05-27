@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { PDFDocument } from "https://esm.sh/pdf-lib@1.17.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,8 +7,6 @@ const corsHeaders = {
 };
 
 const BUCKET = "estimativas";
-const CHUNK_THRESHOLD_BYTES = 40 * 1024 * 1024;
-const PAGES_PER_CHUNK = 15;
 const LARGE_PDF_ERROR = "PDF muito grande para processar. Comprima o arquivo em ilovepdf.com ou exporte apenas as pranchas de layout.";
 
 const promptText = 'Analise este PDF de projeto executivo de móveis planejados. Extraia:\n\n1. DADOS DO PROJETO (se disponíveis no carimbo, capa ou legendas):\n   - nome_cliente: nome do cliente/proprietário\n   - nome_obra: nome da obra ou endereço\n   - arquiteto: nome do arquiteto(a) ou escritório\n   - data_projeto: data do projeto\n\n2. MÓVEIS: Para cada módulo/peça identificada:\n   - ambiente, tipo, quantidade\n   - Tipos válidos: aereo, base, torre, painel, nicho, gaveta, prateleira, guarda_roupa, bancada, rack, divisoria, outro\n   - Identifique o MÁXIMO de peças possível — cada módulo separado conta como um item\n\nIMPORTANTE: Liste CADA módulo/peça separadamente. Um ambiente pode ter 5, 10 ou mais itens. NÃO agrupe múltiplos módulos em um único item. Por exemplo, uma cozinha típica tem: 3-5 aéreos + 2-3 bases + 1 torre + bancada = 7-10 itens separados.\n\nIMPORTANTE: Seja exaustivo. Um projeto residencial completo tipicamente tem 15-40 módulos. Não agrupe — liste cada módulo separadamente. Se um ambiente tem 3 aéreos iguais, liste como quantidade: 3 (um item), mas se são diferentes, liste cada um separado.\n\nRetorne APENAS JSON: {"dados_projeto":{"nome_cliente":"","nome_obra":"","arquiteto":"","data_projeto":""},"moveis":[{"ambiente":"","tipo":"","descricao":"","largura":0,"altura":0,"profundidade":0,"quantidade":1}],"observacoes_gerais":[]}\n\nSe algum dado do projeto não estiver visível, deixe string vazia.';
@@ -53,7 +50,6 @@ function normalizarTipo(tipo: string): string {
 
 class AppError extends Error {
   status: number;
-
   constructor(message: string, status = 500) {
     super(message);
     this.status = status;
@@ -125,49 +121,6 @@ async function chamarGemini(LOVABLE_API_KEY: string, fileUrl: string) {
   return JSON.parse(jsonMatch[0]);
 }
 
-async function dividirPDF(pdfBytes: Uint8Array, paginasPorChunk: number): Promise<Uint8Array[]> {
-  const doc = await PDFDocument.load(pdfBytes);
-  const totalPages = doc.getPageCount();
-  const chunks: Uint8Array[] = [];
-
-  for (let i = 0; i < totalPages; i += paginasPorChunk) {
-    const chunkDoc = await PDFDocument.create();
-    const end = Math.min(i + paginasPorChunk, totalPages);
-    const pages = await chunkDoc.copyPages(doc, Array.from({ length: end - i }, (_, idx) => i + idx));
-    pages.forEach((page) => chunkDoc.addPage(page));
-    chunks.push(await chunkDoc.save());
-  }
-
-  return chunks;
-}
-
-function juntarDadosProjeto(analises: any[]) {
-  return analises.reduce((acc, analise) => {
-    const dados = analise?.dados_projeto || {};
-    return {
-      nome_cliente: acc.nome_cliente || dados.nome_cliente || "",
-      nome_obra: acc.nome_obra || dados.nome_obra || "",
-      arquiteto: acc.arquiteto || dados.arquiteto || "",
-      data_projeto: acc.data_projeto || dados.data_projeto || "",
-    };
-  }, { nome_cliente: "", nome_obra: "", arquiteto: "", data_projeto: "" });
-}
-
-function removerDuplicatas(moveis: any[]) {
-  const mapa = new Map<string, any>();
-  for (const movel of moveis) {
-    const ambiente = (movel.ambiente || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-    const tipo = normalizarTipo(movel.tipo);
-    const chave = `${ambiente}|${tipo}`;
-    const atual = mapa.get(chave);
-    const quantidade = Number(movel.quantidade) || 1;
-    if (!atual || quantidade > (Number(atual.quantidade) || 1)) {
-      mapa.set(chave, { ...movel, tipo, quantidade });
-    }
-  }
-  return Array.from(mapa.values());
-}
-
 function calcularResultado(analise: any) {
   const estimativas = (analise.moveis || []).map((m: any, idx: number) => {
     const tipoNorm = normalizarTipo(m.tipo);
@@ -215,61 +168,8 @@ serve(async (req) => {
 
     if (cached) return jsonResponse(cached.resultado);
 
-    const { data: files, error: listError } = await supabase.storage.from(BUCKET).list("", { search: file_path, limit: 1 });
-    if (listError) {
-      console.error("Storage list error:", listError);
-      throw new AppError("Erro ao verificar tamanho do arquivo", 400);
-    }
-    const fileInfo = files?.find((file: any) => file.name === file_path);
-    const fileSize = Number(fileInfo?.metadata?.size || 0);
-
-    let analise: any;
-    const tempPaths: string[] = [];
-
-    try {
-      if (fileSize > CHUNK_THRESHOLD_BYTES) {
-        const { data: fileData, error: downloadError } = await supabase.storage.from(BUCKET).download(file_path);
-        if (downloadError || !fileData) {
-          console.error("Storage download error:", downloadError);
-          throw new AppError("Erro ao baixar PDF para dividir em partes", 400);
-        }
-
-        const pdfBytes = new Uint8Array(await fileData.arrayBuffer());
-        const chunks = await dividirPDF(pdfBytes, PAGES_PER_CHUNK);
-        const analises: any[] = [];
-
-        for (let i = 0; i < chunks.length; i++) {
-          console.log(`Processando parte ${i + 1} de ${chunks.length}`);
-          const chunkPath = `tmp/${cacheKey}_parte_${i + 1}_${Date.now()}.pdf`;
-          tempPaths.push(chunkPath);
-          const { error: uploadError } = await supabase.storage.from(BUCKET).upload(chunkPath, chunks[i], {
-            contentType: "application/pdf",
-            upsert: true,
-          });
-          if (uploadError) {
-            console.error("Storage chunk upload error:", uploadError);
-            throw new AppError("Erro ao preparar uma parte do PDF", 400);
-          }
-          const chunkUrl = await criarSignedUrl(supabase, chunkPath);
-          analises.push(await chamarGemini(LOVABLE_API_KEY, chunkUrl));
-        }
-
-        analise = {
-          dados_projeto: juntarDadosProjeto(analises),
-          moveis: removerDuplicatas(analises.flatMap((item) => item?.moveis || [])),
-          observacoes_gerais: analises.flatMap((item) => item?.observacoes_gerais || []),
-        };
-      } else {
-        const fileUrl = await criarSignedUrl(supabase, file_path);
-        analise = await chamarGemini(LOVABLE_API_KEY, fileUrl);
-      }
-    } finally {
-      if (tempPaths.length > 0) {
-        const { error: removeError } = await supabase.storage.from(BUCKET).remove(tempPaths);
-        if (removeError) console.error("Storage temp cleanup error:", removeError);
-      }
-    }
-
+    const fileUrl = await criarSignedUrl(supabase, file_path);
+    const analise = await chamarGemini(LOVABLE_API_KEY, fileUrl);
     const resultadoFinal = calcularResultado(analise);
 
     await supabase.from("estimativas_cache").insert({
