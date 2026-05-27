@@ -13,15 +13,6 @@ export const useEstimativaPDF = () => {
     setError(null);
 
     try {
-      const MAX_SIZE = 100 * 1024 * 1024;
-      if (file.size > MAX_SIZE) {
-        const msg = 'PDF muito grande (máximo 100MB). Comprima em ilovepdf.com ou exporte apenas as pranchas de layout do projeto.';
-        toast({ title: 'Arquivo muito grande', description: msg, variant: 'destructive' });
-        setError(msg);
-        setLoading(false);
-        return null;
-      }
-
       setProgress('Enviando PDF...');
       const arrayBuffer = await file.arrayBuffer();
       const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
@@ -44,12 +35,28 @@ export const useEstimativaPDF = () => {
         .from('estimativas')
         .getPublicUrl(fileName);
 
-      setProgress('Analisando projeto com IA...');
+      const isLargePdf = file.size > 40 * 1024 * 1024;
+      const estimatedParts = Math.max(2, Math.ceil(file.size / (40 * 1024 * 1024)));
+      let progressTimer: ReturnType<typeof setInterval> | undefined;
+      if (isLargePdf) {
+        let currentPart = 1;
+        setProgress(`Processando parte ${currentPart} de ${estimatedParts}...`);
+        progressTimer = setInterval(() => {
+          currentPart += 1;
+          setProgress(currentPart <= estimatedParts
+            ? `Processando parte ${currentPart} de ${estimatedParts}...`
+            : 'Finalizando análise...');
+        }, 25000);
+      } else {
+        setProgress('Analisando projeto com IA...');
+      }
 
       const { data: resposta, error: fnError } = await supabase.functions.invoke(
         'estimativa-pdf',
         { body: { file_path: fileName, file_hash: fileHash } }
       );
+      if (progressTimer) clearInterval(progressTimer);
+      if (isLargePdf) setProgress('Finalizando análise...');
 
       if (fnError) {
         const detail = typeof fnError === 'object' && 'context' in fnError
