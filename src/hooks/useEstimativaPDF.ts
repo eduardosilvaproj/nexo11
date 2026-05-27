@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { RelatorioEstimativa, MovelIdentificado, DadosProjeto } from '@/types/estimativa';
 
 const CHUNK_THRESHOLD_BYTES = 40 * 1024 * 1024;
-const PAGES_PER_CHUNK = 15;
+const PAGES_PER_CHUNK = 3;
 
 async function dividirPDFEmChunks(file: File, paginasPorChunk: number): Promise<Uint8Array[]> {
   const arrayBuffer = await file.arrayBuffer();
