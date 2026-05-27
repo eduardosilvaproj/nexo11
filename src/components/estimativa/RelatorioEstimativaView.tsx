@@ -7,7 +7,7 @@ import { Download, User, Building2, PenTool, Calendar, Pencil, Briefcase, Sparkl
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import type { RelatorioEstimativa, MovelIdentificado } from '@/types/estimativa';
-import { LABEL_TIPO_PROJETO, LABEL_PADRAO } from '@/types/estimativa';
+import { LABEL_TIPO_PROJETO } from '@/types/estimativa';
 
 interface RelatorioEstimativaViewProps {
   relatorio: RelatorioEstimativa;
@@ -143,9 +143,8 @@ const gerarCapa = (relatorio: RelatorioEstimativa): string => {
   if (d.nome_obra) metaItems.push(`<div class="m-item"><span class="m-lbl">Obra</span><span class="m-val">${d.nome_obra}</span></div>`);
   if (d.arquiteto) metaItems.push(`<div class="m-item"><span class="m-lbl">Arquiteto</span><span class="m-val">${d.arquiteto}</span></div>`);
   if (d.nome_cliente) metaItems.push(`<div class="m-item"><span class="m-lbl">Cliente</span><span class="m-val">${d.nome_cliente}</span></div>`);
-  if (relatorio.contexto) {
+  if (relatorio.contexto?.tipo_projeto) {
     metaItems.push(`<div class="m-item"><span class="m-lbl">Tipo</span><span class="m-val">${LABEL_TIPO_PROJETO[relatorio.contexto.tipo_projeto]}</span></div>`);
-    metaItems.push(`<div class="m-item"><span class="m-lbl">Padrão</span><span class="m-val">${LABEL_PADRAO[relatorio.contexto.padrao]}</span></div>`);
   }
 
   const c = relatorio.comparacao_orcamento;
@@ -567,20 +566,15 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Contexto da Estimativa</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-              <Briefcase className="h-4 w-4 text-primary mt-0.5" />
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Tipo de Projeto</p>
-                <p className="font-medium">{LABEL_TIPO_PROJETO[relatorio.contexto.tipo_projeto]}</p>
+            {relatorio.contexto.tipo_projeto && (
+              <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
+                <Briefcase className="h-4 w-4 text-primary mt-0.5" />
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Tipo de Projeto</p>
+                  <p className="font-medium">{LABEL_TIPO_PROJETO[relatorio.contexto.tipo_projeto]}</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-              <Sparkles className="h-4 w-4 text-primary mt-0.5" />
-              <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Padrão</p>
-                <p className="font-medium">{LABEL_PADRAO[relatorio.contexto.padrao]}</p>
-              </div>
-            </div>
+            )}
             {relatorio.contexto.orcamento_cliente != null && (
               <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
                 <Target className="h-4 w-4 text-primary mt-0.5" />
