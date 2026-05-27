@@ -67,22 +67,44 @@ function isLargePdfFailure(status: number, body: string) {
   return status === 413 || status === 408 || status === 504 || /context_length|too large|payload|timeout/i.test(body);
 }
 
-async function baixarPdfBase64(supabase: any, filePath: string): Promise<string> {
-  const { data, error } = await supabase.storage.from(BUCKET).download(filePath);
-  if (error || !data) {
-    console.error("Storage download error:", error);
-    throw new AppError("Erro ao baixar arquivo do storage", 400);
+async function uploadParaGeminiFileAPI(supabase: any, GEMINI_API_KEY: string, filePath: string): Promise<string> {
+  const { data: urlData, error: urlError } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUrl(filePath, 600);
+  if (urlError || !urlData?.signedUrl) {
+    console.error("Signed URL error:", urlError);
+    throw new AppError("Erro ao gerar URL do arquivo", 400);
   }
-  const bytes = new Uint8Array(await data.arrayBuffer());
-  let binary = "";
-  const chunkSize = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+
+  const fileResponse = await fetch(urlData.signedUrl);
+  if (!fileResponse.ok) throw new AppError("Erro ao baixar PDF da URL assinada", 400);
+  const fileBlob = await fileResponse.blob();
+
+  const uploadUrl = `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${GEMINI_API_KEY}`;
+  const uploadForm = new FormData();
+  uploadForm.append("file", fileBlob, "projeto.pdf");
+
+  const uploadRes = await fetch(uploadUrl, {
+    method: "POST",
+    headers: { "X-Goog-Upload-Protocol": "multipart" },
+    body: uploadForm,
+  });
+
+  if (!uploadRes.ok) {
+    const errText = await uploadRes.text();
+    console.error("Gemini File API upload error:", uploadRes.status, errText.substring(0, 500));
+    if (uploadRes.status === 429) throw new AppError("Limite de requisições do Gemini excedido. Tente novamente em instantes.", 429);
+    throw new AppError(`Erro no upload ao Gemini: ${errText.substring(0, 200)}`, 502);
   }
-  return btoa(binary);
+
+  const uploadData = await uploadRes.json();
+  const fileUri = uploadData?.file?.uri;
+  if (!fileUri) throw new AppError("Gemini File API não retornou URI do arquivo", 502);
+  console.log("Gemini File API uploaded:", fileUri, "| size:", fileBlob.size);
+  return fileUri;
 }
 
-async function chamarGemini(GEMINI_API_KEY: string, pdfBase64: string) {
+async function chamarGemini(GEMINI_API_KEY: string, fileUri: string) {
   const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${GEMINI_API_KEY}`;
 
   const response = await fetch(geminiUrl, {
@@ -92,12 +114,13 @@ async function chamarGemini(GEMINI_API_KEY: string, pdfBase64: string) {
       contents: [{
         parts: [
           { text: promptText },
-          { inline_data: { mime_type: "application/pdf", data: pdfBase64 } },
+          { file_data: { mime_type: "application/pdf", file_uri: fileUri } },
         ],
       }],
       generationConfig: { temperature: 0, maxOutputTokens: 32000 },
     }),
   });
+
 
   const responseText = await response.text();
   if (!response.ok) {
@@ -176,8 +199,8 @@ serve(async (req) => {
 
     if (cached) return jsonResponse(cached.resultado);
 
-    const pdfBase64 = await baixarPdfBase64(supabase, file_path);
-    const analise = await chamarGemini(GEMINI_API_KEY, pdfBase64);
+    const fileUri = await uploadParaGeminiFileAPI(supabase, GEMINI_API_KEY, file_path);
+    const analise = await chamarGemini(GEMINI_API_KEY, fileUri);
     const resultadoFinal = calcularResultado(analise);
 
     await supabase.from("estimativas_cache").insert({

@@ -3,7 +3,7 @@ import { PDFDocument } from 'pdf-lib';
 import { supabase } from '@/integrations/supabase/client';
 import type { RelatorioEstimativa, MovelIdentificado, DadosProjeto } from '@/types/estimativa';
 
-const CHUNK_THRESHOLD_BYTES = 60 * 1024 * 1024;
+const CHUNK_THRESHOLD_BYTES = 100 * 1024 * 1024;
 const PAGES_PER_CHUNK = 10;
 
 async function contarPaginasPDF(file: File): Promise<number> {
