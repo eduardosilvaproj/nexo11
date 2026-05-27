@@ -545,6 +545,54 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
         </Card>
       )}
 
+      {relatorio.contexto && (
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Contexto da Estimativa</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
+              <Briefcase className="h-4 w-4 text-primary mt-0.5" />
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Tipo de Projeto</p>
+                <p className="font-medium">{LABEL_TIPO_PROJETO[relatorio.contexto.tipo_projeto]}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
+              <Sparkles className="h-4 w-4 text-primary mt-0.5" />
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Padrão</p>
+                <p className="font-medium">{LABEL_PADRAO[relatorio.contexto.padrao]}</p>
+              </div>
+            </div>
+            {relatorio.contexto.orcamento_cliente != null && (
+              <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
+                <Target className="h-4 w-4 text-primary mt-0.5" />
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Orçamento do Cliente</p>
+                  <p className="font-medium">{formatCurrency(relatorio.contexto.orcamento_cliente)}</p>
+                </div>
+              </div>
+            )}
+          </div>
+          {relatorio.contexto.observacoes && (
+            <p className="text-sm text-muted-foreground mt-3 italic">"{relatorio.contexto.observacoes}"</p>
+          )}
+          {relatorio.comparacao_orcamento && (() => {
+            const c = relatorio.comparacao_orcamento;
+            const acima = c.diferenca_valor > 0;
+            return (
+              <div className={`mt-4 p-4 rounded-lg border ${acima ? 'bg-amber-50 border-amber-200' : 'bg-emerald-50 border-emerald-200'}`}>
+                <p className={`text-sm ${acima ? 'text-amber-900' : 'text-emerald-900'}`}>
+                  <strong>Orçamento do cliente:</strong> {formatCurrency(c.orcamento_cliente)} ·{' '}
+                  <strong>Estimativa média:</strong> {formatCurrency(c.estimativa_media)} ·{' '}
+                  <strong>Diferença:</strong> {acima ? '+' : ''}{c.diferenca_pct.toFixed(1)}% ({acima ? '+' : ''}{formatCurrency(c.diferenca_valor)})
+                </p>
+              </div>
+            );
+          })()}
+        </Card>
+      )}
+
+
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Faixa de Investimento</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
