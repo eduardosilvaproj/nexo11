@@ -3,8 +3,14 @@ import { PDFDocument } from 'pdf-lib';
 import { supabase } from '@/integrations/supabase/client';
 import type { RelatorioEstimativa, MovelIdentificado, DadosProjeto } from '@/types/estimativa';
 
-const CHUNK_THRESHOLD_BYTES = 40 * 1024 * 1024;
-const PAGES_PER_CHUNK = 3;
+const CHUNK_THRESHOLD_BYTES = 60 * 1024 * 1024;
+const PAGES_PER_CHUNK = 10;
+
+async function contarPaginasPDF(file: File): Promise<number> {
+  const arrayBuffer = await file.arrayBuffer();
+  const doc = await PDFDocument.load(arrayBuffer);
+  return doc.getPageCount();
+}
 
 async function dividirPDFEmChunks(file: File, paginasPorChunk: number): Promise<Uint8Array[]> {
   const arrayBuffer = await file.arrayBuffer();
