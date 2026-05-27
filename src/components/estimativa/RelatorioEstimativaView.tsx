@@ -240,10 +240,12 @@ const gerarInvestimento = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup
     .tier-lbl{font-family:'Inter',sans-serif;font-size:9px;font-weight:500;letter-spacing:.32em;text-transform:uppercase;color:#8A867E;}
     .tier-val{font-family:'Manrope',sans-serif;font-size:24px;font-weight:300;color:#1C1C1A;letter-spacing:-.02em;}
     .tier-line{width:28px;height:1px;background:#E4DFD6;margin-top:4px;}
+    .tier-desc{font-family:'Inter',sans-serif;font-size:9px;line-height:1.45;color:#8A867E;margin-top:2px;}
     .tier.featured{background:#2A331C;color:#F5F3EF;border-color:#2A331C;}
     .tier.featured .tier-lbl{color:rgba(245,243,239,.6);}
     .tier.featured .tier-val{color:#F5F3EF;}
     .tier.featured .tier-line{background:#C9A961;}
+    .tier.featured .tier-desc{color:rgba(245,243,239,.55);}
     .amb-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 12px;}
     .amb-card{background:#FBFAF7;border:1px solid #E4DFD6;padding:14px 16px;display:flex;align-items:center;gap:14px;}
     .amb-icon{width:28px;height:28px;color:#3D4A2A;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
