@@ -125,6 +125,69 @@ async function chamarGemini(LOVABLE_API_KEY: string, fileUrl: string) {
   return JSON.parse(jsonMatch[0]);
 }
 
+async function dividirPDF(pdfBytes: Uint8Array, paginasPorChunk: number): Promise<Uint8Array[]> {
+  const doc = await PDFDocument.load(pdfBytes);
+  const totalPages = doc.getPageCount();
+  const chunks: Uint8Array[] = [];
+
+  for (let i = 0; i < totalPages; i += paginasPorChunk) {
+    const chunkDoc = await PDFDocument.create();
+    const end = Math.min(i + paginasPorChunk, totalPages);
+    const pages = await chunkDoc.copyPages(doc, Array.from({ length: end - i }, (_, idx) => i + idx));
+    pages.forEach((page) => chunkDoc.addPage(page));
+    chunks.push(await chunkDoc.save());
+  }
+
+  return chunks;
+}
+
+function juntarDadosProjeto(analises: any[]) {
+  return analises.reduce((acc, analise) => {
+    const dados = analise?.dados_projeto || {};
+    return {
+      nome_cliente: acc.nome_cliente || dados.nome_cliente || "",
+      nome_obra: acc.nome_obra || dados.nome_obra || "",
+      arquiteto: acc.arquiteto || dados.arquiteto || "",
+      data_projeto: acc.data_projeto || dados.data_projeto || "",
+    };
+  }, { nome_cliente: "", nome_obra: "", arquiteto: "", data_projeto: "" });
+}
+
+function removerDuplicatas(moveis: any[]) {
+  const mapa = new Map<string, any>();
+  for (const movel of moveis) {
+    const ambiente = (movel.ambiente || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    const tipo = normalizarTipo(movel.tipo);
+    const chave = `${ambiente}|${tipo}`;
+    const atual = mapa.get(chave);
+    const quantidade = Number(movel.quantidade) || 1;
+    if (!atual || quantidade > (Number(atual.quantidade) || 1)) {
+      mapa.set(chave, { ...movel, tipo, quantidade });
+    }
+  }
+  return Array.from(mapa.values());
+}
+
+function calcularResultado(analise: any) {
+  const estimativas = (analise.moveis || []).map((m: any, idx: number) => {
+    const tipoNorm = normalizarTipo(m.tipo);
+    const preco = PRECOS[tipoNorm] || PRECOS.outro;
+    const qtd = m.quantidade || 1;
+    return {
+      movel_id: `movel_${idx}`,
+      preco_minimo: preco.min * qtd,
+      preco_maximo: preco.max * qtd,
+      preco_medio: ((preco.min + preco.max) / 2) * qtd,
+    };
+  });
+
+  const total_minimo = estimativas.reduce((s: number, e: any) => s + e.preco_minimo, 0) * 1.4;
+  const total_maximo = estimativas.reduce((s: number, e: any) => s + e.preco_maximo, 0) * 1.2;
+  const total_medio = estimativas.reduce((s: number, e: any) => s + e.preco_medio, 0) * 1.1;
+
+  return { ...analise, estimativas, total_minimo, total_maximo, total_medio };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
