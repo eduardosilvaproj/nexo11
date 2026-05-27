@@ -355,16 +355,48 @@ const gerarProcesso = (relatorio: RelatorioEstimativa): string => {
 };
 
 export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewProps) => {
-  const grupos = agruparPorAmbiente(relatorio);
+  const gruposCompletos = useMemo(() => agruparPorAmbiente(relatorio), [relatorio]);
+  const [selecionados, setSelecionados] = useState<Set<string>>(
+    () => new Set(gruposCompletos.map((g) => g.ambiente)),
+  );
+
+  const toggleAmbiente = (ambiente: string) => {
+    setSelecionados((prev) => {
+      const next = new Set(prev);
+      if (next.has(ambiente)) next.delete(ambiente);
+      else next.add(ambiente);
+      return next;
+    });
+  };
+
+  const relatorioFiltrado = useMemo<RelatorioEstimativa>(() => {
+    const moveisFiltrados = relatorio.moveis.filter((m) =>
+      selecionados.has(m.ambiente || 'Outros'),
+    );
+    const idsValidos = new Set(moveisFiltrados.map((m) => m.id));
+    const estimativasFiltradas = relatorio.estimativas.filter((e) => idsValidos.has(e.movel_id));
+    const total_minimo = estimativasFiltradas.reduce((s, e) => s + e.preco_minimo, 0) * 1.4;
+    const total_maximo = estimativasFiltradas.reduce((s, e) => s + e.preco_maximo, 0) * 1.2;
+    const total_medio = estimativasFiltradas.reduce((s, e) => s + e.preco_medio, 0) * 1.1;
+    return {
+      ...relatorio,
+      moveis: moveisFiltrados,
+      estimativas: estimativasFiltradas,
+      total_minimo,
+      total_maximo,
+      total_medio,
+    };
+  }, [relatorio, selecionados]);
+
+  const gruposFiltrados = useMemo(() => agruparPorAmbiente(relatorioFiltrado), [relatorioFiltrado]);
   const d = relatorio.dados_projeto;
   const mostrarProjeto = temDadosProjeto(relatorio);
 
   const baixarPDF = async () => {
-    const grupos = agruparPorAmbiente(relatorio);
     const paginas = [
-      gerarCapa(relatorio),
-      gerarInvestimento(relatorio, grupos),
-      gerarProcesso(relatorio),
+      gerarCapa(relatorioFiltrado),
+      gerarInvestimento(relatorioFiltrado, gruposFiltrados),
+      gerarProcesso(relatorioFiltrado),
     ];
 
     const pdf = new jsPDF('p', 'mm', 'a4');
@@ -406,6 +438,8 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
     pdf.save(`estimativa-nexo-${Date.now()}.pdf`);
   };
 
+  const pdfDisabled = selecionados.size === 0;
+
   return (
     <div className="space-y-6">
       <Card className="p-6">
@@ -416,7 +450,7 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
               Análise realizada em {new Date(relatorio.data_analise).toLocaleString('pt-BR')}
             </p>
           </div>
-          <Button className="gap-2" onClick={baixarPDF}>
+          <Button className="gap-2" onClick={baixarPDF} disabled={pdfDisabled}>
             <Download className="h-4 w-4" />
             Baixar PDF
           </Button>
@@ -472,33 +506,52 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="text-center p-6 border rounded-lg">
             <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Mínimo</p>
-            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorio.total_minimo)}</p>
+            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorioFiltrado.total_minimo)}</p>
           </div>
           <div className="text-center p-6 border rounded-lg">
             <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Médio</p>
-            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorio.total_medio)}</p>
+            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorioFiltrado.total_medio)}</p>
           </div>
           <div className="text-center p-6 border rounded-lg">
             <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">Máximo</p>
-            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorio.total_maximo)}</p>
+            <p className="text-2xl font-bold mt-3">{formatCurrency(relatorioFiltrado.total_maximo)}</p>
           </div>
         </div>
       </Card>
 
       <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Ambientes ({grupos.length})</h3>
-        <div className="space-y-3">
-          {grupos.map((g) => (
-            <div key={g.ambiente} className="p-4 border rounded-lg flex items-center justify-between">
-              <p className="font-semibold text-base">{g.ambiente}</p>
-              <div className="text-right">
-                <p className="font-semibold text-primary text-lg">{formatCurrency(g.total_med)}</p>
-                <p className="text-xs text-muted-foreground">
-                  {formatCurrency(g.total_min)} — {formatCurrency(g.total_max)}
-                </p>
-              </div>
-            </div>
-          ))}
+        <div className="flex items-baseline justify-between mb-4">
+          <h3 className="text-lg font-semibold">
+            Ambientes ({selecionados.size}/{gruposCompletos.length})
+          </h3>
+          <p className="text-xs text-muted-foreground">
+            Desmarque ambientes duplicados ou que não deseja incluir
+          </p>
+        </div>
+        <div className="space-y-2">
+          {gruposCompletos.map((g) => {
+            const checked = selecionados.has(g.ambiente);
+            return (
+              <label
+                key={g.ambiente}
+                className={`p-4 border rounded-lg flex items-center gap-4 cursor-pointer transition-colors ${
+                  checked ? 'bg-background' : 'bg-muted/40 opacity-60'
+                }`}
+              >
+                <Checkbox
+                  checked={checked}
+                  onCheckedChange={() => toggleAmbiente(g.ambiente)}
+                />
+                <p className="font-semibold text-base flex-1">{g.ambiente}</p>
+                <div className="text-right">
+                  <p className="font-semibold text-primary text-lg">{formatCurrency(g.total_med)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatCurrency(g.total_min)} — {formatCurrency(g.total_max)}
+                  </p>
+                </div>
+              </label>
+            );
+          })}
         </div>
       </Card>
 
