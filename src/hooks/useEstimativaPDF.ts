@@ -88,7 +88,10 @@ export const useEstimativaPDF = () => {
       let analise: any;
       let publicUrl = '';
 
-      if (file.size < CHUNK_THRESHOLD_BYTES) {
+      const totalPages = await contarPaginasPDF(file);
+      const enviarInteiro = file.size < CHUNK_THRESHOLD_BYTES || totalPages < 100;
+
+      if (enviarInteiro) {
         // Fluxo simples — upload do arquivo inteiro
         setProgress('Enviando PDF...');
         const fileName = baseName;
