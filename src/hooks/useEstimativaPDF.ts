@@ -130,7 +130,14 @@ export const useEstimativaPDF = () => {
               'estimativa-pdf',
               { body: { file_path: chunkPath, file_hash: chunkHash } }
             );
-            if (fnError) throw new Error(fnError.message);
+            if (fnError) {
+              const status = (fnError as any)?.context?.status;
+              throw new Error(
+                status === 429
+                  ? 'Limite de requisições do Gemini excedido. A nova chave ainda está sem cota/billing para Gemini 2.5 Pro.'
+                  : fnError.message
+              );
+            }
             if (data?.error) throw new Error(data.error);
             analises.push(data);
           } catch (err) {
