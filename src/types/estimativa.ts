@@ -1,33 +1,17 @@
 // Types para o módulo de Estimativa de Orçamento via PDF
 
 export type TipoProjeto = 'residencial' | 'comercial' | 'corporativo';
-export type PadraoAcabamento = 'economico' | 'medio' | 'alto' | 'luxo';
 
 export interface ContextoEstimativa {
-  tipo_projeto: TipoProjeto;
-  padrao: PadraoAcabamento;
+  tipo_projeto?: TipoProjeto;
   orcamento_cliente?: number;
   observacoes?: string;
 }
-
-export const MULTIPLICADOR_PADRAO: Record<PadraoAcabamento, number> = {
-  economico: 0.7,
-  medio: 1.0,
-  alto: 1.3,
-  luxo: 1.6,
-};
 
 export const LABEL_TIPO_PROJETO: Record<TipoProjeto, string> = {
   residencial: 'Residencial',
   comercial: 'Comercial',
   corporativo: 'Corporativo',
-};
-
-export const LABEL_PADRAO: Record<PadraoAcabamento, string> = {
-  economico: 'Econômico',
-  medio: 'Médio',
-  alto: 'Alto Padrão',
-  luxo: 'Luxo',
 };
 
 export interface ComparacaoOrcamento {
