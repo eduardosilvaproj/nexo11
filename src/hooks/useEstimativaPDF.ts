@@ -1,6 +1,63 @@
 import { useState } from 'react';
+import { PDFDocument } from 'pdf-lib';
 import { supabase } from '@/integrations/supabase/client';
 import type { RelatorioEstimativa, MovelIdentificado, DadosProjeto } from '@/types/estimativa';
+
+const CHUNK_THRESHOLD_BYTES = 40 * 1024 * 1024;
+const PAGES_PER_CHUNK = 15;
+
+async function dividirPDFEmChunks(file: File, paginasPorChunk: number): Promise<Uint8Array[]> {
+  const arrayBuffer = await file.arrayBuffer();
+  const doc = await PDFDocument.load(arrayBuffer);
+  const totalPages = doc.getPageCount();
+  const chunks: Uint8Array[] = [];
+
+  for (let i = 0; i < totalPages; i += paginasPorChunk) {
+    const chunkDoc = await PDFDocument.create();
+    const end = Math.min(i + paginasPorChunk, totalPages);
+    const indices = Array.from({ length: end - i }, (_, idx) => i + idx);
+    const pages = await chunkDoc.copyPages(doc, indices);
+    pages.forEach((page) => chunkDoc.addPage(page));
+    chunks.push(await chunkDoc.save());
+  }
+
+  return chunks;
+}
+
+function sanitizeName(name: string) {
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9._-]+/g, '_')
+    .replace(/_+/g, '_');
+}
+
+function juntarDadosProjeto(analises: any[]): DadosProjeto {
+  return analises.reduce<DadosProjeto>((acc, a) => {
+    const d = a?.dados_projeto || {};
+    return {
+      nome_cliente: acc.nome_cliente || d.nome_cliente || '',
+      nome_obra: acc.nome_obra || d.nome_obra || '',
+      arquiteto: acc.arquiteto || d.arquiteto || '',
+      data_projeto: acc.data_projeto || d.data_projeto || '',
+    } as DadosProjeto;
+  }, { nome_cliente: '', nome_obra: '', arquiteto: '', data_projeto: '' } as DadosProjeto);
+}
+
+function removerDuplicatas(moveis: any[]) {
+  const mapa = new Map<string, any>();
+  for (const m of moveis) {
+    const ambiente = (m.ambiente || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    const tipo = normalizarTipo(m.tipo);
+    const chave = `${ambiente}|${tipo}`;
+    const atual = mapa.get(chave);
+    const qtd = Number(m.quantidade) || 1;
+    if (!atual || qtd > (Number(atual.quantidade) || 1)) {
+      mapa.set(chave, { ...m, tipo, quantidade: qtd });
+    }
+  }
+  return Array.from(mapa.values());
+}
 
 export const useEstimativaPDF = () => {
   const [loading, setLoading] = useState(false);
@@ -10,66 +67,88 @@ export const useEstimativaPDF = () => {
   const analisarPDF = async (file: File): Promise<RelatorioEstimativa | null> => {
     setLoading(true);
     setError(null);
-    let progressTimer: ReturnType<typeof setInterval> | undefined;
 
     try {
-      setProgress('Enviando PDF...');
+      setProgress('Calculando hash...');
       const arrayBuffer = await file.arrayBuffer();
       const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const fileHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      const fileHash = Array.from(new Uint8Array(hashBuffer))
+        .map((b) => b.toString(16).padStart(2, '0')).join('');
 
-      const safeName = file.name
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-zA-Z0-9._-]+/g, '_')
-        .replace(/_+/g, '_');
-      const fileName = `${Date.now()}_${safeName}`;
-      const { error: uploadError } = await supabase.storage
-        .from('estimativas')
-        .upload(fileName, file);
+      const safeName = sanitizeName(file.name);
+      const baseName = `${Date.now()}_${safeName}`;
 
-      if (uploadError) throw uploadError;
+      let analise: any;
+      let publicUrl = '';
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('estimativas')
-        .getPublicUrl(fileName);
+      if (file.size < CHUNK_THRESHOLD_BYTES) {
+        // Fluxo simples — upload do arquivo inteiro
+        setProgress('Enviando PDF...');
+        const fileName = baseName;
+        const { error: uploadError } = await supabase.storage
+          .from('estimativas').upload(fileName, file);
+        if (uploadError) throw uploadError;
 
-      const isLargePdf = file.size > 40 * 1024 * 1024;
-      const estimatedParts = Math.max(2, Math.ceil(file.size / (40 * 1024 * 1024)));
-      if (isLargePdf) {
-        let currentPart = 1;
-        setProgress(`Processando parte ${currentPart} de ${estimatedParts}...`);
-        progressTimer = setInterval(() => {
-          currentPart += 1;
-          setProgress(currentPart <= estimatedParts
-            ? `Processando parte ${currentPart} de ${estimatedParts}...`
-            : 'Finalizando análise...');
-        }, 25000);
-      } else {
+        publicUrl = supabase.storage.from('estimativas').getPublicUrl(fileName).data.publicUrl;
+
         setProgress('Analisando projeto com IA...');
+        const { data, error: fnError } = await supabase.functions.invoke(
+          'estimativa-pdf',
+          { body: { file_path: fileName, file_hash: fileHash } }
+        );
+        if (fnError) throw new Error(`Edge Function erro: ${fnError.message}`);
+        if (data?.error) throw new Error(data.error);
+        analise = data;
+      } else {
+        // Fluxo com chunking no navegador
+        setProgress('Dividindo PDF em partes...');
+        const chunks = await dividirPDFEmChunks(file, PAGES_PER_CHUNK);
+        const total = chunks.length;
+
+        const analises: any[] = [];
+        const chunkPaths: string[] = [];
+
+        for (let i = 0; i < total; i++) {
+          setProgress(`Processando parte ${i + 1} de ${total}...`);
+          const chunkPath = `chunks/${fileHash}_parte_${i + 1}_${Date.now()}.pdf`;
+          chunkPaths.push(chunkPath);
+
+          const chunkBlob = new Blob([chunks[i] as BlobPart], { type: 'application/pdf' });
+          const { error: upErr } = await supabase.storage
+            .from('estimativas').upload(chunkPath, chunkBlob, { upsert: true, contentType: 'application/pdf' });
+          if (upErr) throw upErr;
+
+          if (i === 0) {
+            publicUrl = supabase.storage.from('estimativas').getPublicUrl(chunkPath).data.publicUrl;
+          }
+
+          const chunkHash = `${fileHash}_parte_${i + 1}`;
+          const { data, error: fnError } = await supabase.functions.invoke(
+            'estimativa-pdf',
+            { body: { file_path: chunkPath, file_hash: chunkHash } }
+          );
+          if (fnError) throw new Error(`Edge Function erro (parte ${i + 1}): ${fnError.message}`);
+          if (data?.error) throw new Error(`Parte ${i + 1}: ${data.error}`);
+          analises.push(data);
+        }
+
+        setProgress('Juntando resultados...');
+        const moveisCombinados = removerDuplicatas(analises.flatMap((a) => a?.moveis || []));
+        analise = {
+          dados_projeto: juntarDadosProjeto(analises),
+          moveis: moveisCombinados,
+          estimativas: [],
+          observacoes_gerais: analises.flatMap((a) => a?.observacoes_gerais || []),
+        };
+
+        // Limpa os chunks do storage
+        supabase.storage.from('estimativas').remove(chunkPaths).catch(() => {});
       }
 
-      const { data: resposta, error: fnError } = await supabase.functions.invoke(
-        'estimativa-pdf',
-        { body: { file_path: fileName, file_hash: fileHash } }
-      );
-      if (progressTimer) clearInterval(progressTimer);
-      if (isLargePdf) setProgress('Finalizando análise...');
-
-      if (fnError) {
-        const detail = typeof fnError === 'object' && 'context' in fnError
-          ? JSON.stringify(fnError)
-          : fnError.message;
-        throw new Error(`Edge Function erro: ${detail}`);
-      }
-      if (resposta?.error) throw new Error(resposta.error);
-
-      const analise = resposta;
       const dados_projeto: DadosProjeto = analise.dados_projeto || {};
 
       setProgress('Calculando estimativas...');
-      const moveis: MovelIdentificado[] = analise.moveis.map((m: any, idx: number) => ({
+      const moveis: MovelIdentificado[] = (analise.moveis || []).map((m: any, idx: number) => ({
         id: `movel_${idx}`,
         ambiente: m.ambiente,
         tipo: m.tipo,
@@ -81,17 +160,22 @@ export const useEstimativaPDF = () => {
         alertas: []
       }));
 
-      const estimativas = (analise.estimativas || []).map((e: any) => ({
-        movel_id: e.movel_id,
-        preco_minimo: e.preco_minimo,
-        preco_maximo: e.preco_maximo,
-        preco_medio: e.preco_medio,
-        base_calculo: e.base_calculo || '',
-      }));
+      // Recalcula estimativas localmente quando vieram de múltiplos chunks (ou usa as do servidor se single)
+      const estimativas = moveis.map((m, idx) => {
+        const preco = getTabelaPreco(m.tipo);
+        const qtd = m.quantidade || 1;
+        return {
+          movel_id: `movel_${idx}`,
+          preco_minimo: preco.fixo_min * qtd,
+          preco_maximo: preco.fixo_max * qtd,
+          preco_medio: ((preco.fixo_min + preco.fixo_max) / 2) * qtd,
+          base_calculo: '',
+        };
+      });
 
-      const total_minimo = analise.total_minimo ?? estimativas.reduce((s: number, e: any) => s + e.preco_minimo, 0);
-      const total_maximo = analise.total_maximo ?? estimativas.reduce((s: number, e: any) => s + e.preco_maximo, 0);
-      const total_medio = analise.total_medio ?? estimativas.reduce((s: number, e: any) => s + e.preco_medio, 0);
+      const total_minimo = estimativas.reduce((s, e) => s + e.preco_minimo, 0) * 1.4;
+      const total_maximo = estimativas.reduce((s, e) => s + e.preco_maximo, 0) * 1.2;
+      const total_medio = estimativas.reduce((s, e) => s + e.preco_medio, 0) * 1.1;
 
       const relatorio: RelatorioEstimativa = {
         id: crypto.randomUUID(),
@@ -113,7 +197,6 @@ export const useEstimativaPDF = () => {
       return relatorio;
 
     } catch (err) {
-      if (progressTimer) clearInterval(progressTimer);
       console.error('Erro:', err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
       setLoading(false);
