@@ -3,10 +3,11 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Download, User, Building2, PenTool, Calendar, Pencil } from 'lucide-react';
+import { Download, User, Building2, PenTool, Calendar, Pencil, Briefcase, Sparkles, Target } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import type { RelatorioEstimativa, MovelIdentificado } from '@/types/estimativa';
+import { LABEL_TIPO_PROJETO, LABEL_PADRAO } from '@/types/estimativa';
 
 interface RelatorioEstimativaViewProps {
   relatorio: RelatorioEstimativa;
