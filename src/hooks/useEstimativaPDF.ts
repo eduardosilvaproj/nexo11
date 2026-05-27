@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
 import type { RelatorioEstimativa, MovelIdentificado, DadosProjeto } from '@/types/estimativa';
 
 export const useEstimativaPDF = () => {
@@ -11,6 +10,7 @@ export const useEstimativaPDF = () => {
   const analisarPDF = async (file: File): Promise<RelatorioEstimativa | null> => {
     setLoading(true);
     setError(null);
+    let progressTimer: ReturnType<typeof setInterval> | undefined;
 
     try {
       setProgress('Enviando PDF...');
@@ -37,7 +37,6 @@ export const useEstimativaPDF = () => {
 
       const isLargePdf = file.size > 40 * 1024 * 1024;
       const estimatedParts = Math.max(2, Math.ceil(file.size / (40 * 1024 * 1024)));
-      let progressTimer: ReturnType<typeof setInterval> | undefined;
       if (isLargePdf) {
         let currentPart = 1;
         setProgress(`Processando parte ${currentPart} de ${estimatedParts}...`);
@@ -114,6 +113,7 @@ export const useEstimativaPDF = () => {
       return relatorio;
 
     } catch (err) {
+      if (progressTimer) clearInterval(progressTimer);
       console.error('Erro:', err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
       setLoading(false);
