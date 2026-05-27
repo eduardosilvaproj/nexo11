@@ -54,32 +54,23 @@ serve(async (req) => {
       );
     }
 
-    // 1. Baixar o PDF do Storage
-    const { data: fileData, error: downloadError } = await supabase.storage
+    // 1. Gerar URL assinada do PDF sem carregar o arquivo na memória da Edge Function
+    const { data: urlData, error: signedUrlError } = await supabase.storage
       .from("estimativas")
-      .download(file_path);
+      .createSignedUrl(file_path, 600);
 
-    if (downloadError || !fileData) {
-      console.error("Storage download error:", downloadError);
+    const fileUrl = urlData?.signedUrl;
+    if (signedUrlError || !fileUrl) {
+      console.error("Storage signed URL error:", signedUrlError);
       return new Response(
-        JSON.stringify({ error: `Erro ao baixar PDF: ${downloadError?.message || "arquivo não encontrado"}` }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Erro ao gerar URL do arquivo" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // 2. Converter PDF para base64 data URL
-    const buffer = new Uint8Array(await fileData.arrayBuffer());
-    let binary = "";
-    const chunkSize = 0x8000;
-    for (let i = 0; i < buffer.length; i += chunkSize) {
-      binary += String.fromCharCode(...buffer.subarray(i, i + chunkSize));
-    }
-    const base64 = btoa(binary);
-    const dataUrl = `data:application/pdf;base64,${base64}`;
-
     const promptText = 'Analise este PDF de projeto executivo de móveis planejados. Extraia:\n\n1. DADOS DO PROJETO (se disponíveis no carimbo, capa ou legendas):\n   - nome_cliente: nome do cliente/proprietário\n   - nome_obra: nome da obra ou endereço\n   - arquiteto: nome do arquiteto(a) ou escritório\n   - data_projeto: data do projeto\n\n2. MÓVEIS: Para cada módulo/peça identificada:\n   - ambiente, tipo, quantidade\n   - Tipos válidos: aereo, base, torre, painel, nicho, gaveta, prateleira, guarda_roupa, bancada, rack, divisoria, outro\n   - Identifique o MÁXIMO de peças possível — cada módulo separado conta como um item\n\nIMPORTANTE: Liste CADA módulo/peça separadamente. Um ambiente pode ter 5, 10 ou mais itens. NÃO agrupe múltiplos módulos em um único item. Por exemplo, uma cozinha típica tem: 3-5 aéreos + 2-3 bases + 1 torre + bancada = 7-10 itens separados.\n\nIMPORTANTE: Seja exaustivo. Um projeto residencial completo tipicamente tem 15-40 módulos. Não agrupe — liste cada módulo separadamente. Se um ambiente tem 3 aéreos iguais, liste como quantidade: 3 (um item), mas se são diferentes, liste cada um separado.\n\nRetorne APENAS JSON: {"dados_projeto":{"nome_cliente":"","nome_obra":"","arquiteto":"","data_projeto":""},"moveis":[{"ambiente":"","tipo":"","descricao":"","largura":0,"altura":0,"profundidade":0,"quantidade":1}],"observacoes_gerais":[]}\n\nSe algum dado do projeto não estiver visível, deixe string vazia.';
 
-    // 3. Chamar Lovable AI Gateway (Gemini 2.5 Pro)
+    // 2. Chamar Lovable AI Gateway (Gemini 2.5 Pro) com URL do arquivo
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -93,7 +84,7 @@ serve(async (req) => {
             role: "user",
             content: [
               { type: "text", text: promptText },
-              { type: "image_url", image_url: { url: dataUrl } },
+              { type: "file_url", file_url: { url: fileUrl } },
             ],
           },
         ],
