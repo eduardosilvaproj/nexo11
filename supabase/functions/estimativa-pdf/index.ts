@@ -9,7 +9,7 @@ const corsHeaders = {
 const BUCKET = "estimativas";
 const LARGE_PDF_ERROR = "PDF muito grande para processar. Comprima o arquivo em ilovepdf.com ou exporte apenas as pranchas de layout.";
 
-const promptText = 'Analise este PDF de projeto executivo de móveis planejados. Extraia:\n\n1. DADOS DO PROJETO (se disponíveis no carimbo, capa ou legendas):\n   - nome_cliente: nome do cliente/proprietário\n   - nome_obra: nome da obra ou endereço\n   - arquiteto: nome do arquiteto(a) ou escritório\n   - data_projeto: data do projeto\n\n2. MÓVEIS: Para cada módulo/peça identificada:\n   - ambiente, tipo, quantidade\n   - Tipos válidos: aereo, base, torre, painel, nicho, gaveta, prateleira, guarda_roupa, bancada, rack, divisoria, outro\n   - Identifique o MÁXIMO de peças possível — cada módulo separado conta como um item\n\nIMPORTANTE: Liste CADA módulo/peça separadamente. Um ambiente pode ter 5, 10 ou mais itens. NÃO agrupe múltiplos módulos em um único item. Por exemplo, uma cozinha típica tem: 3-5 aéreos + 2-3 bases + 1 torre + bancada = 7-10 itens separados.\n\nIMPORTANTE: Seja exaustivo. Um projeto residencial completo tipicamente tem 15-40 módulos. Não agrupe — liste cada módulo separadamente. Se um ambiente tem 3 aéreos iguais, liste como quantidade: 3 (um item), mas se são diferentes, liste cada um separado.\n\nDEDUPLICAÇÃO: O PDF pode ter o mesmo ambiente com nomes diferentes em páginas diferentes (ex: "Suite 1" na planta e "Suite Visita" no detalhamento, ou "Suite 2" e "Suite Filho"). Unifique ambientes que claramente se referem ao mesmo espaço. Use o nome mais descritivo (ex: "Suite Visita" ao invés de "Suite 1"). NÃO duplique móveis que aparecem tanto na planta quanto no detalhamento — conte cada móvel apenas UMA vez.\n\nRetorne APENAS JSON: {"dados_projeto":{"nome_cliente":"","nome_obra":"","arquiteto":"","data_projeto":""},"moveis":[{"ambiente":"","tipo":"","descricao":"","largura":0,"altura":0,"profundidade":0,"quantidade":1}],"observacoes_gerais":[]}\n\nSe algum dado do projeto não estiver visível, deixe string vazia.';
+const promptText = 'Analise este PDF de projeto executivo de móveis planejados. Extraia:\n\n1. DADOS DO PROJETO (se disponíveis no carimbo, capa ou legendas):\n   - nome_cliente: nome do cliente/proprietário\n   - nome_obra: nome da obra ou endereço\n   - arquiteto: nome do arquiteto(a) ou escritório\n   - data_projeto: data do projeto\n\n2. MÓVEIS: Para cada módulo/peça identificada:\n   - ambiente, tipo, quantidade\n   - Tipos válidos: aereo, base, torre, painel, nicho, gaveta, prateleira, guarda_roupa, bancada, rack, divisoria, outro\n   - Identifique o MÁXIMO de peças possível — cada módulo separado conta como um item\n\n⚠️ ATENÇÃO CRÍTICA: Este é um projeto COMPLETO com MUITOS ambientes. Analise TODAS as páginas do PDF, do início ao fim. Um projeto residencial típico tem 8-15 ambientes diferentes: cozinha, sala de estar, sala de jantar, quartos, suítes, banheiros, lavabo, varanda, escritório/home office, closet, lavanderia, área de serviço, hall, dormitórios. Se você identificou MENOS DE 5 AMBIENTES, releia o PDF — certamente está faltando. NÃO PARE até ter passado por todas as páginas.\n\nIMPORTANTE: Liste CADA módulo/peça separadamente. Um ambiente pode ter 5, 10 ou mais itens. NÃO agrupe múltiplos módulos em um único item. Por exemplo, uma cozinha típica tem: 3-5 aéreos + 2-3 bases + 1 torre + bancada = 7-10 itens separados.\n\nIMPORTANTE: Seja exaustivo. Um projeto residencial completo tipicamente tem 20-60 módulos distribuídos em 8-15 ambientes. Não agrupe — liste cada módulo separadamente. Se um ambiente tem 3 aéreos iguais, liste como quantidade: 3 (um item), mas se são diferentes, liste cada um separado.\n\nDEDUPLICAÇÃO: O PDF pode ter o mesmo ambiente com nomes diferentes em páginas diferentes (ex: "Suite 1" na planta e "Suite Visita" no detalhamento, ou "Suite 2" e "Suite Filho"). Unifique ambientes que claramente se referem ao mesmo espaço. Use o nome mais descritivo (ex: "Suite Visita" ao invés de "Suite 1"). NÃO duplique móveis que aparecem tanto na planta quanto no detalhamento — conte cada móvel apenas UMA vez. Mas NÃO confunda deduplicação com omissão: ambientes diferentes (Suite Casal ≠ Suite Filho ≠ Suite Visita) devem todos aparecer.\n\nRetorne APENAS JSON válido e COMPLETO (não trunque): {"dados_projeto":{"nome_cliente":"","nome_obra":"","arquiteto":"","data_projeto":""},"moveis":[{"ambiente":"","tipo":"","descricao":"","largura":0,"altura":0,"profundidade":0,"quantidade":1}],"observacoes_gerais":[]}\n\nDescrições devem ser curtas (máx 60 caracteres) para evitar truncamento. Se algum dado do projeto não estiver visível, deixe string vazia.';
 
 const PRECOS: Record<string, { min: number; max: number }> = {
   aereo: { min: 3600, max: 7500 },
@@ -95,7 +95,7 @@ async function chamarGemini(GEMINI_API_KEY: string, pdfBase64: string) {
           { inline_data: { mime_type: "application/pdf", data: pdfBase64 } },
         ],
       }],
-      generationConfig: { temperature: 0, maxOutputTokens: 4000 },
+      generationConfig: { temperature: 0, maxOutputTokens: 32000 },
     }),
   });
 
@@ -109,9 +109,24 @@ async function chamarGemini(GEMINI_API_KEY: string, pdfBase64: string) {
 
   const result = JSON.parse(responseText);
   const text = result.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  const finishReason = result.candidates?.[0]?.finishReason;
+  console.log("Gemini finishReason:", finishReason, "| text length:", text.length);
   const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new AppError("Resposta da IA não contém JSON válido", 422);
-  return JSON.parse(jsonMatch[0]);
+  if (!jsonMatch) {
+    console.error("Resposta sem JSON. Texto bruto:", text.substring(0, 1000));
+    throw new AppError("Resposta da IA não contém JSON válido", 422);
+  }
+  try {
+    const parsed = JSON.parse(jsonMatch[0]);
+    console.log("Gemini parseado: ambientes únicos =",
+      new Set((parsed.moveis || []).map((m: any) => m.ambiente)).size,
+      "| total móveis =", (parsed.moveis || []).length,
+      "| finishReason =", finishReason);
+    return parsed;
+  } catch (e) {
+    console.error("JSON inválido (provável truncamento). finishReason:", finishReason, "| tamanho:", jsonMatch[0].length, "| fim:", jsonMatch[0].substring(Math.max(0, jsonMatch[0].length - 300)));
+    throw new AppError("Resposta da IA truncada ou JSON inválido", 422);
+  }
 }
 
 function calcularResultado(analise: any) {
