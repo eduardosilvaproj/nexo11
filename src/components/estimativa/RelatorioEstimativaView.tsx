@@ -204,6 +204,7 @@ const gerarCapa = (relatorio: RelatorioEstimativa): string => {
           <span class="cv-inv-lbl">Faixa de Investimento</span>
           <span class="cv-inv-val">${formatCurrency(relatorio.total_minimo)} <em>—</em> ${formatCurrency(relatorio.total_maximo)}</span>
         </div>
+        ${comparacaoHTML}
         <div class="cv-meta">
           <div class="cv-date">${data}</div>
           <div class="cv-meta-row">${metaItems.join('')}</div>
