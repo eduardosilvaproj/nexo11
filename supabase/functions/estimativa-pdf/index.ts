@@ -215,8 +215,7 @@ serve(async (req) => {
     if (!file_path) return jsonResponse({ error: "Campo file_path é obrigatório" }, 400);
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const padraoKey = contexto?.padrao ? `_${contexto.padrao}` : "";
-    const cacheKey = `${file_hash || file_path}${padraoKey}`;
+    const cacheKey = file_hash || file_path;
 
     const { data: cached } = await supabase
       .from("estimativas_cache")
