@@ -185,11 +185,12 @@ serve(async (req) => {
     if (!GEMINI_API_KEY) return jsonResponse({ error: "GEMINI_API_KEY não configurada" }, 500);
     if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return jsonResponse({ error: "Credenciais do Supabase não configuradas" }, 500);
 
-    const { file_path, file_hash } = await req.json();
+    const { file_path, file_hash, contexto } = await req.json();
     if (!file_path) return jsonResponse({ error: "Campo file_path é obrigatório" }, 400);
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const cacheKey = file_hash || file_path;
+    const padraoKey = contexto?.padrao ? `_${contexto.padrao}` : "";
+    const cacheKey = `${file_hash || file_path}${padraoKey}`;
 
     const { data: cached } = await supabase
       .from("estimativas_cache")

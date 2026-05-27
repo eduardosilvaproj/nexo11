@@ -3,10 +3,11 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Download, User, Building2, PenTool, Calendar, Pencil } from 'lucide-react';
+import { Download, User, Building2, PenTool, Calendar, Pencil, Briefcase, Sparkles, Target } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import type { RelatorioEstimativa, MovelIdentificado } from '@/types/estimativa';
+import { LABEL_TIPO_PROJETO, LABEL_PADRAO } from '@/types/estimativa';
 
 interface RelatorioEstimativaViewProps {
   relatorio: RelatorioEstimativa;
@@ -142,6 +143,19 @@ const gerarCapa = (relatorio: RelatorioEstimativa): string => {
   if (d.nome_obra) metaItems.push(`<div class="m-item"><span class="m-lbl">Obra</span><span class="m-val">${d.nome_obra}</span></div>`);
   if (d.arquiteto) metaItems.push(`<div class="m-item"><span class="m-lbl">Arquiteto</span><span class="m-val">${d.arquiteto}</span></div>`);
   if (d.nome_cliente) metaItems.push(`<div class="m-item"><span class="m-lbl">Cliente</span><span class="m-val">${d.nome_cliente}</span></div>`);
+  if (relatorio.contexto) {
+    metaItems.push(`<div class="m-item"><span class="m-lbl">Tipo</span><span class="m-val">${LABEL_TIPO_PROJETO[relatorio.contexto.tipo_projeto]}</span></div>`);
+    metaItems.push(`<div class="m-item"><span class="m-lbl">Padrão</span><span class="m-val">${LABEL_PADRAO[relatorio.contexto.padrao]}</span></div>`);
+  }
+
+  const c = relatorio.comparacao_orcamento;
+  const comparacaoHTML = c
+    ? `<div class="cv-comparacao">
+        <div class="cv-comp-row"><span class="cv-comp-lbl">Orçamento do cliente</span><span class="cv-comp-val">${formatCurrency(c.orcamento_cliente)}</span></div>
+        <div class="cv-comp-row"><span class="cv-comp-lbl">Estimativa média</span><span class="cv-comp-val">${formatCurrency(c.estimativa_media)}</span></div>
+        <div class="cv-comp-row"><span class="cv-comp-lbl">Diferença</span><span class="cv-comp-val" style="color:${c.diferenca_valor > 0 ? '#C9A961' : '#9BBF6E'}">${c.diferenca_valor > 0 ? '+' : ''}${c.diferenca_pct.toFixed(1)}%</span></div>
+      </div>`
+    : '';
 
   return `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONT_LINKS}<style>${SHARED_CSS}
     .cover{color:#F5F3EF;}
@@ -163,7 +177,11 @@ const gerarCapa = (relatorio: RelatorioEstimativa): string => {
     .cv-inv-val em{color:#C9A961;font-style:normal;font-weight:300;}
     .cv-meta{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;}
     .cv-date{font-family:'Inter',sans-serif;font-size:9px;letter-spacing:.32em;text-transform:uppercase;color:rgba(245,243,239,.55);}
-    .cv-meta-row{display:flex;gap:32px;}
+    .cv-meta-row{display:flex;gap:32px;flex-wrap:wrap;}
+    .cv-comparacao{display:flex;flex-direction:column;gap:6px;padding:14px 0;border-bottom:1px solid rgba(245,243,239,.18);}
+    .cv-comp-row{display:flex;justify-content:space-between;align-items:baseline;}
+    .cv-comp-lbl{font-family:'Inter',sans-serif;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:rgba(245,243,239,.55);}
+    .cv-comp-val{font-family:'Manrope',sans-serif;font-weight:300;font-size:14px;color:#F5F3EF;}
     .m-item{display:flex;flex-direction:column;gap:4px;min-width:120px;}
     .m-lbl{font-family:'Inter',sans-serif;font-size:8px;letter-spacing:.34em;text-transform:uppercase;color:rgba(245,243,239,.5);}
     .m-val{font-family:'Manrope',sans-serif;font-weight:400;font-size:13px;color:#F5F3EF;}
@@ -186,6 +204,7 @@ const gerarCapa = (relatorio: RelatorioEstimativa): string => {
           <span class="cv-inv-lbl">Faixa de Investimento</span>
           <span class="cv-inv-val">${formatCurrency(relatorio.total_minimo)} <em>—</em> ${formatCurrency(relatorio.total_maximo)}</span>
         </div>
+        ${comparacaoHTML}
         <div class="cv-meta">
           <div class="cv-date">${data}</div>
           <div class="cv-meta-row">${metaItems.join('')}</div>
@@ -543,6 +562,54 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
           </div>
         </Card>
       )}
+
+      {relatorio.contexto && (
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Contexto da Estimativa</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
+              <Briefcase className="h-4 w-4 text-primary mt-0.5" />
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Tipo de Projeto</p>
+                <p className="font-medium">{LABEL_TIPO_PROJETO[relatorio.contexto.tipo_projeto]}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
+              <Sparkles className="h-4 w-4 text-primary mt-0.5" />
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Padrão</p>
+                <p className="font-medium">{LABEL_PADRAO[relatorio.contexto.padrao]}</p>
+              </div>
+            </div>
+            {relatorio.contexto.orcamento_cliente != null && (
+              <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
+                <Target className="h-4 w-4 text-primary mt-0.5" />
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Orçamento do Cliente</p>
+                  <p className="font-medium">{formatCurrency(relatorio.contexto.orcamento_cliente)}</p>
+                </div>
+              </div>
+            )}
+          </div>
+          {relatorio.contexto.observacoes && (
+            <p className="text-sm text-muted-foreground mt-3 italic">"{relatorio.contexto.observacoes}"</p>
+          )}
+          {relatorio.comparacao_orcamento && (() => {
+            const c = relatorio.comparacao_orcamento;
+            const acima = c.diferenca_valor > 0;
+            return (
+              <div className={`mt-4 p-4 rounded-lg border ${acima ? 'bg-amber-50 border-amber-200' : 'bg-emerald-50 border-emerald-200'}`}>
+                <p className={`text-sm ${acima ? 'text-amber-900' : 'text-emerald-900'}`}>
+                  <strong>Orçamento do cliente:</strong> {formatCurrency(c.orcamento_cliente)} ·{' '}
+                  <strong>Estimativa média:</strong> {formatCurrency(c.estimativa_media)} ·{' '}
+                  <strong>Diferença:</strong> {acima ? '+' : ''}{c.diferenca_pct.toFixed(1)}% ({acima ? '+' : ''}{formatCurrency(c.diferenca_valor)})
+                </p>
+              </div>
+            );
+          })()}
+        </Card>
+      )}
+
 
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Faixa de Investimento</h3>
