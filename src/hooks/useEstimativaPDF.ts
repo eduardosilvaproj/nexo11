@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { PDFDocument } from 'pdf-lib';
 import { supabase } from '@/integrations/supabase/client';
-import type { RelatorioEstimativa, MovelIdentificado, DadosProjeto } from '@/types/estimativa';
+import type {
+  RelatorioEstimativa, MovelIdentificado, DadosProjeto, ContextoEstimativa,
+} from '@/types/estimativa';
+import { MULTIPLICADOR_PADRAO } from '@/types/estimativa';
 
 const CHUNK_THRESHOLD_BYTES = 100 * 1024 * 1024;
 const PAGES_PER_CHUNK = 10;
@@ -71,7 +74,10 @@ export const useEstimativaPDF = () => {
   const [progress, setProgress] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const analisarPDF = async (file: File): Promise<RelatorioEstimativa | null> => {
+  const analisarPDF = async (
+    file: File,
+    contexto: ContextoEstimativa,
+  ): Promise<RelatorioEstimativa | null> => {
     setLoading(true);
     setError(null);
 
@@ -92,7 +98,6 @@ export const useEstimativaPDF = () => {
       const enviarInteiro = file.size < CHUNK_THRESHOLD_BYTES || totalPages < 100;
 
       if (enviarInteiro) {
-        // Fluxo simples — upload do arquivo inteiro
         setProgress('Enviando PDF...');
         const fileName = baseName;
         const { error: uploadError } = await supabase.storage
@@ -104,13 +109,12 @@ export const useEstimativaPDF = () => {
         setProgress('Analisando projeto com IA...');
         const { data, error: fnError } = await supabase.functions.invoke(
           'estimativa-pdf',
-          { body: { file_path: fileName, file_hash: fileHash } }
+          { body: { file_path: fileName, file_hash: fileHash, contexto } }
         );
         if (fnError) throw new Error(`Edge Function erro: ${fnError.message}`);
         if (data?.error) throw new Error(data.error);
         analise = data;
       } else {
-        // Fluxo com chunking no navegador
         setProgress('Dividindo PDF em partes...');
         const chunks = await dividirPDFEmChunks(file, PAGES_PER_CHUNK);
         const total = chunks.length;
@@ -138,7 +142,7 @@ export const useEstimativaPDF = () => {
             const chunkHash = `${fileHash}_parte_${i + 1}`;
             const { data, error: fnError } = await supabase.functions.invoke(
               'estimativa-pdf',
-              { body: { file_path: chunkPath, file_hash: chunkHash } }
+              { body: { file_path: chunkPath, file_hash: chunkHash, contexto } }
             );
             if (fnError) {
               const status = (fnError as any)?.context?.status;
@@ -177,11 +181,11 @@ export const useEstimativaPDF = () => {
           observacoes_gerais: observacoes,
         };
 
-        // Limpa os chunks do storage
         supabase.storage.from('estimativas').remove(chunkPaths).catch(() => {});
       }
 
       const dados_projeto: DadosProjeto = analise.dados_projeto || {};
+      const multPadrao = MULTIPLICADOR_PADRAO[contexto.padrao] ?? 1;
 
       setProgress('Calculando estimativas...');
       const moveis: MovelIdentificado[] = (analise.moveis || []).map((m: any, idx: number) => ({
@@ -196,15 +200,14 @@ export const useEstimativaPDF = () => {
         alertas: []
       }));
 
-      // Recalcula estimativas localmente quando vieram de múltiplos chunks (ou usa as do servidor se single)
       const estimativas = moveis.map((m, idx) => {
         const preco = getTabelaPreco(m.tipo);
         const qtd = m.quantidade || 1;
         return {
           movel_id: `movel_${idx}`,
-          preco_minimo: preco.fixo_min * qtd,
-          preco_maximo: preco.fixo_max * qtd,
-          preco_medio: ((preco.fixo_min + preco.fixo_max) / 2) * qtd,
+          preco_minimo: preco.fixo_min * qtd * multPadrao,
+          preco_maximo: preco.fixo_max * qtd * multPadrao,
+          preco_medio: ((preco.fixo_min + preco.fixo_max) / 2) * qtd * multPadrao,
           base_calculo: '',
         };
       });
@@ -212,6 +215,15 @@ export const useEstimativaPDF = () => {
       const total_minimo = estimativas.reduce((s, e) => s + e.preco_minimo, 0) * 1.4;
       const total_maximo = estimativas.reduce((s, e) => s + e.preco_maximo, 0) * 1.2;
       const total_medio = estimativas.reduce((s, e) => s + e.preco_medio, 0) * 1.1;
+
+      const comparacao_orcamento = contexto.orcamento_cliente && contexto.orcamento_cliente > 0
+        ? {
+            orcamento_cliente: contexto.orcamento_cliente,
+            estimativa_media: total_medio,
+            diferenca_valor: total_medio - contexto.orcamento_cliente,
+            diferenca_pct: ((total_medio - contexto.orcamento_cliente) / contexto.orcamento_cliente) * 100,
+          }
+        : undefined;
 
       const relatorio: RelatorioEstimativa = {
         id: crypto.randomUUID(),
@@ -225,7 +237,9 @@ export const useEstimativaPDF = () => {
         total_minimo,
         total_maximo,
         total_medio,
-        observacoes_gerais: analise.observacoes_gerais || []
+        observacoes_gerais: analise.observacoes_gerais || [],
+        contexto,
+        comparacao_orcamento,
       };
 
       setProgress('Concluído!');
