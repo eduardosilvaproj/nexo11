@@ -79,20 +79,46 @@ async function uploadParaGeminiFileAPI(supabase: any, GEMINI_API_KEY: string, fi
   const fileResponse = await fetch(urlData.signedUrl);
   if (!fileResponse.ok) throw new AppError("Erro ao baixar PDF da URL assinada", 400);
   const fileBlob = await fileResponse.blob();
+  const fileSize = fileBlob.size;
 
-  const uploadUrl = `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${GEMINI_API_KEY}`;
-  const uploadForm = new FormData();
-  uploadForm.append("file", fileBlob, "projeto.pdf");
-
-  const uploadRes = await fetch(uploadUrl, {
+  // Step 1: Start resumable upload (envia apenas metadata)
+  const startUrl = `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${GEMINI_API_KEY}`;
+  const startRes = await fetch(startUrl, {
     method: "POST",
-    headers: { "X-Goog-Upload-Protocol": "multipart" },
-    body: uploadForm,
+    headers: {
+      "X-Goog-Upload-Protocol": "resumable",
+      "X-Goog-Upload-Command": "start",
+      "X-Goog-Upload-Header-Content-Length": String(fileSize),
+      "X-Goog-Upload-Header-Content-Type": "application/pdf",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ file: { display_name: "projeto.pdf" } }),
+  });
+
+  if (!startRes.ok) {
+    const errText = await startRes.text();
+    console.error("Gemini resumable start error:", startRes.status, errText.substring(0, 500));
+    if (startRes.status === 429) throw new AppError("Limite de requisições do Gemini excedido. Tente novamente em instantes.", 429);
+    throw new AppError(`Erro ao iniciar upload no Gemini: ${errText.substring(0, 200)}`, 502);
+  }
+
+  const uploadSessionUrl = startRes.headers.get("x-goog-upload-url") || startRes.headers.get("X-Goog-Upload-URL");
+  if (!uploadSessionUrl) throw new AppError("Gemini não retornou URL de upload resumable", 502);
+
+  // Step 2: Upload bytes + finalize em uma chamada
+  const uploadRes = await fetch(uploadSessionUrl, {
+    method: "POST",
+    headers: {
+      "Content-Length": String(fileSize),
+      "X-Goog-Upload-Offset": "0",
+      "X-Goog-Upload-Command": "upload, finalize",
+    },
+    body: fileBlob,
   });
 
   if (!uploadRes.ok) {
     const errText = await uploadRes.text();
-    console.error("Gemini File API upload error:", uploadRes.status, errText.substring(0, 500));
+    console.error("Gemini resumable upload error:", uploadRes.status, errText.substring(0, 500));
     if (uploadRes.status === 429) throw new AppError("Limite de requisições do Gemini excedido. Tente novamente em instantes.", 429);
     throw new AppError(`Erro no upload ao Gemini: ${errText.substring(0, 200)}`, 502);
   }
@@ -100,7 +126,7 @@ async function uploadParaGeminiFileAPI(supabase: any, GEMINI_API_KEY: string, fi
   const uploadData = await uploadRes.json();
   const fileUri = uploadData?.file?.uri;
   if (!fileUri) throw new AppError("Gemini File API não retornou URI do arquivo", 502);
-  console.log("Gemini File API uploaded:", fileUri, "| size:", fileBlob.size);
+  console.log("Gemini File API uploaded:", fileUri, "| size:", fileSize);
   return fileUri;
 }
 
