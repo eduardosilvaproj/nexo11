@@ -116,6 +116,12 @@ serve(async (req) => {
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+      if (response.status === 413 || response.status === 408 || response.status === 504 || /context_length|too large|payload/i.test(responseText)) {
+        return new Response(
+          JSON.stringify({ error: "PDF muito grande para processar. Comprima o arquivo em ilovepdf.com ou exporte apenas as pranchas de layout." }),
+          { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       let errorMsg = `Lovable AI retornou status ${response.status}`;
       try {
         const errorJson = JSON.parse(responseText);
