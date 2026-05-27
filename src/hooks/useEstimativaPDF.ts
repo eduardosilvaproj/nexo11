@@ -30,6 +30,12 @@ async function dividirPDFEmChunks(file: File, paginasPorChunk: number): Promise<
   return chunks;
 }
 
+async function contarPaginasPDF(file: File): Promise<number> {
+  const arrayBuffer = await file.arrayBuffer();
+  const doc = await PDFDocument.load(arrayBuffer);
+  return doc.getPageCount();
+}
+
 function sanitizeName(name: string) {
   return name
     .normalize('NFD')
