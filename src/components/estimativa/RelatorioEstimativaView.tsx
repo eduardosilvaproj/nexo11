@@ -143,6 +143,19 @@ const gerarCapa = (relatorio: RelatorioEstimativa): string => {
   if (d.nome_obra) metaItems.push(`<div class="m-item"><span class="m-lbl">Obra</span><span class="m-val">${d.nome_obra}</span></div>`);
   if (d.arquiteto) metaItems.push(`<div class="m-item"><span class="m-lbl">Arquiteto</span><span class="m-val">${d.arquiteto}</span></div>`);
   if (d.nome_cliente) metaItems.push(`<div class="m-item"><span class="m-lbl">Cliente</span><span class="m-val">${d.nome_cliente}</span></div>`);
+  if (relatorio.contexto) {
+    metaItems.push(`<div class="m-item"><span class="m-lbl">Tipo</span><span class="m-val">${LABEL_TIPO_PROJETO[relatorio.contexto.tipo_projeto]}</span></div>`);
+    metaItems.push(`<div class="m-item"><span class="m-lbl">Padrão</span><span class="m-val">${LABEL_PADRAO[relatorio.contexto.padrao]}</span></div>`);
+  }
+
+  const c = relatorio.comparacao_orcamento;
+  const comparacaoHTML = c
+    ? `<div class="cv-comparacao">
+        <div class="cv-comp-row"><span class="cv-comp-lbl">Orçamento do cliente</span><span class="cv-comp-val">${formatCurrency(c.orcamento_cliente)}</span></div>
+        <div class="cv-comp-row"><span class="cv-comp-lbl">Estimativa média</span><span class="cv-comp-val">${formatCurrency(c.estimativa_media)}</span></div>
+        <div class="cv-comp-row"><span class="cv-comp-lbl">Diferença</span><span class="cv-comp-val" style="color:${c.diferenca_valor > 0 ? '#C9A961' : '#9BBF6E'}">${c.diferenca_valor > 0 ? '+' : ''}${c.diferenca_pct.toFixed(1)}%</span></div>
+      </div>`
+    : '';
 
   return `<!DOCTYPE html><html><head><meta charset="UTF-8">${FONT_LINKS}<style>${SHARED_CSS}
     .cover{color:#F5F3EF;}
