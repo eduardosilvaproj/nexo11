@@ -360,6 +360,9 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
   const [selecionados, setSelecionados] = useState<Set<string>>(
     () => new Set(gruposCompletos.map((g) => g.ambiente)),
   );
+  // Overrides do valor médio por ambiente (editado manualmente)
+  const [overrides, setOverrides] = useState<Record<string, number>>({});
+  const [editando, setEditando] = useState<string | null>(null);
 
   const toggleAmbiente = (ambiente: string) => {
     setSelecionados((prev) => {
@@ -370,12 +373,48 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
     });
   };
 
+  // Grupos com overrides aplicados (escala min/max proporcionalmente ao médio)
+  const gruposEfetivos = useMemo(() => {
+    return gruposCompletos.map((g) => {
+      const override = overrides[g.ambiente];
+      if (override == null || !g.total_med || g.total_med === 0) return g;
+      const ratio = override / g.total_med;
+      return {
+        ambiente: g.ambiente,
+        total_med: override,
+        total_min: g.total_min * ratio,
+        total_max: g.total_max * ratio,
+      };
+    });
+  }, [gruposCompletos, overrides]);
+
   const relatorioFiltrado = useMemo<RelatorioEstimativa>(() => {
     const moveisFiltrados = relatorio.moveis.filter((m) =>
       selecionados.has(m.ambiente || 'Outros'),
     );
     const idsValidos = new Set(moveisFiltrados.map((m) => m.id));
-    const estimativasFiltradas = relatorio.estimativas.filter((e) => idsValidos.has(e.movel_id));
+
+    // Mapa de ratio por ambiente para escalar estimativas individuais
+    const ratioMap = new Map<string, number>();
+    gruposCompletos.forEach((g) => {
+      const override = overrides[g.ambiente];
+      ratioMap.set(g.ambiente, override != null && g.total_med > 0 ? override / g.total_med : 1);
+    });
+
+    const estimativasFiltradas = relatorio.estimativas
+      .filter((e) => idsValidos.has(e.movel_id))
+      .map((e) => {
+        const movel = relatorio.moveis.find((m) => m.id === e.movel_id);
+        const amb = movel?.ambiente || 'Outros';
+        const r = ratioMap.get(amb) ?? 1;
+        return {
+          ...e,
+          preco_minimo: e.preco_minimo * r,
+          preco_maximo: e.preco_maximo * r,
+          preco_medio: e.preco_medio * r,
+        };
+      });
+
     const total_minimo = estimativasFiltradas.reduce((s, e) => s + e.preco_minimo, 0) * 1.4;
     const total_maximo = estimativasFiltradas.reduce((s, e) => s + e.preco_maximo, 0) * 1.2;
     const total_medio = estimativasFiltradas.reduce((s, e) => s + e.preco_medio, 0) * 1.1;
@@ -387,9 +426,12 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
       total_maximo,
       total_medio,
     };
-  }, [relatorio, selecionados]);
+  }, [relatorio, selecionados, overrides, gruposCompletos]);
 
-  const gruposFiltrados = useMemo(() => agruparPorAmbiente(relatorioFiltrado), [relatorioFiltrado]);
+  const gruposFiltrados = useMemo(
+    () => gruposEfetivos.filter((g) => selecionados.has(g.ambiente)),
+    [gruposEfetivos, selecionados],
+  );
   const d = relatorio.dados_projeto;
   const mostrarProjeto = temDadosProjeto(relatorio);
 
