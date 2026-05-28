@@ -64,8 +64,14 @@ type MenuItem = {
   roles?: AppRole[];
 };
 
+type MenuItem = {
+  title: string;
+  url: string;
+  icon: React.ComponentType<{ className?: string }>;
+  roles?: AppRole[];
+};
+
 const operacao: MenuItem[] = [
-  { title: "Comercial", url: "/comercial", icon: Users, roles: ["admin", "gerente", "vendedor", "franqueador", "admin_master"] },
   { title: "Clientes", url: "/clientes", icon: UserRound, roles: ["admin", "gerente", "vendedor", "franqueador", "pos_venda", "admin_master"] },
   { title: "Técnico", url: "/tecnico", icon: ClipboardCheck, roles: ["admin", "gerente", "tecnico", "medidor", "conferente", "franqueador", "admin_master"] },
   { title: "Produção", url: "/producao", icon: Factory, roles: ["admin", "gerente", "tecnico", "franqueador", "admin_master"] },
@@ -107,6 +113,16 @@ export function AppSidebar() {
   const { perfil, roles, signOut } = useAuth();
   const { naoLidas: totalNotifs } = useNotificacoes();
   const collapsed = state === "collapsed";
+  const location = useLocation();
+
+  const isComercialActive =
+    location.pathname.startsWith("/comercial") || location.pathname.startsWith("/contratos");
+
+  const [comercialOpen, setComercialOpen] = useState(isComercialActive);
+
+  useEffect(() => {
+    setComercialOpen(isComercialActive);
+  }, [isComercialActive]);
 
   useEffect(() => {
     const channel = supabase
@@ -140,7 +156,7 @@ export function AppSidebar() {
       if (error) return 0;
       return count || 0;
     },
-    staleTime: 1000 * 60, // Keep data fresh for 1 minute as we have realtime
+    staleTime: 1000 * 60,
   });
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -153,6 +169,12 @@ export function AppSidebar() {
     if (roles.includes("admin_master")) return true;
     return item.roles.some((r) => roles.includes(r));
   };
+
+  const comercialRoles: AppRole[] = ["admin", "gerente", "vendedor", "franqueador", "admin_master"];
+  const showComercial = comercialRoles.some((r) => roles.includes(r));
+
+  const subItemActive = (url: string) =>
+    location.pathname + location.search === url || location.pathname === url;
 
   return (
     <Sidebar collapsible="icon" className="bg-[#1c1917] border-r border-white/5">
@@ -208,6 +230,97 @@ export function AppSidebar() {
           <SidebarGroupLabel className="nexo-sidebar-label">Operação</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+              {showComercial && (
+                <SidebarMenuItem>
+                  <Collapsible open={comercialOpen} onOpenChange={setComercialOpen}>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton
+                        className={cn(
+                          "w-full",
+                          isComercialActive
+                            ? "!bg-white/[0.06] !text-white font-medium border-l-2 border-[#a3a380] pl-[calc(0.5rem-2px)] rounded-l-none rounded-r-lg hover:!bg-white/[0.08] hover:!text-white"
+                            : "!bg-transparent !text-stone-400 rounded-lg hover:!bg-white/[0.04] hover:!text-white"
+                        )}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4" />
+                            {!collapsed && <span>Comercial</span>}
+                          </div>
+                          {!collapsed && (
+                            <ChevronRight
+                              className={cn(
+                                "h-3.5 w-3.5 transition-transform duration-200",
+                                comercialOpen && "rotate-90"
+                              )}
+                            />
+                          )}
+                        </div>
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub className="border-white/10">
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            asChild
+                            size="sm"
+                            isActive={subItemActive("/comercial?tab=painel")}
+                            className={cn(
+                              subItemActive("/comercial?tab=painel")
+                                ? "bg-white/[0.06] text-white font-medium border-l-2 border-[#a3a380] pl-[calc(0.5rem-2px)] rounded-l-none"
+                                : "text-stone-400 hover:bg-white/[0.04] hover:text-white"
+                            )}
+                          >
+                            <Link to="/comercial?tab=painel">Painel</Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            asChild
+                            size="sm"
+                            isActive={subItemActive("/comercial?tab=pipeline")}
+                            className={cn(
+                              subItemActive("/comercial?tab=pipeline")
+                                ? "bg-white/[0.06] text-white font-medium border-l-2 border-[#a3a380] pl-[calc(0.5rem-2px)] rounded-l-none"
+                                : "text-stone-400 hover:bg-white/[0.04] hover:text-white"
+                            )}
+                          >
+                            <Link to="/comercial?tab=pipeline">Pipeline</Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            asChild
+                            size="sm"
+                            isActive={subItemActive("/comercial?tab=leads")}
+                            className={cn(
+                              subItemActive("/comercial?tab=leads")
+                                ? "bg-white/[0.06] text-white font-medium border-l-2 border-[#a3a380] pl-[calc(0.5rem-2px)] rounded-l-none"
+                                : "text-stone-400 hover:bg-white/[0.04] hover:text-white"
+                            )}
+                          >
+                            <Link to="/comercial?tab=leads">Leads</Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton
+                            asChild
+                            size="sm"
+                            isActive={subItemActive("/contratos")}
+                            className={cn(
+                              subItemActive("/contratos")
+                                ? "bg-white/[0.06] text-white font-medium border-l-2 border-[#a3a380] pl-[calc(0.5rem-2px)] rounded-l-none"
+                                : "text-stone-400 hover:bg-white/[0.04] hover:text-white"
+                            )}
+                          >
+                            <Link to="/contratos">Contratos</Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </SidebarMenuItem>
+              )}
               {operacao.filter(canSee).map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild>
