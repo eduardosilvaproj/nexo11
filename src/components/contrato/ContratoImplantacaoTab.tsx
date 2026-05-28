@@ -20,11 +20,11 @@ export function ContratoImplantacaoTab({ contratoId }: Props) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contratos")
-        .select("id, valor_venda, valor_compra_estimado, trava_implantacao_ok, status")
+        .select("id, valor_venda, trava_implantacao_ok, status")
         .eq("id", contratoId)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      return data as any;
     },
   });
 
