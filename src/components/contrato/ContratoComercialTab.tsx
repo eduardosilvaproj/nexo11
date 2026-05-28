@@ -5,11 +5,13 @@ import { FileText, Loader2, Calculator } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import { ContractPDF } from "./ContractPDF";
 import { ContractPreviewModal } from "./ContractPreviewModal";
+import { CustoViagemCard } from "./CustoViagemCard";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+
 
 
 interface ComercialTabProps {
