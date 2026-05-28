@@ -84,7 +84,7 @@ export function CustoViagemCard({
       return data;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["contrato", contratoId] });
+      qc.invalidateQueries({ queryKey: ["contrato-viagem", contratoId] });
       toast.success("Custo de viagem calculado");
     },
     onError: (e: any) => toast.error(e.message || "Erro ao calcular viagem"),
@@ -217,7 +217,7 @@ export function CustoViagemCard({
           contratoId={contratoId}
           initialTotal={Number(custoViagem ?? 0)}
           initialDetalhamento={d}
-          onSaved={() => qc.invalidateQueries({ queryKey: ["contrato", contratoId] })}
+          onSaved={() => qc.invalidateQueries({ queryKey: ["contrato-viagem", contratoId] })}
         />
       )}
     </div>
