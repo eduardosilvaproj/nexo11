@@ -6235,53 +6235,6 @@ export type Database = {
           },
         ]
       }
-      tecnicos_montadores: {
-        Row: {
-          ativo: boolean
-          created_at: string
-          email: string | null
-          funcoes: string[]
-          id: string
-          loja_id: string
-          nome: string
-          percentual_padrao: number
-          telefone: string | null
-          updated_at: string
-        }
-        Insert: {
-          ativo?: boolean
-          created_at?: string
-          email?: string | null
-          funcoes?: string[]
-          id?: string
-          loja_id: string
-          nome: string
-          percentual_padrao?: number
-          telefone?: string | null
-          updated_at?: string
-        }
-        Update: {
-          ativo?: boolean
-          created_at?: string
-          email?: string | null
-          funcoes?: string[]
-          id?: string
-          loja_id?: string
-          nome?: string
-          percentual_padrao?: number
-          telefone?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "montadores_loja_id_fkey"
-            columns: ["loja_id"]
-            isOneToOne: false
-            referencedRelation: "lojas"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       transacoes: {
         Row: {
           categoria: string
