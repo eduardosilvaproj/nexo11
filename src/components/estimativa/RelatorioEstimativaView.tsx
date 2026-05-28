@@ -638,6 +638,38 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
       </Card>
 
       <Card className="p-6">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Ajuste Global</h3>
+            <p className="text-xs text-muted-foreground mt-1">Aplica desconto ou acréscimo em todos os valores</p>
+          </div>
+          <div className={`text-2xl font-bold tabular-nums ${ajustePct > 0 ? 'text-amber-600' : ajustePct < 0 ? 'text-emerald-600' : 'text-foreground'}`}>
+            {ajustePct > 0 ? '+' : ''}{ajustePct}%
+          </div>
+        </div>
+        <Slider
+          value={[ajustePct]}
+          onValueChange={(v) => setAjustePct(v[0])}
+          min={-50}
+          max={100}
+          step={1}
+          className="my-3"
+        />
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>−50%</span>
+          <button
+            type="button"
+            onClick={() => setAjustePct(0)}
+            className="hover:text-foreground transition-colors"
+          >
+            Resetar
+          </button>
+          <span>+100%</span>
+        </div>
+      </Card>
+
+
+      <Card className="p-6">
         <div className="flex items-baseline justify-between mb-4">
           <h3 className="text-lg font-semibold">
             Ambientes ({selecionados.size}/{gruposCompletos.length})
