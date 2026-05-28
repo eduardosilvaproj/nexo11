@@ -200,12 +200,12 @@ export function ChecklistComercialCard({ contratoId, contrato, ambientes, loja, 
     const r = checklist.ambientes?.[a.id];
     return !!r?.cor_mdf?.trim() && !!r?.puxador?.trim();
   });
-  const eletroOk = contrato.eletrodomesticos_status && contrato.eletrodomesticos_status !== "pendente" &&
-    (contrato.eletrodomesticos_status !== "informado" || (checklist.eletrodomesticos?.length ?? 0) > 0 || !!checklist.eletrodomesticos_arquivo_url);
-  const plantaOk = contrato.planta_hidraulica_status && contrato.planta_hidraulica_status !== "pendente" &&
-    (contrato.planta_hidraulica_status !== "anexada" || !!checklist.planta_hidraulica_url);
-  const extrasOk = contrato.itens_extras_status && contrato.itens_extras_status !== "pendente" &&
-    (contrato.itens_extras_status !== "listados" || (checklist.itens_extras?.length ?? 0) > 0);
+  const eletroOk = eletrodomesticos_status && eletrodomesticos_status !== "pendente" &&
+    (eletrodomesticos_status !== "informado" || (checklist.eletrodomesticos?.length ?? 0) > 0 || !!checklist.eletrodomesticos_arquivo_url);
+  const plantaOk = planta_hidraulica_status && planta_hidraulica_status !== "pendente" &&
+    (planta_hidraulica_status !== "anexada" || !!checklist.planta_hidraulica_url);
+  const extrasOk = itens_extras_status && itens_extras_status !== "pendente" &&
+    (itens_extras_status !== "listados" || (checklist.itens_extras?.length ?? 0) > 0);
   const ledOk = checklist.led?.tipo === "nao" || (checklist.led?.tipo === "sim" && !!checklist.led?.custo);
 
   const mesmaCidade = !!loja?.cidade && !!endereco.cidade && loja.cidade.trim().toLowerCase() === endereco.cidade.trim().toLowerCase();
