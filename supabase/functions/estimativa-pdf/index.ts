@@ -143,7 +143,7 @@ async function chamarGemini(GEMINI_API_KEY: string, fileUri: string) {
           { file_data: { mime_type: "application/pdf", file_uri: fileUri } },
         ],
       }],
-      generationConfig: { temperature: 0, maxOutputTokens: 32000 },
+      generationConfig: { temperature: 0, maxOutputTokens: 65536 },
     }),
   });
 
