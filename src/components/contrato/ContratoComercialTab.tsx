@@ -6,6 +6,7 @@ import { pdf } from "@react-pdf/renderer";
 import { ContractPDF } from "./ContractPDF";
 import { ContractPreviewModal } from "./ContractPreviewModal";
 import { CustoViagemCard } from "./CustoViagemCard";
+import { ChecklistComercialCard } from "./ChecklistComercialCard";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
