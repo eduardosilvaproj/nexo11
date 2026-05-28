@@ -41,6 +41,35 @@ function sanitizeName(name: string) {
     .replace(/_+/g, '_');
 }
 
+async function invokeEstimativaPDF(body: any, timeoutMs = 300_000): Promise<any> {
+  const url = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/estimativa-pdf`;
+  const { data: { session } } = await supabase.auth.getSession();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    const text = await res.text();
+    let data: any = null;
+    try { data = text ? JSON.parse(text) : null; } catch { /* noop */ }
+    if (!res.ok) throw new Error(data?.error || `Edge Function erro (${res.status})`);
+    return data;
+  } catch (err: any) {
+    if (err?.name === 'AbortError') throw new Error('Tempo esgotado (5 min). Tente um PDF menor ou divida o projeto.');
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function juntarDadosProjeto(analises: any[]): DadosProjeto {
   return analises.reduce<DadosProjeto>((acc, a) => {
     const d = a?.dados_projeto || {};
