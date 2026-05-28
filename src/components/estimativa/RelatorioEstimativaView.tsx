@@ -396,20 +396,24 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
     });
   };
 
-  // Grupos com overrides aplicados (escala min/max proporcionalmente ao médio)
+  // Grupos com overrides aplicados (escala min/max proporcionalmente ao médio) + fator global
   const gruposEfetivos = useMemo(() => {
     return gruposCompletos.map((g) => {
       const override = overrides[g.ambiente];
-      if (override == null || !g.total_med || g.total_med === 0) return g;
-      const ratio = override / g.total_med;
-      return {
+      const base = override != null && g.total_med ? {
         ambiente: g.ambiente,
         total_med: override,
-        total_min: g.total_min * ratio,
-        total_max: g.total_max * ratio,
+        total_min: g.total_min * (override / g.total_med),
+        total_max: g.total_max * (override / g.total_med),
+      } : g;
+      return {
+        ambiente: base.ambiente,
+        total_med: base.total_med * fatorAjuste,
+        total_min: base.total_min * fatorAjuste,
+        total_max: base.total_max * fatorAjuste,
       };
     });
-  }, [gruposCompletos, overrides]);
+  }, [gruposCompletos, overrides, fatorAjuste]);
 
   const relatorioFiltrado = useMemo<RelatorioEstimativa>(() => {
     const moveisFiltrados = relatorio.moveis.filter((m) =>
