@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, MapPin, Loader2, Pencil, Sparkles } from "lucide-react";
+import { ChevronDown, MapPin, Loader2, Pencil, Sparkles, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { RelatorioViagem } from "@/components/comercial/RelatorioViagem";
 
 const fmt = (n?: number | null) =>
   typeof n === "number"
@@ -21,16 +23,12 @@ interface Props {
   clienteId?: string | null;
 }
 
-export function CustoViagemCard({
-  contratoId,
-  lojaCidade,
-  lojaEstado,
-  clienteId,
-}: Props) {
+export function CustoViagemCard({ contratoId, lojaCidade, lojaEstado, clienteId }: Props) {
   const { hasRole } = useAuth();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [crewOpen, setCrewOpen] = useState(false);
 
   const canEdit =
     hasRole("gerente") || hasRole("financeiro") || hasRole("admin") || hasRole("admin_master");
@@ -40,7 +38,9 @@ export function CustoViagemCard({
     queryFn: async () => {
       const { data } = await supabase
         .from("contratos")
-        .select("cliente_id, custo_viagem, distancia_km, custo_viagem_detalhamento, custo_viagem_override")
+        .select(
+          "cliente_id, custo_viagem, distancia_km, custo_viagem_detalhamento, custo_viagem_override, viagem_qtd_montadores, viagem_qtd_veiculos",
+        )
         .eq("id", contratoId)
         .maybeSingle();
       return data;
@@ -52,6 +52,8 @@ export function CustoViagemCard({
   const distanciaKm = (viagemRow as any)?.distancia_km as number | null | undefined;
   const detalhamento = (viagemRow as any)?.custo_viagem_detalhamento;
   const override = (viagemRow as any)?.custo_viagem_override;
+  const qtdMontadores = (viagemRow as any)?.viagem_qtd_montadores as number | null | undefined;
+  const qtdVeiculos = (viagemRow as any)?.viagem_qtd_veiculos as number | null | undefined;
 
   const { data: cliente } = useQuery({
     queryKey: ["cliente-endereco", effectiveClienteId],
@@ -67,7 +69,6 @@ export function CustoViagemCard({
     enabled: !!effectiveClienteId,
   });
 
-
   const sameCity = useMemo(() => {
     if (!lojaCidade || !cliente?.cidade) return null;
     return (
@@ -77,9 +78,9 @@ export function CustoViagemCard({
   }, [lojaCidade, lojaEstado, cliente]);
 
   const calcular = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (opts?: { qtd_montadores?: number; qtd_veiculos?: number }) => {
       const { data, error } = await supabase.functions.invoke("calcular-viagem", {
-        body: { contrato_id: contratoId },
+        body: { contrato_id: contratoId, ...opts },
       });
       if (error) throw error;
       return data;
@@ -91,17 +92,28 @@ export function CustoViagemCard({
     onError: (e: any) => toast.error(e.message || "Erro ao calcular viagem"),
   });
 
-  // Auto-calc when destino é outra cidade e ainda não foi calculado
   useEffect(() => {
     if (sameCity === false && custoViagem == null && !override && !calcular.isPending) {
-      calcular.mutate();
+      calcular.mutate(undefined);
     }
   }, [sameCity, custoViagem, override]);
 
-  if (sameCity === null) return null; // sem dados ainda
-  if (sameCity && (custoViagem ?? 0) === 0) return null; // mesma cidade, sem custo
+  if (sameCity === null) return null;
+  if (sameCity && (custoViagem ?? 0) === 0) return null;
 
-  const d = detalhamento || {};
+  // Compose result-like object for RelatorioViagem
+  const reportResult = detalhamento && detalhamento.montadores
+    ? {
+        distancia_km: distanciaKm,
+        dias_montagem: detalhamento.dias_montagem,
+        fins_de_semana_extras: detalhamento.fins_de_semana_extras,
+        noites_hospedado: detalhamento.noites_hospedado,
+        qtd_montadores: detalhamento.qtd_montadores ?? qtdMontadores ?? 2,
+        qtd_veiculos: detalhamento.qtd_veiculos ?? qtdVeiculos ?? 1,
+        custo_total: Number(custoViagem ?? 0),
+        detalhamento,
+      }
+    : null;
 
   return (
     <div className="rounded-xl bg-white" style={{ border: "0.5px solid #E8ECF2", padding: 20 }}>
@@ -115,9 +127,7 @@ export function CustoViagemCard({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 style={{ fontSize: 14, fontWeight: 500, color: "#0D1117" }}>
-                Custo de Viagem
-              </h3>
+              <h3 style={{ fontSize: 14, fontWeight: 500, color: "#0D1117" }}>Custo de Viagem</h3>
               <span
                 className="inline-flex items-center gap-1 rounded-full px-2 py-0.5"
                 style={{ backgroundColor: "#EEF4FF", color: "#1E6FBF", fontSize: 10, fontWeight: 500 }}
@@ -127,7 +137,9 @@ export function CustoViagemCard({
             </div>
             <p style={{ fontSize: 11, color: "#6B7A90", marginTop: 2 }}>
               {distanciaKm ? `${distanciaKm} km · ` : ""}
-              Adicionado automaticamente ao contrato
+              {qtdMontadores ? `${qtdMontadores} montadores · ` : ""}
+              {qtdVeiculos ? `${qtdVeiculos} veículo(s) · ` : ""}
+              Lançado no DRE como frete
             </p>
           </div>
         </div>
@@ -142,13 +154,13 @@ export function CustoViagemCard({
         </div>
       </div>
 
-      <div className="mt-3 flex items-center gap-2">
+      <div className="mt-3 flex items-center gap-2 flex-wrap">
         <button
           onClick={() => setOpen((v) => !v)}
           className="inline-flex items-center gap-1 text-xs hover:underline"
           style={{ color: "#1E6FBF" }}
         >
-          {open ? "Ocultar detalhamento" : "Ver detalhamento"}
+          {open ? "Ocultar relatório" : "Ver relatório completo"}
           <ChevronDown
             size={12}
             style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}
@@ -156,6 +168,14 @@ export function CustoViagemCard({
         </button>
         {canEdit && (
           <>
+            <span className="text-xs text-slate-300">·</span>
+            <button
+              onClick={() => setCrewOpen(true)}
+              className="inline-flex items-center gap-1 text-xs hover:underline"
+              style={{ color: "#6B7A90" }}
+            >
+              <Users size={11} /> Equipe & veículos
+            </button>
             <span className="text-xs text-slate-300">·</span>
             <button
               onClick={() => setEditOpen(true)}
@@ -166,7 +186,7 @@ export function CustoViagemCard({
             </button>
             <span className="text-xs text-slate-300">·</span>
             <button
-              onClick={() => calcular.mutate()}
+              onClick={() => calcular.mutate(undefined)}
               disabled={calcular.isPending}
               className="text-xs hover:underline"
               style={{ color: "#6B7A90" }}
@@ -177,51 +197,95 @@ export function CustoViagemCard({
         )}
       </div>
 
-      {open && (
-        <div className="mt-4 overflow-hidden rounded-lg" style={{ border: "0.5px solid #E8ECF2" }}>
-          <table className="w-full text-sm">
-            <thead>
-              <tr style={{ backgroundColor: "#F7F9FC" }}>
-                <th className="px-3 py-2 text-left text-[11px] font-medium uppercase text-slate-500">Categoria</th>
-                <th className="px-3 py-2 text-right text-[11px] font-medium uppercase text-slate-500">Gasolina</th>
-                <th className="px-3 py-2 text-right text-[11px] font-medium uppercase text-slate-500">Pedágio</th>
-                <th className="px-3 py-2 text-right text-[11px] font-medium uppercase text-slate-500">Hotel</th>
-                <th className="px-3 py-2 text-right text-[11px] font-medium uppercase text-slate-500">Refeição</th>
-                <th className="px-3 py-2 text-right text-[11px] font-medium uppercase text-slate-500">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(["montadores", "medidor", "gerente"] as const).map((k) => (
-                <tr key={k} style={{ borderTop: "0.5px solid #E8ECF2" }}>
-                  <td className="px-3 py-2 capitalize" style={{ color: "#0D1117" }}>{k}</td>
-                  <td className="px-3 py-2 text-right">{fmt(d?.[k]?.gasolina)}</td>
-                  <td className="px-3 py-2 text-right">{fmt(d?.[k]?.pedagio)}</td>
-                  <td className="px-3 py-2 text-right">{fmt(d?.[k]?.hotel)}</td>
-                  <td className="px-3 py-2 text-right">{fmt(d?.[k]?.refeicao)}</td>
-                  <td className="px-3 py-2 text-right font-medium">{fmt(d?.[k]?.subtotal)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {d?.dias_montagem && (
-            <div className="px-3 py-2 text-[11px]" style={{ backgroundColor: "#F7F9FC", color: "#6B7A90" }}>
-              Dias de montagem estimados: <strong>{d.dias_montagem}</strong>
-            </div>
-          )}
+      {open && reportResult && (
+        <div className="mt-4 -mx-2">
+          <RelatorioViagem result={reportResult} />
         </div>
       )}
 
       {canEdit && (
-        <EditCustoViagemDialog
-          open={editOpen}
-          onOpenChange={setEditOpen}
-          contratoId={contratoId}
-          initialTotal={Number(custoViagem ?? 0)}
-          initialDetalhamento={d}
-          onSaved={() => qc.invalidateQueries({ queryKey: ["contrato-viagem", contratoId] })}
-        />
+        <>
+          <EditCustoViagemDialog
+            open={editOpen}
+            onOpenChange={setEditOpen}
+            contratoId={contratoId}
+            initialTotal={Number(custoViagem ?? 0)}
+            initialDetalhamento={detalhamento}
+            onSaved={() => qc.invalidateQueries({ queryKey: ["contrato-viagem", contratoId] })}
+          />
+          <CrewDialog
+            open={crewOpen}
+            onOpenChange={setCrewOpen}
+            initialMontadores={qtdMontadores ?? 2}
+            initialVeiculos={qtdVeiculos ?? 1}
+            onConfirm={(m, v) => {
+              setCrewOpen(false);
+              calcular.mutate({ qtd_montadores: m, qtd_veiculos: v });
+            }}
+          />
+        </>
       )}
     </div>
+  );
+}
+
+function CrewDialog({
+  open,
+  onOpenChange,
+  initialMontadores,
+  initialVeiculos,
+  onConfirm,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  initialMontadores: number;
+  initialVeiculos: number;
+  onConfirm: (m: number, v: number) => void;
+}) {
+  const [m, setM] = useState(String(initialMontadores));
+  const [v, setV] = useState(String(initialVeiculos));
+  useEffect(() => {
+    if (open) {
+      setM(String(initialMontadores));
+      setV(String(initialVeiculos));
+    }
+  }, [open, initialMontadores, initialVeiculos]);
+
+  function onMChange(val: string) {
+    setM(val);
+    setV(String(Math.max(1, Math.ceil(Number(val) / 2))));
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[400px]">
+        <DialogHeader>
+          <DialogTitle>Equipe e veículos</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 py-2">
+          <div className="space-y-1.5">
+            <Label>Quantidade de montadores</Label>
+            <Select value={m} onValueChange={onMChange}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {[2, 3, 4, 5, 6].map((n) => (
+                  <SelectItem key={n} value={String(n)}>{n} montadores</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Quantidade de veículos</Label>
+            <Input type="number" min={1} max={6} value={v} onChange={(e) => setV(e.target.value)} />
+            <p className="text-[11px] text-slate-500">Sugestão: 1 carro a cada 2 montadores</p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
+          <Button onClick={() => onConfirm(Number(m), Number(v))}>Recalcular</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -240,15 +304,9 @@ function EditCustoViagemDialog({
   initialDetalhamento: any;
   onSaved: () => void;
 }) {
-  const [montadores, setMontadores] = useState(
-    String(initialDetalhamento?.montadores?.subtotal ?? 0),
-  );
-  const [medidor, setMedidor] = useState(
-    String(initialDetalhamento?.medidor?.subtotal ?? 0),
-  );
-  const [gerente, setGerente] = useState(
-    String(initialDetalhamento?.gerente?.subtotal ?? 0),
-  );
+  const [montadores, setMontadores] = useState(String(initialDetalhamento?.montadores?.subtotal ?? 0));
+  const [medidor, setMedidor] = useState(String(initialDetalhamento?.medidor?.subtotal ?? 0));
+  const [gerente, setGerente] = useState(String(initialDetalhamento?.gerente?.subtotal ?? 0));
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {

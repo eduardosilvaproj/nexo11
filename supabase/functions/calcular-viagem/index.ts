@@ -19,11 +19,11 @@ const DEFAULTS = {
   consumo_km_litro: 10,
   preco_gasolina: 5.8,
   valor_medicao_dia: 200000,
+  locomocao_diaria_km: 10,
+  montadores_por_carro: 2,
 };
 
-function round(n: number) {
-  return Math.round(n * 100) / 100;
-}
+const round = (n: number) => Math.round(n * 100) / 100;
 
 async function geocodeAndRoute(origem: string, destino: string) {
   const body = {
@@ -46,9 +46,7 @@ async function geocodeAndRoute(origem: string, destino: string) {
     },
   );
   const json = await resp.json();
-  if (!resp.ok) {
-    throw new Error(`Google Routes error [${resp.status}]: ${JSON.stringify(json)}`);
-  }
+  if (!resp.ok) throw new Error(`Google Routes error [${resp.status}]: ${JSON.stringify(json)}`);
   const route = json.routes?.[0];
   if (!route) throw new Error("Nenhuma rota encontrada");
   const distanciaKm = (route.distanceMeters ?? 0) / 1000;
@@ -56,43 +54,56 @@ async function geocodeAndRoute(origem: string, destino: string) {
   const tolls = route.travelAdvisory?.tollInfo?.estimatedPrice;
   if (Array.isArray(tolls)) {
     const brl = tolls.find((t: any) => t.currencyCode === "BRL") ?? tolls[0];
-    if (brl) {
-      pedagio = Number(brl.units ?? 0) + Number(brl.nanos ?? 0) / 1e9;
-    }
+    if (brl) pedagio = Number(brl.units ?? 0) + Number(brl.nanos ?? 0) / 1e9;
   }
   return { distanciaKm, pedagio };
 }
 
-function calcular(distanciaKm: number, pedagioViagem: number, valorVenda: number, CFG: typeof DEFAULTS) {
+function calcular(
+  distanciaKm: number,
+  pedagioViagem: number,
+  valorVenda: number,
+  CFG: typeof DEFAULTS,
+  opts: { qtdMontadores?: number; qtdVeiculos?: number } = {},
+) {
   const diasMontagem = Math.max(1, Math.ceil(valorVenda / Number(CFG.valor_montagem_dia)));
 
-  // Semanas seg-sex (5 dias úteis)
   const semanasCompletas = Math.floor(diasMontagem / 5);
   const diasRestantes = diasMontagem % 5;
-  // Fins de semana extras = uma viagem ida+volta extra por fim de semana intermediário
   const finsDeSemana = diasRestantes > 0 ? semanasCompletas : Math.max(0, semanasCompletas - 1);
-  // Noites hospedadas = dias - fins de semana em casa (sai sexta, volta segunda)
   const noitesHospedado = Math.max(1, diasMontagem - finsDeSemana * 2);
 
-  const custoIdaVolta = ((distanciaKm * 2) / Number(CFG.consumo_km_litro)) * Number(CFG.preco_gasolina);
-  const pedagioIdaVolta = pedagioViagem * 2;
+  const qtdMontadores = Math.max(Number(CFG.min_montadores), opts.qtdMontadores ?? Number(CFG.min_montadores));
+  const qtdVeiculos = Math.max(
+    1,
+    opts.qtdVeiculos ?? Math.ceil(qtdMontadores / Number(CFG.montadores_por_carro)),
+  );
+
+  const gasolinaPorCarro = (distanciaKm * 2) / Number(CFG.consumo_km_litro) * Number(CFG.preco_gasolina);
+  const pedagioPorCarro = pedagioViagem * 2;
+  const custoIdaVoltaFrota = gasolinaPorCarro * qtdVeiculos;
+  const pedagioIdaVoltaFrota = pedagioPorCarro * qtdVeiculos;
 
   // === MONTADORES ===
-  // Viagens: 1 inicial + (finsDeSemana * 1 volta+ida = 1 ida-volta) + 1 final = 2 + finsDeSemana viagens ida+volta
-  const totalViagensMontador = 1 + finsDeSemana + 1; // ida+volta count
-  const gasolinaMontador = totalViagensMontador * custoIdaVolta;
-  const pedagioMontador = totalViagensMontador * pedagioIdaVolta;
-  const hotelMontadores = noitesHospedado * Number(CFG.min_montadores) * Number(CFG.hotel_por_pessoa);
-  const refeicaoMontadores = noitesHospedado * Number(CFG.min_montadores) * Number(CFG.refeicao_montador_dia);
-  const subMontadores = gasolinaMontador + pedagioMontador + hotelMontadores + refeicaoMontadores;
+  const totalViagensMontador = 1 + finsDeSemana + 1; // ida+volta
+  const gasolinaMontador = totalViagensMontador * custoIdaVoltaFrota;
+  const pedagioMontador = totalViagensMontador * pedagioIdaVoltaFrota;
+  const hotelMontadores = noitesHospedado * qtdMontadores * Number(CFG.hotel_por_pessoa);
+  const refeicaoMontadores = noitesHospedado * qtdMontadores * Number(CFG.refeicao_montador_dia);
+  // Locomoção diária hotel↔obra
+  const locomocaoDiariaPorCarro =
+    (Number(CFG.locomocao_diaria_km) * 2) / Number(CFG.consumo_km_litro) * Number(CFG.preco_gasolina);
+  const locomocaoDiaria = locomocaoDiariaPorCarro * qtdVeiculos * noitesHospedado;
+  const subMontadores =
+    gasolinaMontador + pedagioMontador + hotelMontadores + refeicaoMontadores + locomocaoDiaria;
 
-  // === MEDIDOR (bate-volta) ===
-  const subMedidor = custoIdaVolta + pedagioIdaVolta + Number(CFG.refeicao_medidor);
+  // === MEDIDOR (bate-volta, 1 carro) ===
+  const subMedidor = gasolinaPorCarro + pedagioPorCarro + Number(CFG.refeicao_medidor);
 
-  // === GERENTE (2 últimos dias, 1 noite) ===
-  const hotelGerente = 1 * Number(CFG.hotel_por_pessoa);
+  // === GERENTE (2 últimos dias, 1 noite, 1 carro) ===
+  const hotelGerente = Number(CFG.hotel_por_pessoa);
   const refeicaoGerente = 2 * Number(CFG.refeicao_montador_dia);
-  const subGerente = custoIdaVolta + pedagioIdaVolta + hotelGerente + refeicaoGerente;
+  const subGerente = gasolinaPorCarro + pedagioPorCarro + hotelGerente + refeicaoGerente;
 
   const custoTotal = subMontadores + subMedidor + subGerente;
 
@@ -101,27 +112,43 @@ function calcular(distanciaKm: number, pedagioViagem: number, valorVenda: number
     semanas: semanasCompletas,
     fins_de_semana_extras: finsDeSemana,
     noites_hospedado: noitesHospedado,
+    qtd_montadores: qtdMontadores,
+    qtd_veiculos: qtdVeiculos,
     detalhamento: {
       montadores: {
         viagens: totalViagensMontador,
+        noites: noitesHospedado,
+        pessoas: qtdMontadores,
+        veiculos: qtdVeiculos,
         gasolina: round(gasolinaMontador),
         pedagio: round(pedagioMontador),
         hotel: round(hotelMontadores),
         refeicao: round(refeicaoMontadores),
+        locomocao_diaria: round(locomocaoDiaria),
         subtotal: round(subMontadores),
       },
       medidor: {
-        gasolina: round(custoIdaVolta),
-        pedagio: round(pedagioIdaVolta),
+        gasolina: round(gasolinaPorCarro),
+        pedagio: round(pedagioPorCarro),
         refeicao: Number(CFG.refeicao_medidor),
         subtotal: round(subMedidor),
       },
       gerente: {
-        gasolina: round(custoIdaVolta),
-        pedagio: round(pedagioIdaVolta),
+        gasolina: round(gasolinaPorCarro),
+        pedagio: round(pedagioPorCarro),
         hotel: round(hotelGerente),
         refeicao: round(refeicaoGerente),
         subtotal: round(subGerente),
+      },
+      parametros: {
+        gasolina_por_carro_ida_volta: round(gasolinaPorCarro),
+        pedagio_por_carro_ida_volta: round(pedagioPorCarro),
+        locomocao_diaria_por_carro: round(locomocaoDiariaPorCarro),
+        consumo_km_litro: Number(CFG.consumo_km_litro),
+        preco_gasolina: Number(CFG.preco_gasolina),
+        hotel_por_pessoa: Number(CFG.hotel_por_pessoa),
+        refeicao_montador_dia: Number(CFG.refeicao_montador_dia),
+        locomocao_diaria_km: Number(CFG.locomocao_diaria_km),
       },
     },
     custo_total: round(custoTotal),
@@ -156,7 +183,17 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { contrato_id, cep_origem, cep_destino, origem: origemRaw, destino: destinoRaw, valor_venda, loja_id } = body ?? {};
+    const {
+      contrato_id,
+      cep_origem,
+      cep_destino,
+      origem: origemRaw,
+      destino: destinoRaw,
+      valor_venda,
+      loja_id,
+      qtd_montadores,
+      qtd_veiculos,
+    } = body ?? {};
 
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -166,7 +203,7 @@ Deno.serve(async (req) => {
       const destino = destinoRaw || cep_destino;
       if (!origem || !destino || !valor_venda) {
         return new Response(
-          JSON.stringify({ error: "Para simulação, envie origem/cep_origem, destino/cep_destino e valor_venda" }),
+          JSON.stringify({ error: "Para simulação, envie origem, destino e valor_venda" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
@@ -175,7 +212,10 @@ Deno.serve(async (req) => {
         : { data: null };
       const CFG = { ...DEFAULTS, ...(cfgRow ?? {}) };
       const { distanciaKm, pedagio } = await geocodeAndRoute(String(origem), String(destino));
-      const result = calcular(distanciaKm, pedagio, Number(valor_venda), CFG);
+      const result = calcular(distanciaKm, pedagio, Number(valor_venda), CFG, {
+        qtdMontadores: qtd_montadores ? Number(qtd_montadores) : undefined,
+        qtdVeiculos: qtd_veiculos ? Number(qtd_veiculos) : undefined,
+      });
       return new Response(
         JSON.stringify({
           simulacao: true,
@@ -192,7 +232,7 @@ Deno.serve(async (req) => {
     // ============= CONTRATO MODE =============
     const { data: contrato, error: cErr } = await admin
       .from("contratos")
-      .select("id, loja_id, valor_venda, cliente_id, custo_viagem_override")
+      .select("id, loja_id, valor_venda, cliente_id, custo_viagem_override, viagem_qtd_montadores, viagem_qtd_veiculos")
       .eq("id", contrato_id)
       .single();
     if (cErr || !contrato) throw new Error(cErr?.message || "Contrato não encontrado");
@@ -245,9 +285,21 @@ Deno.serve(async (req) => {
     const { distanciaKm, pedagio } = await geocodeAndRoute(origem, destino);
     const CFG = { ...DEFAULTS, ...(cfgRow ?? {}) };
     const valorVenda = Number(contrato.valor_venda ?? 0);
-    const result = calcular(distanciaKm, pedagio, valorVenda, CFG);
+    const result = calcular(distanciaKm, pedagio, valorVenda, CFG, {
+      qtdMontadores: qtd_montadores ? Number(qtd_montadores) : contrato.viagem_qtd_montadores ?? undefined,
+      qtdVeiculos: qtd_veiculos ? Number(qtd_veiculos) : contrato.viagem_qtd_veiculos ?? undefined,
+    });
 
-    const detalhamento = { ...result.detalhamento, dias_montagem: result.dias_montagem, fins_de_semana_extras: result.fins_de_semana_extras, origem, destino };
+    const detalhamento = {
+      ...result.detalhamento,
+      dias_montagem: result.dias_montagem,
+      fins_de_semana_extras: result.fins_de_semana_extras,
+      noites_hospedado: result.noites_hospedado,
+      qtd_montadores: result.qtd_montadores,
+      qtd_veiculos: result.qtd_veiculos,
+      origem,
+      destino,
+    };
 
     await admin
       .from("contratos")
@@ -256,8 +308,30 @@ Deno.serve(async (req) => {
         distancia_km: round(distanciaKm),
         custo_viagem_detalhamento: detalhamento,
         custo_viagem_calculado_em: new Date().toISOString(),
+        viagem_qtd_montadores: result.qtd_montadores,
+        viagem_qtd_veiculos: result.qtd_veiculos,
       })
       .eq("id", contrato_id);
+
+    // Lança no DRE como custo de frete real (upsert)
+    const { data: dreRow } = await admin
+      .from("dre_contrato")
+      .select("contrato_id, custo_frete_real, custo_frete_previsto")
+      .eq("contrato_id", contrato_id)
+      .maybeSingle();
+    if (dreRow) {
+      await admin
+        .from("dre_contrato")
+        .update({ custo_frete_real: result.custo_total, custo_frete_previsto: result.custo_total })
+        .eq("contrato_id", contrato_id);
+    } else {
+      await admin.from("dre_contrato").insert({
+        contrato_id,
+        valor_venda: valorVenda,
+        custo_frete_real: result.custo_total,
+        custo_frete_previsto: result.custo_total,
+      });
+    }
 
     return new Response(
       JSON.stringify({

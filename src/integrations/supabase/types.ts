@@ -1701,8 +1701,10 @@ export type Database = {
           created_at: string
           hotel_por_pessoa: number
           id: string
+          locomocao_diaria_km: number
           loja_id: string | null
           min_montadores: number
+          montadores_por_carro: number
           preco_gasolina: number
           refeicao_medidor: number
           refeicao_montador_dia: number
@@ -1715,8 +1717,10 @@ export type Database = {
           created_at?: string
           hotel_por_pessoa?: number
           id?: string
+          locomocao_diaria_km?: number
           loja_id?: string | null
           min_montadores?: number
+          montadores_por_carro?: number
           preco_gasolina?: number
           refeicao_medidor?: number
           refeicao_montador_dia?: number
@@ -1729,8 +1733,10 @@ export type Database = {
           created_at?: string
           hotel_por_pessoa?: number
           id?: string
+          locomocao_diaria_km?: number
           loja_id?: string | null
           min_montadores?: number
+          montadores_por_carro?: number
           preco_gasolina?: number
           refeicao_medidor?: number
           refeicao_montador_dia?: number
@@ -2188,6 +2194,8 @@ export type Database = {
           url_contrato_assinado: string | null
           valor_venda: number
           vendedor_id: string | null
+          viagem_qtd_montadores: number | null
+          viagem_qtd_veiculos: number | null
         }
         Insert: {
           assinado?: boolean
@@ -2233,6 +2241,8 @@ export type Database = {
           url_contrato_assinado?: string | null
           valor_venda?: number
           vendedor_id?: string | null
+          viagem_qtd_montadores?: number | null
+          viagem_qtd_veiculos?: number | null
         }
         Update: {
           assinado?: boolean
@@ -2278,6 +2288,8 @@ export type Database = {
           url_contrato_assinado?: string | null
           valor_venda?: number
           vendedor_id?: string | null
+          viagem_qtd_montadores?: number | null
+          viagem_qtd_veiculos?: number | null
         }
         Relationships: [
           {
