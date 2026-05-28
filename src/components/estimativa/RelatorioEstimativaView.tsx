@@ -383,6 +383,9 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
   // Overrides do valor médio por ambiente (editado manualmente)
   const [overrides, setOverrides] = useState<Record<string, number>>({});
   const [editando, setEditando] = useState<string | null>(null);
+  // Ajuste percentual global (-50% a +100%)
+  const [ajustePct, setAjustePct] = useState<number>(0);
+  const fatorAjuste = 1 + ajustePct / 100;
 
   const toggleAmbiente = (ambiente: string) => {
     setSelecionados((prev) => {
