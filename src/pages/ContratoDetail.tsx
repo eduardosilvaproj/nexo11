@@ -430,6 +430,7 @@ export default function ContratoDetail() {
                 ambientes={ambientes}
                 orcamentos={orcamentos}
                 onAvancar={() => setActive("medicao")}
+              />
             ) : active === "tecnico" ? (
               <ContratoTecnicoTab contratoId={contrato.id} />
             ) : active === "medicao" ? (
@@ -444,9 +445,6 @@ export default function ContratoDetail() {
               </div>
             ) : active === "implantacao" ? (
               <ChecklistImplantacaoCard contratoId={contrato.id} onAvancado={() => setActive("producao")} />
-            ) : active === "producao" ? (
-            ) : active === "implantacao" ? (
-              <ContratoImplantacaoTab contratoId={contrato.id} />
             ) : active === "producao" ? (
               <ContratoProducaoTab contratoId={contrato.id} />
             ) : active === "entrada" ? (
