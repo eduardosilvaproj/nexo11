@@ -22,14 +22,23 @@ interface AmbienteGroup {
   total_min: number;
   total_max: number;
   total_med: number;
+  comentario?: string;
 }
 
 const agruparPorAmbiente = (relatorio: RelatorioEstimativa): AmbienteGroup[] => {
   const map = new Map<string, AmbienteGroup>();
+  const coments = relatorio.comentarios_ambientes || {};
+  const findComent = (key: string): string | undefined => {
+    if (coments[key]) return coments[key];
+    const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    const target = norm(key);
+    const hit = Object.keys(coments).find((k) => norm(k) === target);
+    return hit ? coments[hit] : undefined;
+  };
   relatorio.moveis.forEach((m: MovelIdentificado) => {
     const key = m.ambiente || 'Outros';
     if (!map.has(key)) {
-      map.set(key, { ambiente: key, total_min: 0, total_max: 0, total_med: 0 });
+      map.set(key, { ambiente: key, total_min: 0, total_max: 0, total_med: 0, comentario: findComent(key) });
     }
     const g = map.get(key)!;
     const e = relatorio.estimativas.find((x) => x.movel_id === m.id);
@@ -222,6 +231,7 @@ const gerarInvestimento = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup
       <div class="amb-icon">${renderIcon(iconForAmbiente(g.ambiente))}</div>
       <div class="amb-body">
         <h3 class="amb-nome">${g.ambiente}</h3>
+        ${g.comentario ? `<p class="amb-coment">${g.comentario}</p>` : ''}
         <p class="amb-faixa">${formatCurrency(g.total_min)} — ${formatCurrency(g.total_max)}</p>
       </div>
       <div class="amb-med">${formatCurrency(g.total_med)}</div>
@@ -253,6 +263,7 @@ const gerarInvestimento = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup
     .amb-icon svg{width:22px;height:22px;}
     .amb-body{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;}
     .amb-nome{font-family:'Manrope',sans-serif;font-weight:500;font-size:13px;color:#1C1C1A;letter-spacing:-.005em;}
+    .amb-coment{font-family:'Inter',sans-serif;font-style:italic;font-size:9px;color:#6B6860;line-height:1.4;margin-top:2px;}
     .amb-faixa{font-family:'Inter',sans-serif;font-size:9.5px;color:#8A867E;letter-spacing:.02em;}
     .amb-med{font-family:'Manrope',sans-serif;font-size:15px;font-weight:400;color:#3D4A2A;letter-spacing:-.015em;}
   </style></head><body>
@@ -412,6 +423,7 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
         total_med: base.total_med * fatorAjuste,
         total_min: base.total_min * fatorAjuste,
         total_max: base.total_max * fatorAjuste,
+        comentario: g.comentario,
       };
     });
   }, [gruposCompletos, overrides, fatorAjuste]);
@@ -695,7 +707,12 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
                   checked={checked}
                   onCheckedChange={() => toggleAmbiente(g.ambiente)}
                 />
-                <p className="font-semibold text-base flex-1">{g.ambiente}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-base">{g.ambiente}</p>
+                  {g.comentario && (
+                    <p className="text-xs italic text-muted-foreground mt-0.5">{g.comentario}</p>
+                  )}
+                </div>
                 <div className="text-right">
                   {isEdit ? (
                     <ValorEditavel
