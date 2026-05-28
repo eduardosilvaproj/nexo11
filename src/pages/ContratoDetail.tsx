@@ -27,6 +27,8 @@ import { ContratoIndicadoresTab } from "@/components/contrato/ContratoIndicadore
 import { PortalClienteManager } from "@/components/portal/PortalClienteManager";
 import { ContratoComunicacoesTab } from "@/components/contrato/ContratoComunicacoesTab";
 import { ContratoSatisfacaoTab } from "@/components/contrato/ContratoSatisfacaoTab";
+import { ContratoImplantacaoTab } from "@/components/contrato/ContratoImplantacaoTab";
+import { ContratoEntradaTab } from "@/components/contrato/ContratoEntradaTab";
 
 
 const STAGE_TO_TAB: Record<string, ContratoTabKey> = {
