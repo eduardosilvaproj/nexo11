@@ -2161,6 +2161,7 @@ export type Database = {
           assinatura_ip: string | null
           assinatura_nome: string | null
           assinatura_user_agent: string | null
+          checklist_comercial: Json | null
           cliente_contato: string | null
           cliente_id: string | null
           cliente_nome: string
@@ -2175,10 +2176,14 @@ export type Database = {
           data_criacao: string
           data_finalizacao: string | null
           distancia_km: number | null
+          eletrodomesticos_status: string | null
+          endereco_entrega: Json | null
           id: string
+          itens_extras_status: string | null
           loja_id: string
           medicao_responsavel_id: string | null
           pdf_assinado_url: string | null
+          planta_hidraulica_status: string | null
           projetista_id: string | null
           status: Database["public"]["Enums"]["contrato_status"]
           sub_etapa_tecnico: string
@@ -2208,6 +2213,7 @@ export type Database = {
           assinatura_ip?: string | null
           assinatura_nome?: string | null
           assinatura_user_agent?: string | null
+          checklist_comercial?: Json | null
           cliente_contato?: string | null
           cliente_id?: string | null
           cliente_nome: string
@@ -2222,10 +2228,14 @@ export type Database = {
           data_criacao?: string
           data_finalizacao?: string | null
           distancia_km?: number | null
+          eletrodomesticos_status?: string | null
+          endereco_entrega?: Json | null
           id?: string
+          itens_extras_status?: string | null
           loja_id: string
           medicao_responsavel_id?: string | null
           pdf_assinado_url?: string | null
+          planta_hidraulica_status?: string | null
           projetista_id?: string | null
           status?: Database["public"]["Enums"]["contrato_status"]
           sub_etapa_tecnico?: string
@@ -2255,6 +2265,7 @@ export type Database = {
           assinatura_ip?: string | null
           assinatura_nome?: string | null
           assinatura_user_agent?: string | null
+          checklist_comercial?: Json | null
           cliente_contato?: string | null
           cliente_id?: string | null
           cliente_nome?: string
@@ -2269,10 +2280,14 @@ export type Database = {
           data_criacao?: string
           data_finalizacao?: string | null
           distancia_km?: number | null
+          eletrodomesticos_status?: string | null
+          endereco_entrega?: Json | null
           id?: string
+          itens_extras_status?: string | null
           loja_id?: string
           medicao_responsavel_id?: string | null
           pdf_assinado_url?: string | null
+          planta_hidraulica_status?: string | null
           projetista_id?: string | null
           status?: Database["public"]["Enums"]["contrato_status"]
           sub_etapa_tecnico?: string

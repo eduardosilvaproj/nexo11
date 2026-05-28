@@ -6,6 +6,7 @@ import { pdf } from "@react-pdf/renderer";
 import { ContractPDF } from "./ContractPDF";
 import { ContractPreviewModal } from "./ContractPreviewModal";
 import { CustoViagemCard } from "./CustoViagemCard";
+import { ChecklistComercialCard } from "./ChecklistComercialCard";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -35,6 +36,7 @@ interface ComercialTabProps {
   loja: any;
   ambientes: any[];
   orcamentos: any[];
+  onAvancar?: () => void;
 }
 
 const formatBRL = (n: number) =>
@@ -68,7 +70,7 @@ const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
   </div>
 );
 
-export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: ComercialTabProps) {
+export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos, onAvancar }: ComercialTabProps) {
   const qc = useQueryClient();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -251,6 +253,14 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
         lojaCidade={loja?.cidade}
         lojaEstado={loja?.estado}
         clienteId={contrato.cliente_id ?? null}
+      />
+
+      <ChecklistComercialCard
+        contratoId={contrato.id}
+        contrato={contrato}
+        ambientes={ambientes}
+        loja={loja}
+        onAvancar={onAvancar}
       />
 
       <Card title="Estimativa financeira">

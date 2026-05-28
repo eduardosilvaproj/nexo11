@@ -426,6 +426,7 @@ export default function ContratoDetail() {
                 loja={loja}
                 ambientes={ambientes}
                 orcamentos={orcamentos}
+                onAvancar={() => setActive("medicao")}
               />
             ) : active === "tecnico" ? (
               <ContratoTecnicoTab contratoId={contrato.id} />
