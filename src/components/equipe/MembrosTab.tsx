@@ -47,7 +47,7 @@ function getInitials(nome: string) {
 
 async function fetchMembros(): Promise<Membro[]> {
   const { data: usuarios, error: uErr } = await supabase
-    .from("usuarios")
+    .from("pessoas")
     .select("id, nome, email, papel_comissao_id, comissao_percentual, funcoes")
     .order("nome");
   if (uErr) throw uErr;
