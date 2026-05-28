@@ -53,7 +53,7 @@ export default function AppLayout() {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-slate-50">
         <AppSidebar />
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col min-w-0">
           <header className="flex h-14 items-center justify-between bg-white/80 backdrop-blur-md px-4 md:px-6 border-b border-slate-200/70 shadow-[0_1px_2px_rgba(15,23,42,0.03)] sticky top-0 z-30">
             <div className="flex items-center gap-2 md:gap-4">
               <SidebarTrigger className="md:hidden" />
@@ -86,7 +86,7 @@ export default function AppLayout() {
               </div>
             </div>
           </header>
-          <main className="flex-1 p-4 md:p-8 overflow-x-hidden">
+          <main className="flex-1 p-4 md:p-8 overflow-x-hidden min-w-0">
             <Outlet />
           </main>
         </div>
