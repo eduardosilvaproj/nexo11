@@ -342,9 +342,9 @@ export default function Comercial() {
         ] as { key: TabKey; label: string }[]).map((t) => {
           const active = tab === t.key;
           return (
-            <button
+          <button
               key={t.key}
-              onClick={() => setTab(t.key)}
+              onClick={() => setTabSync(t.key)}
               className="-mb-px pb-2 pt-1 transition-colors whitespace-nowrap"
               style={{
                 fontSize: 14,
