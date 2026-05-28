@@ -172,22 +172,8 @@ app.post("/equipe-invite-member", async (c) => {
     if (papel && papel.loja_id === lojaId) safePapelId = papel.id;
   }
 
-  // Upsert usuarios row scoped to caller's loja
-  // Upsert usuarios row (mantido temporariamente como backup)
-  const { error: upsertErr } = await admin.from("usuarios").upsert({
-    id: userId,
-    nome,
-    email,
-    loja_id: lojaId,
-    papel_comissao_id: safePapelId,
-    comissao_percentual: comissao_percentual ?? null,
-  }, { onConflict: "id" });
-  if (upsertErr) {
-    return new Response(JSON.stringify({ error: upsertErr.message }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  // (Removido) Upsert em `usuarios` — a tabela foi substituída por uma view sobre `pessoas`.
+
 
   // Upsert na tabela unificada pessoas (fonte única)
   const { error: pessoaErr } = await admin.from("pessoas").upsert({
