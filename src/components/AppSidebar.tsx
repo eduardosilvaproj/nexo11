@@ -265,7 +265,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-white/5 bg-[#0c1526] p-3">
+      <SidebarFooter className="border-t border-white/5 bg-[#1c1917] p-3">
         {!collapsed && perfil && (
           <div className="mb-2 px-2">
             <p className="truncate nexo-sidebar-user-name">{perfil.nome}</p>
