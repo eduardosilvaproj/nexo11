@@ -98,9 +98,9 @@ app.post("/equipe-invite-member", async (c) => {
 
   // Caller's loja
   const { data: callerRow, error: callerRowErr } = await callerClient
-    .from("usuarios")
+    .from("pessoas")
     .select("loja_id")
-    .eq("id", callerId)
+    .eq("auth_user_id", callerId)
     .maybeSingle();
   if (callerRowErr || !callerRow?.loja_id) {
     return new Response(
@@ -172,22 +172,8 @@ app.post("/equipe-invite-member", async (c) => {
     if (papel && papel.loja_id === lojaId) safePapelId = papel.id;
   }
 
-  // Upsert usuarios row scoped to caller's loja
-  // Upsert usuarios row (mantido temporariamente como backup)
-  const { error: upsertErr } = await admin.from("usuarios").upsert({
-    id: userId,
-    nome,
-    email,
-    loja_id: lojaId,
-    papel_comissao_id: safePapelId,
-    comissao_percentual: comissao_percentual ?? null,
-  }, { onConflict: "id" });
-  if (upsertErr) {
-    return new Response(JSON.stringify({ error: upsertErr.message }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
+  // (Removido) Upsert em `usuarios` — a tabela foi substituída por uma view sobre `pessoas`.
+
 
   // Upsert na tabela unificada pessoas (fonte única)
   const { error: pessoaErr } = await admin.from("pessoas").upsert({
