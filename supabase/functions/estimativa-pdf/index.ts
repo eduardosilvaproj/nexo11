@@ -185,9 +185,9 @@ function calcularResultado(analise: any) {
     const qtd = m.quantidade || 1;
     return {
       movel_id: `movel_${idx}`,
-      preco_minimo: preco.min * qtd,
-      preco_maximo: preco.max * qtd,
-      preco_medio: ((preco.min + preco.max) / 2) * qtd,
+      preco_minimo: preco.min * qtd * 0.5,
+      preco_maximo: preco.max * qtd * 0.5,
+      preco_medio: ((preco.min + preco.max) / 2) * qtd * 0.5,
     };
   });
 
