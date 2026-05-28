@@ -33,9 +33,13 @@ import { ContratoEntradaTab } from "@/components/contrato/ContratoEntradaTab";
 
 const STAGE_TO_TAB: Record<string, ContratoTabKey> = {
   comercial: "comercial",
-  tecnico: "tecnico",
+  medicao: "medicao",
+  conferencia: "conferencia",
+  implantacao: "implantacao",
+  tecnico: "medicao",
   producao: "producao",
-  logistica: "logistica",
+  entrada: "entrada",
+  logistica: "entrada",
   montagem: "montagem",
   pos_venda: "pos_venda",
 };
