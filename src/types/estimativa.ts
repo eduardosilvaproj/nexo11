@@ -69,6 +69,7 @@ export interface RelatorioEstimativa {
   total_maximo: number;
   total_medio: number;
   observacoes_gerais: string[];
+  comentarios_ambientes?: Record<string, string>;
   erro?: string;
   contexto?: ContextoEstimativa;
   comparacao_orcamento?: ComparacaoOrcamento;
