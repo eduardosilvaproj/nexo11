@@ -33,9 +33,13 @@ import { ChecklistMedicaoCard } from "@/components/contrato/ChecklistMedicaoCard
 import { ChecklistConferenciaCard } from "@/components/contrato/ChecklistConferenciaCard";
 import { ChecklistImplantacaoCard } from "@/components/contrato/ChecklistImplantacaoCard";
 
-
-const STAGE_TO_TAB: Record<string, ContratoTabKey> = {
-  comercial: "comercial",
+import { ChecklistMedicaoCard } from "@/components/contrato/ChecklistMedicaoCard";
+import { ChecklistConferenciaCard } from "@/components/contrato/ChecklistConferenciaCard";
+import { ChecklistImplantacaoCard } from "@/components/contrato/ChecklistImplantacaoCard";
+import { ChecklistProducaoCard } from "@/components/contrato/ChecklistProducaoCard";
+import { ChecklistEntradaCard } from "@/components/contrato/ChecklistEntradaCard";
+import { ChecklistMontagemCard } from "@/components/contrato/ChecklistMontagemCard";
+import { ChecklistPosVendaCard } from "@/components/contrato/ChecklistPosVendaCard";
   medicao: "medicao",
   conferencia: "conferencia",
   implantacao: "implantacao",
