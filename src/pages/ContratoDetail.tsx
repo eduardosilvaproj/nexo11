@@ -29,6 +29,9 @@ import { ContratoComunicacoesTab } from "@/components/contrato/ContratoComunicac
 import { ContratoSatisfacaoTab } from "@/components/contrato/ContratoSatisfacaoTab";
 import { ContratoImplantacaoTab } from "@/components/contrato/ContratoImplantacaoTab";
 import { ContratoEntradaTab } from "@/components/contrato/ContratoEntradaTab";
+import { ChecklistMedicaoCard } from "@/components/contrato/ChecklistMedicaoCard";
+import { ChecklistConferenciaCard } from "@/components/contrato/ChecklistConferenciaCard";
+import { ChecklistImplantacaoCard } from "@/components/contrato/ChecklistImplantacaoCard";
 
 
 const STAGE_TO_TAB: Record<string, ContratoTabKey> = {
@@ -431,11 +434,17 @@ export default function ContratoDetail() {
             ) : active === "tecnico" ? (
               <ContratoTecnicoTab contratoId={contrato.id} />
             ) : active === "medicao" ? (
-              <ContratoTecnicoTab contratoId={contrato.id} />
+              <div className="flex flex-col gap-4">
+                <ChecklistMedicaoCard contratoId={contrato.id} onAvancado={() => setActive("conferencia")} />
+                <ContratoTecnicoTab contratoId={contrato.id} />
+              </div>
             ) : active === "conferencia" ? (
-              <ContratoTecnicoTab contratoId={contrato.id} />
+              <div className="flex flex-col gap-4">
+                <ChecklistConferenciaCard contratoId={contrato.id} onAvancado={() => setActive("implantacao")} />
+                <ContratoTecnicoTab contratoId={contrato.id} />
+              </div>
             ) : active === "implantacao" ? (
-              <ContratoImplantacaoTab contratoId={contrato.id} />
+              <ChecklistImplantacaoCard contratoId={contrato.id} onAvancado={() => setActive("producao")} />
             ) : active === "producao" ? (
               <ContratoProducaoTab contratoId={contrato.id} />
             ) : active === "entrada" ? (

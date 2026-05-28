@@ -2165,6 +2165,9 @@ export type Database = {
           cliente_contato: string | null
           cliente_id: string | null
           cliente_nome: string
+          comprovante_fabrica_url: string | null
+          conferencia_aprovada_gerente: boolean | null
+          conferencia_concluida_em: string | null
           conferencia_responsavel_id: string | null
           contrato_gerado: boolean
           created_at: string
@@ -2181,8 +2184,10 @@ export type Database = {
           id: string
           itens_extras_status: string | null
           loja_id: string
+          medicao_concluida_em: string | null
           medicao_responsavel_id: string | null
           pdf_assinado_url: string | null
+          pedido_fabrica_status: string | null
           planta_hidraulica_status: string | null
           projetista_id: string | null
           status: Database["public"]["Enums"]["contrato_status"]
@@ -2197,6 +2202,7 @@ export type Database = {
           trava_tecnico_ok: boolean
           updated_at: string
           url_contrato_assinado: string | null
+          valor_conferido: number | null
           valor_venda: number
           vendedor_id: string | null
           viagem_qtd_montadores: number | null
@@ -2217,6 +2223,9 @@ export type Database = {
           cliente_contato?: string | null
           cliente_id?: string | null
           cliente_nome: string
+          comprovante_fabrica_url?: string | null
+          conferencia_aprovada_gerente?: boolean | null
+          conferencia_concluida_em?: string | null
           conferencia_responsavel_id?: string | null
           contrato_gerado?: boolean
           created_at?: string
@@ -2233,8 +2242,10 @@ export type Database = {
           id?: string
           itens_extras_status?: string | null
           loja_id: string
+          medicao_concluida_em?: string | null
           medicao_responsavel_id?: string | null
           pdf_assinado_url?: string | null
+          pedido_fabrica_status?: string | null
           planta_hidraulica_status?: string | null
           projetista_id?: string | null
           status?: Database["public"]["Enums"]["contrato_status"]
@@ -2249,6 +2260,7 @@ export type Database = {
           trava_tecnico_ok?: boolean
           updated_at?: string
           url_contrato_assinado?: string | null
+          valor_conferido?: number | null
           valor_venda?: number
           vendedor_id?: string | null
           viagem_qtd_montadores?: number | null
@@ -2269,6 +2281,9 @@ export type Database = {
           cliente_contato?: string | null
           cliente_id?: string | null
           cliente_nome?: string
+          comprovante_fabrica_url?: string | null
+          conferencia_aprovada_gerente?: boolean | null
+          conferencia_concluida_em?: string | null
           conferencia_responsavel_id?: string | null
           contrato_gerado?: boolean
           created_at?: string
@@ -2285,8 +2300,10 @@ export type Database = {
           id?: string
           itens_extras_status?: string | null
           loja_id?: string
+          medicao_concluida_em?: string | null
           medicao_responsavel_id?: string | null
           pdf_assinado_url?: string | null
+          pedido_fabrica_status?: string | null
           planta_hidraulica_status?: string | null
           projetista_id?: string | null
           status?: Database["public"]["Enums"]["contrato_status"]
@@ -2301,6 +2318,7 @@ export type Database = {
           trava_tecnico_ok?: boolean
           updated_at?: string
           url_contrato_assinado?: string | null
+          valor_conferido?: number | null
           valor_venda?: number
           vendedor_id?: string | null
           viagem_qtd_montadores?: number | null
