@@ -10,6 +10,7 @@ import AuthPage from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 
 import Comercial from "./pages/Comercial";
+import Contratos from "./pages/Contratos";
 import Clientes from "./pages/Clientes";
 import ClienteDetail from "./pages/ClienteDetail";
 import Tecnico from "./pages/Tecnico";
@@ -107,6 +108,11 @@ const App = () => (
               <Route path="/comercial" element={
                 <ProtectedRoute roles={["admin","gerente","vendedor","franqueador","admin_master"]}>
                   <Comercial />
+                </ProtectedRoute>
+              } />
+              <Route path="/contratos" element={
+                <ProtectedRoute roles={["admin","gerente","vendedor","franqueador","admin_master"]}>
+                  <Contratos />
                 </ProtectedRoute>
               } />
               <Route path="/clientes" element={
