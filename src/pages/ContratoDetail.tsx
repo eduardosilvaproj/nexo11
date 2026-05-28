@@ -33,6 +33,11 @@ import { ChecklistMedicaoCard } from "@/components/contrato/ChecklistMedicaoCard
 import { ChecklistConferenciaCard } from "@/components/contrato/ChecklistConferenciaCard";
 import { ChecklistImplantacaoCard } from "@/components/contrato/ChecklistImplantacaoCard";
 
+import { ChecklistProducaoCard } from "@/components/contrato/ChecklistProducaoCard";
+import { ChecklistEntradaCard } from "@/components/contrato/ChecklistEntradaCard";
+import { ChecklistMontagemCard } from "@/components/contrato/ChecklistMontagemCard";
+import { ChecklistPosVendaCard } from "@/components/contrato/ChecklistPosVendaCard";
+
 
 const STAGE_TO_TAB: Record<string, ContratoTabKey> = {
   comercial: "comercial",
@@ -446,17 +451,29 @@ export default function ContratoDetail() {
             ) : active === "implantacao" ? (
               <ChecklistImplantacaoCard contratoId={contrato.id} onAvancado={() => setActive("producao")} />
             ) : active === "producao" ? (
-              <ContratoProducaoTab contratoId={contrato.id} />
+              <div className="flex flex-col gap-4">
+                <ChecklistProducaoCard contratoId={contrato.id} onAvancado={() => setActive("entrada")} />
+                <ContratoProducaoTab contratoId={contrato.id} />
+              </div>
             ) : active === "entrada" ? (
-              <ContratoEntradaTab contratoId={contrato.id} />
+              <div className="flex flex-col gap-4">
+                <ChecklistEntradaCard contratoId={contrato.id} onAvancado={() => setActive("montagem")} />
+                <ContratoEntradaTab contratoId={contrato.id} />
+              </div>
             ) : active === "logistica" ? (
               <ContratoLogisticaTab contratoId={contrato.id} />
             ) : active === "montagem" ? (
-              <ContratoMontagemTab contratoId={contrato.id} lojaId={contrato.loja_id} />
+              <div className="flex flex-col gap-4">
+                <ChecklistMontagemCard contratoId={contrato.id} onAvancado={() => setActive("pos_venda")} />
+                <ContratoMontagemTab contratoId={contrato.id} lojaId={contrato.loja_id} />
+              </div>
             ) : active === "ambientes" ? (
               <ContratoAmbientesTab contratoId={contrato.id} contratoLojaId={contrato.loja_id} />
             ) : active === "pos_venda" ? (
-              <ContratoPosVendaTab contratoId={contrato.id} />
+              <div className="flex flex-col gap-4">
+                <ChecklistPosVendaCard contratoId={contrato.id} />
+                <ContratoPosVendaTab contratoId={contrato.id} />
+              </div>
             ) : active === "dre" ? (
               <ContratoDreTab
                 contratoId={contrato.id}

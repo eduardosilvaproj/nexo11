@@ -2181,14 +2181,33 @@ export type Database = {
           distancia_km: number | null
           eletrodomesticos_status: string | null
           endereco_entrega: Json | null
+          entrada_avaria_descricao: string | null
+          entrada_avaria_foto_url: string | null
+          entrada_avaria_status: string | null
+          entrada_data_recebimento: string | null
+          entrada_fotos_urls: Json | null
+          entrada_tem_avaria: boolean | null
+          entrada_volumes_esperados: number | null
+          entrada_volumes_recebidos: number | null
           id: string
           itens_extras_status: string | null
           loja_id: string
           medicao_concluida_em: string | null
           medicao_responsavel_id: string | null
+          montagem_aceite_cliente_url: string | null
+          montagem_concluida: boolean | null
+          montagem_data_conclusao: string | null
+          montagem_data_inicio: string | null
+          montagem_fotos_antes: Json | null
+          montagem_fotos_depois: Json | null
           pdf_assinado_url: string | null
           pedido_fabrica_status: string | null
           planta_hidraulica_status: string | null
+          posvenda_aprovado: boolean | null
+          posvenda_pesquisa_status: string | null
+          producao_nf_url: string | null
+          producao_previsao_entrega: string | null
+          producao_status: string | null
           projetista_id: string | null
           status: Database["public"]["Enums"]["contrato_status"]
           sub_etapa_tecnico: string
@@ -2239,14 +2258,33 @@ export type Database = {
           distancia_km?: number | null
           eletrodomesticos_status?: string | null
           endereco_entrega?: Json | null
+          entrada_avaria_descricao?: string | null
+          entrada_avaria_foto_url?: string | null
+          entrada_avaria_status?: string | null
+          entrada_data_recebimento?: string | null
+          entrada_fotos_urls?: Json | null
+          entrada_tem_avaria?: boolean | null
+          entrada_volumes_esperados?: number | null
+          entrada_volumes_recebidos?: number | null
           id?: string
           itens_extras_status?: string | null
           loja_id: string
           medicao_concluida_em?: string | null
           medicao_responsavel_id?: string | null
+          montagem_aceite_cliente_url?: string | null
+          montagem_concluida?: boolean | null
+          montagem_data_conclusao?: string | null
+          montagem_data_inicio?: string | null
+          montagem_fotos_antes?: Json | null
+          montagem_fotos_depois?: Json | null
           pdf_assinado_url?: string | null
           pedido_fabrica_status?: string | null
           planta_hidraulica_status?: string | null
+          posvenda_aprovado?: boolean | null
+          posvenda_pesquisa_status?: string | null
+          producao_nf_url?: string | null
+          producao_previsao_entrega?: string | null
+          producao_status?: string | null
           projetista_id?: string | null
           status?: Database["public"]["Enums"]["contrato_status"]
           sub_etapa_tecnico?: string
@@ -2297,14 +2335,33 @@ export type Database = {
           distancia_km?: number | null
           eletrodomesticos_status?: string | null
           endereco_entrega?: Json | null
+          entrada_avaria_descricao?: string | null
+          entrada_avaria_foto_url?: string | null
+          entrada_avaria_status?: string | null
+          entrada_data_recebimento?: string | null
+          entrada_fotos_urls?: Json | null
+          entrada_tem_avaria?: boolean | null
+          entrada_volumes_esperados?: number | null
+          entrada_volumes_recebidos?: number | null
           id?: string
           itens_extras_status?: string | null
           loja_id?: string
           medicao_concluida_em?: string | null
           medicao_responsavel_id?: string | null
+          montagem_aceite_cliente_url?: string | null
+          montagem_concluida?: boolean | null
+          montagem_data_conclusao?: string | null
+          montagem_data_inicio?: string | null
+          montagem_fotos_antes?: Json | null
+          montagem_fotos_depois?: Json | null
           pdf_assinado_url?: string | null
           pedido_fabrica_status?: string | null
           planta_hidraulica_status?: string | null
+          posvenda_aprovado?: boolean | null
+          posvenda_pesquisa_status?: string | null
+          producao_nf_url?: string | null
+          producao_previsao_entrega?: string | null
+          producao_status?: string | null
           projetista_id?: string | null
           status?: Database["public"]["Enums"]["contrato_status"]
           sub_etapa_tecnico?: string

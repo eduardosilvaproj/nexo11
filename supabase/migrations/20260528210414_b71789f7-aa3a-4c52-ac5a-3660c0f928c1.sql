@@ -1,0 +1,21 @@
+
+ALTER TABLE public.contratos
+  ADD COLUMN IF NOT EXISTS producao_status text DEFAULT 'aguardando',
+  ADD COLUMN IF NOT EXISTS producao_previsao_entrega date,
+  ADD COLUMN IF NOT EXISTS producao_nf_url text,
+  ADD COLUMN IF NOT EXISTS entrada_data_recebimento date,
+  ADD COLUMN IF NOT EXISTS entrada_volumes_esperados integer DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS entrada_volumes_recebidos integer DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS entrada_fotos_urls jsonb DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS entrada_tem_avaria boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS entrada_avaria_descricao text,
+  ADD COLUMN IF NOT EXISTS entrada_avaria_foto_url text,
+  ADD COLUMN IF NOT EXISTS entrada_avaria_status text,
+  ADD COLUMN IF NOT EXISTS montagem_data_inicio date,
+  ADD COLUMN IF NOT EXISTS montagem_data_conclusao date,
+  ADD COLUMN IF NOT EXISTS montagem_fotos_antes jsonb DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS montagem_fotos_depois jsonb DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS montagem_aceite_cliente_url text,
+  ADD COLUMN IF NOT EXISTS montagem_concluida boolean DEFAULT false,
+  ADD COLUMN IF NOT EXISTS posvenda_pesquisa_status text DEFAULT 'pendente',
+  ADD COLUMN IF NOT EXISTS posvenda_aprovado boolean DEFAULT false;
