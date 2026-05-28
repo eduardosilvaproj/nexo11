@@ -135,11 +135,7 @@ export const useEstimativaPDF = () => {
         publicUrl = supabase.storage.from('estimativas').getPublicUrl(fileName).data.publicUrl;
 
         setProgress('Analisando projeto com IA...');
-        const { data, error: fnError } = await supabase.functions.invoke(
-          'estimativa-pdf',
-          { body: { file_path: fileName, file_hash: fileHash, contexto } }
-        );
-        if (fnError) throw new Error(`Edge Function erro: ${fnError.message}`);
+        const data = await invokeEstimativaPDF({ file_path: fileName, file_hash: fileHash, contexto });
         if (data?.error) throw new Error(data.error);
         analise = data;
       } else {
