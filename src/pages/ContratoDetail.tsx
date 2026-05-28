@@ -34,7 +34,6 @@ import { ChecklistConferenciaCard } from "@/components/contrato/ChecklistConfere
 import { ChecklistImplantacaoCard } from "@/components/contrato/ChecklistImplantacaoCard";
 
 import { ChecklistProducaoCard } from "@/components/contrato/ChecklistProducaoCard";
-import { ChecklistProducaoCard } from "@/components/contrato/ChecklistProducaoCard";
 import { ChecklistEntradaCard } from "@/components/contrato/ChecklistEntradaCard";
 import { ChecklistMontagemCard } from "@/components/contrato/ChecklistMontagemCard";
 import { ChecklistPosVendaCard } from "@/components/contrato/ChecklistPosVendaCard";
