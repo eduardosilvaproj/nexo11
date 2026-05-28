@@ -7,57 +7,59 @@
 
 @layer base {
   :root {
-    /* === NEXO Brand Tokens (requested palette) === */
-    --nexo-bg-dark: #060d1a;
-    --nexo-sidebar-dark: #0a0e1a;
-    --nexo-surface-dark: #0c1526;
+    /* === NEXO Brand — Premium SaaS (Linear/Notion/Vercel inspired) === */
+    --nexo-bg-dark: #1c1917;
+    --nexo-sidebar-dark: #1c1917;
+    --nexo-surface-dark: #292524;
     --nexo-border-dark: rgba(255, 255, 255, 0.06);
-    --nexo-text-primary: #1e293b;
-    --nexo-text-secondary: #64748b;
+    --nexo-text-primary: #1c1917;
+    --nexo-text-secondary: #78716c;
     --nexo-blue: #1a9be8;
     --nexo-green: #22c97a;
+    --nexo-accent: #a3a380; /* olive */
+    --nexo-accent-gold: #b8935a;
 
-    --nexo-gradient-primary: linear-gradient(90deg, #1a7fe8, #22c97a);
+    --nexo-gradient-primary: linear-gradient(90deg, #1c1917, #292524);
 
-    /* === Shadcn semantic tokens (HSL) — Light, premium SaaS === */
-    --background: 210 30% 98.5%;
-    --foreground: 222 47% 11%;
+    /* === Shadcn semantic tokens (HSL) — Warm off-white premium === */
+    --background: 40 17% 97%;          /* #FAFAF8 */
+    --foreground: 24 10% 10%;          /* stone-900 */
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 24 10% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 24 10% 10%;
 
-    --primary: 202 82% 51%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 24 10% 10%;             /* dark stone */
+    --primary-foreground: 40 17% 97%;
 
-    --secondary: 210 40% 96.5%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 30 10% 95%;
+    --secondary-foreground: 24 10% 10%;
 
-    --muted: 210 40% 96.5%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 30 10% 95%;
+    --muted-foreground: 25 5% 45%;
 
-    --accent: 210 40% 96.5%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 60 8% 56%;               /* olive */
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 202 82% 51%;
+    --border: 30 8% 90%;               /* stone-200 #E7E5E4 */
+    --input: 30 8% 90%;
+    --ring: 60 8% 56%;
 
-    --radius: 0.75rem;
+    --radius: 0.625rem;
 
-    /* Sidebar - KEEP DARK AS REQUESTED */
-    --sidebar-background: 225 44% 7%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 202 82% 51%;
+    /* Sidebar — dark stone */
+    --sidebar-background: 24 10% 10%;
+    --sidebar-foreground: 30 10% 85%;
+    --sidebar-primary: 60 8% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 202 82% 51% / 0.14;
-    --sidebar-accent-foreground: 210 40% 96%;
-    --sidebar-border: 210 40% 96% / 0.06;
+    --sidebar-accent: 0 0% 100% / 0.06;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 100% / 0.06;
     --sidebar-ring: 202 82% 51%;
   }
 
