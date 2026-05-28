@@ -19,8 +19,10 @@ interface ComercialTabProps {
     id: string;
     cliente_nome: string;
     cliente_contato: string | null;
+    cliente_id?: string | null;
     vendedor_id: string | null;
     data_criacao: string;
+
     assinado: boolean;
     data_assinatura?: string | null;
     assinatura_nome?: string | null;
