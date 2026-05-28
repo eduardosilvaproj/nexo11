@@ -139,8 +139,8 @@ export function AppSidebar() {
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     isActive
-      ? "!bg-[rgba(26,155,232,0.16)] !text-white font-medium border-l-2 border-[#1a9be8] pl-[calc(0.5rem-2px)] rounded-l-none rounded-r-lg transition-all duration-150 hover:!bg-[rgba(26,155,232,0.2)] hover:!text-white [&_svg]:!text-[#1a9be8]"
-      : "!bg-transparent !text-slate-400 rounded-lg transition-all duration-150 hover:!bg-white/[0.04] hover:!text-white hover:[&_svg]:!text-[#1a9be8]";
+      ? "!bg-white/[0.06] !text-white font-medium border-l-2 border-[#a3a380] pl-[calc(0.5rem-2px)] rounded-l-none rounded-r-lg transition-all duration-200 hover:!bg-white/[0.08] hover:!text-white [&_svg]:!text-[#a3a380]"
+      : "!bg-transparent !text-stone-400 rounded-lg transition-all duration-200 hover:!bg-white/[0.04] hover:!text-white hover:[&_svg]:!text-[#a3a380]";
 
   const canSee = (item: MenuItem) => {
     if (!item.roles || item.roles.length === 0) return true;
@@ -149,8 +149,8 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon" className="bg-[#0a0e1a] border-r border-white/5">
-      <SidebarHeader className="border-b border-white/5 bg-[#0a0e1a] px-4 py-4">
+    <Sidebar collapsible="icon" className="bg-[#1c1917] border-r border-white/5">
+      <SidebarHeader className="border-b border-white/5 bg-[#1c1917] px-4 py-4">
         {collapsed ? (
           <img src="/nexo-logo.png" alt="Logo" className="w-8 h-8 object-contain" />
         ) : (
@@ -161,7 +161,7 @@ export function AppSidebar() {
         )}
       </SidebarHeader>
 
-      <SidebarContent className="bg-[#0a0e1a]">
+      <SidebarContent className="bg-[#1c1917]">
         <SidebarGroup>
           <SidebarGroupLabel className="nexo-sidebar-label">Início</SidebarGroupLabel>
           <SidebarGroupContent>
