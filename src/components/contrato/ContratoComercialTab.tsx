@@ -5,6 +5,7 @@ import { FileText, Loader2, Calculator } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import { ContractPDF } from "./ContractPDF";
 import { ContractPreviewModal } from "./ContractPreviewModal";
+import { CustoViagemCard } from "./CustoViagemCard";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -12,13 +13,16 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
 
+
 interface ComercialTabProps {
   contrato: {
     id: string;
     cliente_nome: string;
     cliente_contato: string | null;
+    cliente_id?: string | null;
     vendedor_id: string | null;
     data_criacao: string;
+
     assinado: boolean;
     data_assinatura?: string | null;
     assinatura_nome?: string | null;
@@ -242,7 +246,15 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
         </button>
       </Card>
 
+      <CustoViagemCard
+        contratoId={contrato.id}
+        lojaCidade={loja?.cidade}
+        lojaEstado={loja?.estado}
+        clienteId={contrato.cliente_id ?? null}
+      />
+
       <Card title="Estimativa financeira">
+
         <div className="overflow-hidden rounded-lg" style={{ border: "0.5px solid #E8ECF2" }}>
           <table className="w-full">
             <thead>
