@@ -263,6 +263,7 @@ const gerarInvestimento = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup
     .amb-icon svg{width:22px;height:22px;}
     .amb-body{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;}
     .amb-nome{font-family:'Manrope',sans-serif;font-weight:500;font-size:13px;color:#1C1C1A;letter-spacing:-.005em;}
+    .amb-coment{font-family:'Inter',sans-serif;font-style:italic;font-size:9px;color:#6B6860;line-height:1.4;margin-top:2px;}
     .amb-faixa{font-family:'Inter',sans-serif;font-size:9.5px;color:#8A867E;letter-spacing:.02em;}
     .amb-med{font-family:'Manrope',sans-serif;font-size:15px;font-weight:400;color:#3D4A2A;letter-spacing:-.015em;}
   </style></head><body>
