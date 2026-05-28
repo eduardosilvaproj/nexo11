@@ -139,7 +139,7 @@ export function ChecklistComercialCard({ contratoId, contrato, ambientes, loja, 
   };
 
   const saveField = async (patch: Record<string, any>) => {
-    const { error } = await supabase.from("contratos").update(patch).eq("id", contratoId);
+    const { error } = await supabase.from("contratos").update(patch as any).eq("id", contratoId);
     if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["contrato", contratoId] });
   };
