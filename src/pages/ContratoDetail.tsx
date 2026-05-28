@@ -430,13 +430,21 @@ export default function ContratoDetail() {
                 ambientes={ambientes}
                 orcamentos={orcamentos}
                 onAvancar={() => setActive("medicao")}
-              />
             ) : active === "tecnico" ? (
               <ContratoTecnicoTab contratoId={contrato.id} />
             ) : active === "medicao" ? (
-              <ContratoTecnicoTab contratoId={contrato.id} />
+              <div className="flex flex-col gap-4">
+                <ChecklistMedicaoCard contratoId={contrato.id} onAvancado={() => setActive("conferencia")} />
+                <ContratoTecnicoTab contratoId={contrato.id} />
+              </div>
             ) : active === "conferencia" ? (
-              <ContratoTecnicoTab contratoId={contrato.id} />
+              <div className="flex flex-col gap-4">
+                <ChecklistConferenciaCard contratoId={contrato.id} onAvancado={() => setActive("implantacao")} />
+                <ContratoTecnicoTab contratoId={contrato.id} />
+              </div>
+            ) : active === "implantacao" ? (
+              <ChecklistImplantacaoCard contratoId={contrato.id} onAvancado={() => setActive("producao")} />
+            ) : active === "producao" ? (
             ) : active === "implantacao" ? (
               <ContratoImplantacaoTab contratoId={contrato.id} />
             ) : active === "producao" ? (
