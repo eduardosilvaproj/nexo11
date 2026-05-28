@@ -167,8 +167,10 @@ export function AppSidebar() {
   const comercialRoles: AppRole[] = ["admin", "gerente", "vendedor", "franqueador", "admin_master"];
   const showComercial = comercialRoles.some((r) => roles.includes(r));
 
-  const subItemActive = (url: string) =>
-    location.pathname + location.search === url || location.pathname === url;
+  const subItemActive = (url: string) => {
+    if (url === "/contratos") return location.pathname.startsWith("/contratos");
+    return location.pathname + location.search === url || location.pathname === url;
+  };
 
   return (
     <Sidebar collapsible="icon" className="bg-[#1c1917] border-r border-white/5">
