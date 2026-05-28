@@ -251,6 +251,7 @@ export const useEstimativaPDF = () => {
         total_maximo,
         total_medio,
         observacoes_gerais: analise.observacoes_gerais || [],
+        comentarios_ambientes: analise.comentarios_ambientes || {},
         contexto,
         comparacao_orcamento,
       };
