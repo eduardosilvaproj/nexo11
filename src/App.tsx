@@ -110,6 +110,11 @@ const App = () => (
                   <Comercial />
                 </ProtectedRoute>
               } />
+              <Route path="/contratos" element={
+                <ProtectedRoute roles={["admin","gerente","vendedor","franqueador","admin_master"]}>
+                  <Contratos />
+                </ProtectedRoute>
+              } />
               <Route path="/clientes" element={
                 <ProtectedRoute roles={["admin","gerente","vendedor","franqueador","pos_venda","admin_master"]}>
                   <Clientes />
