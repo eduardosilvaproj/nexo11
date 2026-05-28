@@ -425,7 +425,8 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
     const ratioMap = new Map<string, number>();
     gruposCompletos.forEach((g) => {
       const override = overrides[g.ambiente];
-      ratioMap.set(g.ambiente, override != null && g.total_med > 0 ? override / g.total_med : 1);
+      const overrideRatio = override != null && g.total_med > 0 ? override / g.total_med : 1;
+      ratioMap.set(g.ambiente, overrideRatio * fatorAjuste);
     });
 
     const estimativasFiltradas = relatorio.estimativas
