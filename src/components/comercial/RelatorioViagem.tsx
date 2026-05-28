@@ -74,13 +74,13 @@ export const RelatorioViagem = forwardRef<HTMLDivElement, Props>(
 
         <div className="grid gap-3">
           <Block
-            title={`Montadores (${m.pessoas} pessoas · ${m.veiculos} veículo(s))`}
+            title={`Montadores (${m.pessoas ?? 0} pessoa${(m.pessoas ?? 0) > 1 ? "s" : ""} · ${m.veiculos ?? 0} veículo(s))`}
             rows={[
-              ["Hospedagem", `${m.noites} × ${m.pessoas} × ${brl(params.hotel_por_pessoa)} = ${brl(m.hotel)}`],
-              ["Refeição", `${m.noites} × ${m.pessoas} × ${brl(params.refeicao_montador_dia)} = ${brl(m.refeicao)}`],
-              ["Combustível (viagens)", `${m.viagens} × ${brl(params.gasolina_por_carro_ida_volta * m.veiculos)} = ${brl(m.gasolina)}`],
-              ["Pedágio (viagens)", `${m.viagens} × ${brl(params.pedagio_por_carro_ida_volta * m.veiculos)} = ${brl(m.pedagio)}`],
-              ["Locomoção diária (hotel↔obra)", `${m.noites} dias × ${params.locomocao_diaria_km * 2}km × ${m.veiculos} carro(s) = ${brl(m.locomocao_diaria)}`],
+              ["Hospedagem", `${m.noites ?? 0} × ${m.pessoas ?? 0} × ${brl(params.hotel_por_pessoa)} = ${brl(m.hotel)}`],
+              ["Refeição", `${m.noites ?? 0} × ${m.pessoas ?? 0} × ${brl(params.refeicao_montador_dia)} = ${brl(m.refeicao)}`],
+              ["Combustível (viagens)", `${m.viagens ?? 0} × ${brl((params.gasolina_por_carro_ida_volta ?? 0) * (m.veiculos ?? 0))} = ${brl(m.gasolina)}`],
+              ["Pedágio (viagens)", `${m.viagens ?? 0} × ${brl((params.pedagio_por_carro_ida_volta ?? 0) * (m.veiculos ?? 0))} = ${brl(m.pedagio)}`],
+              ["Locomoção diária (hotel↔obra)", `${m.noites ?? 0} dias × ${(params.locomocao_diaria_km ?? 0) * 2}km × ${m.veiculos ?? 0} carro(s) = ${brl(m.locomocao_diaria)}`],
             ]}
             subtotal={m.subtotal}
           />
