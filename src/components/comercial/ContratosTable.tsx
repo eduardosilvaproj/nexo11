@@ -9,8 +9,12 @@ type ContratoStatus = Database["public"]["Enums"]["contrato_status"];
 
 const ETAPAS: Record<ContratoStatus, { label: string; bg: string; color: string }> = {
   comercial: { label: "Comercial", bg: "#E6F3FF", color: "#1E6FBF" },
+  medicao: { label: "Medição", bg: "#EEEDFB", color: "#7F77DD" },
+  conferencia: { label: "Conferência", bg: "#EEF1FB", color: "#5B6FCB" },
+  implantacao: { label: "Implantação", bg: "#FFF4E0", color: "#B8860B" },
   tecnico: { label: "Técnico", bg: "#EEEDFB", color: "#7F77DD" },
   producao: { label: "Produção", bg: "#FBE9E1", color: "#D85A30" },
+  entrada: { label: "Entrada", bg: "#E6F0FF", color: "#2D5BA4" },
   logistica: { label: "Logística", bg: "#E0F7EC", color: "#12B76A" },
   montagem: { label: "Montagem", bg: "#E0F4EC", color: "#1D9E75" },
   pos_venda: { label: "Pós-venda", bg: "#FCEFD2", color: "#E8A020" },
