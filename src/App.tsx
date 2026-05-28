@@ -10,6 +10,7 @@ import AuthPage from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 
 import Comercial from "./pages/Comercial";
+import Contratos from "./pages/Contratos";
 import Clientes from "./pages/Clientes";
 import ClienteDetail from "./pages/ClienteDetail";
 import Tecnico from "./pages/Tecnico";
