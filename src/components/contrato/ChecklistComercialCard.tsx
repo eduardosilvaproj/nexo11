@@ -359,10 +359,10 @@ export function ChecklistComercialCard({ contratoId, contrato, ambientes, loja, 
             </div>
           } />
 
-          <Item done={!!eletroOk} label={`Eletrodomésticos · ${labelStatus(contrato.eletrodomesticos_status)}`} action={
+          <Item done={!!eletroOk} label={`Eletrodomésticos · ${labelStatus(eletrodomesticos_status)}`} action={
             <div className="flex items-center gap-1">
               <SelectStatus
-                value={contrato.eletrodomesticos_status}
+                value={eletrodomesticos_status}
                 onChange={(v) => saveField({ eletrodomesticos_status: v })}
                 options={[
                   { value: "informado", label: "Informados" },
@@ -370,24 +370,24 @@ export function ChecklistComercialCard({ contratoId, contrato, ambientes, loja, 
                   { value: "nao_informou", label: "Cliente não informou" },
                 ]}
               />
-              {contrato.eletrodomesticos_status === "informado" && (
+              {eletrodomesticos_status === "informado" && (
                 <ActionBtn onClick={() => setEletroOpen(true)}>
                   Lista ({checklist.eletrodomesticos?.length ?? 0}{checklist.eletrodomesticos_arquivo_url ? " + arquivo" : ""})
                 </ActionBtn>
               )}
             </div>
           } />
-          <Item done={!!plantaOk} label={`Planta hidráulica · ${labelStatus(contrato.planta_hidraulica_status)}`} action={
+          <Item done={!!plantaOk} label={`Planta hidráulica · ${labelStatus(planta_hidraulica_status)}`} action={
             <div className="flex items-center gap-1">
               <SelectStatus
-                value={contrato.planta_hidraulica_status}
+                value={planta_hidraulica_status}
                 onChange={(v) => saveField({ planta_hidraulica_status: v })}
                 options={[
                   { value: "anexada", label: "Anexada" },
                   { value: "solicitada", label: "Solicitada ao cliente" },
                 ]}
               />
-              {contrato.planta_hidraulica_status !== "solicitada" && (
+              {planta_hidraulica_status !== "solicitada" && (
                 <label className="cursor-pointer">
                   <input type="file" className="hidden" onChange={onPlantaFile} accept="image/*,application/pdf" />
                   <span className="text-xs px-2.5 py-1 rounded-md inline-flex items-center gap-1" style={{ backgroundColor: "#F7F9FC", color: "#1E6FBF", border: "0.5px solid #E8ECF2", fontWeight: 500 }}>
@@ -397,17 +397,17 @@ export function ChecklistComercialCard({ contratoId, contrato, ambientes, loja, 
               )}
             </div>
           } />
-          <Item done={!!extrasOk} label={`Itens extras (fora do Promob) · ${labelStatus(contrato.itens_extras_status)}`} action={
+          <Item done={!!extrasOk} label={`Itens extras (fora do Promob) · ${labelStatus(itens_extras_status)}`} action={
             <div className="flex items-center gap-1">
               <SelectStatus
-                value={contrato.itens_extras_status}
+                value={itens_extras_status}
                 onChange={(v) => saveField({ itens_extras_status: v })}
                 options={[
                   { value: "listados", label: "Listados" },
                   { value: "nao_ha", label: "Não há" },
                 ]}
               />
-              {contrato.itens_extras_status === "listados" && (
+              {itens_extras_status === "listados" && (
                 <ActionBtn onClick={() => setExtrasOpen(true)}>Lista ({checklist.itens_extras?.length ?? 0})</ActionBtn>
               )}
             </div>
