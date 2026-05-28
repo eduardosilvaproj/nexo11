@@ -7,20 +7,28 @@ import type { Database } from "@/integrations/supabase/types";
 type ContratoStatus = Database["public"]["Enums"]["contrato_status"];
 
 const STATUS_STYLES: Record<ContratoStatus, { bg: string; fg: string; label: string }> = {
-  comercial:  { bg: "#E6F3FF", fg: "#1E6FBF", label: "Comercial" },
-  tecnico:    { bg: "#EEEDFE", fg: "#534AB7", label: "Técnico" },
-  producao:   { bg: "#FAECE7", fg: "#993C1D", label: "Produção" },
-  logistica:  { bg: "#D1FAE5", fg: "#05873C", label: "Logística" },
-  montagem:   { bg: "#E1F5EE", fg: "#0F6E56", label: "Montagem" },
-  pos_venda:  { bg: "#FEF3C7", fg: "#E8A020", label: "Pós-venda" },
-  finalizado: { bg: "#D1FAE5", fg: "#05873C", label: "Finalizado" },
-  cancelado:  { bg: "#FEE4E2", fg: "#B42318", label: "Cancelado" },
+  comercial:   { bg: "#E6F3FF", fg: "#1E6FBF", label: "Comercial" },
+  medicao:     { bg: "#EEEDFE", fg: "#534AB7", label: "Medição" },
+  conferencia: { bg: "#EEF1FB", fg: "#3D4FA0", label: "Conferência" },
+  implantacao: { bg: "#FFF4E0", fg: "#8A6500", label: "Implantação" },
+  tecnico:     { bg: "#EEEDFE", fg: "#534AB7", label: "Técnico" },
+  producao:    { bg: "#FAECE7", fg: "#993C1D", label: "Produção" },
+  entrada:     { bg: "#E6F0FF", fg: "#2D5BA4", label: "Entrada" },
+  logistica:   { bg: "#D1FAE5", fg: "#05873C", label: "Logística" },
+  montagem:    { bg: "#E1F5EE", fg: "#0F6E56", label: "Montagem" },
+  pos_venda:   { bg: "#FEF3C7", fg: "#E8A020", label: "Pós-venda" },
+  finalizado:  { bg: "#D1FAE5", fg: "#05873C", label: "Finalizado" },
+  cancelado:   { bg: "#FEE4E2", fg: "#B42318", label: "Cancelado" },
 };
 
 const NEXT_STAGE: Partial<Record<ContratoStatus, ContratoStatus>> = {
-  comercial: "tecnico",
+  comercial: "medicao",
+  medicao: "conferencia",
+  conferencia: "implantacao",
+  implantacao: "producao",
+  producao: "entrada",
+  entrada: "montagem",
   tecnico: "producao",
-  producao: "logistica",
   logistica: "montagem",
   montagem: "pos_venda",
   pos_venda: "finalizado",
