@@ -31,13 +31,13 @@ export function SimuladorViagemDialog({ open, onOpenChange, origemPadrao }: Prop
     setQtdVeiculos(String(Math.max(1, Math.ceil(n / 2))));
   }
 
-  async function calcular() {
+  async function calcular(silent = false) {
     if (!origem || !destino || !valor) {
-      toast({ title: "Preencha origem, destino e valor", variant: "destructive" });
+      if (!silent) toast({ title: "Preencha origem, destino e valor", variant: "destructive" });
       return;
     }
     setLoading(true);
-    setResult(null);
+    if (!silent) setResult(null);
     try {
       const { data, error } = await supabase.functions.invoke("calcular-viagem", {
         body: {
@@ -52,11 +52,19 @@ export function SimuladorViagemDialog({ open, onOpenChange, origemPadrao }: Prop
       if ((data as any)?.error) throw new Error((data as any).error);
       setResult(data);
     } catch (e: any) {
-      toast({ title: "Erro ao calcular", description: e.message, variant: "destructive" });
+      if (!silent) toast({ title: "Erro ao calcular", description: e.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
   }
+
+  // Recalcula automaticamente quando muda montadores/veículos (após primeiro cálculo)
+  useEffect(() => {
+    if (!result) return;
+    const t = setTimeout(() => calcular(true), 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qtdMontadores, qtdVeiculos]);
 
   function imprimir() {
     const html = reportRef.current?.outerHTML;
