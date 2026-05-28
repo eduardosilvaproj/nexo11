@@ -255,6 +255,14 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos, on
         clienteId={contrato.cliente_id ?? null}
       />
 
+      <ChecklistComercialCard
+        contratoId={contrato.id}
+        contrato={contrato}
+        ambientes={ambientes}
+        loja={loja}
+        onAvancar={onAvancar}
+      />
+
       <Card title="Estimativa financeira">
 
         <div className="overflow-hidden rounded-lg" style={{ border: "0.5px solid #E8ECF2" }}>
