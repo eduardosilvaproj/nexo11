@@ -705,7 +705,12 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
                   checked={checked}
                   onCheckedChange={() => toggleAmbiente(g.ambiente)}
                 />
-                <p className="font-semibold text-base flex-1">{g.ambiente}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-base">{g.ambiente}</p>
+                  {g.comentario && (
+                    <p className="text-xs italic text-muted-foreground mt-0.5">{g.comentario}</p>
+                  )}
+                </div>
                 <div className="text-right">
                   {isEdit ? (
                     <ValorEditavel
