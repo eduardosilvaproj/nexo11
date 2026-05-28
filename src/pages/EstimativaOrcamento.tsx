@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { UploadPDFEstimativa } from '@/components/estimativa/UploadPDFEstimativa';
 import { RelatorioEstimativaView } from '@/components/estimativa/RelatorioEstimativaView';
+import { ChatEstimativa } from '@/components/estimativa/ChatEstimativa';
 import type { RelatorioEstimativa } from '@/types/estimativa';
 
 export default function EstimativaOrcamento() {
@@ -21,6 +22,7 @@ export default function EstimativaOrcamento() {
             ← Nova análise
           </button>
           <RelatorioEstimativaView relatorio={relatorio} />
+          <ChatEstimativa relatorio={relatorio} />
         </div>
       )}
     </div>
