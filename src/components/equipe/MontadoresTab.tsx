@@ -63,7 +63,7 @@ export function MontadoresTab() {
 
   const toggleAtivo = async (m: Montador) => {
     const { error } = await sb
-      .from("tecnicos_montadores")
+      .from("pessoas")
       .update({ ativo: !m.ativo })
       .eq("id", m.id);
     if (error) return toast.error(error.message);
