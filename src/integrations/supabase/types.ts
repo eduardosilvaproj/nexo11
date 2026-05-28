@@ -2118,7 +2118,12 @@ export type Database = {
           projetista_id: string | null
           status: Database["public"]["Enums"]["contrato_status"]
           sub_etapa_tecnico: string
+          trava_comercial_ok: boolean
+          trava_conferencia_ok: boolean
+          trava_entrada_ok: boolean
+          trava_implantacao_ok: boolean
           trava_medicao_ok: boolean
+          trava_montagem_ok: boolean
           trava_producao_ok: boolean
           trava_tecnico_ok: boolean
           updated_at: string
@@ -2153,7 +2158,12 @@ export type Database = {
           projetista_id?: string | null
           status?: Database["public"]["Enums"]["contrato_status"]
           sub_etapa_tecnico?: string
+          trava_comercial_ok?: boolean
+          trava_conferencia_ok?: boolean
+          trava_entrada_ok?: boolean
+          trava_implantacao_ok?: boolean
           trava_medicao_ok?: boolean
+          trava_montagem_ok?: boolean
           trava_producao_ok?: boolean
           trava_tecnico_ok?: boolean
           updated_at?: string
@@ -2188,7 +2198,12 @@ export type Database = {
           projetista_id?: string | null
           status?: Database["public"]["Enums"]["contrato_status"]
           sub_etapa_tecnico?: string
+          trava_comercial_ok?: boolean
+          trava_conferencia_ok?: boolean
+          trava_entrada_ok?: boolean
+          trava_implantacao_ok?: boolean
           trava_medicao_ok?: boolean
+          trava_montagem_ok?: boolean
           trava_producao_ok?: boolean
           trava_tecnico_ok?: boolean
           updated_at?: string
@@ -7138,8 +7153,12 @@ export type Database = {
       chamado_tipo: "assistencia" | "reclamacao" | "garantia" | "solicitacao"
       contrato_status:
         | "comercial"
+        | "medicao"
+        | "conferencia"
+        | "implantacao"
         | "tecnico"
         | "producao"
+        | "entrada"
         | "logistica"
         | "montagem"
         | "pos_venda"
@@ -7344,8 +7363,12 @@ export const Constants = {
       chamado_tipo: ["assistencia", "reclamacao", "garantia", "solicitacao"],
       contrato_status: [
         "comercial",
+        "medicao",
+        "conferencia",
+        "implantacao",
         "tecnico",
         "producao",
+        "entrada",
         "logistica",
         "montagem",
         "pos_venda",

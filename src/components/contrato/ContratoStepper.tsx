@@ -5,13 +5,21 @@ type ContratoStatus = Database["public"]["Enums"]["contrato_status"];
 
 const STEPS: { key: ContratoStatus; label: string }[] = [
   { key: "comercial", label: "Comercial" },
-  { key: "tecnico", label: "Técnico" },
+  { key: "medicao", label: "Medição" },
+  { key: "conferencia", label: "Conferência" },
+  { key: "implantacao", label: "Implantação" },
   { key: "producao", label: "Produção" },
-  { key: "logistica", label: "Logística" },
+  { key: "entrada", label: "Entrada" },
   { key: "montagem", label: "Montagem" },
   { key: "pos_venda", label: "Pós-venda" },
   { key: "finalizado", label: "Finalizado" },
 ];
+
+// Mapeia status legados/equivalentes para a etapa visível no stepper
+const STATUS_TO_STEP: Partial<Record<ContratoStatus, ContratoStatus>> = {
+  tecnico: "medicao",
+  logistica: "entrada",
+};
 
 interface ContratoStepperProps {
   current: ContratoStatus;
@@ -19,7 +27,8 @@ interface ContratoStepperProps {
 }
 
 export function ContratoStepper({ current, blocked = false }: ContratoStepperProps) {
-  const currentIndex = STEPS.findIndex((s) => s.key === current);
+  const effective = STATUS_TO_STEP[current] ?? current;
+  const currentIndex = STEPS.findIndex((s) => s.key === effective);
 
   return (
     <>
@@ -31,24 +40,20 @@ export function ContratoStepper({ current, blocked = false }: ContratoStepperPro
         .nexo-step-pulse { animation: nexo-step-pulse 2s infinite; }
       `}</style>
       <div
-        style={{ padding: "16px 32px", borderBottom: "0.5px solid #E8ECF2" }}
+        style={{ padding: "16px 24px", borderBottom: "0.5px solid #E8ECF2" }}
         className="bg-white overflow-x-auto no-scrollbar"
       >
-        <div className="flex items-start min-w-[700px] md:min-w-0">
+        <div className="flex items-start min-w-[880px] md:min-w-0">
           {STEPS.map((step, idx) => {
             const isDone = idx < currentIndex;
             const isCurrent = idx === currentIndex;
             const isBlocked = isCurrent && blocked;
-            const isFuture = idx > currentIndex;
             const isLast = idx === STEPS.length - 1;
 
             let circleBg = "#E8ECF2";
             let circleColor = "#B0BAC9";
             let labelColor = "#6B7A90";
             let circleClass = "";
-            let connectorStyle: React.CSSProperties = {
-              borderTop: "2px solid #E8ECF2",
-            };
 
             if (isBlocked) {
               circleBg = "#E53935";
@@ -58,43 +63,37 @@ export function ContratoStepper({ current, blocked = false }: ContratoStepperPro
               circleColor = "#FFFFFF";
               labelColor = "#0D1117";
               circleClass = "nexo-step-pulse";
-              connectorStyle = { borderTop: "2px dashed #B0BAC9" };
             } else if (isDone) {
               circleBg = "#12B76A";
               circleColor = "#FFFFFF";
               labelColor = "#05873C";
-              connectorStyle = { borderTop: "2px solid #12B76A" };
             }
 
             return (
               <div key={step.key} className="flex flex-1 flex-col items-center">
                 <div className="flex w-full items-center">
-                  {/* connector left (invisible for first) */}
                   <div
                     className="flex-1"
                     style={
                       idx === 0
                         ? { borderTop: "2px solid transparent" }
-                        : isDone || (isCurrent && !isBlocked)
-                          ? idx <= currentIndex
-                            ? { borderTop: "2px solid #12B76A" }
-                            : connectorStyle
+                        : idx <= currentIndex
+                          ? { borderTop: "2px solid #12B76A" }
                           : { borderTop: "2px solid #E8ECF2" }
                     }
                   />
                   <div
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${circleClass}`}
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${circleClass}`}
                     style={{ backgroundColor: circleBg, color: circleColor }}
                   >
                     {isBlocked ? (
-                      <Lock className="h-4 w-4" />
+                      <Lock className="h-3.5 w-3.5" />
                     ) : isDone ? (
-                      <Check className="h-4 w-4" />
+                      <Check className="h-3.5 w-3.5" />
                     ) : (
-                      <span className="text-xs font-medium">{idx + 1}</span>
+                      <span style={{ fontSize: 11, fontWeight: 600 }}>{idx + 1}</span>
                     )}
                   </div>
-                  {/* connector right */}
                   <div
                     className="flex-1"
                     style={
@@ -109,8 +108,8 @@ export function ContratoStepper({ current, blocked = false }: ContratoStepperPro
                   />
                 </div>
                 <span
-                  className="mt-2"
-                  style={{ fontSize: 11, color: labelColor }}
+                  className="mt-1.5 text-center"
+                  style={{ fontSize: 10.5, color: labelColor, lineHeight: 1.2, fontWeight: isCurrent ? 600 : 400 }}
                 >
                   {step.label}
                 </span>

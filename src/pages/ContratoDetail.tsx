@@ -27,13 +27,19 @@ import { ContratoIndicadoresTab } from "@/components/contrato/ContratoIndicadore
 import { PortalClienteManager } from "@/components/portal/PortalClienteManager";
 import { ContratoComunicacoesTab } from "@/components/contrato/ContratoComunicacoesTab";
 import { ContratoSatisfacaoTab } from "@/components/contrato/ContratoSatisfacaoTab";
+import { ContratoImplantacaoTab } from "@/components/contrato/ContratoImplantacaoTab";
+import { ContratoEntradaTab } from "@/components/contrato/ContratoEntradaTab";
 
 
 const STAGE_TO_TAB: Record<string, ContratoTabKey> = {
   comercial: "comercial",
-  tecnico: "tecnico",
+  medicao: "medicao",
+  conferencia: "conferencia",
+  implantacao: "implantacao",
+  tecnico: "medicao",
   producao: "producao",
-  logistica: "logistica",
+  entrada: "entrada",
+  logistica: "entrada",
   montagem: "montagem",
   pos_venda: "pos_venda",
 };
@@ -423,8 +429,16 @@ export default function ContratoDetail() {
               />
             ) : active === "tecnico" ? (
               <ContratoTecnicoTab contratoId={contrato.id} />
+            ) : active === "medicao" ? (
+              <ContratoTecnicoTab contratoId={contrato.id} />
+            ) : active === "conferencia" ? (
+              <ContratoTecnicoTab contratoId={contrato.id} />
+            ) : active === "implantacao" ? (
+              <ContratoImplantacaoTab contratoId={contrato.id} />
             ) : active === "producao" ? (
               <ContratoProducaoTab contratoId={contrato.id} />
+            ) : active === "entrada" ? (
+              <ContratoEntradaTab contratoId={contrato.id} />
             ) : active === "logistica" ? (
               <ContratoLogisticaTab contratoId={contrato.id} />
             ) : active === "montagem" ? (

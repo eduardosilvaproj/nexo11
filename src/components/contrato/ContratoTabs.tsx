@@ -2,8 +2,12 @@ import { useState } from "react";
 
 export type ContratoTabKey =
   | "comercial"
+  | "medicao"
+  | "conferencia"
+  | "implantacao"
   | "tecnico"
   | "producao"
+  | "entrada"
   | "logistica"
   | "montagem"
   | "ambientes"
@@ -21,9 +25,11 @@ export type ContratoTabKey =
 const TABS: { key: ContratoTabKey; label: string }[] = [
   { key: "comercial", label: "Comercial" },
   { key: "financeiro", label: "Financeiro" },
-  { key: "tecnico", label: "Técnico" },
+  { key: "medicao", label: "Medição" },
+  { key: "conferencia", label: "Conferência" },
+  { key: "implantacao", label: "Implantação" },
   { key: "producao", label: "Produção" },
-  { key: "logistica", label: "Logística" },
+  { key: "entrada", label: "Entrada" },
   { key: "montagem", label: "Montagem" },
   { key: "ambientes", label: "Ambientes" },
   { key: "pos_venda", label: "Pós-venda" },
