@@ -51,9 +51,10 @@ export function MontadoresTab() {
     enabled: !!lojaId,
     queryFn: async () => {
       const { data, error } = await sb
-        .from("tecnicos_montadores")
+        .from("pessoas")
         .select("id, nome, telefone, email, percentual_padrao, ativo, funcoes")
         .eq("loja_id", lojaId!)
+        .eq("tipo", "prestador")
         .order("nome", { ascending: true });
       if (error) throw error;
       return (data ?? []) as Montador[];
@@ -62,7 +63,7 @@ export function MontadoresTab() {
 
   const toggleAtivo = async (m: Montador) => {
     const { error } = await sb
-      .from("tecnicos_montadores")
+      .from("pessoas")
       .update({ ativo: !m.ativo })
       .eq("id", m.id);
     if (error) return toast.error(error.message);
