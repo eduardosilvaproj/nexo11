@@ -232,9 +232,23 @@ export default function Comercial() {
   const { perfil } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [formOpen, setFormOpen] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [tab, setTab] = useState<TabKey>("painel");
+
+  const initialTab: TabKey =
+    searchParams.get("tab") === "pipeline" || searchParams.get("tab") === "leads"
+      ? (searchParams.get("tab") as TabKey)
+      : "painel";
+  const [tab, setTab] = useState<TabKey>(initialTab);
+
+  const setTabSync = useCallback(
+    (next: TabKey) => {
+      setTab(next);
+      setSearchParams({ tab: next });
+    },
+    [setSearchParams]
+  );
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
