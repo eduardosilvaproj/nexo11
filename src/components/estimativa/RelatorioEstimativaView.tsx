@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
 import { Download, User, Building2, PenTool, Calendar, Pencil, Briefcase, Target } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -383,6 +384,9 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
   // Overrides do valor médio por ambiente (editado manualmente)
   const [overrides, setOverrides] = useState<Record<string, number>>({});
   const [editando, setEditando] = useState<string | null>(null);
+  // Ajuste percentual global (-50% a +100%)
+  const [ajustePct, setAjustePct] = useState<number>(0);
+  const fatorAjuste = 1 + ajustePct / 100;
 
   const toggleAmbiente = (ambiente: string) => {
     setSelecionados((prev) => {
@@ -393,20 +397,24 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
     });
   };
 
-  // Grupos com overrides aplicados (escala min/max proporcionalmente ao médio)
+  // Grupos com overrides aplicados (escala min/max proporcionalmente ao médio) + fator global
   const gruposEfetivos = useMemo(() => {
     return gruposCompletos.map((g) => {
       const override = overrides[g.ambiente];
-      if (override == null || !g.total_med || g.total_med === 0) return g;
-      const ratio = override / g.total_med;
-      return {
+      const base = override != null && g.total_med ? {
         ambiente: g.ambiente,
         total_med: override,
-        total_min: g.total_min * ratio,
-        total_max: g.total_max * ratio,
+        total_min: g.total_min * (override / g.total_med),
+        total_max: g.total_max * (override / g.total_med),
+      } : g;
+      return {
+        ambiente: base.ambiente,
+        total_med: base.total_med * fatorAjuste,
+        total_min: base.total_min * fatorAjuste,
+        total_max: base.total_max * fatorAjuste,
       };
     });
-  }, [gruposCompletos, overrides]);
+  }, [gruposCompletos, overrides, fatorAjuste]);
 
   const relatorioFiltrado = useMemo<RelatorioEstimativa>(() => {
     const moveisFiltrados = relatorio.moveis.filter((m) =>
@@ -418,7 +426,8 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
     const ratioMap = new Map<string, number>();
     gruposCompletos.forEach((g) => {
       const override = overrides[g.ambiente];
-      ratioMap.set(g.ambiente, override != null && g.total_med > 0 ? override / g.total_med : 1);
+      const overrideRatio = override != null && g.total_med > 0 ? override / g.total_med : 1;
+      ratioMap.set(g.ambiente, overrideRatio * fatorAjuste);
     });
 
     const estimativasFiltradas = relatorio.estimativas
@@ -446,7 +455,7 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
       total_maximo,
       total_medio,
     };
-  }, [relatorio, selecionados, overrides, gruposCompletos]);
+  }, [relatorio, selecionados, overrides, gruposCompletos, fatorAjuste]);
 
   const gruposFiltrados = useMemo(
     () => gruposEfetivos.filter((g) => selecionados.has(g.ambiente)),
@@ -627,6 +636,38 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
           </div>
         </div>
       </Card>
+
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Ajuste Global</h3>
+            <p className="text-xs text-muted-foreground mt-1">Aplica desconto ou acréscimo em todos os valores</p>
+          </div>
+          <div className={`text-2xl font-bold tabular-nums ${ajustePct > 0 ? 'text-amber-600' : ajustePct < 0 ? 'text-emerald-600' : 'text-foreground'}`}>
+            {ajustePct > 0 ? '+' : ''}{ajustePct}%
+          </div>
+        </div>
+        <Slider
+          value={[ajustePct]}
+          onValueChange={(v) => setAjustePct(v[0])}
+          min={-50}
+          max={100}
+          step={1}
+          className="my-3"
+        />
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>−50%</span>
+          <button
+            type="button"
+            onClick={() => setAjustePct(0)}
+            className="hover:text-foreground transition-colors"
+          >
+            Resetar
+          </button>
+          <span>+100%</span>
+        </div>
+      </Card>
+
 
       <Card className="p-6">
         <div className="flex items-baseline justify-between mb-4">
