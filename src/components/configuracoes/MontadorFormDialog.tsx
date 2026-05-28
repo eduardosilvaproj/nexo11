@@ -76,6 +76,7 @@ export function MontadorFormDialog({ open, onOpenChange, lojaId, montador }: Pro
       percentual_padrao: pct,
       ativo,
       funcoes,
+      tipo: "prestador",
     };
 
     const client = supabase as unknown as {
