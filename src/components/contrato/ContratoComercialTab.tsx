@@ -246,7 +246,15 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: 
         </button>
       </Card>
 
+      <CustoViagemCard
+        contratoId={contrato.id}
+        lojaCidade={loja?.cidade}
+        lojaEstado={loja?.estado}
+        clienteId={contrato.cliente_id ?? null}
+      />
+
       <Card title="Estimativa financeira">
+
         <div className="overflow-hidden rounded-lg" style={{ border: "0.5px solid #E8ECF2" }}>
           <table className="w-full">
             <thead>
