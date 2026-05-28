@@ -36,6 +36,7 @@ interface ComercialTabProps {
   loja: any;
   ambientes: any[];
   orcamentos: any[];
+  onAvancar?: () => void;
 }
 
 const formatBRL = (n: number) =>
