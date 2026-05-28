@@ -40,6 +40,10 @@ import { ChecklistProducaoCard } from "@/components/contrato/ChecklistProducaoCa
 import { ChecklistEntradaCard } from "@/components/contrato/ChecklistEntradaCard";
 import { ChecklistMontagemCard } from "@/components/contrato/ChecklistMontagemCard";
 import { ChecklistPosVendaCard } from "@/components/contrato/ChecklistPosVendaCard";
+
+
+const STAGE_TO_TAB: Record<string, ContratoTabKey> = {
+  comercial: "comercial",
   medicao: "medicao",
   conferencia: "conferencia",
   implantacao: "implantacao",
