@@ -1,11 +1,11 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, MapPin, Printer, FileDown } from "lucide-react";
+import { Loader2, MapPin, Printer, FileDown, AlertTriangle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { RelatorioViagem } from "./RelatorioViagem";
 
@@ -31,13 +31,13 @@ export function SimuladorViagemDialog({ open, onOpenChange, origemPadrao }: Prop
     setQtdVeiculos(String(Math.max(1, Math.ceil(n / 2))));
   }
 
-  async function calcular() {
+  async function calcular(silent = false) {
     if (!origem || !destino || !valor) {
-      toast({ title: "Preencha origem, destino e valor", variant: "destructive" });
+      if (!silent) toast({ title: "Preencha origem, destino e valor", variant: "destructive" });
       return;
     }
     setLoading(true);
-    setResult(null);
+    if (!silent) setResult(null);
     try {
       const { data, error } = await supabase.functions.invoke("calcular-viagem", {
         body: {
@@ -52,11 +52,19 @@ export function SimuladorViagemDialog({ open, onOpenChange, origemPadrao }: Prop
       if ((data as any)?.error) throw new Error((data as any).error);
       setResult(data);
     } catch (e: any) {
-      toast({ title: "Erro ao calcular", description: e.message, variant: "destructive" });
+      if (!silent) toast({ title: "Erro ao calcular", description: e.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
   }
+
+  // Recalcula automaticamente quando muda montadores/veículos (após primeiro cálculo)
+  useEffect(() => {
+    if (!result) return;
+    const t = setTimeout(() => calcular(true), 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qtdMontadores, qtdVeiculos]);
 
   function imprimir() {
     const html = reportRef.current?.outerHTML;
@@ -114,8 +122,8 @@ export function SimuladorViagemDialog({ open, onOpenChange, origemPadrao }: Prop
             <Select value={qtdMontadores} onValueChange={onMontadoresChange}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {[2, 3, 4, 5, 6].map((n) => (
-                  <SelectItem key={n} value={String(n)}>{n} montadores</SelectItem>
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <SelectItem key={n} value={String(n)}>{n} montador{n > 1 ? "es" : ""}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -132,7 +140,14 @@ export function SimuladorViagemDialog({ open, onOpenChange, origemPadrao }: Prop
           </div>
         </div>
 
-        <Button onClick={calcular} disabled={loading} className="w-full">
+        {Number(qtdMontadores) < 2 && (
+          <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-800">
+            <AlertTriangle className="h-3.5 w-3.5 mt-0.5" />
+            <span>Recomendado mínimo 2 montadores para entregas fora da cidade.</span>
+          </div>
+        )}
+
+        <Button onClick={() => calcular(false)} disabled={loading} className="w-full">
           {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
           Calcular
         </Button>

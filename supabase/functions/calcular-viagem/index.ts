@@ -66,18 +66,21 @@ function calcular(
   CFG: typeof DEFAULTS,
   opts: { qtdMontadores?: number; qtdVeiculos?: number } = {},
 ) {
-  const diasMontagem = Math.max(1, Math.ceil(valorVenda / Number(CFG.valor_montagem_dia)));
+  const qtdMontadores = Math.max(1, opts.qtdMontadores ?? Number(CFG.min_montadores));
+  const qtdVeiculos = Math.max(
+    1,
+    opts.qtdVeiculos ?? Math.ceil(qtdMontadores / Number(CFG.montadores_por_carro)),
+  );
+
+  const diasMontagem = Math.max(
+    1,
+    Math.ceil(valorVenda / (Number(CFG.valor_montagem_dia) * qtdMontadores)),
+  );
 
   const semanasCompletas = Math.floor(diasMontagem / 5);
   const diasRestantes = diasMontagem % 5;
   const finsDeSemana = diasRestantes > 0 ? semanasCompletas : Math.max(0, semanasCompletas - 1);
   const noitesHospedado = Math.max(1, diasMontagem - finsDeSemana * 2);
-
-  const qtdMontadores = Math.max(Number(CFG.min_montadores), opts.qtdMontadores ?? Number(CFG.min_montadores));
-  const qtdVeiculos = Math.max(
-    1,
-    opts.qtdVeiculos ?? Math.ceil(qtdMontadores / Number(CFG.montadores_por_carro)),
-  );
 
   const gasolinaPorCarro = (distanciaKm * 2) / Number(CFG.consumo_km_litro) * Number(CFG.preco_gasolina);
   const pedagioPorCarro = pedagioViagem * 2;
