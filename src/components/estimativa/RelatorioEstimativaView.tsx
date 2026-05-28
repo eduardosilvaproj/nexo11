@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
 import { Download, User, Building2, PenTool, Calendar, Pencil, Briefcase, Target } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
