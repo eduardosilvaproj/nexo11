@@ -122,8 +122,8 @@ export function SimuladorViagemDialog({ open, onOpenChange, origemPadrao }: Prop
             <Select value={qtdMontadores} onValueChange={onMontadoresChange}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {[2, 3, 4, 5, 6].map((n) => (
-                  <SelectItem key={n} value={String(n)}>{n} montadores</SelectItem>
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <SelectItem key={n} value={String(n)}>{n} montador{n > 1 ? "es" : ""}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -140,7 +140,14 @@ export function SimuladorViagemDialog({ open, onOpenChange, origemPadrao }: Prop
           </div>
         </div>
 
-        <Button onClick={calcular} disabled={loading} className="w-full">
+        {Number(qtdMontadores) < 2 && (
+          <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-800">
+            <AlertTriangle className="h-3.5 w-3.5 mt-0.5" />
+            <span>Recomendado mínimo 2 montadores para entregas fora da cidade.</span>
+          </div>
+        )}
+
+        <Button onClick={() => calcular(false)} disabled={loading} className="w-full">
           {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
           Calcular
         </Button>
