@@ -421,6 +421,7 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
         total_med: base.total_med * fatorAjuste,
         total_min: base.total_min * fatorAjuste,
         total_max: base.total_max * fatorAjuste,
+        comentario: g.comentario,
       };
     });
   }, [gruposCompletos, overrides, fatorAjuste]);
