@@ -454,7 +454,7 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
       total_maximo,
       total_medio,
     };
-  }, [relatorio, selecionados, overrides, gruposCompletos]);
+  }, [relatorio, selecionados, overrides, gruposCompletos, fatorAjuste]);
 
   const gruposFiltrados = useMemo(
     () => gruposEfetivos.filter((g) => selecionados.has(g.ambiente)),
