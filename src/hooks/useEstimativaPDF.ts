@@ -192,6 +192,7 @@ export const useEstimativaPDF = () => {
           moveis: moveisCombinados,
           estimativas: [],
           observacoes_gerais: observacoes,
+          comentarios_ambientes: Object.assign({}, ...analises.map((a) => a?.comentarios_ambientes || {})),
         };
 
         supabase.storage.from('estimativas').remove(chunkPaths).catch(() => {});
