@@ -19,10 +19,6 @@ interface Props {
   lojaCidade?: string | null;
   lojaEstado?: string | null;
   clienteId?: string | null;
-  custoViagem?: number | null;
-  distanciaKm?: number | null;
-  detalhamento?: any;
-  override?: boolean;
 }
 
 export function CustoViagemCard({
@@ -30,10 +26,6 @@ export function CustoViagemCard({
   lojaCidade,
   lojaEstado,
   clienteId,
-  custoViagem,
-  distanciaKm,
-  detalhamento,
-  override,
 }: Props) {
   const { hasRole } = useAuth();
   const qc = useQueryClient();
@@ -42,6 +34,24 @@ export function CustoViagemCard({
 
   const canEdit =
     hasRole("gerente") || hasRole("financeiro") || hasRole("admin") || hasRole("admin_master");
+
+  const { data: viagemRow } = useQuery({
+    queryKey: ["contrato-viagem", contratoId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("contratos")
+        .select("custo_viagem, distancia_km, custo_viagem_detalhamento, custo_viagem_override")
+        .eq("id", contratoId)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const custoViagem = (viagemRow as any)?.custo_viagem as number | null | undefined;
+  const distanciaKm = (viagemRow as any)?.distancia_km as number | null | undefined;
+  const detalhamento = (viagemRow as any)?.custo_viagem_detalhamento;
+  const override = (viagemRow as any)?.custo_viagem_override;
+
 
   const { data: cliente } = useQuery({
     queryKey: ["cliente-endereco", clienteId],
