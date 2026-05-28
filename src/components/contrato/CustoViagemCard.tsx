@@ -40,32 +40,33 @@ export function CustoViagemCard({
     queryFn: async () => {
       const { data } = await supabase
         .from("contratos")
-        .select("custo_viagem, distancia_km, custo_viagem_detalhamento, custo_viagem_override")
+        .select("cliente_id, custo_viagem, distancia_km, custo_viagem_detalhamento, custo_viagem_override")
         .eq("id", contratoId)
         .maybeSingle();
       return data;
     },
   });
 
+  const effectiveClienteId = clienteId ?? ((viagemRow as any)?.cliente_id as string | null);
   const custoViagem = (viagemRow as any)?.custo_viagem as number | null | undefined;
   const distanciaKm = (viagemRow as any)?.distancia_km as number | null | undefined;
   const detalhamento = (viagemRow as any)?.custo_viagem_detalhamento;
   const override = (viagemRow as any)?.custo_viagem_override;
 
-
   const { data: cliente } = useQuery({
-    queryKey: ["cliente-endereco", clienteId],
+    queryKey: ["cliente-endereco", effectiveClienteId],
     queryFn: async () => {
-      if (!clienteId) return null;
+      if (!effectiveClienteId) return null;
       const { data } = await supabase
         .from("clientes")
         .select("cidade, estado")
-        .eq("id", clienteId)
+        .eq("id", effectiveClienteId)
         .maybeSingle();
       return data;
     },
-    enabled: !!clienteId,
+    enabled: !!effectiveClienteId,
   });
+
 
   const sameCity = useMemo(() => {
     if (!lojaCidade || !cliente?.cidade) return null;
