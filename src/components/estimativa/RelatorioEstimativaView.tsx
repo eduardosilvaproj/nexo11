@@ -231,6 +231,7 @@ const gerarInvestimento = (relatorio: RelatorioEstimativa, grupos: AmbienteGroup
       <div class="amb-icon">${renderIcon(iconForAmbiente(g.ambiente))}</div>
       <div class="amb-body">
         <h3 class="amb-nome">${g.ambiente}</h3>
+        ${g.comentario ? `<p class="amb-coment">${g.comentario}</p>` : ''}
         <p class="amb-faixa">${formatCurrency(g.total_min)} — ${formatCurrency(g.total_max)}</p>
       </div>
       <div class="amb-med">${formatCurrency(g.total_med)}</div>
