@@ -64,12 +64,6 @@ type MenuItem = {
   roles?: AppRole[];
 };
 
-type MenuItem = {
-  title: string;
-  url: string;
-  icon: React.ComponentType<{ className?: string }>;
-  roles?: AppRole[];
-};
 
 const operacao: MenuItem[] = [
   { title: "Clientes", url: "/clientes", icon: UserRound, roles: ["admin", "gerente", "vendedor", "franqueador", "pos_venda", "admin_master"] },
