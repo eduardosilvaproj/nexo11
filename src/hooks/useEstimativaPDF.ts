@@ -164,18 +164,7 @@ export const useEstimativaPDF = () => {
             }
 
             const chunkHash = `${fileHash}_parte_${i + 1}`;
-            const { data, error: fnError } = await supabase.functions.invoke(
-              'estimativa-pdf',
-              { body: { file_path: chunkPath, file_hash: chunkHash, contexto } }
-            );
-            if (fnError) {
-              const status = (fnError as any)?.context?.status;
-              throw new Error(
-                status === 429
-                  ? 'Limite de requisições do Gemini excedido. A nova chave ainda está sem cota/billing para Gemini 2.5 Pro.'
-                  : fnError.message
-              );
-            }
+            const data = await invokeEstimativaPDF({ file_path: chunkPath, file_hash: chunkHash, contexto });
             if (data?.error) throw new Error(data.error);
             analises.push(data);
           } catch (err) {
