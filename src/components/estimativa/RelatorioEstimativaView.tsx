@@ -22,14 +22,23 @@ interface AmbienteGroup {
   total_min: number;
   total_max: number;
   total_med: number;
+  comentario?: string;
 }
 
 const agruparPorAmbiente = (relatorio: RelatorioEstimativa): AmbienteGroup[] => {
   const map = new Map<string, AmbienteGroup>();
+  const coments = relatorio.comentarios_ambientes || {};
+  const findComent = (key: string): string | undefined => {
+    if (coments[key]) return coments[key];
+    const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    const target = norm(key);
+    const hit = Object.keys(coments).find((k) => norm(k) === target);
+    return hit ? coments[hit] : undefined;
+  };
   relatorio.moveis.forEach((m: MovelIdentificado) => {
     const key = m.ambiente || 'Outros';
     if (!map.has(key)) {
-      map.set(key, { ambiente: key, total_min: 0, total_max: 0, total_med: 0 });
+      map.set(key, { ambiente: key, total_min: 0, total_max: 0, total_med: 0, comentario: findComent(key) });
     }
     const g = map.get(key)!;
     const e = relatorio.estimativas.find((x) => x.movel_id === m.id);
