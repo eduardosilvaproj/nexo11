@@ -359,7 +359,7 @@ export default function Comercial() {
         })}
       </div>
 
-      {tab === "painel" && <PainelComercial onSelectLead={() => setTab("pipeline")} />}
+      {tab === "painel" && <PainelComercial onSelectLead={() => setTabSync("pipeline")} />}
 
       {tab === "leads" && <LeadsTable />}
 
