@@ -101,8 +101,26 @@ const ActionBtn: React.FC<{ onClick: () => void; children: React.ReactNode; vari
 
 export function ChecklistComercialCard({ contratoId, contrato, ambientes, loja, onAvancar }: Props) {
   const qc = useQueryClient();
-  const checklist: ChecklistJson = contrato.checklist_comercial || {};
-  const endereco: EnderecoJson = contrato.endereco_entrega || {};
+
+  // Fetch checklist-specific fields directly from contratos (the parent view doesn't expose them)
+  const { data: contratoChecklist } = useQuery({
+    queryKey: ["contrato_checklist", contratoId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contratos")
+        .select("checklist_comercial,endereco_entrega,eletrodomesticos_status,planta_hidraulica_status,itens_extras_status")
+        .eq("id", contratoId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as any;
+    },
+  });
+
+  const checklist: ChecklistJson = (contratoChecklist?.checklist_comercial as any) || {};
+  const endereco: EnderecoJson = (contratoChecklist?.endereco_entrega as any) || {};
+  const eletrodomesticos_status: string | undefined = contratoChecklist?.eletrodomesticos_status ?? contrato.eletrodomesticos_status;
+  const planta_hidraulica_status: string | undefined = contratoChecklist?.planta_hidraulica_status ?? contrato.planta_hidraulica_status;
+  const itens_extras_status: string | undefined = contratoChecklist?.itens_extras_status ?? contrato.itens_extras_status;
 
   const [enderecoOpen, setEnderecoOpen] = useState(false);
   const [ambientesOpen, setAmbientesOpen] = useState(false);
@@ -145,17 +163,22 @@ export function ChecklistComercialCard({ contratoId, contrato, ambientes, loja, 
     },
   });
 
+  const invalidateAll = () => {
+    qc.invalidateQueries({ queryKey: ["contrato_checklist", contratoId] });
+    qc.invalidateQueries({ queryKey: ["contrato_dre_view", contratoId] });
+  };
+
   const saveChecklist = async (patch: Partial<ChecklistJson>) => {
     const merged = { ...checklist, ...patch };
     const { error } = await supabase.from("contratos").update({ checklist_comercial: merged } as any).eq("id", contratoId);
     if (error) { toast.error(error.message); return; }
-    qc.invalidateQueries({ queryKey: ["contrato", contratoId] });
+    invalidateAll();
   };
 
   const saveField = async (patch: Record<string, any>) => {
     const { error } = await supabase.from("contratos").update(patch as any).eq("id", contratoId);
     if (error) { toast.error(error.message); return; }
-    qc.invalidateQueries({ queryKey: ["contrato", contratoId] });
+    invalidateAll();
   };
 
   const uploadFile = async (file: File, prefix: string) => {
