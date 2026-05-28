@@ -1888,6 +1888,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "contrato_ambientes_conferente_id_fkey"
+            columns: ["conferente_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrato_ambientes_conferente_id_fkey"
+            columns: ["conferente_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios_publico"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "contrato_ambientes_contrato_id_fkey"
             columns: ["contrato_id"]
             isOneToOne: false
@@ -1916,10 +1930,38 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "contrato_ambientes_medidor_id_fkey"
+            columns: ["medidor_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrato_ambientes_medidor_id_fkey"
+            columns: ["medidor_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios_publico"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "contrato_ambientes_montador_id_fkey"
             columns: ["montador_id"]
             isOneToOne: false
             referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrato_ambientes_montador_id_fkey"
+            columns: ["montador_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrato_ambientes_montador_id_fkey"
+            columns: ["montador_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios_publico"
             referencedColumns: ["id"]
           },
         ]
@@ -2167,6 +2209,13 @@ export type Database = {
             columns: ["loja_id"]
             isOneToOne: false
             referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_projetista_id_fkey"
+            columns: ["projetista_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
             referencedColumns: ["id"]
           },
           {
@@ -4650,6 +4699,13 @@ export type Database = {
             foreignKeyName: "orcamentos_projetista_id_fkey"
             columns: ["projetista_id"]
             isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_projetista_id_fkey"
+            columns: ["projetista_id"]
+            isOneToOne: false
             referencedRelation: "usuarios"
             referencedColumns: ["id"]
           },
@@ -4658,6 +4714,13 @@ export type Database = {
             columns: ["projetista_id"]
             isOneToOne: false
             referencedRelation: "usuarios_publico"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orcamentos_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "pessoas"
             referencedColumns: ["id"]
           },
           {
@@ -5892,6 +5955,13 @@ export type Database = {
             foreignKeyName: "rh_funcionarios_usuario_id_fkey"
             columns: ["usuario_id"]
             isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rh_funcionarios_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
             referencedRelation: "usuarios"
             referencedColumns: ["id"]
           },
@@ -6498,6 +6568,13 @@ export type Database = {
             foreignKeyName: "usuario_lojas_usuario_id_fkey"
             columns: ["usuario_id"]
             isOneToOne: false
+            referencedRelation: "pessoas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuario_lojas_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
             referencedRelation: "usuarios"
             referencedColumns: ["id"]
           },
@@ -6506,60 +6583,6 @@ export type Database = {
             columns: ["usuario_id"]
             isOneToOne: false
             referencedRelation: "usuarios_publico"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      usuarios: {
-        Row: {
-          comissao_percentual: number | null
-          created_at: string
-          email: string | null
-          funcoes: string[] | null
-          funcoes_app_habilitadas: string[] | null
-          id: string
-          loja_id: string | null
-          nome: string
-          papel_comissao_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          comissao_percentual?: number | null
-          created_at?: string
-          email?: string | null
-          funcoes?: string[] | null
-          funcoes_app_habilitadas?: string[] | null
-          id: string
-          loja_id?: string | null
-          nome: string
-          papel_comissao_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          comissao_percentual?: number | null
-          created_at?: string
-          email?: string | null
-          funcoes?: string[] | null
-          funcoes_app_habilitadas?: string[] | null
-          id?: string
-          loja_id?: string | null
-          nome?: string
-          papel_comissao_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "usuarios_loja_id_fkey"
-            columns: ["loja_id"]
-            isOneToOne: false
-            referencedRelation: "lojas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "usuarios_papel_comissao_id_fkey"
-            columns: ["papel_comissao_id"]
-            isOneToOne: false
-            referencedRelation: "papeis_comissao"
             referencedColumns: ["id"]
           },
         ]
@@ -6607,23 +6630,86 @@ export type Database = {
       }
     }
     Views: {
+      usuarios: {
+        Row: {
+          comissao_percentual: number | null
+          created_at: string | null
+          email: string | null
+          funcoes: string[] | null
+          funcoes_app_habilitadas: string[] | null
+          id: string | null
+          loja_id: string | null
+          nome: string | null
+          papel_comissao_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          comissao_percentual?: number | null
+          created_at?: string | null
+          email?: string | null
+          funcoes?: string[] | null
+          funcoes_app_habilitadas?: string[] | null
+          id?: string | null
+          loja_id?: string | null
+          nome?: string | null
+          papel_comissao_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          comissao_percentual?: number | null
+          created_at?: string | null
+          email?: string | null
+          funcoes?: string[] | null
+          funcoes_app_habilitadas?: string[] | null
+          id?: string | null
+          loja_id?: string | null
+          nome?: string | null
+          papel_comissao_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pessoas_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pessoas_papel_comissao_id_fkey"
+            columns: ["papel_comissao_id"]
+            isOneToOne: false
+            referencedRelation: "papeis_comissao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usuarios_publico: {
         Row: {
+          ativo: boolean | null
+          auth_user_id: string | null
           created_at: string | null
+          email: string | null
           id: string | null
           loja_id: string | null
           nome: string | null
           updated_at: string | null
         }
         Insert: {
+          ativo?: boolean | null
+          auth_user_id?: string | null
           created_at?: string | null
+          email?: string | null
           id?: string | null
           loja_id?: string | null
           nome?: string | null
           updated_at?: string | null
         }
         Update: {
+          ativo?: boolean | null
+          auth_user_id?: string | null
           created_at?: string | null
+          email?: string | null
           id?: string | null
           loja_id?: string | null
           nome?: string | null
@@ -6631,7 +6717,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "usuarios_loja_id_fkey"
+            foreignKeyName: "pessoas_loja_id_fkey"
             columns: ["loja_id"]
             isOneToOne: false
             referencedRelation: "lojas"
