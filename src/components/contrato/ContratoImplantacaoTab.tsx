@@ -67,7 +67,7 @@ export function ContratoImplantacaoTab({ contratoId }: Props) {
           <div>
             <div className="text-xs text-slate-500">Custo estimado fábrica</div>
             <div className="text-lg font-semibold text-slate-900">
-              {formatBRL(Number(contrato?.valor_compra_estimado ?? 0))}
+              —
             </div>
           </div>
         </div>
