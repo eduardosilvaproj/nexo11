@@ -21,8 +21,11 @@ const DEFAULTS = {
   valor_medicao_dia: 200000,
 };
 
+function round(n: number) {
+  return Math.round(n * 100) / 100;
+}
+
 async function geocodeAndRoute(origem: string, destino: string) {
-  // Use Routes API computeRoutes with tolls
   const body = {
     origin: { address: origem },
     destination: { address: destino },
@@ -60,6 +63,71 @@ async function geocodeAndRoute(origem: string, destino: string) {
   return { distanciaKm, pedagio };
 }
 
+function calcular(distanciaKm: number, pedagioViagem: number, valorVenda: number, CFG: typeof DEFAULTS) {
+  const diasMontagem = Math.max(1, Math.ceil(valorVenda / Number(CFG.valor_montagem_dia)));
+
+  // Semanas seg-sex (5 dias úteis)
+  const semanasCompletas = Math.floor(diasMontagem / 5);
+  const diasRestantes = diasMontagem % 5;
+  // Fins de semana extras = uma viagem ida+volta extra por fim de semana intermediário
+  const finsDeSemana = diasRestantes > 0 ? semanasCompletas : Math.max(0, semanasCompletas - 1);
+  // Noites hospedadas = dias - fins de semana em casa (sai sexta, volta segunda)
+  const noitesHospedado = Math.max(1, diasMontagem - finsDeSemana * 2);
+
+  const custoIdaVolta = ((distanciaKm * 2) / Number(CFG.consumo_km_litro)) * Number(CFG.preco_gasolina);
+  const pedagioIdaVolta = pedagioViagem * 2;
+
+  // === MONTADORES ===
+  // Viagens: 1 inicial + (finsDeSemana * 1 volta+ida = 1 ida-volta) + 1 final = 2 + finsDeSemana viagens ida+volta
+  const totalViagensMontador = 1 + finsDeSemana + 1; // ida+volta count
+  const gasolinaMontador = totalViagensMontador * custoIdaVolta;
+  const pedagioMontador = totalViagensMontador * pedagioIdaVolta;
+  const hotelMontadores = noitesHospedado * Number(CFG.min_montadores) * Number(CFG.hotel_por_pessoa);
+  const refeicaoMontadores = noitesHospedado * Number(CFG.min_montadores) * Number(CFG.refeicao_montador_dia);
+  const subMontadores = gasolinaMontador + pedagioMontador + hotelMontadores + refeicaoMontadores;
+
+  // === MEDIDOR (bate-volta) ===
+  const subMedidor = custoIdaVolta + pedagioIdaVolta + Number(CFG.refeicao_medidor);
+
+  // === GERENTE (2 últimos dias, 1 noite) ===
+  const hotelGerente = 1 * Number(CFG.hotel_por_pessoa);
+  const refeicaoGerente = 2 * Number(CFG.refeicao_montador_dia);
+  const subGerente = custoIdaVolta + pedagioIdaVolta + hotelGerente + refeicaoGerente;
+
+  const custoTotal = subMontadores + subMedidor + subGerente;
+
+  return {
+    dias_montagem: diasMontagem,
+    semanas: semanasCompletas,
+    fins_de_semana_extras: finsDeSemana,
+    noites_hospedado: noitesHospedado,
+    detalhamento: {
+      montadores: {
+        viagens: totalViagensMontador,
+        gasolina: round(gasolinaMontador),
+        pedagio: round(pedagioMontador),
+        hotel: round(hotelMontadores),
+        refeicao: round(refeicaoMontadores),
+        subtotal: round(subMontadores),
+      },
+      medidor: {
+        gasolina: round(custoIdaVolta),
+        pedagio: round(pedagioIdaVolta),
+        refeicao: Number(CFG.refeicao_medidor),
+        subtotal: round(subMedidor),
+      },
+      gerente: {
+        gasolina: round(custoIdaVolta),
+        pedagio: round(pedagioIdaVolta),
+        hotel: round(hotelGerente),
+        refeicao: round(refeicaoGerente),
+        subtotal: round(subGerente),
+      },
+    },
+    custo_total: round(custoTotal),
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -87,23 +155,44 @@ Deno.serve(async (req) => {
       });
     }
 
-    const body = await req.json();
-    const { contrato_id } = body ?? {};
-    if (!contrato_id || typeof contrato_id !== "string") {
-      return new Response(JSON.stringify({ error: "contrato_id obrigatório" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const body = await req.json().catch(() => ({}));
+    const { contrato_id, cep_origem, cep_destino, origem: origemRaw, destino: destinoRaw, valor_venda, loja_id } = body ?? {};
 
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Load contrato + cliente + loja
+    // ============= SIMULATION MODE =============
+    if (!contrato_id) {
+      const origem = origemRaw || cep_origem;
+      const destino = destinoRaw || cep_destino;
+      if (!origem || !destino || !valor_venda) {
+        return new Response(
+          JSON.stringify({ error: "Para simulação, envie origem/cep_origem, destino/cep_destino e valor_venda" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      const { data: cfgRow } = loja_id
+        ? await admin.from("config_viagem").select("*").eq("loja_id", loja_id).maybeSingle()
+        : { data: null };
+      const CFG = { ...DEFAULTS, ...(cfgRow ?? {}) };
+      const { distanciaKm, pedagio } = await geocodeAndRoute(String(origem), String(destino));
+      const result = calcular(distanciaKm, pedagio, Number(valor_venda), CFG);
+      return new Response(
+        JSON.stringify({
+          simulacao: true,
+          distancia_km: round(distanciaKm),
+          pedagio_por_viagem: round(pedagio),
+          origem,
+          destino,
+          ...result,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // ============= CONTRATO MODE =============
     const { data: contrato, error: cErr } = await admin
       .from("contratos")
-      .select(
-        "id, loja_id, valor_venda, cliente_id, custo_viagem_override",
-      )
+      .select("id, loja_id, valor_venda, cliente_id, custo_viagem_override")
       .eq("id", contrato_id)
       .single();
     if (cErr || !contrato) throw new Error(cErr?.message || "Contrato não encontrado");
@@ -116,13 +205,9 @@ Deno.serve(async (req) => {
     }
 
     const [{ data: loja }, { data: cliente }, { data: cfgRow }] = await Promise.all([
-      admin.from("lojas").select("id, endereco, cidade, estado").eq("id", contrato.loja_id).maybeSingle(),
+      admin.from("lojas").select("id, endereco, cidade, estado, cep").eq("id", contrato.loja_id).maybeSingle(),
       contrato.cliente_id
-        ? admin
-            .from("clientes")
-            .select("endereco, cidade, estado, cep")
-            .eq("id", contrato.cliente_id)
-            .maybeSingle()
+        ? admin.from("clientes").select("endereco, cidade, estado, cep").eq("id", contrato.cliente_id).maybeSingle()
         : Promise.resolve({ data: null }),
       admin.from("config_viagem").select("*").eq("loja_id", contrato.loja_id).maybeSingle(),
     ]);
@@ -134,7 +219,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Same city → zera custo
     const sameCity =
       loja.cidade.trim().toLowerCase() === cliente.cidade.trim().toLowerCase() &&
       (loja.estado ?? "").trim().toLowerCase() === (cliente.estado ?? "").trim().toLowerCase();
@@ -155,67 +239,20 @@ Deno.serve(async (req) => {
       );
     }
 
-    const origem = [loja.endereco, loja.cidade, loja.estado].filter(Boolean).join(", ");
-    const destino = [cliente.endereco, cliente.cidade, cliente.estado, cliente.cep]
-      .filter(Boolean)
-      .join(", ");
+    const origem = [loja.endereco, loja.cidade, loja.estado, loja.cep].filter(Boolean).join(", ");
+    const destino = [cliente.endereco, cliente.cidade, cliente.estado, cliente.cep].filter(Boolean).join(", ");
 
     const { distanciaKm, pedagio } = await geocodeAndRoute(origem, destino);
-
     const CFG = { ...DEFAULTS, ...(cfgRow ?? {}) };
     const valorVenda = Number(contrato.valor_venda ?? 0);
-    const diasMontagem = Math.max(1, Math.ceil(valorVenda / Number(CFG.valor_montagem_dia)));
+    const result = calcular(distanciaKm, pedagio, valorVenda, CFG);
 
-    const gasolinaIda = (distanciaKm * 2) / Number(CFG.consumo_km_litro) * Number(CFG.preco_gasolina);
-
-    // MONTADORES
-    const gasolinaMontador = gasolinaIda;
-    const pedagioMontador = pedagio;
-    const hotelMontadores = diasMontagem * Number(CFG.min_montadores) * Number(CFG.hotel_por_pessoa);
-    const refeicaoMontadores =
-      diasMontagem * Number(CFG.min_montadores) * Number(CFG.refeicao_montador_dia);
-    const subMontadores = gasolinaMontador + pedagioMontador + hotelMontadores + refeicaoMontadores;
-
-    // MEDIDOR
-    const subMedidor = gasolinaIda + pedagio + Number(CFG.refeicao_medidor);
-
-    // GERENTE (2 dias, 1 noite)
-    const hotelGerente = 1 * Number(CFG.hotel_por_pessoa);
-    const refeicaoGerente = 2 * Number(CFG.refeicao_montador_dia);
-    const subGerente = gasolinaIda + pedagio + hotelGerente + refeicaoGerente;
-
-    const custoTotal = subMontadores + subMedidor + subGerente;
-
-    const detalhamento = {
-      montadores: {
-        gasolina: round(gasolinaMontador),
-        pedagio: round(pedagioMontador),
-        hotel: round(hotelMontadores),
-        refeicao: round(refeicaoMontadores),
-        subtotal: round(subMontadores),
-      },
-      medidor: {
-        gasolina: round(gasolinaIda),
-        pedagio: round(pedagio),
-        refeicao: Number(CFG.refeicao_medidor),
-        subtotal: round(subMedidor),
-      },
-      gerente: {
-        gasolina: round(gasolinaIda),
-        pedagio: round(pedagio),
-        hotel: round(hotelGerente),
-        refeicao: round(refeicaoGerente),
-        subtotal: round(subGerente),
-      },
-      dias_montagem: diasMontagem,
-      origem,
-      destino,
-    };
+    const detalhamento = { ...result.detalhamento, dias_montagem: result.dias_montagem, fins_de_semana_extras: result.fins_de_semana_extras, origem, destino };
 
     await admin
       .from("contratos")
       .update({
-        custo_viagem: round(custoTotal),
+        custo_viagem: result.custo_total,
         distancia_km: round(distanciaKm),
         custo_viagem_detalhamento: detalhamento,
         custo_viagem_calculado_em: new Date().toISOString(),
@@ -225,9 +262,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         distancia_km: round(distanciaKm),
-        dias_montagem: diasMontagem,
+        ...result,
         detalhamento,
-        custo_total: round(custoTotal),
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
@@ -239,7 +275,3 @@ Deno.serve(async (req) => {
     });
   }
 });
-
-function round(n: number) {
-  return Math.round(n * 100) / 100;
-}
