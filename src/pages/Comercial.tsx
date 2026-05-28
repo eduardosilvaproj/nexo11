@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   DndContext,
@@ -232,9 +232,23 @@ export default function Comercial() {
   const { perfil } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [formOpen, setFormOpen] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [tab, setTab] = useState<TabKey>("painel");
+
+  const initialTab: TabKey =
+    searchParams.get("tab") === "pipeline" || searchParams.get("tab") === "leads"
+      ? (searchParams.get("tab") as TabKey)
+      : "painel";
+  const [tab, setTab] = useState<TabKey>(initialTab);
+
+  const setTabSync = useCallback(
+    (next: TabKey) => {
+      setTab(next);
+      setSearchParams({ tab: next });
+    },
+    [setSearchParams]
+  );
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
@@ -328,9 +342,9 @@ export default function Comercial() {
         ] as { key: TabKey; label: string }[]).map((t) => {
           const active = tab === t.key;
           return (
-            <button
+          <button
               key={t.key}
-              onClick={() => setTab(t.key)}
+              onClick={() => setTabSync(t.key)}
               className="-mb-px pb-2 pt-1 transition-colors whitespace-nowrap"
               style={{
                 fontSize: 14,
@@ -345,7 +359,7 @@ export default function Comercial() {
         })}
       </div>
 
-      {tab === "painel" && <PainelComercial onSelectLead={() => setTab("pipeline")} />}
+      {tab === "painel" && <PainelComercial onSelectLead={() => setTabSync("pipeline")} />}
 
       {tab === "leads" && <LeadsTable />}
 
