@@ -1695,6 +1695,59 @@ export type Database = {
           },
         ]
       }
+      config_viagem: {
+        Row: {
+          consumo_km_litro: number
+          created_at: string
+          hotel_por_pessoa: number
+          id: string
+          loja_id: string | null
+          min_montadores: number
+          preco_gasolina: number
+          refeicao_medidor: number
+          refeicao_montador_dia: number
+          updated_at: string
+          valor_medicao_dia: number
+          valor_montagem_dia: number
+        }
+        Insert: {
+          consumo_km_litro?: number
+          created_at?: string
+          hotel_por_pessoa?: number
+          id?: string
+          loja_id?: string | null
+          min_montadores?: number
+          preco_gasolina?: number
+          refeicao_medidor?: number
+          refeicao_montador_dia?: number
+          updated_at?: string
+          valor_medicao_dia?: number
+          valor_montagem_dia?: number
+        }
+        Update: {
+          consumo_km_litro?: number
+          created_at?: string
+          hotel_por_pessoa?: number
+          id?: string
+          loja_id?: string | null
+          min_montadores?: number
+          preco_gasolina?: number
+          refeicao_medidor?: number
+          refeicao_montador_dia?: number
+          updated_at?: string
+          valor_medicao_dia?: number
+          valor_montagem_dia?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "config_viagem_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: true
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contract_messages: {
         Row: {
           contract_id: string
@@ -2108,9 +2161,14 @@ export type Database = {
           conferencia_responsavel_id: string | null
           contrato_gerado: boolean
           created_at: string
+          custo_viagem: number | null
+          custo_viagem_calculado_em: string | null
+          custo_viagem_detalhamento: Json | null
+          custo_viagem_override: boolean
           data_assinatura: string | null
           data_criacao: string
           data_finalizacao: string | null
+          distancia_km: number | null
           id: string
           loja_id: string
           medicao_responsavel_id: string | null
@@ -2148,9 +2206,14 @@ export type Database = {
           conferencia_responsavel_id?: string | null
           contrato_gerado?: boolean
           created_at?: string
+          custo_viagem?: number | null
+          custo_viagem_calculado_em?: string | null
+          custo_viagem_detalhamento?: Json | null
+          custo_viagem_override?: boolean
           data_assinatura?: string | null
           data_criacao?: string
           data_finalizacao?: string | null
+          distancia_km?: number | null
           id?: string
           loja_id: string
           medicao_responsavel_id?: string | null
@@ -2188,9 +2251,14 @@ export type Database = {
           conferencia_responsavel_id?: string | null
           contrato_gerado?: boolean
           created_at?: string
+          custo_viagem?: number | null
+          custo_viagem_calculado_em?: string | null
+          custo_viagem_detalhamento?: Json | null
+          custo_viagem_override?: boolean
           data_assinatura?: string | null
           data_criacao?: string
           data_finalizacao?: string | null
+          distancia_km?: number | null
           id?: string
           loja_id?: string
           medicao_responsavel_id?: string | null
