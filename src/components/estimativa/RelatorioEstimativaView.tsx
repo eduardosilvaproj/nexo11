@@ -435,9 +435,9 @@ export const RelatorioEstimativaView = ({ relatorio }: RelatorioEstimativaViewPr
         };
       });
 
-    const total_minimo = estimativasFiltradas.reduce((s, e) => s + e.preco_minimo, 0) * 1.4;
-    const total_maximo = estimativasFiltradas.reduce((s, e) => s + e.preco_maximo, 0) * 1.2;
-    const total_medio = estimativasFiltradas.reduce((s, e) => s + e.preco_medio, 0) * 1.1;
+    const total_minimo = estimativasFiltradas.reduce((s, e) => s + e.preco_minimo, 0);
+    const total_maximo = estimativasFiltradas.reduce((s, e) => s + e.preco_maximo, 0);
+    const total_medio = estimativasFiltradas.reduce((s, e) => s + e.preco_medio, 0);
     return {
       ...relatorio,
       moveis: moveisFiltrados,

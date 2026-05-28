@@ -224,9 +224,9 @@ export const useEstimativaPDF = () => {
         };
       });
 
-      const total_minimo = estimativas.reduce((s, e) => s + e.preco_minimo, 0) * 1.4;
-      const total_maximo = estimativas.reduce((s, e) => s + e.preco_maximo, 0) * 1.2;
-      const total_medio = estimativas.reduce((s, e) => s + e.preco_medio, 0) * 1.1;
+      const total_minimo = estimativas.reduce((s, e) => s + e.preco_minimo, 0);
+      const total_maximo = estimativas.reduce((s, e) => s + e.preco_maximo, 0);
+      const total_medio = estimativas.reduce((s, e) => s + e.preco_medio, 0);
 
       const comparacao_orcamento = contexto.orcamento_cliente && contexto.orcamento_cliente > 0
         ? {
