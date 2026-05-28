@@ -29,6 +29,9 @@ import { ContratoComunicacoesTab } from "@/components/contrato/ContratoComunicac
 import { ContratoSatisfacaoTab } from "@/components/contrato/ContratoSatisfacaoTab";
 import { ContratoImplantacaoTab } from "@/components/contrato/ContratoImplantacaoTab";
 import { ContratoEntradaTab } from "@/components/contrato/ContratoEntradaTab";
+import { ChecklistMedicaoCard } from "@/components/contrato/ChecklistMedicaoCard";
+import { ChecklistConferenciaCard } from "@/components/contrato/ChecklistConferenciaCard";
+import { ChecklistImplantacaoCard } from "@/components/contrato/ChecklistImplantacaoCard";
 
 
 const STAGE_TO_TAB: Record<string, ContratoTabKey> = {
