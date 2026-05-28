@@ -74,9 +74,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // Busca dados básicos do usuário
       const { data: userData, error: userError } = await supabase
-        .from('usuarios')
+        .from('pessoas')
         .select('id, nome, loja_id')
-        .eq('id', userId)
+        .eq('auth_user_id', userId)
         .maybeSingle();
 
       if (userError) throw userError;
