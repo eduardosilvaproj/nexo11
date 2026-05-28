@@ -133,7 +133,7 @@ export function ChecklistComercialCard({ contratoId, contrato, ambientes, loja, 
 
   const saveChecklist = async (patch: Partial<ChecklistJson>) => {
     const merged = { ...checklist, ...patch };
-    const { error } = await supabase.from("contratos").update({ checklist_comercial: merged }).eq("id", contratoId);
+    const { error } = await supabase.from("contratos").update({ checklist_comercial: merged } as any).eq("id", contratoId);
     if (error) { toast.error(error.message); return; }
     qc.invalidateQueries({ queryKey: ["contrato", contratoId] });
   };
