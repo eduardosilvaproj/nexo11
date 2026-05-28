@@ -98,9 +98,9 @@ app.post("/equipe-invite-member", async (c) => {
 
   // Caller's loja
   const { data: callerRow, error: callerRowErr } = await callerClient
-    .from("usuarios")
+    .from("pessoas")
     .select("loja_id")
-    .eq("id", callerId)
+    .eq("auth_user_id", callerId)
     .maybeSingle();
   if (callerRowErr || !callerRow?.loja_id) {
     return new Response(
