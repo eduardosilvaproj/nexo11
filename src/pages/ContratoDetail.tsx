@@ -443,6 +443,9 @@ export default function ContratoDetail() {
               <ContratoLogisticaTab contratoId={contrato.id} />
             ) : active === "montagem" ? (
               <ContratoMontagemTab contratoId={contrato.id} lojaId={contrato.loja_id} />
+            ) : active === "ambientes" ? (
+              <ContratoAmbientesTab contratoId={contrato.id} contratoLojaId={contrato.loja_id} />
+            ) : active === "pos_venda" ? (
               <ContratoPosVendaTab contratoId={contrato.id} />
             ) : active === "dre" ? (
               <ContratoDreTab
