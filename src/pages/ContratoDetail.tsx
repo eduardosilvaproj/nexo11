@@ -429,15 +429,20 @@ export default function ContratoDetail() {
               />
             ) : active === "tecnico" ? (
               <ContratoTecnicoTab contratoId={contrato.id} />
+            ) : active === "medicao" ? (
+              <ContratoTecnicoTab contratoId={contrato.id} />
+            ) : active === "conferencia" ? (
+              <ContratoTecnicoTab contratoId={contrato.id} />
+            ) : active === "implantacao" ? (
+              <ContratoImplantacaoTab contratoId={contrato.id} />
             ) : active === "producao" ? (
               <ContratoProducaoTab contratoId={contrato.id} />
+            ) : active === "entrada" ? (
+              <ContratoEntradaTab contratoId={contrato.id} />
             ) : active === "logistica" ? (
               <ContratoLogisticaTab contratoId={contrato.id} />
             ) : active === "montagem" ? (
               <ContratoMontagemTab contratoId={contrato.id} lojaId={contrato.loja_id} />
-            ) : active === "ambientes" ? (
-              <ContratoAmbientesTab contratoId={contrato.id} contratoLojaId={contrato.loja_id} />
-            ) : active === "pos_venda" ? (
               <ContratoPosVendaTab contratoId={contrato.id} />
             ) : active === "dre" ? (
               <ContratoDreTab
