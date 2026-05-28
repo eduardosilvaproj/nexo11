@@ -70,7 +70,7 @@ const Field = ({ label, value }: { label: string; value: React.ReactNode }) => (
   </div>
 );
 
-export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos }: ComercialTabProps) {
+export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos, onAvancar }: ComercialTabProps) {
   const qc = useQueryClient();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
