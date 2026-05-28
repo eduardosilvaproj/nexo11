@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, MapPin } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, MapPin, Printer, FileDown } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { RelatorioViagem } from "./RelatorioViagem";
 
 interface Props {
   open: boolean;
@@ -13,15 +15,21 @@ interface Props {
   origemPadrao?: string;
 }
 
-const brl = (n: number) =>
-  (Number(n) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
 export function SimuladorViagemDialog({ open, onOpenChange, origemPadrao }: Props) {
   const [origem, setOrigem] = useState(origemPadrao ?? "");
   const [destino, setDestino] = useState("");
   const [valor, setValor] = useState("");
+  const [qtdMontadores, setQtdMontadores] = useState("2");
+  const [qtdVeiculos, setQtdVeiculos] = useState("1");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const reportRef = useRef<HTMLDivElement>(null);
+
+  function onMontadoresChange(v: string) {
+    setQtdMontadores(v);
+    const n = Number(v);
+    setQtdVeiculos(String(Math.max(1, Math.ceil(n / 2))));
+  }
 
   async function calcular() {
     if (!origem || !destino || !valor) {
@@ -32,7 +40,13 @@ export function SimuladorViagemDialog({ open, onOpenChange, origemPadrao }: Prop
     setResult(null);
     try {
       const { data, error } = await supabase.functions.invoke("calcular-viagem", {
-        body: { origem, destino, valor_venda: Number(valor) },
+        body: {
+          origem,
+          destino,
+          valor_venda: Number(valor),
+          qtd_montadores: Number(qtdMontadores),
+          qtd_veiculos: Number(qtdVeiculos),
+        },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -44,9 +58,38 @@ export function SimuladorViagemDialog({ open, onOpenChange, origemPadrao }: Prop
     }
   }
 
+  function imprimir() {
+    const html = reportRef.current?.outerHTML;
+    if (!html) return;
+    const w = window.open("", "_blank", "width=900,height=1200");
+    if (!w) return;
+    w.document.write(`
+      <html><head><title>Simulação de Viagem - NEXO</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <style>
+        body{font-family:-apple-system,system-ui,sans-serif;padding:32px;color:#0f172a}
+        .header{border-bottom:2px solid #0f172a;padding-bottom:12px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+        .logo{font-size:22px;font-weight:800;letter-spacing:-0.02em}
+        .date{font-size:12px;color:#64748b}
+        .footer{margin-top:32px;padding-top:12px;border-top:1px solid #e2e8f0;font-size:11px;color:#64748b;text-align:center}
+        @media print { .no-print{display:none} }
+      </style>
+      </head><body>
+        <div class="header">
+          <div class="logo">NEXO</div>
+          <div class="date">Simulação · ${new Date().toLocaleString("pt-BR")}</div>
+        </div>
+        ${html}
+        <div class="footer">Simulação informativa — valores podem variar conforme condições reais da operação.</div>
+      </body></html>
+    `);
+    w.document.close();
+    setTimeout(() => w.print(), 500);
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MapPin className="h-4 w-4" /> Simulador de custo de viagem
@@ -63,12 +106,28 @@ export function SimuladorViagemDialog({ open, onOpenChange, origemPadrao }: Prop
             <Input value={destino} onChange={(e) => setDestino(e.target.value)} placeholder="Ex: 13560-000" />
           </div>
           <div>
-            <Label>Valor estimado da venda (R$)</Label>
+            <Label>Valor da venda (R$)</Label>
+            <Input type="number" value={valor} onChange={(e) => setValor(e.target.value)} placeholder="50000" />
+          </div>
+          <div>
+            <Label>Qtd. montadores</Label>
+            <Select value={qtdMontadores} onValueChange={onMontadoresChange}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {[2, 3, 4, 5, 6].map((n) => (
+                  <SelectItem key={n} value={String(n)}>{n} montadores</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Qtd. veículos</Label>
             <Input
               type="number"
-              value={valor}
-              onChange={(e) => setValor(e.target.value)}
-              placeholder="50000"
+              min={1}
+              max={6}
+              value={qtdVeiculos}
+              onChange={(e) => setQtdVeiculos(e.target.value)}
             />
           </div>
         </div>
@@ -79,51 +138,23 @@ export function SimuladorViagemDialog({ open, onOpenChange, origemPadrao }: Prop
         </Button>
 
         {result && (
-          <div className="space-y-3 mt-2 border-t pt-4">
-            <div className="flex items-baseline justify-between">
-              <span className="text-sm text-muted-foreground">Custo total estimado</span>
-              <span className="text-2xl font-bold">{brl(result.custo_total)}</span>
+          <>
+            <RelatorioViagem
+              ref={reportRef}
+              result={result}
+              origem={origem}
+              destino={destino}
+              valorVenda={Number(valor)}
+            />
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={imprimir}>
+                <Printer className="h-4 w-4 mr-2" /> Imprimir
+              </Button>
+              <Button variant="outline" className="flex-1" onClick={imprimir}>
+                <FileDown className="h-4 w-4 mr-2" /> Exportar PDF
+              </Button>
             </div>
-            <div className="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
-              <div>Distância: <b>{result.distancia_km} km</b></div>
-              <div>Dias montagem: <b>{result.dias_montagem}</b></div>
-              <div>Fins de semana extras: <b>{result.fins_de_semana_extras ?? 0}</b></div>
-            </div>
-
-            <div className="rounded-md border overflow-hidden text-sm">
-              <table className="w-full">
-                <thead className="bg-muted/50">
-                  <tr>
-                    <th className="text-left p-2">Pessoa</th>
-                    <th className="text-right p-2">Gasolina</th>
-                    <th className="text-right p-2">Pedágio</th>
-                    <th className="text-right p-2">Hotel</th>
-                    <th className="text-right p-2">Refeição</th>
-                    <th className="text-right p-2">Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(["montadores", "medidor", "gerente"] as const).map((k) => {
-                    const d = result.detalhamento?.[k];
-                    if (!d) return null;
-                    return (
-                      <tr key={k} className="border-t">
-                        <td className="p-2 capitalize">{k}</td>
-                        <td className="text-right p-2">{brl(d.gasolina)}</td>
-                        <td className="text-right p-2">{brl(d.pedagio)}</td>
-                        <td className="text-right p-2">{d.hotel != null ? brl(d.hotel) : "—"}</td>
-                        <td className="text-right p-2">{brl(d.refeicao)}</td>
-                        <td className="text-right p-2 font-medium">{brl(d.subtotal)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Simulação informativa — não salva no contrato.
-            </p>
-          </div>
+          </>
         )}
       </DialogContent>
     </Dialog>
