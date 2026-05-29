@@ -85,6 +85,7 @@ const gestao: MenuItem[] = [
   { title: "Almoxarifado", url: "/almoxarifado", icon: Package, roles: ["admin", "gerente", "almoxarife", "comprador", "franqueador", "admin_master"] },
   { title: "Equipe", url: "/equipe", icon: UserCog, roles: ["admin", "gerente", "admin_master"] },
   { title: "RH / Pessoas", url: "/rh", icon: Briefcase, roles: ["admin", "gerente", "rh", "franqueador", "admin_master"] },
+  { title: "Frota", url: "/frota", icon: Truck, roles: ["admin", "gerente", "logistico", "franqueador", "admin_master"] },
   { title: "Lojas", url: "/lojas", icon: Building2, roles: ["admin", "franqueador", "admin_master"] },
   { title: "Cond. Pagamento", url: "/configuracoes/pagamento", icon: Settings, roles: ["admin", "gerente", "admin_master"] },
   { title: "Fornecedores", url: "/configuracoes/fornecedores", icon: Factory, roles: ["admin", "gerente", "admin_master"] },
