@@ -229,6 +229,21 @@ const App = () => (
                   <IndicadoresOperacionais />
                 </ProtectedRoute>
               } />
+              <Route path="/frota" element={
+                <ProtectedRoute roles={["admin","admin_master","gerente","logistico","franqueador"]}>
+                  <FrotaLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<FrotaDashboard />} />
+                <Route path="veiculos" element={<FrotaVeiculos />} />
+                <Route path="abastecimentos" element={<FrotaAbastecimentos />} />
+                <Route path="manutencoes" element={<FrotaManutencoes />} />
+                <Route path="multas" element={<FrotaMultas />} />
+                <Route path="postos" element={<FrotaPostos />} />
+                <Route path="cnh" element={<FrotaCnh />} />
+                <Route path="relatorios" element={<FrotaRelatorios />} />
+              </Route>
+              <Route path="/frota/checkin" element={<ProtectedRoute><FrotaCheckin /></ProtectedRoute>} />
               <Route path="/lojas" element={
                 <ProtectedRoute roles={["admin","franqueador","admin_master"]} redirectTo="/" redirectMessage="Acesso restrito">
                   <Lojas />
