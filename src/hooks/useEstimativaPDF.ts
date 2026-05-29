@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { RelatorioEstimativa, MovelIdentificado, DadosProjeto } from '@/types/estimativa';
+import type { RelatorioEstimativa, MovelIdentificado, DadosProjeto, ContextoEstimativa } from '@/types/estimativa';
 
 export const useEstimativaPDF = () => {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const analisarPDF = async (file: File): Promise<RelatorioEstimativa | null> => {
+  const analisarPDF = async (file: File, _contexto?: ContextoEstimativa): Promise<RelatorioEstimativa | null> => {
     setLoading(true);
     setError(null);
 

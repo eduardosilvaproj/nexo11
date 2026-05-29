@@ -91,14 +91,6 @@ function useIsMobileView() {
   return isMobile;
 }
 
-// Wrapper that chooses AppLayout (desktop) vs AppShellMobile (mobile)
-function AppShellWrapper({ children }: { children: React.ReactNode }) {
-  const isMobile = useIsMobileView();
-  if (isMobile) {
-    return <AppShellMobile>{children}</AppShellMobile>;
-  }
-  return <>{children}</>;
-}
 
 // Root layout switcher at route level
 function RootLayoutSwitcher() {

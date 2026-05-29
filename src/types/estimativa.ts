@@ -58,3 +58,11 @@ export interface TabelaPrecoBase {
   preco_m3_min?: number;
   preco_m3_max?: number;
 }
+
+export type TipoProjeto = 'residencial' | 'comercial' | 'corporativo' | string;
+
+export interface ContextoEstimativa {
+  tipo_projeto?: TipoProjeto;
+  orcamento_cliente?: number;
+  observacoes?: string;
+}
