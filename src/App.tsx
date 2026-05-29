@@ -43,6 +43,16 @@ import Execucao from "./pages/Execucao";
 import IndicadoresOperacionais from "./pages/IndicadoresOperacionais";
 import Automacoes from "./pages/Automacoes";
 import CentralComunicacao from "./pages/CentralComunicacao";
+import FrotaLayout from "./pages/frota/FrotaLayout";
+import FrotaDashboard from "./pages/frota/FrotaDashboard";
+import FrotaVeiculos from "./pages/frota/FrotaVeiculos";
+import FrotaAbastecimentos from "./pages/frota/FrotaAbastecimentos";
+import FrotaManutencoes from "./pages/frota/FrotaManutencoes";
+import FrotaMultas from "./pages/frota/FrotaMultas";
+import FrotaPostos from "./pages/frota/FrotaPostos";
+import FrotaCnh from "./pages/frota/FrotaCnh";
+import FrotaRelatorios from "./pages/frota/FrotaRelatorios";
+import FrotaCheckin from "./pages/frota/FrotaCheckin";
 
 import AcompanhamentoCriacao from "./pages/AcompanhamentoCriacao";
 import AcessoAcompanhamento from "./pages/AcessoAcompanhamento";
