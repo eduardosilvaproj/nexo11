@@ -38,7 +38,7 @@ export function AmbientesMontagemList() {
     queryKey: ["montadores-filtro"],
     queryFn: async () => {
       const { data } = await sb
-        .from("tecnicos_montadores")
+        .from("pessoas")
         .select("id, nome")
         .contains("funcoes", ["montador"])
         .eq("ativo", true)
@@ -54,7 +54,7 @@ export function AmbientesMontagemList() {
       const { data, error } = await sb
         .from("contrato_ambientes")
         .select(
-          "id, nome, valor_montador, status_montagem, data_montagem, montador_id, contrato_id, contratos:contrato_id(id, cliente_nome), tecnicos_montadores:montador_id(nome)",
+          "id, nome, valor_montador, status_montagem, data_montagem, montador_id, contrato_id, contratos:contrato_id(id, cliente_nome), pessoas:montador_id(nome)",
         )
         .neq("status_montagem", "pago")
         .order("data_montagem", { ascending: true, nullsFirst: false });
@@ -199,7 +199,7 @@ export function AmbientesMontagemList() {
                       {a.nome}
                     </td>
                     <td className="px-3 py-2 text-sm" style={{ color: "#0D1117" }}>
-                      {a.tecnicos_montadores?.nome ?? "—"}
+                      {a.pessoas?.nome ?? "—"}
                     </td>
                     <td className="px-3 py-2 text-sm" style={{ color: "#0D1117", whiteSpace: "nowrap" }}>
                       {data}

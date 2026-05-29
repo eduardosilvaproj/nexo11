@@ -113,7 +113,7 @@ export function ContratoMedicaoAmbientesSection({
     enabled: !!lojaId,
     queryFn: async () => {
       const { data, error } = await sb
-        .from("tecnicos_montadores")
+        .from("pessoas")
         .select("id, nome, percentual_padrao, ativo, funcoes")
         .eq("loja_id", lojaId)
         .contains("funcoes", [funcao])

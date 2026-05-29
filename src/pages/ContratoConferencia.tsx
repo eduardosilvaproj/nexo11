@@ -121,7 +121,7 @@ export default function ContratoConferenciaPage() {
     enabled: !!contrato?.loja_id,
     queryFn: async () => {
       const { data } = await supabase
-        .from("usuarios")
+        .from("pessoas")
         .select("id, nome")
         .contains("funcoes", ["conferente"])
         .order("nome");

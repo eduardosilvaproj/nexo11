@@ -96,7 +96,7 @@ export function ContratoMontagemTab({ contratoId, lojaId }: MontagemTabProps) {
 
   const { data: usuarios = [] } = useQuery({
     queryKey: ["usuarios-min"],
-    queryFn: async () => (await supabase.from("usuarios").select("id, nome")).data ?? [],
+    queryFn: async () => (await supabase.from("pessoas").select("id, nome")).data ?? [],
   });
 
   const { data: equipes = [] } = useQuery({

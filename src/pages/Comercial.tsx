@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   DndContext,
@@ -18,12 +18,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 import { LeadFormDialog } from "@/components/comercial/LeadFormDialog";
-import { PainelComercial } from "@/components/comercial/PainelComercial";
+import { PainelDoDia } from "@/components/comercial/PainelDoDia";
 import { LeadsTable } from "@/components/comercial/LeadsTable";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { UploadPDFEstimativa } from "@/components/estimativa/UploadPDFEstimativa";
-import { RelatorioEstimativaView } from "@/components/estimativa/RelatorioEstimativaView";
-import type { RelatorioEstimativa } from "@/types/estimativa";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { UploadPDFEstimativa } from '@/components/estimativa/UploadPDFEstimativa';
+import { RelatorioEstimativaView } from '@/components/estimativa/RelatorioEstimativaView';
+import type { RelatorioEstimativa } from '@/types/estimativa';
 import type { Database } from "@/integrations/supabase/types";
 
 type LeadStatus = Database["public"]["Enums"]["lead_status"];
@@ -232,29 +232,18 @@ export default function Comercial() {
   const { perfil } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [formOpen, setFormOpen] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
-
-  const initialTab: TabKey =
-    searchParams.get("tab") === "pipeline" || searchParams.get("tab") === "leads"
-      ? (searchParams.get("tab") as TabKey)
-      : "painel";
-  const [tab, setTab] = useState<TabKey>(initialTab);
-
-  const setTabSync = useCallback(
-    (next: TabKey) => {
-      setTab(next);
-      setSearchParams({ tab: next });
-    },
-    [setSearchParams]
-  );
+  const [tab, setTab] = useState<TabKey>("painel");
+  const [filterStatus, setFilterStatus] = useState<"all" | LeadStatus>("all");
+  const [filterVendedor, setFilterVendedor] = useState<string>("all");
+  const [search, setSearch] = useState("");
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ["leads", perfil?.loja_id],
-    enabled: !!perfil?.loja_id && tab === "pipeline",
+    enabled: !!perfil?.loja_id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("leads")
@@ -287,8 +276,6 @@ export default function Comercial() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["leads", perfil?.loja_id] });
-      queryClient.invalidateQueries({ queryKey: ["leads-painel", perfil?.loja_id] });
-      queryClient.invalidateQueries({ queryKey: ["leads-tabela", perfil?.loja_id] });
     },
   });
 
@@ -306,34 +293,51 @@ export default function Comercial() {
 
   const activeLead = activeId ? leads.find((l) => l.id === activeId) : null;
 
+  const filteredLeads = leads.filter((l) => {
+    if (filterStatus !== "all" && l.status !== filterStatus) return false;
+    if (filterVendedor !== "all" && l.vendedor_id !== filterVendedor) return false;
+    if (search.trim() && !l.nome.toLowerCase().includes(search.trim().toLowerCase())) return false;
+    return true;
+  });
+
+  const vendedoresUnicos = Array.from(
+    new Set(leads.map((l) => l.vendedor_id).filter(Boolean) as string[]),
+  );
+
   const grouped = COLUMNS.map((c) => ({
     ...c,
-    leads: leads.filter((l) => l.status === c.id),
+    leads: filteredLeads.filter((l) => l.status === c.id),
   }));
 
-  const titulos: Record<TabKey, { t: string; s: string }> = {
-    painel: { t: "Painel comercial", s: "Visão do dia e prioridades" },
-    pipeline: { t: "Pipeline", s: "Funil de leads — arraste para mover" },
-    leads: { t: "Leads", s: "Todos os leads da loja" },
+  const TAB_TITLES: Record<TabKey, { title: string; subtitle: string }> = {
+    painel: { title: "Comercial", subtitle: "Visão geral do dia" },
+    pipeline: { title: "Pipeline", subtitle: "Kanban de leads" },
+    leads: { title: "Leads", subtitle: "Todos os leads" },
   };
 
   return (
     <div className="flex h-full flex-col gap-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 style={{ fontSize: 18, fontWeight: 500, color: "#0D1117" }}>{titulos[tab].t}</h1>
-          <p className="mt-0.5" style={{ fontSize: 13, color: "#6B7A90" }}>{titulos[tab].s}</p>
+          <h1 style={{ fontSize: 18, fontWeight: 500, color: "#0D1117" }}>
+            {TAB_TITLES[tab].title}
+          </h1>
+          <p className="mt-0.5" style={{ fontSize: 13, color: "#6B7A90" }}>
+            {TAB_TITLES[tab].subtitle}
+          </p>
         </div>
-        <button
-          onClick={() => setFormOpen(true)}
-          className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 px-4 py-2 text-white transition-colors hover:bg-[#1759A0]"
-          style={{ background: "#1E6FBF", borderRadius: 8, fontSize: 13, fontWeight: 500 }}
-        >
-          <Plus className="h-4 w-4" /> Novo lead
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setFormOpen(true)}
+            className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 px-4 py-2 text-white transition-colors hover:bg-[#1759A0]"
+            style={{ background: "#1E6FBF", borderRadius: 8, fontSize: 13, fontWeight: 500 }}
+          >
+            <Plus className="h-4 w-4" /> Novo lead
+          </button>
+        </div>
       </div>
 
-      {/* Abas */}
+      {/* Tabs */}
       <div className="flex items-center gap-6 border-b border-[#E8ECF2] overflow-x-auto no-scrollbar">
         {([
           { key: "painel", label: "Painel" },
@@ -342,9 +346,9 @@ export default function Comercial() {
         ] as { key: TabKey; label: string }[]).map((t) => {
           const active = tab === t.key;
           return (
-          <button
+            <button
               key={t.key}
-              onClick={() => setTabSync(t.key)}
+              onClick={() => setTab(t.key)}
               className="-mb-px pb-2 pt-1 transition-colors whitespace-nowrap"
               style={{
                 fontSize: 14,
@@ -359,40 +363,106 @@ export default function Comercial() {
         })}
       </div>
 
-      {tab === "painel" && <PainelComercial onSelectLead={() => setTabSync("pipeline")} />}
+      {/* Tab Content */}
+      {tab === "painel" && <PainelDoDia />}
 
       {tab === "leads" && <LeadsTable />}
 
       {tab === "pipeline" && (
-        isLoading ? (
-          <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-            Carregando leads...
-          </div>
-        ) : (
-          <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-            <div className="flex flex-1 gap-3 overflow-x-auto pb-2">
-              {grouped.map((col) => (
-                <Column
-                  key={col.id}
-                  status={col.id}
-                  title={col.title}
-                  leads={col.leads}
-                  onConvert={(lead) => navigate(`/contratos/novo?leadId=${lead.id}`)}
-                />
+        <>
+          {/* Pipeline Filters */}
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value as "all" | LeadStatus)}
+              style={{
+                height: 36,
+                borderRadius: 8,
+                border: "1px solid #E8ECF2",
+                padding: "0 10px",
+                fontSize: 13,
+                color: "#0D1117",
+                background: "#FFFFFF",
+                outline: "none",
+              }}
+            >
+              <option value="all">Todas as etapas</option>
+              {COLUMNS.map((c) => (
+                <option key={c.id} value={c.id}>{c.title}</option>
               ))}
+            </select>
+
+            <select
+              value={filterVendedor}
+              onChange={(e) => setFilterVendedor(e.target.value)}
+              style={{
+                height: 36,
+                borderRadius: 8,
+                border: "1px solid #E8ECF2",
+                padding: "0 10px",
+                fontSize: 13,
+                color: "#0D1117",
+                background: "#FFFFFF",
+                outline: "none",
+              }}
+            >
+              <option value="all">Todos os vendedores</option>
+              {vendedoresUnicos.map((v) => (
+                <option key={v} value={v}>{v.slice(0, 8)}</option>
+              ))}
+            </select>
+
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por cliente..."
+              maxLength={80}
+              style={{
+                height: 36,
+                borderRadius: 8,
+                border: "1px solid #E8ECF2",
+                padding: "0 10px",
+                fontSize: 13,
+                color: "#0D1117",
+                background: "#FFFFFF",
+                outline: "none",
+                minWidth: 220,
+                flex: 1,
+              }}
+            />
+          </div>
+
+          {isLoading ? (
+            <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
+              Carregando leads...
             </div>
-            <DragOverlay>
-              {activeLead && (
-                <Card className="w-[260px] cursor-grabbing border-nexo-blue bg-card p-3 shadow-lg">
-                  <p className="text-sm font-semibold">{activeLead.nome}</p>
-                  {activeLead.contato && (
-                    <p className="mt-0.5 text-xs text-muted-foreground">{activeLead.contato}</p>
-                  )}
-                </Card>
-              )}
-            </DragOverlay>
-          </DndContext>
-        )
+          ) : (
+            <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+              <div className="flex flex-1 gap-3 overflow-x-auto pb-2">
+                {grouped.map((col) => (
+                  <Column
+                    key={col.id}
+                    status={col.id}
+                    title={col.title}
+                    leads={col.leads}
+                    onConvert={(lead) => navigate(`/contratos/novo?leadId=${lead.id}`)}
+                  />
+                ))}
+              </div>
+              <DragOverlay>
+                {activeLead && (
+                  <Card className="w-[260px] cursor-grabbing border-nexo-blue bg-card p-3 shadow-lg">
+                    <p className="text-sm font-semibold">{activeLead.nome}</p>
+                    {activeLead.contato && (
+                      <p className="mt-0.5 text-xs text-muted-foreground">{activeLead.contato}</p>
+                    )}
+                  </Card>
+                )}
+              </DragOverlay>
+            </DndContext>
+          )}
+        </>
       )}
 
       <LeadFormDialog open={formOpen} onOpenChange={setFormOpen} />

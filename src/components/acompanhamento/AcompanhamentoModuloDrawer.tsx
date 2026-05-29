@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ExternalLink, Save, CheckCircle2, XCircle } from "lucide-react";
+import { ExternalLink, Save, CheckCircle2 } from "lucide-react";
 
 interface AcompanhamentoModuloDrawerProps {
   modulo: any;
@@ -106,17 +106,17 @@ export default function AcompanhamentoModuloDrawer({ modulo, isOpen, onClose, on
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="w-[100vw] sm:max-w-[600px] overflow-y-auto bg-[#0a0e1a] border-white/5 text-white">
-        <SheetHeader className="pb-6 border-b border-white/5">
-          <div className="flex justify-between items-start">
-            <div>
-              <Badge variant="outline" className="mb-2 bg-white/5 border-white/10 text-muted-foreground uppercase">{formData.area}</Badge>
-              <SheetTitle className="text-2xl font-bold text-white">{formData.nome}</SheetTitle>
+      <SheetContent className="w-[100vw] overflow-y-auto border-slate-200 bg-slate-50 text-slate-950 sm:max-w-[640px]">
+        <SheetHeader className="border-b border-slate-200 pb-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 space-y-2">
+              <Badge variant="outline" className="rounded-full border-slate-200 bg-white text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">{formData.area}</Badge>
+              <SheetTitle className="text-2xl font-black leading-tight text-slate-950">{formData.nome}</SheetTitle>
             </div>
-            <Button 
-              variant={formData.aprovado ? "default" : "outline"} 
-              size="sm" 
-              className={formData.aprovado ? "bg-green-600 hover:bg-green-700" : "border-white/10"}
+            <Button
+              variant={formData.aprovado ? "default" : "outline"}
+              size="sm"
+              className={formData.aprovado ? "shrink-0 rounded-2xl bg-emerald-600 hover:bg-emerald-700" : "shrink-0 rounded-2xl border-slate-200 bg-white font-bold hover:bg-slate-100"}
               onClick={toggleAprovado}
             >
               {formData.aprovado ? (
@@ -128,12 +128,12 @@ export default function AcompanhamentoModuloDrawer({ modulo, isOpen, onClose, on
           </div>
         </SheetHeader>
 
-        <div className="py-6 space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-6 py-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Área</Label>
+              <Label className="font-bold text-slate-700">Área</Label>
               <Select value={formData.area || "Início"} onValueChange={(v) => setFormData({...formData, area: v})}>
-                <SelectTrigger className="bg-[#0c1526] border-white/10">
+                <SelectTrigger className="rounded-2xl border-slate-200 bg-white shadow-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -145,9 +145,9 @@ export default function AcompanhamentoModuloDrawer({ modulo, isOpen, onClose, on
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Status</Label>
+              <Label className="font-bold text-slate-700">Status</Label>
               <Select value={formData.status || "nao_iniciado"} onValueChange={(v) => setFormData({...formData, status: v})}>
-                <SelectTrigger className="bg-[#0c1526] border-white/10">
+                <SelectTrigger className="rounded-2xl border-slate-200 bg-white shadow-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -162,34 +162,34 @@ export default function AcompanhamentoModuloDrawer({ modulo, isOpen, onClose, on
           </div>
 
           <div className="space-y-2">
-            <Label>Resumo do Módulo (Público)</Label>
+            <Label className="font-bold text-slate-700">Resumo do Módulo (Público)</Label>
             <Textarea 
               rows={3}
               value={formData.resumo_modulo || ''} 
               onChange={(e) => setFormData({...formData, resumo_modulo: e.target.value})}
               placeholder="Descreva de forma curta e objetiva a finalidade deste módulo..."
-              className="bg-[#0c1526] border-white/10"
+              className="rounded-2xl border-slate-200 bg-white shadow-sm"
             />
           </div>
 
           <div className="space-y-2">
             <div className="flex justify-between">
-              <Label>Percentual de Evolução</Label>
+              <Label className="font-bold text-slate-700">Percentual de Evolução</Label>
               <span className="text-sm font-bold">{formData.percentual}%</span>
             </div>
-            <Input 
-              type="range" 
-              min="0" 
-              max="100" 
-              value={formData.percentual} 
+            <Input
+              type="range"
+              min="0"
+              max="100"
+              value={formData.percentual}
               onChange={(e) => setFormData({...formData, percentual: parseInt(e.target.value)})}
-              className="h-2 bg-[#0c1526]"
+              className="h-2 accent-slate-950"
             />
-            <Progress value={formData.percentual} className="h-1" />
+            <Progress value={formData.percentual} className="h-2 bg-slate-200" />
           </div>
 
           <Tabs defaultValue="listas" className="w-full">
-            <TabsList className="bg-[#0c1526] border-white/10 w-full justify-start overflow-x-auto no-scrollbar">
+            <TabsList className="no-scrollbar w-full justify-start overflow-x-auto rounded-2xl border border-slate-200 bg-white p-1">
               <TabsTrigger value="listas">Conteúdo</TabsTrigger>
               <TabsTrigger value="anotacoes">Anotações</TabsTrigger>
               <TabsTrigger value="visual">Visual</TabsTrigger>
@@ -197,62 +197,62 @@ export default function AcompanhamentoModuloDrawer({ modulo, isOpen, onClose, on
 
             <TabsContent value="listas" className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label>Funcionalidades (uma por linha)</Label>
+                <Label className="font-bold text-slate-700">Funcionalidades (uma por linha)</Label>
                 <Textarea 
                   rows={4}
                   value={formData.funcionalidades_text} 
                   onChange={(e) => setFormData({...formData, funcionalidades_text: e.target.value})}
-                  className="bg-[#0c1526] border-white/10"
+                  className="rounded-2xl border-slate-200 bg-white shadow-sm"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Processos (um por linha)</Label>
+                <Label className="font-bold text-slate-700">Processos (um por linha)</Label>
                 <Textarea 
                   rows={4}
                   value={formData.processos_text} 
                   onChange={(e) => setFormData({...formData, processos_text: e.target.value})}
-                  className="bg-[#0c1526] border-white/10"
+                  className="rounded-2xl border-slate-200 bg-white shadow-sm"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label className="text-green-500">O que está OK</Label>
+                  <Label className="font-bold text-emerald-600">O que está OK</Label>
                   <Textarea 
                     rows={4}
                     value={formData.ok_items_text} 
                     onChange={(e) => setFormData({...formData, ok_items_text: e.target.value})}
-                    className="bg-[#0c1526] border-white/10"
+                    className="rounded-2xl border-slate-200 bg-white shadow-sm"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-yellow-500">O que revisar</Label>
+                  <Label className="font-bold text-amber-600">O que revisar</Label>
                   <Textarea 
                     rows={4}
                     value={formData.revisar_items_text} 
                     onChange={(e) => setFormData({...formData, revisar_items_text: e.target.value})}
-                    className="bg-[#0c1526] border-white/10"
+                    className="rounded-2xl border-slate-200 bg-white shadow-sm"
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-blue-500">Próximos passos</Label>
+                <Label className="font-bold text-sky-600">Próximos passos</Label>
                 <Textarea 
                   rows={4}
                   value={formData.proximos_passos_text} 
                   onChange={(e) => setFormData({...formData, proximos_passos_text: e.target.value})}
-                  className="bg-[#0c1526] border-white/10"
+                  className="rounded-2xl border-slate-200 bg-white shadow-sm"
                 />
               </div>
             </TabsContent>
 
             <TabsContent value="anotacoes" className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label>Anotações Internas</Label>
+                <Label className="font-bold text-slate-700">Anotações Internas</Label>
                 <Textarea 
                   rows={15}
                   value={formData.anotacoes_internas || ''} 
                   onChange={(e) => setFormData({...formData, anotacoes_internas: e.target.value})}
-                  className="bg-[#0c1526] border-white/10"
+                  className="rounded-2xl border-slate-200 bg-white shadow-sm"
                   placeholder="Registro histórico, decisões técnicas ou observações de negócio sobre este módulo..."
                 />
               </div>
@@ -260,13 +260,13 @@ export default function AcompanhamentoModuloDrawer({ modulo, isOpen, onClose, on
 
             <TabsContent value="visual" className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label>URL do Print / Referência Visual</Label>
+                <Label className="font-bold text-slate-700">URL do Print / Referência Visual</Label>
                 <div className="flex gap-2">
                   <Input 
                     value={formData.print_url || ''} 
                     onChange={(e) => setFormData({...formData, print_url: e.target.value})}
                     placeholder="https://exemplo.com/imagem.png"
-                    className="bg-[#0c1526] border-white/10"
+                    className="rounded-2xl border-slate-200 bg-white shadow-sm"
                   />
                   {formData.print_url && (
                     <Button variant="outline" size="icon" onClick={() => window.open(formData.print_url, '_blank')}>
@@ -276,7 +276,7 @@ export default function AcompanhamentoModuloDrawer({ modulo, isOpen, onClose, on
                 </div>
               </div>
               {formData.print_url ? (
-                <div className="border border-white/10 rounded-lg overflow-hidden bg-black/20 flex items-center justify-center p-2">
+                <div className="flex items-center justify-center overflow-hidden rounded-3xl border border-slate-200 bg-white p-3 shadow-sm">
                   <img 
                     src={formData.print_url} 
                     alt="Print do módulo" 
@@ -287,7 +287,7 @@ export default function AcompanhamentoModuloDrawer({ modulo, isOpen, onClose, on
                   />
                 </div>
               ) : (
-                <div className="h-40 border border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center text-muted-foreground">
+                <div className="flex h-40 flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white text-slate-500">
                   <span>Nenhum print cadastrado</span>
                 </div>
               )}
@@ -295,9 +295,9 @@ export default function AcompanhamentoModuloDrawer({ modulo, isOpen, onClose, on
           </Tabs>
         </div>
 
-        <SheetFooter className="pt-6 border-t border-white/5">
-          <Button variant="ghost" onClick={onClose} disabled={isSaving}>Cancelar</Button>
-          <Button onClick={handleSave} disabled={isSaving} className="gap-2">
+        <SheetFooter className="border-t border-slate-200 pt-6">
+          <Button variant="ghost" onClick={onClose} disabled={isSaving} className="rounded-2xl">Cancelar</Button>
+          <Button onClick={handleSave} disabled={isSaving} className="gap-2 rounded-2xl bg-slate-950 shadow-lg shadow-slate-950/10 hover:bg-slate-800">
             <Save className="h-4 w-4" />
             {isSaving ? "Salvando..." : "Salvar Alterações"}
           </Button>

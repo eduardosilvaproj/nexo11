@@ -12,7 +12,7 @@ const BodySchema = z.object({
   email: z.string().trim().email().max(255),
   funcoes: z.array(z.string()).min(1).optional(),
   funcoes_app_habilitadas: z.array(z.string()).optional(),
-  role: z.enum(["vendedor", "tecnico", "montador", "gerente", "admin"]).optional(),
+  role: z.enum(["vendedor","projetista","tecnico","conferente","montador","motorista","gerente","financeiro","comprador","almoxarife","logistico","pos_venda","admin"]).optional(),
   equipe_id: z.string().uuid().optional().nullable(),
   papel_comissao_id: z.string().uuid().optional().nullable(),
   comissao_percentual: z.number().min(0).max(100).optional().nullable(),
@@ -69,6 +69,8 @@ app.post("/equipe-invite-member", async (c) => {
     );
   }
   const { nome, email, funcoes, funcoes_app_habilitadas, role, equipe_id, papel_comissao_id, comissao_percentual } = parsed.data;
+
+  // Resolve funcoes: prefer explicit funcoes array, fallback to single role
   const funcoesList = funcoes ?? (role ? [role] : []);
   if (funcoesList.length === 0) {
     return new Response(JSON.stringify({ error: "Informe ao menos uma função" }), {
@@ -76,7 +78,7 @@ app.post("/equipe-invite-member", async (c) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-  const primaryRole = (role ?? funcoesList[0]) as "vendedor" | "tecnico" | "montador" | "gerente" | "admin";
+  const primaryRole = (role ?? funcoesList[0]) as string;
 
   // Authorization: caller must be admin or gerente
   const [{ data: isAdmin }, { data: isGerente }] = await Promise.all([
@@ -96,7 +98,7 @@ app.post("/equipe-invite-member", async (c) => {
     });
   }
 
-  // Caller's loja
+  // Caller's loja — now from pessoas
   const { data: callerRow, error: callerRowErr } = await callerClient
     .from("pessoas")
     .select("loja_id")
@@ -172,15 +174,13 @@ app.post("/equipe-invite-member", async (c) => {
     if (papel && papel.loja_id === lojaId) safePapelId = papel.id;
   }
 
-  // (Removido) Upsert em `usuarios` — a tabela foi substituída por uma view sobre `pessoas`.
-
-
   // Upsert na tabela unificada pessoas (fonte única)
   const { error: pessoaErr } = await admin.from("pessoas").upsert({
     id: userId,
     auth_user_id: userId,
     nome,
     email,
+    telefone: null,
     loja_id: lojaId,
     tipo: "colaborador",
     funcoes: funcoesList,
@@ -196,7 +196,7 @@ app.post("/equipe-invite-member", async (c) => {
     });
   }
 
-  // Insert role (avoid duplicate)
+  // Insert role (avoid duplicate) — use primaryRole
   const { data: existingRole } = await admin
     .from("user_roles")
     .select("id")

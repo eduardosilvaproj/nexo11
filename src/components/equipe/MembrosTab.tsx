@@ -49,6 +49,7 @@ async function fetchMembros(): Promise<Membro[]> {
   const { data: usuarios, error: uErr } = await supabase
     .from("pessoas")
     .select("id, nome, email, papel_comissao_id, comissao_percentual, funcoes")
+    .not("auth_user_id", "is", null)
     .order("nome");
   if (uErr) throw uErr;
   if (!usuarios?.length) return [];

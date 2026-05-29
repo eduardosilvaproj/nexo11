@@ -34,30 +34,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const loadProfileAndRoles = async (userId: string) => {
-    try {
-      const [{ data: perfilData }, { data: rolesData }, { data: platformRolesData }] = await Promise.all([
-        supabase.from("pessoas").select("id,nome,email,loja_id").eq("auth_user_id", userId).maybeSingle(),
-        supabase.from("user_roles").select("role").eq("user_id", userId),
-        supabase.from("platform_user_roles").select("role").eq("user_id", userId)
-      ]);
-
-      setPerfil(perfilData ?? null);
-
-      const rolesList = (rolesData ?? []).map((r) => r.role as AppRole);
-      
-      // Se for platform_admin ou platform_support, adiciona admin_master para garantir acesso total no operacional
-      const isPlatformUser = (platformRolesData ?? []).some(
-        pr => pr.role === 'platform_admin' || pr.role === 'platform_support'
-      );
-      
-      if (isPlatformUser && !rolesList.includes("admin_master")) {
-        rolesList.push("admin_master");
-      }
-
-      setRoles(rolesList);
-    } catch (error) {
-      console.error("Erro ao carregar perfil e papéis:", error);
-    }
+    const [{ data: perfilData }, { data: rolesData }] = await Promise.all([
+      supabase.from("pessoas").select("id,nome,email,loja_id").eq("auth_user_id", userId).maybeSingle(),
+      supabase.from("user_roles").select("role").eq("user_id", userId),
+    ]);
+    setPerfil(perfilData ?? null);
+    setRoles((rolesData ?? []).map((r) => r.role as AppRole));
   };
 
   useEffect(() => {

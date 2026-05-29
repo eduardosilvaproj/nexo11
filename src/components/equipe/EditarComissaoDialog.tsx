@@ -41,7 +41,7 @@ export function EditarComissaoDialog({ open, onOpenChange, userId, nome }: Props
     if (!open || !userId) return;
     (async () => {
       const { data } = await supabase
-        .from("usuarios")
+        .from("pessoas")
         .select("papel_comissao_id, comissao_percentual")
         .eq("id", userId)
         .maybeSingle();
@@ -68,7 +68,7 @@ export function EditarComissaoDialog({ open, onOpenChange, userId, nome }: Props
     }
     setSaving(true);
     const { error } = await supabase
-      .from("usuarios")
+      .from("pessoas")
       .update({
         papel_comissao_id: papelId === NONE ? null : papelId,
         comissao_percentual: pctNum,

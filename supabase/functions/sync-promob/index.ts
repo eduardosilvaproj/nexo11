@@ -64,7 +64,7 @@ serve(async (req) => {
     }
 
     const [{ data: perfil }, { data: roles }] = await Promise.all([
-      supabase.from("usuarios").select("loja_id").eq("id", user.id).maybeSingle(),
+      supabase.from("pessoas").select("loja_id").eq("auth_user_id", user.id).maybeSingle(),
       supabase.from("user_roles").select("role, loja_id").eq("user_id", user.id),
     ]);
 

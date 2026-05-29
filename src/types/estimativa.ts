@@ -1,30 +1,16 @@
 // Types para o módulo de Estimativa de Orçamento via PDF
 
-export type TipoProjeto = 'residencial' | 'comercial' | 'corporativo';
-
-export interface ContextoEstimativa {
-  tipo_projeto?: TipoProjeto;
-  orcamento_cliente?: number;
-  observacoes?: string;
-}
-
-export const LABEL_TIPO_PROJETO: Record<TipoProjeto, string> = {
-  residencial: 'Residencial',
-  comercial: 'Comercial',
-  corporativo: 'Corporativo',
-};
-
-export interface ComparacaoOrcamento {
-  orcamento_cliente: number;
-  estimativa_media: number;
-  diferenca_valor: number;
-  diferenca_pct: number;
+export interface DadosProjeto {
+  nome_cliente?: string;
+  nome_obra?: string;
+  arquiteto?: string;
+  data_projeto?: string;
 }
 
 export interface MovelIdentificado {
   id: string;
   ambiente: string;
-  tipo: 'aereo' | 'base' | 'torre' | 'painel' | 'nicho' | 'gaveta' | 'prateleira' | 'guarda_roupa' | 'bancada' | 'rack' | 'divisoria' | 'outro';
+  tipo: 'aereo' | 'base' | 'torre' | 'painel' | 'nicho' | 'gaveta' | 'outro' | string;
   descricao: string;
   largura?: number;
   altura?: number;
@@ -49,13 +35,6 @@ export interface ValidacaoTecnica {
   recomendacoes: string[];
 }
 
-export interface DadosProjeto {
-  nome_cliente?: string;
-  nome_obra?: string;
-  arquiteto?: string;
-  data_projeto?: string;
-}
-
 export interface RelatorioEstimativa {
   id: string;
   pdf_url: string;
@@ -69,10 +48,7 @@ export interface RelatorioEstimativa {
   total_maximo: number;
   total_medio: number;
   observacoes_gerais: string[];
-  comentarios_ambientes?: Record<string, string>;
   erro?: string;
-  contexto?: ContextoEstimativa;
-  comparacao_orcamento?: ComparacaoOrcamento;
 }
 
 export interface TabelaPrecoBase {

@@ -1,207 +1,51 @@
 import { useState } from 'react';
-import { PDFDocument } from 'pdf-lib';
 import { supabase } from '@/integrations/supabase/client';
-import type {
-  RelatorioEstimativa, MovelIdentificado, DadosProjeto, ContextoEstimativa,
-} from '@/types/estimativa';
-
-const CHUNK_THRESHOLD_BYTES = 100 * 1024 * 1024;
-const PAGES_PER_CHUNK = 10;
-
-async function contarPaginasPDF(file: File): Promise<number> {
-  const arrayBuffer = await file.arrayBuffer();
-  const doc = await PDFDocument.load(arrayBuffer);
-  return doc.getPageCount();
-}
-
-async function dividirPDFEmChunks(file: File, paginasPorChunk: number): Promise<Uint8Array[]> {
-  const arrayBuffer = await file.arrayBuffer();
-  const doc = await PDFDocument.load(arrayBuffer);
-  const totalPages = doc.getPageCount();
-  const chunks: Uint8Array[] = [];
-
-  for (let i = 0; i < totalPages; i += paginasPorChunk) {
-    const chunkDoc = await PDFDocument.create();
-    const end = Math.min(i + paginasPorChunk, totalPages);
-    const indices = Array.from({ length: end - i }, (_, idx) => i + idx);
-    const pages = await chunkDoc.copyPages(doc, indices);
-    pages.forEach((page) => chunkDoc.addPage(page));
-    chunks.push(await chunkDoc.save());
-  }
-
-  return chunks;
-}
-
-
-function sanitizeName(name: string) {
-  return name
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z0-9._-]+/g, '_')
-    .replace(/_+/g, '_');
-}
-
-async function invokeEstimativaPDF(body: any, timeoutMs = 300_000): Promise<any> {
-  const url = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/estimativa-pdf`;
-  const { data: { session } } = await supabase.auth.getSession();
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-      },
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
-    const text = await res.text();
-    let data: any = null;
-    try { data = text ? JSON.parse(text) : null; } catch { /* noop */ }
-    if (!res.ok) throw new Error(data?.error || `Edge Function erro (${res.status})`);
-    return data;
-  } catch (err: any) {
-    if (err?.name === 'AbortError') throw new Error('Tempo esgotado (5 min). Tente um PDF menor ou divida o projeto.');
-    throw err;
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-function juntarDadosProjeto(analises: any[]): DadosProjeto {
-  return analises.reduce<DadosProjeto>((acc, a) => {
-    const d = a?.dados_projeto || {};
-    return {
-      nome_cliente: acc.nome_cliente || d.nome_cliente || '',
-      nome_obra: acc.nome_obra || d.nome_obra || '',
-      arquiteto: acc.arquiteto || d.arquiteto || '',
-      data_projeto: acc.data_projeto || d.data_projeto || '',
-    } as DadosProjeto;
-  }, { nome_cliente: '', nome_obra: '', arquiteto: '', data_projeto: '' } as DadosProjeto);
-}
-
-function removerDuplicatas(moveis: any[]) {
-  const mapa = new Map<string, any>();
-  for (const m of moveis) {
-    const ambiente = (m.ambiente || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-    const tipo = normalizarTipo(m.tipo);
-    const chave = `${ambiente}|${tipo}`;
-    const atual = mapa.get(chave);
-    const qtd = Number(m.quantidade) || 1;
-    if (!atual || qtd > (Number(atual.quantidade) || 1)) {
-      mapa.set(chave, { ...m, tipo, quantidade: qtd });
-    }
-  }
-  return Array.from(mapa.values());
-}
+import type { RelatorioEstimativa, MovelIdentificado, DadosProjeto } from '@/types/estimativa';
 
 export const useEstimativaPDF = () => {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const analisarPDF = async (
-    file: File,
-    contexto: ContextoEstimativa,
-  ): Promise<RelatorioEstimativa | null> => {
+  const analisarPDF = async (file: File): Promise<RelatorioEstimativa | null> => {
     setLoading(true);
     setError(null);
 
     try {
-      setProgress('Calculando hash...');
-      const arrayBuffer = await file.arrayBuffer();
-      const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
-      const fileHash = Array.from(new Uint8Array(hashBuffer))
-        .map((b) => b.toString(16).padStart(2, '0')).join('');
+      setProgress('Enviando PDF...');
+      const fileName = `${Date.now()}_${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('estimativas')
+        .upload(fileName, file);
 
-      const safeName = sanitizeName(file.name);
-      const baseName = `${Date.now()}_${safeName}`;
+      if (uploadError) throw uploadError;
 
-      let analise: any;
-      let publicUrl = '';
+      const { data: { publicUrl } } = supabase.storage
+        .from('estimativas')
+        .getPublicUrl(fileName);
 
-      const totalPages = await contarPaginasPDF(file);
-      const enviarInteiro = file.size < CHUNK_THRESHOLD_BYTES || totalPages < 100;
+      setProgress('Analisando projeto com IA...');
 
-      if (enviarInteiro) {
-        setProgress('Enviando PDF...');
-        const fileName = baseName;
-        const { error: uploadError } = await supabase.storage
-          .from('estimativas').upload(fileName, file);
-        if (uploadError) throw uploadError;
+      const { data: resposta, error: fnError } = await supabase.functions.invoke(
+        'estimativa-pdf',
+        { body: { file_path: fileName } }
+      );
 
-        publicUrl = supabase.storage.from('estimativas').getPublicUrl(fileName).data.publicUrl;
-
-        setProgress('Analisando projeto com IA...');
-        const data = await invokeEstimativaPDF({ file_path: fileName, file_hash: fileHash, contexto });
-        if (data?.error) throw new Error(data.error);
-        analise = data;
-      } else {
-        setProgress('Dividindo PDF em partes...');
-        const chunks = await dividirPDFEmChunks(file, PAGES_PER_CHUNK);
-        const total = chunks.length;
-
-        const analises: any[] = [];
-        const chunkPaths: string[] = [];
-        let chunksComErro = 0;
-        const errosDetalhes: string[] = [];
-
-        for (let i = 0; i < total; i++) {
-          setProgress(`Processando parte ${i + 1} de ${total}...`);
-          const chunkPath = `chunks/${fileHash}_parte_${i + 1}_${Date.now()}.pdf`;
-          chunkPaths.push(chunkPath);
-
-          try {
-            const chunkBlob = new Blob([chunks[i] as BlobPart], { type: 'application/pdf' });
-            const { error: upErr } = await supabase.storage
-              .from('estimativas').upload(chunkPath, chunkBlob, { upsert: true, contentType: 'application/pdf' });
-            if (upErr) throw upErr;
-
-            if (i === 0) {
-              publicUrl = supabase.storage.from('estimativas').getPublicUrl(chunkPath).data.publicUrl;
-            }
-
-            const chunkHash = `${fileHash}_parte_${i + 1}`;
-            const data = await invokeEstimativaPDF({ file_path: chunkPath, file_hash: chunkHash, contexto });
-            if (data?.error) throw new Error(data.error);
-            analises.push(data);
-          } catch (err) {
-            chunksComErro++;
-            const msg = err instanceof Error ? err.message : String(err);
-            errosDetalhes.push(`Parte ${i + 1}: ${msg}`);
-            console.warn(`Chunk ${i + 1} falhou, pulando...`, msg);
-          }
-        }
-
-        if (analises.length === 0) {
-          throw new Error(`Nenhuma parte foi processada. Erros: ${errosDetalhes.slice(0, 3).join(' | ')}`);
-        }
-
-        setProgress('Juntando resultados...');
-        const moveisCombinados = removerDuplicatas(analises.flatMap((a) => a?.moveis || []));
-        const observacoes = analises.flatMap((a) => a?.observacoes_gerais || []);
-        if (chunksComErro > 0) {
-          observacoes.unshift(
-            `⚠️ ${analises.length} de ${total} partes processadas com sucesso. ${chunksComErro} ${chunksComErro === 1 ? 'parte não pôde ser analisada' : 'partes não puderam ser analisadas'} (páginas em branco, imagens complexas ou erro temporário da IA).`
-          );
-        }
-        analise = {
-          dados_projeto: juntarDadosProjeto(analises),
-          moveis: moveisCombinados,
-          estimativas: [],
-          observacoes_gerais: observacoes,
-          comentarios_ambientes: Object.assign({}, ...analises.map((a) => a?.comentarios_ambientes || {})),
-        };
-
-        supabase.storage.from('estimativas').remove(chunkPaths).catch(() => {});
+      if (fnError) {
+        const detail = typeof fnError === 'object' && 'context' in fnError
+          ? JSON.stringify(fnError)
+          : fnError.message;
+        throw new Error(`Edge Function erro: ${detail}`);
       }
+      if (resposta?.error) throw new Error(resposta.error);
 
+      const analise = resposta;
+
+      // Extrair dados do projeto se disponíveis
       const dados_projeto: DadosProjeto = analise.dados_projeto || {};
 
       setProgress('Calculando estimativas...');
-      const moveis: MovelIdentificado[] = (analise.moveis || []).map((m: any, idx: number) => ({
+      const moveis: MovelIdentificado[] = analise.moveis.map((m: any, idx: number) => ({
         id: `movel_${idx}`,
         ambiente: m.ambiente,
         tipo: m.tipo,
@@ -213,30 +57,40 @@ export const useEstimativaPDF = () => {
         alertas: []
       }));
 
-      const estimativas = moveis.map((m, idx) => {
-        const preco = getTabelaPreco(m.tipo);
-        const qtd = m.quantidade || 1;
+      const estimativas = moveis.map(movel => {
+        let largura = movel.largura || 0;
+        let altura = movel.altura || 0;
+
+        // Se medidas parecem estar em metros (< 10), converter para cm
+        if (largura > 0 && largura < 10) largura = largura * 100;
+        if (altura > 0 && altura < 10) altura = altura * 100;
+
+        const area = (largura * altura) / 10000;
+        const tabela = getTabelaPreco(movel.tipo);
+
+        // Se não tem medidas ou área é muito pequena, usa preço fixo por tipo
+        if (area < 0.1) {
+          return {
+            movel_id: movel.id,
+            preco_minimo: tabela.fixo_min * movel.quantidade,
+            preco_maximo: tabela.fixo_max * movel.quantidade,
+            preco_medio: ((tabela.fixo_min + tabela.fixo_max) / 2) * movel.quantidade,
+            base_calculo: `Estimativa por tipo (${movel.tipo}) × ${movel.quantidade} un`
+          };
+        }
+
         return {
-          movel_id: `movel_${idx}`,
-          preco_minimo: preco.fixo_min * qtd,
-          preco_maximo: preco.fixo_max * qtd,
-          preco_medio: ((preco.fixo_min + preco.fixo_max) / 2) * qtd,
-          base_calculo: '',
+          movel_id: movel.id,
+          preco_minimo: area * tabela.min * movel.quantidade,
+          preco_maximo: area * tabela.max * movel.quantidade,
+          preco_medio: area * ((tabela.min + tabela.max) / 2) * movel.quantidade,
+          base_calculo: `${area.toFixed(2)}m² × R$ ${tabela.min}-${tabela.max}/m²`
         };
       });
 
-      const total_minimo = estimativas.reduce((s, e) => s + e.preco_minimo, 0);
-      const total_maximo = estimativas.reduce((s, e) => s + e.preco_maximo, 0);
-      const total_medio = estimativas.reduce((s, e) => s + e.preco_medio, 0);
-
-      const comparacao_orcamento = contexto.orcamento_cliente && contexto.orcamento_cliente > 0
-        ? {
-            orcamento_cliente: contexto.orcamento_cliente,
-            estimativa_media: total_medio,
-            diferenca_valor: total_medio - contexto.orcamento_cliente,
-            diferenca_pct: ((total_medio - contexto.orcamento_cliente) / contexto.orcamento_cliente) * 100,
-          }
-        : undefined;
+      const total_minimo = estimativas.reduce((sum, e) => sum + e.preco_minimo, 0);
+      const total_maximo = estimativas.reduce((sum, e) => sum + e.preco_maximo, 0);
+      const total_medio = estimativas.reduce((sum, e) => sum + e.preco_medio, 0);
 
       const relatorio: RelatorioEstimativa = {
         id: crypto.randomUUID(),
@@ -250,10 +104,7 @@ export const useEstimativaPDF = () => {
         total_minimo,
         total_maximo,
         total_medio,
-        observacoes_gerais: analise.observacoes_gerais || [],
-        comentarios_ambientes: analise.comentarios_ambientes || {},
-        contexto,
-        comparacao_orcamento,
+        observacoes_gerais: analise.observacoes_gerais || []
       };
 
       setProgress('Concluído!');
@@ -272,40 +123,42 @@ export const useEstimativaPDF = () => {
 };
 
 function getTabelaPreco(tipo: string): { min: number; max: number; fixo_min: number; fixo_max: number } {
+  // Normaliza o tipo recebido da IA para um dos tipos conhecidos
   const normalizado = normalizarTipo(tipo);
+  // Valores ajustados para mercado de móveis planejados premium
   const tabela: Record<string, { min: number; max: number; fixo_min: number; fixo_max: number }> = {
-    aereo:        { min: 2400, max: 4500, fixo_min: 3600, fixo_max: 7500 },
-    base:         { min: 3000, max: 5400, fixo_min: 6000, fixo_max: 13500 },
-    torre:        { min: 3600, max: 6600, fixo_min: 9000, fixo_max: 18000 },
-    painel:       { min: 1800, max: 3600, fixo_min: 4500, fixo_max: 10500 },
-    nicho:        { min: 1500, max: 3000, fixo_min: 1800, fixo_max: 4500 },
-    gaveta:       { min: 1200, max: 2400, fixo_min: 2400, fixo_max: 5400 },
-    prateleira:   { min: 900,  max: 2100, fixo_min: 1200, fixo_max: 3000 },
+    aereo:      { min: 2400, max: 4500, fixo_min: 3600, fixo_max: 7500 },
+    base:       { min: 3000, max: 5400, fixo_min: 6000, fixo_max: 13500 },
+    torre:      { min: 3600, max: 6600, fixo_min: 9000, fixo_max: 18000 },
+    painel:     { min: 1800, max: 3600, fixo_min: 4500, fixo_max: 10500 },
+    nicho:      { min: 1500, max: 3000, fixo_min: 1800, fixo_max: 4500 },
+    gaveta:     { min: 1200, max: 2400, fixo_min: 2400, fixo_max: 5400 },
+    prateleira: { min: 900,  max: 2100, fixo_min: 1200, fixo_max: 3000 },
     guarda_roupa: { min: 3600, max: 6600, fixo_min: 11000, fixo_max: 24000 },
-    bancada:      { min: 2400, max: 4800, fixo_min: 5000, fixo_max: 11000 },
-    rack:         { min: 2000, max: 4000, fixo_min: 4000, fixo_max: 9000 },
-    divisoria:    { min: 1800, max: 3600, fixo_min: 4000, fixo_max: 10000 },
-    outro:        { min: 2100, max: 4200, fixo_min: 4500, fixo_max: 10500 }
+    bancada:    { min: 2400, max: 4800, fixo_min: 5000, fixo_max: 11000 },
+    rack:       { min: 2000, max: 4000, fixo_min: 4000, fixo_max: 9000 },
+    divisoria:  { min: 1800, max: 3600, fixo_min: 4000, fixo_max: 10000 },
+    outro:      { min: 2100, max: 4200, fixo_min: 4500, fixo_max: 10500 }
   };
   return tabela[normalizado] || tabela.outro;
 }
 
 function normalizarTipo(tipo: string): string {
-  const t = (tipo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  const t = (tipo || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
   const mapa: Record<string, string> = {
-    'aereo': 'aereo', 'suspenso': 'aereo',
-    'base': 'base', 'balcao': 'base',
-    'bancada': 'bancada',
-    'torre': 'torre', 'coluna': 'torre', 'despenseiro': 'torre',
-    'painel': 'painel',
-    'rack': 'rack',
+    'aereo': 'aereo', 'aéreo': 'aereo', 'armario aereo': 'aereo', 'suspenso': 'aereo',
+    'base': 'base', 'balcao': 'base', 'bancada': 'bancada',
+    'torre': 'torre', 'torre quente': 'torre', 'coluna': 'torre', 'despenseiro': 'torre',
+    'painel': 'painel', 'rack': 'rack',
     'nicho': 'nicho',
     'gaveta': 'gaveta', 'gaveteiro': 'gaveta',
     'prateleira': 'prateleira',
     'guarda roupa': 'guarda_roupa', 'guarda-roupa': 'guarda_roupa', 'roupeiro': 'guarda_roupa', 'armario': 'guarda_roupa',
-    'divisoria': 'divisoria',
+    'divisoria': 'divisoria', 'divisória': 'divisoria',
   };
+  // Busca exata primeiro
   if (mapa[t]) return mapa[t];
+  // Busca parcial
   for (const [chave, valor] of Object.entries(mapa)) {
     if (t.includes(chave) || chave.includes(t)) return valor;
   }

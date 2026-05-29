@@ -76,19 +76,12 @@ export function MontadorFormDialog({ open, onOpenChange, lojaId, montador }: Pro
       percentual_padrao: pct,
       ativo,
       funcoes,
-      tipo: "prestador",
-    };
-
-    const client = supabase as unknown as {
-      from: (t: string) => {
-        insert: (v: unknown) => Promise<{ error: Error | null }>;
-        update: (v: unknown) => { eq: (c: string, v: string) => Promise<{ error: Error | null }> };
-      };
+      tipo: 'prestador' as const,
     };
 
     const { error } = montador
-      ? await client.from("pessoas").update(payload).eq("id", montador.id)
-      : await client.from("pessoas").insert(payload);
+      ? await supabase.from("pessoas").update(payload).eq("id", montador.id)
+      : await supabase.from("pessoas").insert(payload);
 
     setSaving(false);
     if (error) return toast.error(error.message);

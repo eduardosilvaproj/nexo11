@@ -52,7 +52,7 @@ export function ContratosTable({ onCreate }: Props) {
           .select("id, cliente_nome, vendedor_id, status, valor_venda, data_criacao, assinado, data_assinatura, dre_contrato(margem_prevista)")
 
           .order("data_criacao", { ascending: false }),
-        supabase.from("usuarios").select("id, nome").eq("loja_id", perfil!.loja_id!),
+        supabase.from("pessoas").select("id, nome").eq("loja_id", perfil!.loja_id!),
       ]);
       if (contratosRes.error) throw contratosRes.error;
       if (usuariosRes.error) throw usuariosRes.error;

@@ -154,7 +154,7 @@ export function FluxoCaixaCard() {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
-      const { data: usr } = await supabase.from("usuarios").select("loja_id").eq("id", u.user.id).maybeSingle();
+      const { data: usr } = await supabase.from("pessoas").select("loja_id").eq("auth_user_id", u.user.id).maybeSingle();
       if (usr?.loja_id) setLojaId(usr.loja_id);
     })();
   }, []);

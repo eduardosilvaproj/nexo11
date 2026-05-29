@@ -105,7 +105,7 @@ export default function Tecnico() {
     queryKey: ["responsaveis-tecnico", papelAtual],
     queryFn: async () => {
       const { data } = await supabase
-        .from("usuarios")
+        .from("pessoas")
         .select("id, nome")
         .contains("funcoes", [papelAtual])
         .order("nome");
@@ -147,7 +147,7 @@ export default function Tecnico() {
   const { data: usuarios = [] } = useQuery({
     queryKey: ["usuarios-min-tecnico"],
     queryFn: async () => {
-      const { data } = await supabase.from("usuarios").select("id,nome");
+      const { data } = await supabase.from("pessoas").select("id,nome");
       return data ?? [];
     },
   });

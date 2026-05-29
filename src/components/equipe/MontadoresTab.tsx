@@ -8,8 +8,6 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { MontadorFormDialog, type Montador } from "@/components/configuracoes/MontadorFormDialog";
 
-const sb = supabase as unknown as { from: (t: string) => any };
-
 const FUNCAO_BADGES: Record<string, { label: string; bg: string; color: string }> = {
   montador:   { label: "Montador",   bg: "#FAECE7", color: "#993C1D" },
   tecnico:    { label: "Técnico",    bg: "#EEEDFE", color: "#534AB7" },
@@ -50,11 +48,11 @@ export function MontadoresTab() {
     queryKey: ["montadores-config", lojaId],
     enabled: !!lojaId,
     queryFn: async () => {
-      const { data, error } = await sb
+      const { data, error } = await supabase
         .from("pessoas")
         .select("id, nome, telefone, email, percentual_padrao, ativo, funcoes")
         .eq("loja_id", lojaId!)
-        .eq("tipo", "prestador")
+        .overlaps("funcoes", ["montador", "tecnico", "conferente", "motorista", "medidor"])
         .order("nome", { ascending: true });
       if (error) throw error;
       return (data ?? []) as Montador[];
@@ -62,7 +60,7 @@ export function MontadoresTab() {
   });
 
   const toggleAtivo = async (m: Montador) => {
-    const { error } = await sb
+    const { error } = await supabase
       .from("pessoas")
       .update({ ativo: !m.ativo })
       .eq("id", m.id);

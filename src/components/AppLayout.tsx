@@ -19,11 +19,9 @@ const ROUTE_LABELS: Record<string, string> = {
   compras: "Compras",
   equipe: "Equipe",
   lojas: "Lojas",
-  rh: "RH / Pessoas",
   analytics: "Analytics",
    integracoes: "Integrações",
   contratos: "Contratos",
-  operacao: "Operação",
 };
 
 function getInitials(nome?: string | null, email?: string | null) {
@@ -51,43 +49,52 @@ export default function AppLayout() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-slate-50">
+      <div className="nexo-app-shell flex min-h-screen w-full">
         <AppSidebar />
-        <div className="flex flex-1 flex-col min-w-0">
-          <header className="flex h-14 items-center justify-between bg-white/80 backdrop-blur-md px-4 md:px-6 border-b border-slate-200/70 shadow-[0_1px_2px_rgba(15,23,42,0.03)] sticky top-0 z-30">
+        <div className="relative z-[1] flex flex-1 flex-col">
+          <header
+            className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/70 bg-white/78 px-4 shadow-sm shadow-slate-900/[0.03] backdrop-blur-xl md:px-6"
+          >
             <div className="flex items-center gap-2 md:gap-4">
-              <SidebarTrigger className="md:hidden" />
-              <nav className="hidden sm:flex items-center gap-2 text-sm">
+              <SidebarTrigger className="rounded-xl border border-slate-200 bg-white shadow-sm md:hidden" />
+              {/* Breadcrumb */}
+              <nav className="hidden items-center gap-2 rounded-full border border-slate-200/80 bg-white/70 px-3 py-1.5 text-sm shadow-sm sm:flex">
               {isDashboard ? (
-                <span className="font-semibold text-slate-900">Dashboard</span>
+                <span className="font-semibold text-[#0D1117]">Dashboard</span>
               ) : (
                 <>
-                  <Link to="/" className="text-slate-500 transition-colors hover:text-primary">
+                  <Link
+                    to="/"
+                    className="text-[#64748b] transition-colors hover:text-[#1a9be8]"
+                  >
                     Dashboard
                   </Link>
-                  <span className="text-slate-300">/</span>
-                  <span className="font-semibold text-slate-900">{currentLabel}</span>
+                  <span className="text-[#64748b]/40">/</span>
+                  <span className="font-semibold text-[#0D1117]">{currentLabel}</span>
                 </>
               )}
               </nav>
-              <span className="sm:hidden font-semibold text-slate-900 text-sm">
+              {/* Mobile Title */}
+              <span className="text-sm font-semibold text-[#0D1117] sm:hidden">
                 {currentLabel}
               </span>
             </div>
 
+            {/* Right side: bell + avatar */}
             <div className="flex items-center gap-3">
               <NotificationsBell />
               <div
-                className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold text-white shadow-sm ring-2 ring-white"
-                style={{ background: "linear-gradient(135deg, #1a7fe8, #22c97a)" }}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/80 bg-[linear-gradient(135deg,#1a7fe8,#22c97a)] text-xs font-bold text-white shadow-lg shadow-sky-900/15 ring-4 ring-slate-100"
                 title={perfil?.nome ?? perfil?.email ?? ""}
               >
                 {initials}
               </div>
             </div>
           </header>
-          <main className="flex-1 p-4 md:p-8 overflow-x-hidden min-w-0">
-            <Outlet />
+          <main className="relative flex-1 overflow-x-hidden p-4 md:p-6">
+            <div className="mx-auto w-full max-w-[1600px]">
+              <Outlet />
+            </div>
           </main>
         </div>
       </div>

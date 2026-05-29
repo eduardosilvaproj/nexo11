@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,9 +11,8 @@ import {
   ArrowRight,
   MessageSquare,
   type LucideIcon,
-  Bell,
 } from "lucide-react";
-import { DynamicAlerts } from "@/components/dashboard/DynamicAlerts";
+import { cn } from "@/lib/utils";
 
 const ETAPAS_CONFIG: { key: string; label: string; border: string; text: string; iconBg: string }[] = [
   { key: "comercial", label: "Comercial", border: "#378ADD", text: "#0C447C", iconBg: "#E6F1FB" },
@@ -34,27 +33,28 @@ interface MetricCardProps {
 }
 
 const cardStyle: React.CSSProperties = {
-  border: "1px solid #E8ECF2",
-  borderRadius: "12px",
+  border: "1px solid rgba(226, 232, 240, 0.9)",
+  borderRadius: "18px",
 };
 
 function MetricCard({ label, value, icon: Icon, color, valueColor = "#0D1117" }: MetricCardProps) {
   return (
     <div
-      className="relative bg-white p-5 shadow-sm"
-      style={{ ...cardStyle, borderTop: `3px solid ${color}` }}
+      className="group relative overflow-hidden bg-white/95 p-5 shadow-sm shadow-slate-200/70 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/80"
+      style={{ ...cardStyle, borderTop: `4px solid ${color}` }}
     >
-      <Icon
-        className="absolute right-4 top-4"
-        style={{ color, width: 20, height: 20 }}
-      />
-      <p style={{ fontSize: 12, color: "#6B7A90" }}>{label}</p>
-      <p
-        className="mt-2"
-        style={{ fontSize: 24, fontWeight: 500, color: valueColor, lineHeight: 1.2 }}
-      >
-        {value}
-      </p>
+      <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-slate-50 transition-transform group-hover:scale-125" />
+      <div className="relative flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">{label}</p>
+          <p className="mt-2 text-3xl font-bold tracking-tight" style={{ color: valueColor, lineHeight: 1.15 }}>
+            {value}
+          </p>
+        </div>
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl" style={{ color, backgroundColor: `${color}14` }}>
+          <Icon className="h-5 w-5" />
+        </div>
+      </div>
     </div>
   );
 }
@@ -175,16 +175,23 @@ export default function Dashboard() {
   }, [queryClient]);
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 style={{ fontSize: 22, fontWeight: 500, color: "#0D1117", letterSpacing: "-0.01em" }}>
-          Olá, {perfil?.nome ?? "Bem-vindo"}
-        </h1>
-        <p className="mt-1" style={{ fontSize: 14, color: "#6B7A90" }}>
-          {perfil?.loja_id
-            ? "Visão geral da sua loja."
-            : "Você ainda não está vinculado a uma loja. Peça ao admin para te associar."}
-        </p>
+    <div className="space-y-7">
+      <div className="relative overflow-hidden rounded-[28px] border border-sky-100 bg-gradient-to-br from-white via-sky-50/70 to-emerald-50/60 p-6 shadow-sm shadow-slate-200/70">
+        <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-sky-200/30 blur-3xl" />
+        <div className="absolute bottom-0 right-28 h-32 w-32 rounded-full bg-emerald-200/30 blur-3xl" />
+        <div className="relative max-w-2xl">
+          <span className="inline-flex rounded-full border border-sky-200 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-sky-700">
+            Painel NEXO
+          </span>
+          <h1 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-slate-950">
+            Olá, {perfil?.nome ?? "Bem-vindo"}
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            {perfil?.loja_id
+              ? "Visão executiva da sua loja, com contratos, vendas, margem e mensagens em um só lugar."
+              : "Você ainda não está vinculado a uma loja. Peça ao admin para te associar."}
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
@@ -215,13 +222,15 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
-        {/* Pipeline de contratos */}
-        <div className="lg:col-span-2 bg-white p-6 shadow-sm flex flex-col" style={cardStyle}>
-        <div className="mb-6 flex items-center justify-between">
-          <h2 style={{ fontSize: 18, fontWeight: 600, color: "#0D1117" }}> Pipeline de contratos </h2>
-          <span style={{ fontSize: 14, color: "#6B7A90" }}>
-            {stats?.contratosAtivos ?? 0} contratos em andamento
+      {/* Pipeline de contratos */}
+      <div className="bg-white/95 p-6 shadow-sm shadow-slate-200/70" style={cardStyle}>
+        <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-xl font-bold tracking-[-0.02em] text-slate-950">Pipeline de contratos</h2>
+            <p className="mt-1 text-sm text-slate-500">Acompanhe volume, valor e saúde de cada etapa.</p>
+          </div>
+          <span className="rounded-full bg-sky-50 px-3 py-1 text-sm font-semibold text-sky-700">
+            {stats?.contratosAtivos ?? 0} em andamento
           </span>
         </div>
 
@@ -232,124 +241,92 @@ export default function Dashboard() {
               <button
                 key={etapa.key}
                 onClick={() => navigate(`/comercial?etapa=${etapa.key}`)}
-                className="flex flex-col rounded-xl border-l-[4px] bg-[#F8F9FA] p-4 text-left transition-all hover:bg-[#F1F3F5] active:scale-[0.98]"
-                style={{ borderLeftColor: etapa.border }}
+                className="group flex min-h-40 flex-col rounded-2xl border bg-slate-50/80 p-4 text-left transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-lg hover:shadow-slate-200/70 active:translate-y-0"
+                style={{ borderColor: `${etapa.border}30`, borderTop: `4px solid ${etapa.border}` }}
               >
-                <span className="mb-0.5 block font-bold text-[#212529]" style={{ fontSize: 24, lineHeight: 1.1 }}>
-                  {data.count}
-                </span>
-                <span className="mb-2 block truncate font-semibold text-[#6B7A90]" style={{ fontSize: 13 }}>
-                  {etapa.label}
-                </span>
-                <span className="mb-3 block font-semibold text-[#495057]" style={{ fontSize: 13 }}>
-                  {formatBRL(data.total)}
-                </span>
-                
-                <div className="mt-auto flex gap-1.5">
-                  <div className="flex h-5 w-7 items-center justify-center rounded bg-green-500/10 text-[10px] font-bold text-green-700" title="No prazo">
-                    🟢 {data.noPrazo}
-                  </div>
-                  <div className="flex h-5 w-7 items-center justify-center rounded bg-amber-500/10 text-[10px] font-bold text-amber-700" title="Em alerta">
-                    🟡 {data.emAlerta}
-                  </div>
-                  <div className="flex h-5 w-7 items-center justify-center rounded bg-red-500/10 text-[10px] font-bold text-red-700" title="Em atraso">
-                    🔴 {data.emAtraso}
-                  </div>
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <span className="text-3xl font-bold leading-none text-slate-950">{data.count}</span>
+                  <span className="rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.08em]" style={{ backgroundColor: etapa.iconBg, color: etapa.text }}>
+                    {etapa.key === "finalizado" ? "fim" : "etapa"}
+                  </span>
+                </div>
+                <span className="block truncate text-sm font-bold text-slate-700">{etapa.label}</span>
+                <span className="mt-1 block text-sm font-semibold text-slate-500">{formatBRL(data.total)}</span>
+
+                <div className="mt-auto grid grid-cols-3 gap-1.5 pt-4">
+                  {[
+                    { label: "Prazo", value: data.noPrazo, className: "bg-emerald-50 text-emerald-700" },
+                    { label: "Alerta", value: data.emAlerta, className: "bg-amber-50 text-amber-700" },
+                    { label: "Atraso", value: data.emAtraso, className: "bg-rose-50 text-rose-700" },
+                  ].map((item) => (
+                    <div key={item.label} className={cn("rounded-lg px-1.5 py-1 text-center", item.className)} title={item.label}>
+                      <div className="text-xs font-bold leading-none">{item.value}</div>
+                      <div className="mt-0.5 text-[9px] font-semibold uppercase tracking-wide opacity-70">{item.label}</div>
+                    </div>
+                  ))}
                 </div>
               </button>
             );
           })}
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center justify-between border-t pt-4">
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5 text-[11px] text-[#6B7A90]">
-              <span className="h-2 w-2 rounded-full bg-green-500" /> no prazo
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" /> no prazo
             </span>
-            <span className="flex items-center gap-1.5 text-[11px] text-[#6B7A90]">
+            <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
               <span className="h-2 w-2 rounded-full bg-amber-500" /> em alerta
             </span>
-            <span className="flex items-center gap-1.5 text-[11px] text-[#6B7A90]">
-              <span className="h-2 w-2 rounded-full bg-red-500" /> em atraso
+            <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+              <span className="h-2 w-2 rounded-full bg-rose-500" /> em atraso
             </span>
           </div>
-          <span className="text-[11px] text-[#6B7A90]">
+          <span className="text-xs font-medium text-slate-500">
             Clique em uma etapa para ver os contratos
           </span>
-        </div>
-        </div>
-
-        {/* Alertas Dinâmicos (Sidebar) */}
-        <div className="flex flex-col gap-4">
-          <div className="bg-white p-6 shadow-sm h-full" style={cardStyle}>
-            <div className="mb-4 flex items-center justify-between">
-              <h2 style={{ fontSize: 16, fontWeight: 600, color: "#0D1117" }}>Alertas Prioritários</h2>
-              <Link to="/notificacoes" className="text-xs text-[#1E6FBF] hover:underline">
-                Ver tudo
-              </Link>
-            </div>
-            <DynamicAlerts />
-          </div>
         </div>
       </div>
 
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 items-stretch">
         {/* Ponto de equilíbrio */}
-        <div className="flex flex-col bg-white p-6 shadow-sm h-full" style={cardStyle}>
-          <h2
-            className="mb-4"
-            style={{ fontSize: 16, fontWeight: 600, color: "#0D1117" }}
-          >
-            Ponto de equilíbrio
-          </h2>
+        <div className="flex h-full flex-col bg-white/95 p-6 shadow-sm shadow-slate-200/70" style={cardStyle}>
+          <div className="mb-5">
+            <h2 className="text-lg font-bold tracking-[-0.02em] text-slate-950">Ponto de equilíbrio</h2>
+            <p className="mt-1 text-sm text-slate-500">Indicadores para calibrar custos e metas mensais.</p>
+          </div>
 
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span style={{ fontSize: 14, color: "#6B7A90" }}>Custo fixo mensal</span>
-              <span style={{ fontSize: 14, fontWeight: 500, color: "#0D1117" }}>
-                {formatBRL(custoFixo)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span style={{ fontSize: 14, color: "#6B7A90" }}>PE calculado</span>
-              <span style={{ fontSize: 14, fontWeight: 500, color: "#0D1117" }}>
-                {formatBRL(pe)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span style={{ fontSize: 14, color: "#6B7A90" }}>Faturamento atual</span>
-              <span style={{ fontSize: 14, fontWeight: 500, color: "#0D1117" }}>
-                {formatBRL(faturamentoAtual)}
-              </span>
-            </div>
+          <div className="space-y-3">
+            {[
+              ["Custo fixo mensal", formatBRL(custoFixo)],
+              ["PE calculado", formatBRL(pe)],
+              ["Faturamento atual", formatBRL(faturamentoAtual)],
+            ].map(([label, value]) => (
+              <div key={label} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3">
+                <span className="text-sm font-medium text-slate-500">{label}</span>
+                <span className="text-sm font-bold text-slate-950">{value}</span>
+              </div>
+            ))}
           </div>
 
           <div className="mt-6">
             <div className="mb-2 flex items-center justify-between">
-              <span style={{ fontSize: 12, color: "#6B7A90" }}>% do PE atingido</span>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#1E6FBF" }}>
+              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">% do PE atingido</span>
+              <span className="text-sm font-bold text-sky-700">
                 {peProgress.toFixed(0)}%
               </span>
             </div>
-            <div
-              className="h-2.5 w-full overflow-hidden"
-              style={{ background: "#E8ECF2", borderRadius: 999 }}
-            >
+            <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100">
               <div
-                className="h-full transition-all"
-                style={{
-                  width: `${peProgress}%`,
-                  background: "#1E6FBF",
-                  borderRadius: 999,
-                }}
+                className="h-full rounded-full bg-gradient-to-r from-sky-500 to-emerald-400 transition-all"
+                style={{ width: `${peProgress}%` }}
               />
             </div>
           </div>
 
           <Link
             to="/financeiro"
-            className="mt-auto pt-6 inline-flex items-center gap-1 self-start text-[#1E6FBF] transition-colors hover:text-[#00AAFF]"
-            style={{ fontSize: 13, fontWeight: 500 }}
+            className="mt-auto inline-flex items-center gap-1 self-start pt-6 text-sm font-semibold text-sky-700 transition-colors hover:text-emerald-600"
           >
             Configurar custos fixos
             <ArrowRight className="h-4 w-4" />
@@ -357,17 +334,20 @@ export default function Dashboard() {
         </div>
 
         {/* Mensagens por etapa */}
-        <div className="flex flex-col bg-white p-6 shadow-sm h-full" style={cardStyle}>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 style={{ fontSize: 16, fontWeight: 600, color: "#0D1117" }}>Mensagens por etapa</h2>
+        <div className="flex h-full flex-col bg-white/95 p-6 shadow-sm shadow-slate-200/70" style={cardStyle}>
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold tracking-[-0.02em] text-slate-950">Mensagens por etapa</h2>
+              <p className="mt-1 text-sm text-slate-500">Conversas abertas e pendências de leitura.</p>
+            </div>
             {(stats?.totalUnread ?? 0) > 0 && (
-              <span className="flex h-6 items-center justify-center rounded-full bg-red-500 px-2.5 text-[11px] font-bold text-white">
+              <span className="flex h-7 shrink-0 items-center justify-center rounded-full bg-rose-500 px-3 text-xs font-bold text-white shadow-sm shadow-rose-200">
                 {stats?.totalUnread} não lidas
               </span>
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3 flex-1 overflow-y-auto">
+          <div className="grid flex-1 grid-cols-1 gap-3 overflow-y-auto sm:grid-cols-2">
             {ETAPAS_CONFIG.filter(e => e.key !== 'finalizado').map((etapa) => {
               const data = stats?.mensagens?.[etapa.key] || { totalConversas: 0, unreadCount: 0 };
               return (
@@ -377,7 +357,7 @@ export default function Dashboard() {
                     localStorage.setItem('mensagens_filtro_etapa', etapa.key);
                     navigate('/mensagens');
                   }}
-                  className="group flex items-center gap-3 rounded-lg border border-transparent bg-[#F8F9FA] p-3 transition-all hover:border-[#E2E8F0] hover:bg-white"
+                  className="group flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3 transition-all hover:-translate-y-0.5 hover:border-sky-100 hover:bg-white hover:shadow-md hover:shadow-slate-200/70"
                 >
                   <div 
                     className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm" 
@@ -386,11 +366,11 @@ export default function Dashboard() {
                     <MessageSquare className="h-4 w-4" />
                   </div>
                   <div className="flex flex-col items-start min-w-0 flex-1">
-                    <span className="truncate text-[13px] font-semibold text-gray-700">{etapa.label}</span>
-                    <span className="text-[11px] text-gray-500">{data.totalConversas} {data.totalConversas === 1 ? 'conversa' : 'conv.'}</span>
+                    <span className="truncate text-sm font-bold text-slate-700">{etapa.label}</span>
+                    <span className="text-xs font-medium text-slate-500">{data.totalConversas} {data.totalConversas === 1 ? 'conversa' : 'conv.'}</span>
                   </div>
                   {data.unreadCount > 0 && (
-                    <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                    <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white shadow-sm shadow-rose-200">
                       {data.unreadCount}
                     </span>
                   )}
@@ -401,7 +381,7 @@ export default function Dashboard() {
           
           <Link
             to="/mensagens"
-            className="mt-4 text-[11px] text-[#6B7A90] hover:text-[#1E6FBF]"
+            className="mt-4 inline-flex items-center gap-1 self-start text-sm font-semibold text-sky-700 hover:text-emerald-600"
           >
             Ver todas as mensagens
           </Link>

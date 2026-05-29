@@ -106,7 +106,7 @@ export default function Comissoes() {
 
       // 2. TODOS os membros da loja com papel configurado (inclui admins)
       const { data: membros, error: errMembros } = await supabase
-        .from("usuarios")
+        .from("pessoas")
         .select("id, nome, papel_comissao_id, comissao_percentual, funcoes")
         .eq("loja_id", lojaId);
       if (errMembros) throw errMembros;
@@ -248,9 +248,9 @@ export default function Comissoes() {
       const uid = userData.user?.id;
       if (!uid) return;
       const { data: u } = await supabase
-        .from("usuarios")
+        .from("pessoas")
         .select("loja_id")
-        .eq("id", uid)
+        .eq("auth_user_id", uid)
         .maybeSingle();
       const lid = u?.loja_id ?? null;
       setLojaId(lid);

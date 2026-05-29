@@ -30,16 +30,26 @@ const AcompanhamentoCriacao = () => {
   });
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-7">
       <AcompanhamentoHeader onReload={refetch} />
       <AcompanhamentoResumoCards modulos={modulos || []} />
       <AcompanhamentoFilters filters={filters} onFilterChange={setFilters} />
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredModulos?.map(modulo => (
-          <AcompanhamentoModuloCard key={modulo.id} modulo={modulo} onEdit={() => setSelectedModulo(modulo)} />
-        ))}
-      </div>
+
+      {isLoading ? (
+        <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-sm font-medium text-slate-500 shadow-sm">
+          Carregando módulos...
+        </div>
+      ) : filteredModulos?.length === 0 ? (
+        <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-500 shadow-sm">
+          Nenhum módulo encontrado com os filtros selecionados.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {filteredModulos?.map(modulo => (
+            <AcompanhamentoModuloCard key={modulo.id} modulo={modulo} onEdit={() => setSelectedModulo(modulo)} />
+          ))}
+        </div>
+      )}
 
       <AcompanhamentoModuloDrawer 
         modulo={selectedModulo} 

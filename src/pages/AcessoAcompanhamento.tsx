@@ -24,13 +24,17 @@ export default function AcessoAcompanhamento() {
       const { data, error } = await supabase.rpc('validar_acesso_acompanhamento', {
         p_serial: serial.trim()
       });
+
       if (error) throw error;
+
+      // Casting to any to avoid TS errors with Supabase Json type
       const result = data as any;
 
       if (result?.valido) {
         sessionStorage.setItem('acompanhamento_serial_validado', 'true');
         sessionStorage.setItem('acompanhamento_serial', serial.trim());
         sessionStorage.setItem('acompanhamento_nome_cliente', result.nome_cliente || '');
+        
         toast.success(result.mensagem);
         navigate('/acompanhamento-publico');
       } else {
@@ -45,36 +49,49 @@ export default function AcessoAcompanhamento() {
   };
 
   return (
-    <div className="min-h-screen nexo-gradient-soft flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* decorative blobs */}
-      <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-sky-200/40 blur-3xl" />
-      <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-emerald-200/40 blur-3xl" />
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 p-4 text-slate-950">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.18),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(15,23,42,0.10),transparent_34%)]" />
+      <div className="pointer-events-none absolute left-1/2 top-10 h-72 w-72 -translate-x-1/2 rounded-full bg-sky-200/40 blur-3xl" />
 
-      <div className="w-full max-w-md space-y-8 relative z-10">
-        <div className="flex flex-col items-center text-center space-y-3">
-          <img src="/nexo-logo.png" alt="NEXO" className="w-28 h-auto object-contain mb-2" />
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Acompanhamento da Criação</h1>
-          <p className="text-sm text-slate-500 max-w-sm">
-            Digite o código de acesso para visualizar o andamento da criação do seu sistema.
-          </p>
+      <div className="relative w-full max-w-md space-y-8">
+        <div className="flex flex-col items-center space-y-4 text-center">
+          <div className="rounded-3xl border border-slate-200 bg-white px-6 py-5 shadow-xl shadow-slate-200/70">
+            <img src="/nexo-logo.png" alt="NEXO Logo" className="h-auto w-32 object-contain" />
+          </div>
+          <div className="space-y-3">
+            <span className="inline-flex rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-sky-600 shadow-sm">
+              Portal do cliente
+            </span>
+            <h1 className="text-3xl font-black tracking-tight text-slate-950">Acompanhamento da Criação</h1>
+            <p className="mx-auto max-w-sm text-sm leading-relaxed text-slate-500">
+              Digite o código de acesso para visualizar, em tempo real, o andamento da criação do seu sistema.
+            </p>
+          </div>
         </div>
 
-        <Card className="shadow-xl border-slate-200/60">
-          <CardContent className="pt-6 pb-6">
+        <Card className="rounded-[2rem] border-slate-200 bg-white/90 shadow-2xl shadow-slate-200/80 backdrop-blur">
+          <CardContent className="p-6">
             <form onSubmit={handleAccess} className="space-y-4">
-              <div className="relative">
-                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input
-                  placeholder="Código de Acesso (Serial)"
-                  value={serial}
-                  onChange={(e) => setSerial(e.target.value)}
-                  className="pl-10 h-11"
-                  disabled={loading}
-                />
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">Código de acesso</label>
+                <div className="relative">
+                  <KeyRound className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Input
+                    placeholder="Informe o serial recebido"
+                    value={serial}
+                    onChange={(e) => setSerial(e.target.value)}
+                    className="h-12 rounded-2xl border-slate-200 bg-slate-50 pl-11 font-semibold text-slate-950 shadow-inner shadow-slate-100 placeholder:text-slate-400 focus-visible:ring-sky-500"
+                    disabled={loading}
+                  />
+                </div>
               </div>
-              <Button type="submit" className="w-full h-11" disabled={loading}>
+              <Button
+                type="submit"
+                className="h-12 w-full rounded-2xl bg-slate-950 font-bold text-white shadow-lg shadow-slate-950/15 hover:bg-slate-800"
+                disabled={loading}
+              >
                 {loading ? (
-                  <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Validando...</>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   "Acessar acompanhamento"
                 )}
@@ -83,8 +100,8 @@ export default function AcessoAcompanhamento() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-slate-400">
-          &copy; {new Date().getFullYear()} NEXO &middot; Gestão de Planejados
+        <p className="text-center text-xs font-medium text-slate-400">
+          &copy; {new Date().getFullYear()} NEXO - Gestão de Planejados
         </p>
       </div>
     </div>

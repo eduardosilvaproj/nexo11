@@ -54,7 +54,7 @@ export function NovaEntregaDialog({ open, onOpenChange, defaultDate, defaultTurn
     queryKey: ["usuarios-motoristas"],
     queryFn: async () => {
       const { data } = await supabase
-        .from("usuarios")
+        .from("pessoas")
         .select("id, nome")
         .contains("funcoes", ["motorista"])
         .order("nome");

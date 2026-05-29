@@ -139,9 +139,9 @@ export function PontoRapidoCard() {
     setSubmitting(true);
     try {
       const { data: u, error: uErr } = await supabase
-        .from("usuarios")
+        .from("pessoas")
         .select("loja_id")
-        .eq("id", user.id)
+        .eq("auth_user_id", user.id)
         .maybeSingle();
       if (uErr) throw uErr;
       if (!u?.loja_id) throw new Error("Sua loja não está configurada");
@@ -275,9 +275,9 @@ function AjustePontoDialog({
       if (!ajustadoPor) throw new Error("Sessão inválida");
 
       const { data: u } = await supabase
-        .from("usuarios")
+        .from("pessoas")
         .select("nome")
-        .eq("id", ajustadoPor)
+        .eq("auth_user_id", ajustadoPor)
         .maybeSingle();
 
       // Update entrada
@@ -442,8 +442,9 @@ function SemanaPontoCard() {
     queryKey: ["ponto-membros"],
     queryFn: async (): Promise<Membro[]> => {
       const { data, error } = await supabase
-        .from("usuarios")
+        .from("pessoas")
         .select("id, nome")
+        .not("auth_user_id", "is", null)
         .order("nome");
       if (error) throw error;
       return (data ?? []) as Membro[];

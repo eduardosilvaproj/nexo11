@@ -82,7 +82,7 @@ export function ContratoComercialTab({ contrato, loja, ambientes, orcamentos, on
     queryFn: async () => {
       if (!contrato.vendedor_id) return null;
       const { data } = await supabase
-        .from("usuarios")
+        .from("pessoas")
         .select("nome, email")
         .eq("id", contrato.vendedor_id)
         .maybeSingle();

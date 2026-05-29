@@ -141,9 +141,9 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
     enabled: !!perfil?.loja_id,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("usuarios")
+        .from("pessoas")
         .select(`
-          id, 
+          id,
           nome,
           papeis_comissao!papel_comissao_id (
             nome

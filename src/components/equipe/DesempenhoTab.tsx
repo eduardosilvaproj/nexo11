@@ -89,8 +89,9 @@ export function DesempenhoTab() {
     queryKey: ["desempenho-membros"],
     queryFn: async (): Promise<Membro[]> => {
       const { data: us, error } = await supabase
-        .from("usuarios")
+        .from("pessoas")
         .select("id, nome")
+        .not("auth_user_id", "is", null)
         .order("nome");
       if (error) throw error;
       const ids = (us ?? []).map((u) => u.id);

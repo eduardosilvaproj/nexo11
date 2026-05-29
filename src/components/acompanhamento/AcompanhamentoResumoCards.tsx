@@ -1,5 +1,5 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, AlertCircle, Percent, Package, ShieldCheck } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CheckCircle2, AlertCircle, Percent, Package } from "lucide-react";
 
 interface AcompanhamentoResumoCardsProps {
   modulos: any[];
@@ -10,30 +10,31 @@ export default function AcompanhamentoResumoCards({ modulos }: AcompanhamentoRes
   const concluidos = modulos.filter(m => m.status === 'concluido').length;
   const emRevisao = modulos.filter(m => m.status === 'em_revisao').length;
   const aprovados = modulos.filter(m => m.aprovado).length;
-  const percentualGeral = total > 0
+  
+  const percentualGeral = total > 0 
     ? Math.round(modulos.reduce((acc, curr) => acc + curr.percentual, 0) / total)
     : 0;
 
   const stats = [
-    { title: "Total de Módulos", value: total, icon: Package, tint: "bg-sky-50 text-sky-600" },
-    { title: "Concluídos", value: concluidos, icon: CheckCircle2, tint: "bg-emerald-50 text-emerald-600" },
-    { title: "Em Revisão", value: emRevisao, icon: AlertCircle, tint: "bg-amber-50 text-amber-600" },
-    { title: "Aprovados", value: aprovados, icon: ShieldCheck, tint: "bg-emerald-50 text-emerald-600" },
-    { title: "Evolução Geral", value: `${percentualGeral}%`, icon: Percent, tint: "bg-violet-50 text-violet-600" },
+    { title: "Total de Módulos", value: total, icon: Package, color: "text-sky-600", bg: "bg-sky-50" },
+    { title: "Concluídos", value: concluidos, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { title: "Em Revisão", value: emRevisao, icon: AlertCircle, color: "text-amber-600", bg: "bg-amber-50" },
+    { title: "Aprovados", value: aprovados, icon: CheckCircle2, color: "text-teal-600", bg: "bg-teal-50" },
+    { title: "Evolução Geral", value: `${percentualGeral}%`, icon: Percent, color: "text-violet-600", bg: "bg-violet-50" },
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
       {stats.map((stat, i) => (
-        <Card key={i} className="hover:shadow-md">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">{stat.title}</span>
-              <div className={`h-9 w-9 rounded-xl flex items-center justify-center ${stat.tint}`}>
-                <stat.icon className="h-4 w-4" />
-              </div>
+        <Card key={i} className="border-slate-200 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">{stat.title}</CardTitle>
+            <div className={`rounded-2xl ${stat.bg} p-2`}>
+              <stat.icon className={`h-4 w-4 ${stat.color}`} />
             </div>
-            <div className="text-3xl font-bold tracking-tight text-slate-900 tabular-nums">{stat.value}</div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-black tracking-tight text-slate-950">{stat.value}</div>
           </CardContent>
         </Card>
       ))}

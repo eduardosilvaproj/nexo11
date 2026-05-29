@@ -1,16 +1,17 @@
+import { useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import AppLayout from "@/components/AppLayout";
+import { AppShellMobile } from "@/routes/mobile/AppShellMobile";
 import AuthPage from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
-
+import Placeholder from "./pages/Placeholder";
 import Comercial from "./pages/Comercial";
-import Contratos from "./pages/Contratos";
 import Clientes from "./pages/Clientes";
 import ClienteDetail from "./pages/ClienteDetail";
 import Tecnico from "./pages/Tecnico";
@@ -38,50 +39,246 @@ import OrcamentoNegociacao from "./pages/OrcamentoNegociacao";
 import ConfigFornecedores from "./pages/ConfigFornecedores";
 import Compras from "./pages/Compras";
 import EstimativaOrcamento from "./pages/EstimativaOrcamento";
-import RH from "./pages/RH";
-import Execucao from "./pages/Execucao";
-import IndicadoresOperacionais from "./pages/IndicadoresOperacionais";
-import Automacoes from "./pages/Automacoes";
-import CentralComunicacao from "./pages/CentralComunicacao";
-import FrotaLayout from "./pages/frota/FrotaLayout";
-import FrotaDashboard from "./pages/frota/FrotaDashboard";
-import FrotaVeiculos from "./pages/frota/FrotaVeiculos";
-import FrotaAbastecimentos from "./pages/frota/FrotaAbastecimentos";
-import FrotaManutencoes from "./pages/frota/FrotaManutencoes";
-import FrotaMultas from "./pages/frota/FrotaMultas";
-import FrotaPostos from "./pages/frota/FrotaPostos";
-import FrotaCnh from "./pages/frota/FrotaCnh";
-import FrotaRelatorios from "./pages/frota/FrotaRelatorios";
-import FrotaCheckin from "./pages/frota/FrotaCheckin";
 
 import AcompanhamentoCriacao from "./pages/AcompanhamentoCriacao";
 import AcessoAcompanhamento from "./pages/AcessoAcompanhamento";
 import AcompanhamentoPublico from "./pages/AcompanhamentoPublico";
 import NewContract from "./pages/NewContract";
-import Almoxarifado from "./pages/Almoxarifado";
-import Apresentacao from "./pages/Apresentacao";
-import SemPermissao from "./pages/SemPermissao";
-import Notificacoes from "./pages/Notificacoes";
-import ConfiguracaoInicial from "./pages/ConfiguracaoInicial";
-import ModoCampo from "./pages/ModoCampo";
-import MasterLayout from "@/components/master/MasterLayout";
-import { MasterProtectedRoute } from "@/components/master/MasterProtectedRoute";
-import MasterDashboard from "./pages/master/MasterDashboard";
-import MasterClientes from "./pages/master/MasterClientes";
-import MasterLojas from "./pages/master/MasterLojas";
-import MasterPlanos from "./pages/master/MasterPlanos";
-import MasterAssinaturas from "./pages/master/MasterAssinaturas";
-import MasterLimites from "./pages/master/MasterLimites";
-import MasterSuporte from "./pages/master/MasterSuporte";
-import MasterSaude from "./pages/master/MasterSaude";
-import MasterAuditoria from "./pages/master/MasterAuditoria";
 
-
-
-
+// Mobile imports - lazy loaded
+import DashboardVendedor from "@/routes/mobile/pages/DashboardVendedor";
+import LeadsVendedor from "@/routes/mobile/pages/LeadsVendedor";
+import ContratosVendedor from "@/routes/mobile/pages/ContratosVendedor";
+import MetasVendedor from "@/routes/mobile/pages/MetasVendedor";
+import ChatVendedor from "@/routes/mobile/pages/ChatVendedor";
+import DashboardMedidor from "@/routes/mobile/pages/DashboardMedidor";
+import AndamentosMedidor from "@/routes/mobile/pages/AndamentosMedidor";
+import ValoresMedidor from "@/routes/mobile/pages/ValoresMedidor";
+import HistoricoMedidor from "@/routes/mobile/pages/HistoricoMedidor";
+import DashboardConferente from "@/routes/mobile/pages/DashboardConferente";
+import AndamentosConferente from "@/routes/mobile/pages/AndamentosConferente";
+import HistoricoConferente from "@/routes/mobile/pages/HistoricoConferente";
+import DashboardMontador from "@/routes/mobile/pages/DashboardMontador";
+import OrdensMontador from "@/routes/mobile/pages/OrdensMontador";
+import GuiasMontador from "@/routes/mobile/pages/GuiasMontador";
+import FotosMontador from "@/routes/mobile/pages/FotosMontador";
+import AgendaMontador from "@/routes/mobile/pages/AgendaMontador";
+import SolicitacoesMontador from "@/routes/mobile/pages/SolicitacoesMontador";
+import DashboardEntregue from "@/routes/mobile/pages/DashboardEntregue";
+import AgendaEntregue from "@/routes/mobile/pages/AgendaEntregue";
+import RomaneioEntregue from "@/routes/mobile/pages/RomaneioEntregue";
+import ItensEntregue from "@/routes/mobile/pages/ItensEntregue";
+import DashboardAdmin from "@/routes/mobile/pages/DashboardAdmin";
+import AgendaAdmin from "@/routes/mobile/pages/AgendaAdmin";
+import ResumoAdmin from "@/routes/mobile/pages/ResumoAdmin";
 
 
 const queryClient = new QueryClient();
+
+// Breakpoint for mobile detection (matches use-mobile.ts)
+const MOBILE_BREAKPOINT = 768;
+
+// Hook to detect mobile
+function useIsMobileView() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+    setIsMobile(mql.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+  return isMobile;
+}
+
+// Wrapper that chooses AppLayout (desktop) vs AppShellMobile (mobile)
+function AppShellWrapper({ children }: { children: React.ReactNode }) {
+  const isMobile = useIsMobileView();
+  if (isMobile) {
+    return <AppShellMobile>{children}</AppShellMobile>;
+  }
+  return <>{children}</>;
+}
+
+// Root layout switcher at route level
+function RootLayoutSwitcher() {
+  const isMobile = useIsMobileView();
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route path="/login" element={<AuthPage />} />
+      <Route path="/auth" element={<AuthPage />} />
+      <Route path="/portal" element={<PortalEntrada />} />
+      <Route path="/portal/:token" element={<PortalCliente />} />
+      <Route path="/acesso-acompanhamento" element={<AcessoAcompanhamento />} />
+      <Route path="/acompanhamento-publico" element={<AcompanhamentoPublico />} />
+
+      {/* Mobile routes — always use AppShellMobile */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <AppShellMobile />
+          </ProtectedRoute>
+        }
+      >
+        {/* Vendedor mobile */}
+        <Route path="/mobile/vendedor" element={<DashboardVendedor />} />
+        <Route path="/mobile/vendedor/leads" element={<LeadsVendedor />} />
+        <Route path="/mobile/vendedor/contratos" element={<ContratosVendedor />} />
+        <Route path="/mobile/vendedor/metas" element={<MetasVendedor />} />
+        <Route path="/mobile/vendedor/chat" element={<ChatVendedor />} />
+
+        {/* Medidor mobile */}
+        <Route path="/mobile/medidor" element={<DashboardMedidor />} />
+        <Route path="/mobile/medidor/andamentos" element={<AndamentosMedidor />} />
+        <Route path="/mobile/medidor/valores" element={<ValoresMedidor />} />
+        <Route path="/mobile/medidor/historico" element={<HistoricoMedidor />} />
+
+        {/* Conferente mobile */}
+        <Route path="/mobile/conferente" element={<DashboardConferente />} />
+        <Route path="/mobile/conferente/andamentos" element={<AndamentosConferente />} />
+        <Route path="/mobile/conferente/historico" element={<HistoricoConferente />} />
+
+        {/* Montador mobile */}
+        <Route path="/mobile/montador" element={<DashboardMontador />} />
+        <Route path="/mobile/montador/ordens" element={<OrdensMontador />} />
+        <Route path="/mobile/montador/guias" element={<GuiasMontador />} />
+        <Route path="/mobile/montador/fotos" element={<FotosMontador />} />
+        <Route path="/mobile/montador/agenda" element={<AgendaMontador />} />
+        <Route path="/mobile/montador/solicitacoes" element={<SolicitacoesMontador />} />
+
+        {/* Entregue mobile */}
+        <Route path="/mobile/entregue" element={<DashboardEntregue />} />
+        <Route path="/mobile/entregue/agenda" element={<AgendaEntregue />} />
+        <Route path="/mobile/entregue/romaneio" element={<RomaneioEntregue />} />
+        <Route path="/mobile/entregue/itens" element={<ItensEntregue />} />
+
+        {/* Admin mobile */}
+        <Route path="/mobile/admin" element={<DashboardAdmin />} />
+        <Route path="/mobile/admin/agenda" element={<AgendaAdmin />} />
+        <Route path="/mobile/admin/resumo" element={<ResumoAdmin />} />
+      </Route>
+
+      {/* Desktop routes */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <AppLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/acompanhamento-criacao" element={
+          <ProtectedRoute roles={["admin"]}>
+            <AcompanhamentoCriacao />
+          </ProtectedRoute>
+        } />
+
+        {/* Operação */}
+        <Route path="/comercial" element={<Comercial />} />
+        <Route path="/clientes" element={<Clientes />} />
+        <Route path="/clientes/:id" element={<ClienteDetail />} />
+        <Route path="/mensagens" element={<Mensagens />} />
+        <Route path="/orcamentos/:id/negociacao" element={
+          <ProtectedRoute roles={["admin","gerente","vendedor"]}>
+            <OrcamentoNegociacao />
+          </ProtectedRoute>
+        } />
+        <Route path="/contratos/:id" element={<ContratoDetail />} />
+        <Route path="/contratos/:id/medicao" element={<ContratoMedicao />} />
+        <Route path="/contratos/:id/conferencia" element={<ContratoConferencia />} />
+        <Route path="/contratos/novo" element={
+          <ProtectedRoute roles={["admin","gerente","vendedor"]}>
+            <NewContract />
+          </ProtectedRoute>
+        } />
+        <Route path="/tecnico" element={
+          <ProtectedRoute roles={["admin","gerente","tecnico","franqueador"]}>
+            <Tecnico />
+          </ProtectedRoute>
+        } />
+        <Route path="/producao" element={
+          <ProtectedRoute roles={["admin","gerente","tecnico","franqueador"]}>
+            <Producao />
+          </ProtectedRoute>
+        } />
+        <Route path="/logistica" element={
+          <ProtectedRoute roles={["admin","gerente","tecnico","franqueador"]}>
+            <Logistica />
+          </ProtectedRoute>
+        } />
+        <Route path="/montagem" element={
+          <ProtectedRoute roles={["admin","gerente","montador","tecnico","franqueador"]}>
+            <Montagem />
+          </ProtectedRoute>
+        } />
+        <Route path="/pos-venda" element={<PosVenda />} />
+        <Route path="/dre" element={
+          <ProtectedRoute roles={["admin","gerente","franqueador"]}>
+            <Dre />
+          </ProtectedRoute>
+        } />
+
+        {/* Gestão */}
+        <Route path="/financeiro" element={
+          <ProtectedRoute roles={["admin","gerente","franqueador"]}>
+            <Financeiro />
+          </ProtectedRoute>
+        } />
+        <Route path="/comissoes" element={
+          <ProtectedRoute roles={["admin","gerente"]}>
+            <Comissoes />
+          </ProtectedRoute>
+        } />
+        <Route path="/compras" element={
+          <ProtectedRoute roles={["admin","gerente","tecnico"]}>
+            <Compras />
+          </ProtectedRoute>
+        } />
+        <Route path="/equipe" element={
+          <ProtectedRoute roles={["admin","gerente"]}>
+            <Equipe />
+          </ProtectedRoute>
+        } />
+        <Route path="/lojas" element={
+          <ProtectedRoute roles={["admin","franqueador"]} redirectTo="/" redirectMessage="Acesso restrito">
+            <Lojas />
+          </ProtectedRoute>
+        } />
+        <Route path="/lojas/:id" element={
+          <ProtectedRoute roles={["admin","franqueador"]} redirectTo="/" redirectMessage="Acesso restrito">
+            <LojaDetail />
+          </ProtectedRoute>
+        } />
+
+        {/* Inteligência */}
+        <Route path="/analytics" element={
+          <ProtectedRoute roles={["admin","gerente","franqueador"]}>
+            <Analytics />
+          </ProtectedRoute>
+        } />
+        <Route path="/integracoes" element={
+          <ProtectedRoute roles={["admin","gerente"]}>
+            <Integracoes />
+          </ProtectedRoute>
+        } />
+        <Route path="/configuracoes/pagamento" element={
+          <ProtectedRoute roles={["admin","gerente"]}>
+            <ConfigPagamento />
+          </ProtectedRoute>
+        } />
+        <Route path="/configuracoes/fornecedores" element={
+          <ProtectedRoute roles={["admin","gerente"]}>
+            <ConfigFornecedores />
+          </ProtectedRoute>
+        } />
+        <Route path="/estimativa-orcamento" element={<EstimativaOrcamento />} />
+      </Route>
+
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -90,238 +287,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<AuthPage />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/apresentacao" element={<Apresentacao />} />
-            <Route path="/portal" element={<PortalEntrada />} />
-            <Route path="/portal/:token" element={<PortalCliente />} />
-            <Route path="/acesso-acompanhamento" element={<AcessoAcompanhamento />} />
-            <Route path="/acompanhamento-publico" element={<AcompanhamentoPublico />} />
-
-            <Route
-              element={
-                <ProtectedRoute>
-                  <AppLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/acompanhamento-criacao" element={
-                <ProtectedRoute roles={["admin"]}>
-                  <AcompanhamentoCriacao />
-                </ProtectedRoute>
-              } />
-
-
-              {/* Operação */}
-              <Route path="/comercial" element={
-                <ProtectedRoute roles={["admin","gerente","vendedor","franqueador","admin_master"]}>
-                  <Comercial />
-                </ProtectedRoute>
-              } />
-              <Route path="/contratos" element={
-                <ProtectedRoute roles={["admin","gerente","vendedor","franqueador","admin_master"]}>
-                  <Contratos />
-                </ProtectedRoute>
-              } />
-              <Route path="/clientes" element={
-                <ProtectedRoute roles={["admin","gerente","vendedor","franqueador","pos_venda","admin_master"]}>
-                  <Clientes />
-                </ProtectedRoute>
-              } />
-              <Route path="/clientes/:id" element={
-                <ProtectedRoute roles={["admin","gerente","vendedor","franqueador","pos_venda","admin_master"]}>
-                  <ClienteDetail />
-                </ProtectedRoute>
-              } />
-              <Route path="/mensagens" element={<Mensagens />} />
-              <Route path="/orcamentos/:id/negociacao" element={
-                <ProtectedRoute roles={["admin","gerente","vendedor","admin_master"]}>
-                  <OrcamentoNegociacao />
-                </ProtectedRoute>
-              } />
-              <Route path="/contratos/:id" element={<ContratoDetail />} />
-              <Route path="/contratos/:id/medicao" element={
-                <ProtectedRoute roles={["admin","gerente","tecnico","medidor","admin_master"]}>
-                  <ContratoMedicao />
-                </ProtectedRoute>
-              } />
-              <Route path="/contratos/:id/conferencia" element={
-                <ProtectedRoute roles={["admin","gerente","tecnico","conferente","admin_master"]}>
-                  <ContratoConferencia />
-                </ProtectedRoute>
-              } />
-              <Route path="/contratos/novo" element={
-                <ProtectedRoute roles={["admin","gerente","vendedor","admin_master"]}>
-                  <NewContract />
-                </ProtectedRoute>
-              } />
-              <Route path="/tecnico" element={
-                <ProtectedRoute roles={["admin","gerente","tecnico","medidor","conferente","franqueador","admin_master"]}>
-                  <Tecnico />
-                </ProtectedRoute>
-              } />
-              <Route path="/producao" element={
-                <ProtectedRoute roles={["admin","gerente","tecnico","franqueador","admin_master"]}>
-                  <Producao />
-                </ProtectedRoute>
-              } />
-              <Route path="/logistica" element={
-                <ProtectedRoute roles={["admin","gerente","logistico","franqueador","admin_master"]}>
-                  <Logistica />
-                </ProtectedRoute>
-              } />
-              <Route path="/montagem" element={
-                <ProtectedRoute roles={["admin","gerente","montador","tecnico","franqueador","admin_master"]}>
-                  <Montagem />
-                </ProtectedRoute>
-              } />
-              <Route path="/pos-venda" element={
-                <ProtectedRoute roles={["admin","gerente","pos_venda","franqueador","admin_master"]}>
-                  <PosVenda />
-                </ProtectedRoute>
-              } />
-              <Route path="/dre" element={
-                <ProtectedRoute roles={["admin","gerente","franqueador","financeiro","admin_master"]}>
-                  <Dre />
-                </ProtectedRoute>
-              } />
-
-              {/* Gestão */}
-              <Route path="/financeiro" element={
-                <ProtectedRoute roles={["admin","gerente","franqueador","financeiro","admin_master"]}>
-                  <Financeiro />
-                </ProtectedRoute>
-              } />
-              <Route path="/comissoes" element={
-                <ProtectedRoute roles={["admin","gerente","financeiro","admin_master"]}>
-                  <Comissoes />
-                </ProtectedRoute>
-              } />
-              <Route path="/compras" element={
-                <ProtectedRoute roles={["admin","gerente","comprador","almoxarife","admin_master"]}>
-                  <Compras />
-                </ProtectedRoute>
-              } />
-              <Route path="/almoxarifado" element={
-                <ProtectedRoute roles={["admin","gerente","almoxarife","comprador","franqueador","admin_master"]}>
-                  <Almoxarifado />
-                </ProtectedRoute>
-              } />
-              <Route path="/equipe" element={
-                <ProtectedRoute roles={["admin","gerente","admin_master"]}>
-                  <Equipe />
-                </ProtectedRoute>
-              } />
-              <Route path="/rh" element={
-                <ProtectedRoute roles={["admin","gerente","franqueador","rh","admin_master"]}>
-                  <RH />
-                </ProtectedRoute>
-              } />
-              <Route path="/operacao/execucao" element={
-                <ProtectedRoute roles={["admin","gerente","admin_master"]}>
-                  <Execucao />
-                </ProtectedRoute>
-              } />
-              <Route path="/operacao/indicadores" element={
-                <ProtectedRoute roles={["admin","gerente","admin_master"]}>
-                  <IndicadoresOperacionais />
-                </ProtectedRoute>
-              } />
-              <Route path="/frota" element={
-                <ProtectedRoute roles={["admin","admin_master","gerente","logistico","franqueador"]}>
-                  <FrotaLayout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<FrotaDashboard />} />
-                <Route path="veiculos" element={<FrotaVeiculos />} />
-                <Route path="abastecimentos" element={<FrotaAbastecimentos />} />
-                <Route path="manutencoes" element={<FrotaManutencoes />} />
-                <Route path="multas" element={<FrotaMultas />} />
-                <Route path="postos" element={<FrotaPostos />} />
-                <Route path="cnh" element={<FrotaCnh />} />
-                <Route path="relatorios" element={<FrotaRelatorios />} />
-              </Route>
-              <Route path="/frota/checkin" element={<ProtectedRoute><FrotaCheckin /></ProtectedRoute>} />
-              <Route path="/lojas" element={
-                <ProtectedRoute roles={["admin","franqueador","admin_master"]} redirectTo="/" redirectMessage="Acesso restrito">
-                  <Lojas />
-                </ProtectedRoute>
-              } />
-              <Route path="/lojas/:id" element={
-                <ProtectedRoute roles={["admin","franqueador","admin_master"]} redirectTo="/" redirectMessage="Acesso restrito">
-                  <LojaDetail />
-                </ProtectedRoute>
-              } />
-
-              {/* Inteligência */}
-              <Route path="/analytics" element={
-                <ProtectedRoute roles={["admin","gerente","franqueador","admin_master"]}>
-                  <Analytics />
-                </ProtectedRoute>
-              } />
-              <Route path="/integracoes" element={
-                <ProtectedRoute roles={["admin","gerente","admin_master"]}>
-                  <Integracoes />
-                </ProtectedRoute>
-              } />
-              <Route path="/comunicacoes/envios" element={
-                <ProtectedRoute roles={["admin","gerente","admin_master"]}>
-                  <CentralComunicacao />
-                </ProtectedRoute>
-              } />
-              <Route path="/configuracoes/pagamento" element={
-                <ProtectedRoute roles={["admin","gerente","admin_master"]}>
-                  <ConfigPagamento />
-                </ProtectedRoute>
-              } />
-              <Route path="/configuracoes/fornecedores" element={
-                <ProtectedRoute roles={["admin","gerente","admin_master"]}>
-                  <ConfigFornecedores />
-                </ProtectedRoute>
-              } />
-              <Route path="/configuracoes/automacoes" element={
-                <ProtectedRoute roles={["admin","gerente","franqueador","admin_master"]}>
-                  <Automacoes />
-                </ProtectedRoute>
-              } />
-              <Route path="/estimativa-orcamento" element={<EstimativaOrcamento />} />
-              <Route path="/notificacoes" element={<Notificacoes />} />
-              <Route path="/configuracao-inicial" element={
-                <ProtectedRoute roles={["admin", "gerente", "franqueador", "admin_master"]}>
-                  <ConfiguracaoInicial />
-                </ProtectedRoute>
-              } />
-              <Route path="/campo" element={
-                <ProtectedRoute roles={["admin", "gerente", "tecnico", "medidor", "conferente", "logistico", "montador", "pos_venda", "almoxarife", "admin_master"]}>
-                  <ModoCampo />
-                </ProtectedRoute>
-              } />
-              <Route path="/sem-permissao" element={<SemPermissao />} />
-            </Route>
-
-            <Route
-              path="/master"
-              element={
-                <MasterProtectedRoute>
-                  <MasterLayout />
-                </MasterProtectedRoute>
-              }
-            >
-              <Route index element={<MasterDashboard />} />
-              <Route path="clientes" element={<MasterClientes />} />
-              <Route path="lojas" element={<MasterLojas />} />
-              <Route path="planos" element={<MasterPlanos />} />
-              <Route path="assinaturas" element={<MasterAssinaturas />} />
-              <Route path="limites" element={<MasterLimites />} />
-              <Route path="suporte" element={<MasterSuporte />} />
-              <Route path="saude" element={<MasterSaude />} />
-              <Route path="auditoria" element={<MasterAuditoria />} />
-            </Route>
-
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <RootLayoutSwitcher />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

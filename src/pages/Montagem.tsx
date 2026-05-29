@@ -795,7 +795,7 @@ function CriarEquipeDialog({ onCreated }: { onCreated: () => void }) {
   const mut = useMutation({
     mutationFn: async () => {
       if (!nome) throw new Error("Informe o nome");
-      const { data: u } = await supabase.from("usuarios").select("loja_id").eq("id", (await supabase.auth.getUser()).data.user?.id ?? "").maybeSingle();
+      const { data: u } = await supabase.from("pessoas").select("loja_id").eq("auth_user_id", (await supabase.auth.getUser()).data.user?.id ?? "").maybeSingle();
       if (!u?.loja_id) throw new Error("Usuário sem loja");
       const { error } = await supabase.from("equipes").insert({
         loja_id: u.loja_id,

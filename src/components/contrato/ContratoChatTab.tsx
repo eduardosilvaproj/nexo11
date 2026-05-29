@@ -87,9 +87,9 @@ export function ContratoChatTab({ contratoId }: ContratoChatTabProps) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase
-          .from("usuarios")
+          .from("pessoas")
           .select("nome")
-          .eq("id", user.id)
+          .eq("auth_user_id", user.id)
           .maybeSingle();
         
         if (profile?.nome) {

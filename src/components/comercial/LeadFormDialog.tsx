@@ -65,7 +65,7 @@ export function LeadFormDialog({ open, onOpenChange }: Props) {
     enabled: !!perfil?.loja_id && open,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("usuarios")
+        .from("pessoas")
         .select("id, nome")
         .eq("loja_id", perfil!.loja_id!)
         .order("nome");
