@@ -43,6 +43,16 @@ import Execucao from "./pages/Execucao";
 import IndicadoresOperacionais from "./pages/IndicadoresOperacionais";
 import Automacoes from "./pages/Automacoes";
 import CentralComunicacao from "./pages/CentralComunicacao";
+import FrotaLayout from "./pages/frota/FrotaLayout";
+import FrotaDashboard from "./pages/frota/FrotaDashboard";
+import FrotaVeiculos from "./pages/frota/FrotaVeiculos";
+import FrotaAbastecimentos from "./pages/frota/FrotaAbastecimentos";
+import FrotaManutencoes from "./pages/frota/FrotaManutencoes";
+import FrotaMultas from "./pages/frota/FrotaMultas";
+import FrotaPostos from "./pages/frota/FrotaPostos";
+import FrotaCnh from "./pages/frota/FrotaCnh";
+import FrotaRelatorios from "./pages/frota/FrotaRelatorios";
+import FrotaCheckin from "./pages/frota/FrotaCheckin";
 
 import AcompanhamentoCriacao from "./pages/AcompanhamentoCriacao";
 import AcessoAcompanhamento from "./pages/AcessoAcompanhamento";
@@ -219,6 +229,21 @@ const App = () => (
                   <IndicadoresOperacionais />
                 </ProtectedRoute>
               } />
+              <Route path="/frota" element={
+                <ProtectedRoute roles={["admin","admin_master","gerente","logistico","franqueador"]}>
+                  <FrotaLayout />
+                </ProtectedRoute>
+              }>
+                <Route index element={<FrotaDashboard />} />
+                <Route path="veiculos" element={<FrotaVeiculos />} />
+                <Route path="abastecimentos" element={<FrotaAbastecimentos />} />
+                <Route path="manutencoes" element={<FrotaManutencoes />} />
+                <Route path="multas" element={<FrotaMultas />} />
+                <Route path="postos" element={<FrotaPostos />} />
+                <Route path="cnh" element={<FrotaCnh />} />
+                <Route path="relatorios" element={<FrotaRelatorios />} />
+              </Route>
+              <Route path="/frota/checkin" element={<ProtectedRoute><FrotaCheckin /></ProtectedRoute>} />
               <Route path="/lojas" element={
                 <ProtectedRoute roles={["admin","franqueador","admin_master"]} redirectTo="/" redirectMessage="Acesso restrito">
                   <Lojas />
