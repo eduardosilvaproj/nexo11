@@ -3285,6 +3285,15 @@ export type Database = {
       }
       financeiro_contas_receber: {
         Row: {
+          asaas_billing_date: string | null
+          asaas_billing_type: string | null
+          asaas_customer_id: string | null
+          asaas_due_date: string | null
+          asaas_invoice_id: string | null
+          asaas_invoice_url: string | null
+          asaas_mdc5: string | null
+          asaas_payment_id: string | null
+          asaas_payment_status: string | null
           cliente_id: string | null
           contrato_id: string | null
           created_at: string | null
@@ -3305,6 +3314,15 @@ export type Database = {
           vencimento: string
         }
         Insert: {
+          asaas_billing_date?: string | null
+          asaas_billing_type?: string | null
+          asaas_customer_id?: string | null
+          asaas_due_date?: string | null
+          asaas_invoice_id?: string | null
+          asaas_invoice_url?: string | null
+          asaas_mdc5?: string | null
+          asaas_payment_id?: string | null
+          asaas_payment_status?: string | null
           cliente_id?: string | null
           contrato_id?: string | null
           created_at?: string | null
@@ -3325,6 +3343,15 @@ export type Database = {
           vencimento: string
         }
         Update: {
+          asaas_billing_date?: string | null
+          asaas_billing_type?: string | null
+          asaas_customer_id?: string | null
+          asaas_due_date?: string | null
+          asaas_invoice_id?: string | null
+          asaas_invoice_url?: string | null
+          asaas_mdc5?: string | null
+          asaas_payment_id?: string | null
+          asaas_payment_status?: string | null
           cliente_id?: string | null
           contrato_id?: string | null
           created_at?: string | null

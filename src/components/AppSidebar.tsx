@@ -24,6 +24,7 @@ import {
   Settings,
   LogOut,
   MessageSquare,
+  FileText,
 } from "lucide-react";
 import {
   Sidebar,
@@ -53,6 +54,7 @@ type MenuItem = {
 
 const operacao: MenuItem[] = [
   { title: "Comercial", url: "/comercial", icon: Users },
+  { title: "Contratos", url: "/contratos", icon: FileText },
   { title: "Clientes", url: "/clientes", icon: UserRound },
   { title: "Técnico", url: "/tecnico", icon: ClipboardCheck, roles: ["admin", "gerente", "tecnico", "franqueador"] },
   { title: "Produção", url: "/producao", icon: Factory, roles: ["admin", "gerente", "tecnico", "franqueador"] },

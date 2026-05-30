@@ -12,6 +12,8 @@ import AuthPage from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Placeholder from "./pages/Placeholder";
 import Comercial from "./pages/Comercial";
+import Contratos from "./pages/Contratos";
+import RH from "./pages/RH";
 import Clientes from "./pages/Clientes";
 import ClienteDetail from "./pages/ClienteDetail";
 import Tecnico from "./pages/Tecnico";
@@ -170,6 +172,8 @@ function RootLayoutSwitcher() {
 
         {/* Operação */}
         <Route path="/comercial" element={<Comercial />} />
+        <Route path="/contratos" element={<Contratos />} />
+        <Route path="/rh" element={<RH />} />
         <Route path="/clientes" element={<Clientes />} />
         <Route path="/clientes/:id" element={<ClienteDetail />} />
         <Route path="/mensagens" element={<Mensagens />} />

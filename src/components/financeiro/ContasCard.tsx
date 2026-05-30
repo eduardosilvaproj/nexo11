@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check, Trash2, Calendar } from "lucide-react";
+import { Check, Trash2, Calendar, QrCode } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PagamentoConfirmDialog } from "./PagamentoConfirmDialog";
+import { GerarCobrancaDialog } from "./GerarCobrancaDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { canPerform } from "@/lib/permissions";
 
@@ -44,6 +45,7 @@ export function ContasCard() {
   const [receber, setReceber] = useState<Conta[]>([]);
   const [pagar, setPagar] = useState<Conta[]>([]);
   const [pagamentoAlvo, setPagamentoAlvo] = useState<{ id: string; descricao: string; valor: number; tipo: 'receita' | 'despesa'; status: Status; contrato_id?: string | null } | null>(null);
+  const [cobrancaAlvo, setCobrancaAlvo] = useState<{ id: string; descricao: string; valor: number; vencimento: string; contrato_id: string | null; contratos?: { id: string; cliente_nome: string } | null } | null>(null);
   const [filtroReceber, setFiltroReceber] = useState<FiltroKey>("todas");
   const [filtroPagar, setFiltroPagar] = useState<FiltroKey>("todas");
   const hojeStr = new Date().toISOString().slice(0, 10);
@@ -55,7 +57,7 @@ export function ContasCard() {
     const [resReceber, resPagar] = await Promise.all([
       supabase
         .from("financeiro_contas_receber")
-        .select("id, descricao, valor, vencimento, data_pagamento, status, contrato_id, contratos(id, cliente_nome)")
+        .select("id, descricao, valor, vencimento, data_pagamento, status, contrato_id, contratos(id, cliente_nome), asaas_payment_id")
         .order("vencimento", { ascending: true }),
       supabase
         .from("financeiro_contas_pagar")
@@ -196,6 +198,17 @@ export function ContasCard() {
                                 )}
                               </Button>
                             )}
+                            {isReceita && podeGerenciar && (c.status === "pendente" || c.status === "atrasado") && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-7 w-7 text-[#1E6FBF] hover:bg-[#1E6FBF]/10"
+                                onClick={() => setCobrancaAlvo({ id: c.id, descricao: c.descricao, valor: Number(c.valor), vencimento: c.vencimento, contrato_id: c.contrato_id, contratos: c.contratos })}
+                                title="Gerar cobrança PIX / boleto"
+                              >
+                                <QrCode className="h-4 w-4" />
+                              </Button>
+                            )}
                             {podeGerenciar && (
                               <Button
                                 size="icon"
@@ -257,6 +270,13 @@ export function ContasCard() {
         onOpenChange={(v) => !v && setPagamentoAlvo(null)}
         transacao={pagamentoAlvo}
         onConfirmed={carregar}
+      />
+
+      <GerarCobrancaDialog
+        open={!!cobrancaAlvo}
+        onOpenChange={(v) => !v && setCobrancaAlvo(null)}
+        cobranca={cobrancaAlvo}
+        onCobrado={carregar}
       />
     </div>
   );

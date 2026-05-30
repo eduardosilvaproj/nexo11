@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useRef, useCallback, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
@@ -33,25 +33,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadProfileAndRoles = async (userId: string) => {
-    const [{ data: perfilData }, { data: rolesData }] = await Promise.all([
-      supabase.from("pessoas").select("id,nome,email,loja_id").eq("auth_user_id", userId).maybeSingle(),
-      supabase.from("user_roles").select("role").eq("user_id", userId),
-    ]);
-    setPerfil(perfilData ?? null);
-    setRoles((rolesData ?? []).map((r) => r.role as AppRole));
-  };
+  // Deduplication refs — prevent unnecessary re-fetches and re-renders
+  const loadedUserIdRef = useRef<string | null>(null);
+  const loadingProfileRef = useRef(false);
+  const lastPerfilRef = useRef<UsuarioPerfil | null>(null);
+  const lastRolesRef = useRef<AppRole[]>([]);
+
+  const loadProfileAndRoles = useCallback(async (userId: string) => {
+    // Skip if already loaded for this user
+    if (loadedUserIdRef.current === userId) return;
+    // Skip if already loading
+    if (loadingProfileRef.current) return;
+
+    loadingProfileRef.current = true;
+    try {
+      const [{ data: perfilData }, { data: rolesData }] = await Promise.all([
+        supabase.from("pessoas").select("id,nome,email,loja_id").eq("auth_user_id", userId).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", userId),
+      ]);
+
+      const newPerfil = perfilData as UsuarioPerfil | null;
+      const newRoles = (rolesData ?? []).map((r) => r.role as AppRole);
+
+      // Only update state if data actually changed (reference equality)
+      if (loadedUserIdRef.current !== userId) {
+        loadedUserIdRef.current = userId;
+        setPerfil(newPerfil);
+        setRoles(newRoles);
+        lastPerfilRef.current = newPerfil;
+        lastRolesRef.current = newRoles;
+      }
+    } finally {
+      loadingProfileRef.current = false;
+    }
+  }, []);
 
   useEffect(() => {
     // Listener PRIMEIRO
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
+
       if (newSession?.user) {
-        loadProfileAndRoles(newSession.user.id);
+        // Only reload profile if user actually changed (not on TOKEN_REFRESHED)
+        if (event !== "TOKEN_REFRESHED") {
+          loadProfileAndRoles(newSession.user.id);
+        }
       } else {
         setPerfil(null);
         setRoles([]);
+        loadedUserIdRef.current = null;
+        lastPerfilRef.current = null;
+        lastRolesRef.current = [];
       }
     });
 
@@ -59,12 +92,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
       setUser(s?.user ?? null);
-      if (s?.user) loadProfileAndRoles(s.user.id).then(() => setLoading(false));
-      else setLoading(false);
+      if (s?.user) {
+        loadProfileAndRoles(s.user.id).then(() => setLoading(false));
+      } else {
+        setLoading(false);
+      }
     });
 
     return () => sub.subscription.unsubscribe();
-  }, []);
+  }, [loadProfileAndRoles]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -84,6 +120,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    loadedUserIdRef.current = null;
+    lastPerfilRef.current = null;
+    lastRolesRef.current = [];
     await supabase.auth.signOut();
   };
 
