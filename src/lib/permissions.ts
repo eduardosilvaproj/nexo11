@@ -138,8 +138,9 @@ const ROLE_PERMISSIONS: Record<AppRole, PermissionAction[]> = {
   ],
   franqueador: [
     "comercial.view", "clientes.view", "contratos.view", "pos_venda.view",
-    "dre.view", "financeiro.view", "comissoes.view", "lojas.view", "equipe.view", 
-    "analytics.view", "notificacoes.view", "documentos.view", "documentos.financeiro.view",
+    "dre.view", "financeiro.view", "financeiro.manage", "comissoes.view", "comissoes.manage",
+    "lojas.view", "equipe.view", "equipe.manage",
+    "analytics.view", "notificacoes.view", "notificacoes.manage", "documentos.view", "documentos.financeiro.view",
     "evidencias.view", "rh.view", "rh.funcionarios.view"
   ],
   gerente: [

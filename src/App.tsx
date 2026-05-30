@@ -218,7 +218,7 @@ function RootLayoutSwitcher() {
           </ProtectedRoute>
         } />
         <Route path="/comissoes" element={
-          <ProtectedRoute roles={["admin","gerente"]}>
+          <ProtectedRoute roles={["admin","gerente","franqueador"]}>
             <Comissoes />
           </ProtectedRoute>
         } />
