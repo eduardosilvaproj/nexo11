@@ -33,6 +33,7 @@ import Analytics from "./pages/Analytics";
 import Lojas from "./pages/Lojas";
 import LojaDetail from "./pages/LojaDetail";
 import NotFound from "./pages/NotFound.tsx";
+import SemPermissao from "./pages/SemPermissao";
 import PortalCliente from "./pages/PortalCliente";
 import PortalEntrada from "./pages/PortalEntrada";
 import Integracoes from "./pages/Integracoes";
