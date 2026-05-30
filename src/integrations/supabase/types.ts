@@ -2151,6 +2151,7 @@ export type Database = {
       }
       contratos: {
         Row: {
+          asaas_customer_id: string | null
           assinado: boolean
           assinado_em: string | null
           assinado_ip: string | null
@@ -2163,6 +2164,7 @@ export type Database = {
           assinatura_user_agent: string | null
           checklist_comercial: Json | null
           cliente_contato: string | null
+          cliente_cpf_cnpj: string | null
           cliente_id: string | null
           cliente_nome: string
           comprovante_fabrica_url: string | null
@@ -2228,6 +2230,7 @@ export type Database = {
           viagem_qtd_veiculos: number | null
         }
         Insert: {
+          asaas_customer_id?: string | null
           assinado?: boolean
           assinado_em?: string | null
           assinado_ip?: string | null
@@ -2240,6 +2243,7 @@ export type Database = {
           assinatura_user_agent?: string | null
           checklist_comercial?: Json | null
           cliente_contato?: string | null
+          cliente_cpf_cnpj?: string | null
           cliente_id?: string | null
           cliente_nome: string
           comprovante_fabrica_url?: string | null
@@ -2305,6 +2309,7 @@ export type Database = {
           viagem_qtd_veiculos?: number | null
         }
         Update: {
+          asaas_customer_id?: string | null
           assinado?: boolean
           assinado_em?: string | null
           assinado_ip?: string | null
@@ -2317,6 +2322,7 @@ export type Database = {
           assinatura_user_agent?: string | null
           checklist_comercial?: Json | null
           cliente_contato?: string | null
+          cliente_cpf_cnpj?: string | null
           cliente_id?: string | null
           cliente_nome?: string
           comprovante_fabrica_url?: string | null
@@ -3285,6 +3291,9 @@ export type Database = {
       }
       financeiro_contas_receber: {
         Row: {
+          asaas_billing_type: string | null
+          asaas_payment_id: string | null
+          asaas_payment_status: string | null
           cliente_id: string | null
           contrato_id: string | null
           created_at: string | null
@@ -3305,6 +3314,9 @@ export type Database = {
           vencimento: string
         }
         Insert: {
+          asaas_billing_type?: string | null
+          asaas_payment_id?: string | null
+          asaas_payment_status?: string | null
           cliente_id?: string | null
           contrato_id?: string | null
           created_at?: string | null
@@ -3325,6 +3337,9 @@ export type Database = {
           vencimento: string
         }
         Update: {
+          asaas_billing_type?: string | null
+          asaas_payment_id?: string | null
+          asaas_payment_status?: string | null
           cliente_id?: string | null
           contrato_id?: string | null
           created_at?: string | null

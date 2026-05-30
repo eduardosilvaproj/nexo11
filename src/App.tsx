@@ -41,8 +41,6 @@ import OrcamentoNegociacao from "./pages/OrcamentoNegociacao";
 import ConfigFornecedores from "./pages/ConfigFornecedores";
 import Compras from "./pages/Compras";
 import EstimativaOrcamento from "./pages/EstimativaOrcamento";
-import RH from "./pages/RH";
-import Contratos from "./pages/Contratos";
 
 import AcompanhamentoCriacao from "./pages/AcompanhamentoCriacao";
 import AcessoAcompanhamento from "./pages/AcessoAcompanhamento";
