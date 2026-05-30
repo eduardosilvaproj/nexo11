@@ -68,6 +68,7 @@ const gestao: MenuItem[] = [
   { title: "Comissões", url: "/comissoes", icon: Percent },
   { title: "Compras", url: "/compras", icon: ShoppingCart },
   { title: "Equipe", url: "/equipe", icon: UserCog },
+  { title: "RH", url: "/rh", icon: Users2, roles: ["admin", "gerente", "franqueador"] },
   { title: "Lojas", url: "/lojas", icon: Building2, roles: ["admin", "franqueador"] },
   { title: "Cond. Pagamento", url: "/configuracoes/pagamento", icon: Settings, roles: ["admin", "gerente"] },
   { title: "Fornecedores", url: "/configuracoes/fornecedores", icon: Factory, roles: ["admin", "gerente"] },
