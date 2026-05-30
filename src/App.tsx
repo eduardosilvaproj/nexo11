@@ -190,59 +190,19 @@ function RootLayoutSwitcher() {
             <NewContract />
           </ProtectedRoute>
         } />
-        <Route path="/tecnico" element={
-          <ProtectedRoute roles={["admin","gerente","tecnico","franqueador"]}>
-            <Tecnico />
-          </ProtectedRoute>
-        } />
-        <Route path="/producao" element={
-          <ProtectedRoute roles={["admin","gerente","tecnico","franqueador"]}>
-            <Producao />
-          </ProtectedRoute>
-        } />
-        <Route path="/logistica" element={
-          <ProtectedRoute roles={["admin","gerente","tecnico","franqueador"]}>
-            <Logistica />
-          </ProtectedRoute>
-        } />
-        <Route path="/montagem" element={
-          <ProtectedRoute roles={["admin","gerente","montador","tecnico","franqueador"]}>
-            <Montagem />
-          </ProtectedRoute>
-        } />
+        <Route path="/tecnico" element={<Tecnico />} />
+        <Route path="/producao" element={<Producao />} />
+        <Route path="/logistica" element={<Logistica />} />
+        <Route path="/montagem" element={<Montagem />} />
         <Route path="/pos-venda" element={<PosVenda />} />
-        <Route path="/dre" element={
-          <ProtectedRoute roles={["admin","gerente","franqueador"]}>
-            <Dre />
-          </ProtectedRoute>
-        } />
+        <Route path="/dre" element={<Dre />} />
 
         {/* Gestão */}
-        <Route path="/financeiro" element={
-          <ProtectedRoute roles={["admin","gerente","franqueador","financeiro","vendedor"]}>
-            <Financeiro />
-          </ProtectedRoute>
-        } />
-        <Route path="/comissoes" element={
-          <ProtectedRoute roles={["admin","gerente","franqueador"]}>
-            <Comissoes />
-          </ProtectedRoute>
-        } />
-        <Route path="/compras" element={
-          <ProtectedRoute roles={["admin","gerente","tecnico"]}>
-            <Compras />
-          </ProtectedRoute>
-        } />
-        <Route path="/rh" element={
-          <ProtectedRoute roles={["admin","gerente","franqueador"]}>
-            <RH />
-          </ProtectedRoute>
-        } />
-        <Route path="/equipe" element={
-          <ProtectedRoute roles={["admin","gerente"]}>
-            <Equipe />
-          </ProtectedRoute>
-        } />
+        <Route path="/financeiro" element={<Financeiro />} />
+        <Route path="/comissoes" element={<Comissoes />} />
+        <Route path="/compras" element={<Compras />} />
+        <Route path="/rh" element={<RH />} />
+        <Route path="/equipe" element={<Equipe />} />
         <Route path="/lojas" element={
           <ProtectedRoute roles={["admin","franqueador"]} redirectTo="/" redirectMessage="Acesso restrito">
             <Lojas />
@@ -255,27 +215,12 @@ function RootLayoutSwitcher() {
         } />
 
         {/* Inteligência */}
-        <Route path="/analytics" element={
-          <ProtectedRoute roles={["admin","gerente","franqueador"]}>
-            <Analytics />
-          </ProtectedRoute>
-        } />
-        <Route path="/integracoes" element={
-          <ProtectedRoute roles={["admin","gerente"]}>
-            <Integracoes />
-          </ProtectedRoute>
-        } />
-        <Route path="/configuracoes/pagamento" element={
-          <ProtectedRoute roles={["admin","gerente"]}>
-            <ConfigPagamento />
-          </ProtectedRoute>
-        } />
-        <Route path="/configuracoes/fornecedores" element={
-          <ProtectedRoute roles={["admin","gerente"]}>
-            <ConfigFornecedores />
-          </ProtectedRoute>
-        } />
+        <Route path="/analytics" element={<Analytics />} />
+        <Route path="/integracoes" element={<Integracoes />} />
+        <Route path="/configuracoes/pagamento" element={<ConfigPagamento />} />
+        <Route path="/configuracoes/fornecedores" element={<ConfigFornecedores />} />
         <Route path="/estimativa-orcamento" element={<EstimativaOrcamento />} />
+        <Route path="/sem-permissao" element={<SemPermissao />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />
