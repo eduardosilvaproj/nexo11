@@ -21,6 +21,7 @@ interface Solicitacao {
   descricao?: string;
   valor: number;
   beneficiario_nome?: string;
+  beneficiario_pix?: string;
   data_necessidade: string | null;
   data_vencimento: string | null;
   status: Status;
