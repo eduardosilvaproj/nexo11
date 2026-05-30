@@ -218,7 +218,7 @@ function RootLayoutSwitcher() {
 
         {/* Gestão */}
         <Route path="/financeiro" element={
-          <ProtectedRoute roles={["admin","gerente","franqueador"]}>
+          <ProtectedRoute roles={["admin","gerente","franqueador","financeiro","vendedor"]}>
             <Financeiro />
           </ProtectedRoute>
         } />
