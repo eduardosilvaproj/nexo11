@@ -103,8 +103,7 @@ export function PagamentosImediatos() {
   const hoje = new Date().toISOString().slice(0, 10);
   const urgentes = items.filter(i =>
     (i.status === 'aprovado_nivel2' || i.status === 'aprovado_nivel1') &&
-    i.data_necessidade && i.data_necessidade <= hoje &&
-    i.status !== 'pago' && i.status !== 'cancelado'
+    i.data_necessidade && i.data_necessidade <= hoje
   );
 
   const filtrados = useMemo(() => {
