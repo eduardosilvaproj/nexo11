@@ -178,6 +178,8 @@ export function PagamentosImediatos() {
     else {
       // Criar lançamento em contas a pagar
       await supabase.from('financeiro_contas_pagar').insert({
+        loja_id: s.loja_id,
+        categoria: (s as any).categoria?.nome || 'Outros',
         descricao: s.titulo,
         valor: Number(s.valor),
         vencimento: s.data_vencimento || hoje,
