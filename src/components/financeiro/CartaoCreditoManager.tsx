@@ -44,13 +44,12 @@ interface Compra {
   cartao_id: string;
   descricao: string;
   valor: number;
-  data_compra: string;
-  data_vencimento_parcela: string | null;
-  numero_parcelas: number;
-  parcela_atual: number;
+  vencimento: string;
+  total_parcelas: number | null;
+  parcela_numero: number | null;
   fornecedor_id?: string;
   fornecedor?: { nome?: string } | null;
-  observacoes?: string;
+  status?: string;
 }
 
 function fmtBRL(v: number) {
@@ -94,7 +93,7 @@ export function CartaoCreditoManager() {
     const [c, f, cp] = await Promise.all([
       supabase.from('cartoes_credito').select('*').order('created_at', { ascending: false }),
       supabase.from('faturas_cartao').select('*, cartao:cartoes_credito(*)').order('mes_referencia', { ascending: false }).limit(24),
-      supabase.from('financeiro_contas_pagar').select('*, fornecedor:fornecedores(id, nome)').eq('cartao_id', '!null').order('data_compra', { ascending: false }).limit(100),
+      supabase.from('financeiro_contas_pagar').select('*, fornecedor:fornecedores(id, nome)').not('cartao_id', 'is', null).order('vencimento', { ascending: false }).limit(100),
     ]);
     if (c.error) toast.error(c.error.message); else setCartoes(c.data ?? []);
     if (f.error) toast.error(f.error.message); else setFaturas(f.data as any ?? []);
@@ -136,12 +135,11 @@ export function CartaoCreditoManager() {
         cartao_id: formCompra.cartao_id,
         descricao: `${formCompra.descricao} (${i}/${parcelas})`,
         valor: valorParcela,
-        data_compra: formCompra.data_compra,
-        data_vencimento_parcela: d.toISOString().slice(0, 10),
-        numero_parcelas: parcelas,
-        parcela_atual: i,
+        vencimento: d.toISOString().slice(0, 10),
+        total_parcelas: parcelas,
+        parcela_numero: i,
         fornecedor_id: formCompra.fornecedor_id || null,
-        observacoes: formCompra.observacoes || null,
+        status: 'pendente',
       });
     }
 
@@ -157,7 +155,7 @@ export function CartaoCreditoManager() {
 
   const totalUtilizado = cartoes.reduce((s, c) => s + Number(c.limite_utilizado), 0);
   const totalLimite = cartoes.reduce((s, c) => s + Number(c.limite), 0);
-  const comprasMes = compras.filter(c => c.data_compra?.startsWith(new Date().toISOString().slice(0, 7)));
+  const comprasMes = compras.filter(c => c.vencimento?.startsWith(new Date().toISOString().slice(0, 7)));
   const totalComprasMes = comprasMes.reduce((s, c) => s + Number(c.valor), 0);
 
   return (
@@ -275,8 +273,8 @@ export function CartaoCreditoManager() {
                           <td className="px-3 py-3"><p className="font-medium">{c.descricao}</p><p className="text-xs text-slate-500">{c.fornecedor?.nome || ''}</p></td>
                           <td className="px-3 py-3 text-xs">{cartao ? `${cartao.nome_titular} ••${cartao.numero_final}` : '—'}</td>
                           <td className="px-3 py-3 text-right font-bold text-red-600">{fmtBRL(Number(c.valor))}</td>
-                          <td className="px-3 py-3 text-xs">{c.numero_parcelas > 1 ? `${c.parcela_atual}/${c.numero_parcelas}` : 'À vista'}</td>
-                          <td className="px-3 py-3 text-xs text-slate-500">{fmtData(c.data_vencimento_parcela)}</td>
+                          <td className="px-3 py-3 text-xs">{(c.total_parcelas ?? 1) > 1 ? `${c.parcela_numero}/${c.total_parcelas}` : 'À vista'}</td>
+                          <td className="px-3 py-3 text-xs text-slate-500">{fmtData(c.vencimento)}</td>
                           <td className="px-3 py-3">
                             <Badge className="text-[10px]" style={{ background: c.valor > 0 ? '#D1FAE5' : '#F1F5F9', color: c.valor > 0 ? '#059669' : '#64748B' }}>Ativo</Badge>
                           </td>
