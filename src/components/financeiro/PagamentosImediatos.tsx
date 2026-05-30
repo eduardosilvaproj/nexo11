@@ -21,6 +21,7 @@ interface Solicitacao {
   descricao?: string;
   valor: number;
   beneficiario_nome?: string;
+  beneficiario_pix?: string;
   data_necessidade: string | null;
   data_vencimento: string | null;
   status: Status;
@@ -64,8 +65,8 @@ export function PagamentosImediatos() {
   const [showForm, setShowForm] = useState(false);
   const [showDetalhe, setShowDetalhe] = useState<Solicitacao | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const { roles, user } = useAuth();
-  const podeGerenciar = canPerform(roles, "financeiro.manage") || canPerform(roles, "financeiro.aprovacao");
+  const { roles, user, perfil } = useAuth();
+  const podeGerenciar = canPerform(roles, "financeiro.manage");
 
   // Form state
   const [form, setForm] = useState({
@@ -102,8 +103,7 @@ export function PagamentosImediatos() {
   const hoje = new Date().toISOString().slice(0, 10);
   const urgentes = items.filter(i =>
     (i.status === 'aprovado_nivel2' || i.status === 'aprovado_nivel1') &&
-    i.data_necessidade && i.data_necessidade <= hoje &&
-    i.status !== 'pago' && i.status !== 'cancelado'
+    i.data_necessidade && i.data_necessidade <= hoje
   );
 
   const filtrados = useMemo(() => {
@@ -178,6 +178,8 @@ export function PagamentosImediatos() {
     else {
       // Criar lançamento em contas a pagar
       await supabase.from('financeiro_contas_pagar').insert({
+        loja_id: s.loja_id,
+        categoria: (s as any).categoria?.nome || 'Outros',
         descricao: s.titulo,
         valor: Number(s.valor),
         vencimento: s.data_vencimento || hoje,
