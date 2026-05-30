@@ -39,6 +39,8 @@ import OrcamentoNegociacao from "./pages/OrcamentoNegociacao";
 import ConfigFornecedores from "./pages/ConfigFornecedores";
 import Compras from "./pages/Compras";
 import EstimativaOrcamento from "./pages/EstimativaOrcamento";
+import RH from "./pages/RH";
+import Contratos from "./pages/Contratos";
 
 import AcompanhamentoCriacao from "./pages/AcompanhamentoCriacao";
 import AcessoAcompanhamento from "./pages/AcessoAcompanhamento";
@@ -176,6 +178,7 @@ function RootLayoutSwitcher() {
             <OrcamentoNegociacao />
           </ProtectedRoute>
         } />
+        <Route path="/contratos" element={<Contratos />} />
         <Route path="/contratos/:id" element={<ContratoDetail />} />
         <Route path="/contratos/:id/medicao" element={<ContratoMedicao />} />
         <Route path="/contratos/:id/conferencia" element={<ContratoConferencia />} />
@@ -225,6 +228,11 @@ function RootLayoutSwitcher() {
         <Route path="/compras" element={
           <ProtectedRoute roles={["admin","gerente","tecnico"]}>
             <Compras />
+          </ProtectedRoute>
+        } />
+        <Route path="/rh" element={
+          <ProtectedRoute roles={["admin","gerente","franqueador"]}>
+            <RH />
           </ProtectedRoute>
         } />
         <Route path="/equipe" element={
