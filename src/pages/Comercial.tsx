@@ -72,7 +72,7 @@ function LeadCard({ lead, onConvert }: { lead: Lead; onConvert: (l: Lead) => voi
   return (
     <div
       ref={setNodeRef}
-      className={`transition-shadow hover:shadow-sm ${isDragging ? "opacity-30" : ""}`}
+      className={`transition-shadow hover:shadow-sm overflow-hidden ${isDragging ? "opacity-30" : ""}`}
       style={cardStyle}
     >
       {/* Drag handle area */}
@@ -119,27 +119,22 @@ function LeadCard({ lead, onConvert }: { lead: Lead; onConvert: (l: Lead) => voi
           </div>
         )}
 
-        <div className="mt-2 flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <span
-              className="inline-flex items-center justify-center"
-              style={{
-                width: 20,
-                height: 20,
-                borderRadius: 999,
-                background: "#E8ECF2",
-                color: "#6B7A90",
-                fontSize: 10,
-                fontWeight: 600,
-              }}
-            >
-              {lead.vendedor_id ? "•" : "?"}
-            </span>
-            <span style={{ fontSize: 11, color: "#6B7A90" }}>
-              {lead.vendedor_id ? "Vendedor" : "Sem resp."}
-            </span>
-          </div>
-          <span style={{ fontSize: 11, color: "#B0BAC9" }}>{formatDate(lead.data_entrada)}</span>
+        <div className="mt-2 flex items-center justify-between overflow-hidden">
+          <span
+            className="inline-flex items-center justify-center flex-shrink-0"
+            style={{
+              width: 18,
+              height: 18,
+              borderRadius: 999,
+              background: "#E8ECF2",
+              color: "#6B7A90",
+              fontSize: 9,
+              fontWeight: 600,
+            }}
+          >
+            {lead.vendedor_id ? "•" : "?"}
+          </span>
+          <span className="truncate" style={{ fontSize: 10, color: "#B0BAC9" }}>{formatDate(lead.data_entrada)}</span>
         </div>
       </div>
 
