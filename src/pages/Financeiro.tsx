@@ -6,6 +6,10 @@ import { SimuladorPECard } from "@/components/financeiro/SimuladorPECard";
 import { HistoricoPECard } from "@/components/financeiro/HistoricoPECard";
 import { FluxoCaixaCard } from "@/components/financeiro/FluxoCaixaCard";
 import { ContasCard } from "@/components/financeiro/ContasCard";
+import { PagamentosImediatos } from "@/components/financeiro/PagamentosImediatos";
+import { CartaoCreditoManager } from "@/components/financeiro/CartaoCreditoManager";
+import { TransferenciasModulos } from "@/components/financeiro/TransferenciasModulos";
+import { TaxasFinanceirasCard } from "@/components/financeiro/TaxasFinanceirasCard";
 
 function PontoEquilibrio() {
   const [custoFixoTotal, setCustoFixoTotal] = useState<number>(0);
@@ -25,51 +29,57 @@ function PontoEquilibrio() {
   );
 }
 
-
-function FluxoCaixaTab() {
-  return <FluxoCaixaCard />;
-}
-
-function ContasPlaceholder() {
-  return <ContasCard />;
-}
-
-
 export default function Financeiro() {
   return (
     <div className="space-y-6 p-6">
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">NEXO Financeiro</h1>
-        <p className="text-sm text-muted-foreground">Gestão financeira da loja</p>
+        <p className="text-sm text-muted-foreground">Gestão financeira completa da loja</p>
       </header>
 
-      <Tabs defaultValue="ponto-equilibrio">
+      <Tabs defaultValue="pagamentos">
         <TabsList
-          className="h-auto justify-start rounded-none bg-transparent p-0 border-b"
+          className="h-auto flex-wrap justify-start rounded-none bg-transparent p-0 border-b"
           style={{ borderColor: "#E8ECF2" }}
         >
           {[
-            { v: "ponto-equilibrio", l: "Ponto de equilíbrio" },
-            { v: "fluxo-caixa", l: "Fluxo de caixa" },
+            { v: "pagamentos", l: "Pagamentos Imediatos" },
             { v: "contas", l: "Contas" },
+            { v: "cartao", l: "Cartões" },
+            { v: "transferencias", l: "Transferências" },
+            { v: "taxas", l: "Taxas" },
+            { v: "fluxo-caixa", l: "Fluxo de Caixa" },
+            { v: "ponto-equilibrio", l: "Ponto de Equilíbrio" },
           ].map((t) => (
             <TabsTrigger
               key={t.v}
               value={t.v}
-              className="rounded-none bg-transparent px-4 py-2 text-[#6B7A90] shadow-none data-[state=active]:bg-transparent data-[state=active]:text-[#1E6FBF] data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#1E6FBF] -mb-px"
+              className="rounded-none bg-transparent px-3 py-2 text-[#6B7A90] text-sm shadow-none data-[state=active]:bg-transparent data-[state=active]:text-[#1E6FBF] data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-[#1E6FBF] -mb-px"
             >
               {t.l}
             </TabsTrigger>
           ))}
         </TabsList>
-        <TabsContent value="ponto-equilibrio" className="mt-4">
-          <PontoEquilibrio />
-        </TabsContent>
-        <TabsContent value="fluxo-caixa" className="mt-4">
-          <FluxoCaixaTab />
+        <TabsContent value="pagamentos" className="mt-4">
+          <PagamentosImediatos />
         </TabsContent>
         <TabsContent value="contas" className="mt-4">
-          <ContasPlaceholder />
+          <ContasCard />
+        </TabsContent>
+        <TabsContent value="cartao" className="mt-4">
+          <CartaoCreditoManager />
+        </TabsContent>
+        <TabsContent value="transferencias" className="mt-4">
+          <TransferenciasModulos />
+        </TabsContent>
+        <TabsContent value="taxas" className="mt-4">
+          <TaxasFinanceirasCard />
+        </TabsContent>
+        <TabsContent value="fluxo-caixa" className="mt-4">
+          <FluxoCaixaCard />
+        </TabsContent>
+        <TabsContent value="ponto-equilibrio" className="mt-4">
+          <PontoEquilibrio />
         </TabsContent>
       </Tabs>
     </div>
