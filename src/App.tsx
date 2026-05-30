@@ -178,6 +178,7 @@ function RootLayoutSwitcher() {
             <OrcamentoNegociacao />
           </ProtectedRoute>
         } />
+        <Route path="/contratos" element={<Contratos />} />
         <Route path="/contratos/:id" element={<ContratoDetail />} />
         <Route path="/contratos/:id/medicao" element={<ContratoMedicao />} />
         <Route path="/contratos/:id/conferencia" element={<ContratoConferencia />} />
