@@ -65,8 +65,8 @@ export function PagamentosImediatos() {
   const [showForm, setShowForm] = useState(false);
   const [showDetalhe, setShowDetalhe] = useState<Solicitacao | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
-  const { roles, user } = useAuth();
-  const podeGerenciar = canPerform(roles, "financeiro.manage") || canPerform(roles, "financeiro.aprovacao");
+  const { roles, user, perfil } = useAuth();
+  const podeGerenciar = canPerform(roles, "financeiro.manage");
 
   // Form state
   const [form, setForm] = useState({
