@@ -104,7 +104,9 @@ export function CartaoCreditoManager() {
 
   async function handleCriarCartao() {
     if (!formCartao.nome_titular || !formCartao.numero_final) { toast.error('Informe nome e últimos 4 dígitos'); return; }
+    if (!perfil?.loja_id) { toast.error('Loja não identificada'); return; }
     const { error } = await supabase.from('cartoes_credito').insert({
+      loja_id: perfil.loja_id,
       nome_titular: formCartao.nome_titular,
       numero_final: formCartao.numero_final,
       bandeira: formCartao.bandeira || null,
