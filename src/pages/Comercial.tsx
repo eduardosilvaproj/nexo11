@@ -12,7 +12,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { Plus, ArrowRightLeft, FileText } from "lucide-react";
+import { Plus, ArrowRightLeft, FileText, MessageSquareText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -22,6 +22,7 @@ import { PainelDoDia } from "@/components/comercial/PainelDoDia";
 import { LeadsTable } from "@/components/comercial/LeadsTable";
 import { FunilConversao } from "@/components/comercial/FunilConversao";
 import { MotivoPerdaDialog } from "@/components/comercial/MotivoPerdaDialog";
+import { BriefingLeadDialog } from "@/components/comercial/BriefingLeadDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { UploadPDFEstimativa } from '@/components/estimativa/UploadPDFEstimativa';
 import { RelatorioEstimativaView } from '@/components/estimativa/RelatorioEstimativaView';
@@ -53,6 +54,7 @@ function formatDate(value: string | null) {
 function LeadCard({ lead, onConvert }: { lead: Lead; onConvert: (l: Lead) => void }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: lead.id });
   const [relatorioEstimativa, setRelatorioEstimativa] = useState<RelatorioEstimativa | null>(null);
+  const [showBriefing, setShowBriefing] = useState(false);
 
   const isConvertido = lead.status === "convertido";
   const isPerdido = lead.status === "perdido";
@@ -175,8 +177,23 @@ function LeadCard({ lead, onConvert }: { lead: Lead; onConvert: (l: Lead) => voi
               )}
             </DialogContent>
           </Dialog>
+
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowBriefing(true); }}
+            className="inline-flex w-full items-center justify-center gap-1 rounded-md py-1 transition-colors hover:bg-purple-50"
+            style={{ fontSize: 11, color: "#7C3AED", fontWeight: 500 }}
+          >
+            <MessageSquareText className="h-3 w-3" /> Briefing
+          </button>
         </div>
       )}
+
+      <BriefingLeadDialog
+        open={showBriefing}
+        onOpenChange={setShowBriefing}
+        leadId={lead.id}
+        leadNome={lead.nome}
+      />
     </div>
   );
 }
