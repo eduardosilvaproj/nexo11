@@ -61,7 +61,6 @@ function LeadCard({ lead, onConvert }: { lead: Lead; onConvert: (l: Lead) => voi
     background: "#FFFFFF",
     border: "0.5px solid #E8ECF2",
     borderRadius: 8,
-    padding: 12,
     opacity: isPerdido ? 0.6 : 1,
     borderLeft: isConvertido
       ? "3px solid #12B76A"
@@ -73,77 +72,82 @@ function LeadCard({ lead, onConvert }: { lead: Lead; onConvert: (l: Lead) => voi
   return (
     <div
       ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      className={`cursor-grab transition-shadow hover:shadow-sm active:cursor-grabbing ${
-        isDragging ? "opacity-30" : ""
-      }`}
+      className={`transition-shadow hover:shadow-sm ${isDragging ? "opacity-30" : ""}`}
       style={cardStyle}
     >
-      <div className="flex items-center justify-between">
-        <p style={{ fontSize: 13, fontWeight: 500, color: "#0D1117" }} className="truncate flex-1">
-          {lead.nome}
-        </p>
-        {(lead as any).temperatura && (
-          <span
-            className="inline-block w-2 h-2 rounded-full ml-1 flex-shrink-0"
-            title={(lead as any).temperatura}
-            style={{
-              background: (lead as any).temperatura === "quente" ? "#EF4444"
-                : (lead as any).temperatura === "morno" ? "#F59E0B" : "#3B82F6"
-            }}
-          />
+      {/* Drag handle area */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing p-3 pb-1"
+        style={{ touchAction: "none" }}
+      >
+        <div className="flex items-center justify-between">
+          <p style={{ fontSize: 13, fontWeight: 500, color: "#0D1117" }} className="truncate flex-1">
+            {lead.nome}
+          </p>
+          {(lead as any).temperatura && (
+            <span
+              className="inline-block w-2 h-2 rounded-full ml-1 flex-shrink-0"
+              title={(lead as any).temperatura}
+              style={{
+                background: (lead as any).temperatura === "quente" ? "#EF4444"
+                  : (lead as any).temperatura === "morno" ? "#F59E0B" : "#3B82F6"
+              }}
+            />
+          )}
+        </div>
+        {lead.contato && (
+          <p className="mt-0.5 truncate" style={{ fontSize: 12, color: "#6B7A90" }}>
+            {lead.contato}
+          </p>
         )}
-      </div>
-      {lead.contato && (
-        <p className="mt-0.5 truncate" style={{ fontSize: 12, color: "#6B7A90" }}>
-          {lead.contato}
-        </p>
-      )}
 
-      {lead.origem && (
-        <div className="mt-2">
-          <span
-            style={{
-              fontSize: 11,
-              background: "#E6F3FF",
-              color: "#1E6FBF",
-              padding: "2px 8px",
-              borderRadius: 999,
-            }}
-          >
-            {lead.origem}
-          </span>
-        </div>
-      )}
+        {lead.origem && (
+          <div className="mt-2">
+            <span
+              style={{
+                fontSize: 11,
+                background: "#E6F3FF",
+                color: "#1E6FBF",
+                padding: "2px 8px",
+                borderRadius: 999,
+              }}
+            >
+              {lead.origem}
+            </span>
+          </div>
+        )}
 
-      <div className="mt-2 flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <span
-            className="inline-flex items-center justify-center"
-            style={{
-              width: 20,
-              height: 20,
-              borderRadius: 999,
-              background: "#E8ECF2",
-              color: "#6B7A90",
-              fontSize: 10,
-              fontWeight: 600,
-            }}
-          >
-            {lead.vendedor_id ? "•" : "?"}
-          </span>
-          <span style={{ fontSize: 11, color: "#6B7A90" }}>
-            {lead.vendedor_id ? "Vendedor" : "Sem responsável"}
-          </span>
+        <div className="mt-2 flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <span
+              className="inline-flex items-center justify-center"
+              style={{
+                width: 20,
+                height: 20,
+                borderRadius: 999,
+                background: "#E8ECF2",
+                color: "#6B7A90",
+                fontSize: 10,
+                fontWeight: 600,
+              }}
+            >
+              {lead.vendedor_id ? "•" : "?"}
+            </span>
+            <span style={{ fontSize: 11, color: "#6B7A90" }}>
+              {lead.vendedor_id ? "Vendedor" : "Sem resp."}
+            </span>
+          </div>
+          <span style={{ fontSize: 11, color: "#B0BAC9" }}>{formatDate(lead.data_entrada)}</span>
         </div>
-        <span style={{ fontSize: 11, color: "#B0BAC9" }}>{formatDate(lead.data_entrada)}</span>
       </div>
 
+      {/* Action buttons - NOT draggable */}
       {!isConvertido && !isPerdido && (
-        <div className="mt-2 space-y-1">
+        <div className="px-3 pb-2 pt-1 space-y-1">
           <button
-            onClick={() => onConvert(lead)}
+            onClick={(e) => { e.stopPropagation(); onConvert(lead); }}
             className="inline-flex w-full items-center justify-center gap-1 rounded-md py-1 transition-colors hover:bg-[#E6F3FF]"
             style={{ fontSize: 11, color: "#1E6FBF", fontWeight: 500 }}
           >
@@ -153,6 +157,7 @@ function LeadCard({ lead, onConvert }: { lead: Lead; onConvert: (l: Lead) => voi
           <Dialog>
             <DialogTrigger asChild>
               <button
+                onClick={(e) => e.stopPropagation()}
                 className="inline-flex w-full items-center justify-center gap-1 rounded-md py-1 transition-colors hover:bg-gray-100"
                 style={{ fontSize: 11, color: "#6B7A90", fontWeight: 500 }}
               >
@@ -279,9 +284,12 @@ export default function Comercial() {
     mutationFn: async ({ id, status }: { id: string; status: LeadStatus }) => {
       const { error } = await supabase
         .from("leads")
-        .update({ status, data_ultimo_contato: new Date().toISOString() })
+        .update({ status, data_ultimo_contato: new Date().toISOString() } as any)
         .eq("id", id);
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao mover lead:", error);
+        throw error;
+      }
     },
     onMutate: async ({ id, status }) => {
       await queryClient.cancelQueries({ queryKey: ["leads", perfil?.loja_id] });
