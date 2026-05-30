@@ -11,6 +11,7 @@ import { CartaoCreditoManager } from "@/components/financeiro/CartaoCreditoManag
 import { TransferenciasModulos } from "@/components/financeiro/TransferenciasModulos";
 import { TaxasFinanceirasCard } from "@/components/financeiro/TaxasFinanceirasCard";
 import { FinanciamentoContrato } from "@/components/financeiro/FinanciamentoContrato";
+import { BoletoConciliacao } from "@/components/financeiro/BoletoConciliacao";
 
 function PontoEquilibrio() {
   const [custoFixoTotal, setCustoFixoTotal] = useState<number>(0);
@@ -46,6 +47,7 @@ export default function Financeiro() {
           {[
             { v: "pagamentos", l: "Pagamentos Imediatos" },
             { v: "contas", l: "Contas" },
+            { v: "boletos", l: "Boletos" },
             { v: "financiamento", l: "Financiamentos" },
             { v: "cartao", l: "Cartões" },
             { v: "transferencias", l: "Transferências" },
@@ -67,6 +69,9 @@ export default function Financeiro() {
         </TabsContent>
         <TabsContent value="contas" className="mt-4">
           <ContasCard />
+        </TabsContent>
+        <TabsContent value="boletos" className="mt-4">
+          <BoletoConciliacao />
         </TabsContent>
         <TabsContent value="financiamento" className="mt-4">
           <FinanciamentoContrato />
