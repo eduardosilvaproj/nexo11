@@ -11,8 +11,13 @@ type Lead = Database["public"]["Tables"]["leads"]["Row"];
 const STATUS_LABEL: Record<LeadStatus, string> = {
   novo: "Novo",
   atendimento: "Atendimento",
+  qualificacao: "Qualificação",
   visita: "Visita",
+  medicao_agendada: "Medição",
   proposta: "Proposta",
+  orcamento_enviado: "Orçamento",
+  negociacao: "Negociação",
+  fechamento: "Fechamento",
   convertido: "Convertido",
   perdido: "Perdido",
 };
@@ -20,8 +25,13 @@ const STATUS_LABEL: Record<LeadStatus, string> = {
 const STATUS_COLOR: Record<LeadStatus, { bg: string; color: string }> = {
   novo: { bg: "#E6F3FF", color: "#1E6FBF" },
   atendimento: { bg: "#EEF2FF", color: "#4F46E5" },
+  qualificacao: { bg: "#EDE9FE", color: "#6D28D9" },
   visita: { bg: "#FEF3C7", color: "#92400E" },
+  medicao_agendada: { bg: "#FEF9C3", color: "#854D0E" },
   proposta: { bg: "#FFEDD5", color: "#9A3412" },
+  orcamento_enviado: { bg: "#FFE4E6", color: "#9F1239" },
+  negociacao: { bg: "#FCE7F3", color: "#9D174D" },
+  fechamento: { bg: "#DCFCE7", color: "#166534" },
   convertido: { bg: "#E6F7EE", color: "#0E8A4F" },
   perdido: { bg: "#FEE2E2", color: "#B91C1C" },
 };
