@@ -87,11 +87,9 @@ export function PagamentosImediatos() {
     const { data, error } = await supabase
       .from('solicitacoes_pagamento')
       .select(`
-        id, titulo, descricao, valor, beneficiario_nome, data_necessidade, data_vencimento,
-        status, nivel_aprovacao, created_at, urgencia,
-        created_by:auth.users(id, email),
-        fornecedor:fornecedores(id, nome),
-        categoria:categorias_despesas(nome)
+        id, titulo, descricao, valor, beneficiario_nome, beneficiario_pix,
+        data_necessidade, data_vencimento, status, nivel_aprovacao, created_at,
+        created_by, fornecedor_id
       `)
       .order('created_at', { ascending: false })
       .limit(100);
