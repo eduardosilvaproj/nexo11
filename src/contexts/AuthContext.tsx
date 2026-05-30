@@ -48,8 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(newSession);
       setUser(newSession?.user ?? null);
       if (newSession?.user) {
-        // defer pra evitar deadlock
-        setTimeout(() => loadProfileAndRoles(newSession.user.id), 0);
+        loadProfileAndRoles(newSession.user.id);
       } else {
         setPerfil(null);
         setRoles([]);
@@ -60,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
       setUser(s?.user ?? null);
-      if (s?.user) loadProfileAndRoles(s.user.id).finally(() => setLoading(false));
+      if (s?.user) loadProfileAndRoles(s.user.id).then(() => setLoading(false));
       else setLoading(false);
     });
 
