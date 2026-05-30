@@ -197,7 +197,7 @@ function Column({
   return (
     <div
       className="flex h-full flex-col"
-      style={{ width: 200, minWidth: 200, background: "#F5F7FA", borderRadius: 8 }}
+      style={{ width: 155, minWidth: 155, background: "#F5F7FA", borderRadius: 8 }}
     >
       <div className="flex items-center justify-between px-3 py-2.5">
         <span
@@ -336,7 +336,11 @@ export default function Comercial() {
   const grouped = COLUMNS.map((c) => ({
     ...c,
     leads: filteredLeads.filter((l) => l.status === c.id),
-  }));
+  })).filter((c) => {
+    // Always show core stages + any stage that has leads
+    const coreStages = ["novo", "atendimento", "visita", "proposta", "convertido", "perdido"];
+    return coreStages.includes(c.id) || c.leads.length > 0;
+  });
 
   const TAB_TITLES: Record<TabKey, { title: string; subtitle: string }> = {
     painel: { title: "Comercial", subtitle: "Visão geral do dia" },
@@ -485,7 +489,7 @@ export default function Comercial() {
               </div>
               <DragOverlay>
                 {activeLead && (
-                  <Card className="w-[260px] cursor-grabbing border-nexo-blue bg-card p-3 shadow-lg">
+                  <Card className="w-[150px] cursor-grabbing border-nexo-blue bg-card p-3 shadow-lg">
                     <p className="text-sm font-semibold">{activeLead.nome}</p>
                     {activeLead.contato && (
                       <p className="mt-0.5 text-xs text-muted-foreground">{activeLead.contato}</p>
