@@ -490,6 +490,23 @@ export function NovoContratoWizard({ initialStep = 1, clienteId, leadId, onClose
         await supabase.from("orcamentos").update({ contrato_id: contrato.id }).eq("id", orcamento.id);
         if (selectedLeadId) await supabase.from("leads").update({ status: "convertido" }).eq("id", selectedLeadId);
 
+        // Gerar contas a receber automaticamente a partir das parcelas
+        if (parcelasJson && parcelasJson.length > 0) {
+          const contasReceber = parcelasJson.map((p: any, idx: number) => ({
+            loja_id: perfil.loja_id,
+            descricao: `${clientData.nome} — ${p.label || `Parcela ${idx + 1}`}`,
+            valor: Number(p.valor),
+            vencimento: p.data,
+            status: "pendente",
+            contrato_id: contrato.id,
+            parcela_numero: idx + 1,
+            total_parcelas: parcelasJson.length,
+            forma_pagamento: condicaoSel?.nome || "boleto",
+          }));
+          const { error: finErr } = await supabase.from("financeiro_contas_receber").insert(contasReceber);
+          if (finErr) console.error("Erro ao gerar contas a receber:", finErr);
+        }
+
         toast.success("Contrato gerado com sucesso!");
         navigate(`/contratos/${contrato.id}`);
       } else {
