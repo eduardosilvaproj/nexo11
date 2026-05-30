@@ -20,6 +20,8 @@ import { Card } from "@/components/ui/card";
 import { LeadFormDialog } from "@/components/comercial/LeadFormDialog";
 import { PainelDoDia } from "@/components/comercial/PainelDoDia";
 import { LeadsTable } from "@/components/comercial/LeadsTable";
+import { FunilConversao } from "@/components/comercial/FunilConversao";
+import { MotivoPerdaDialog } from "@/components/comercial/MotivoPerdaDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { UploadPDFEstimativa } from '@/components/estimativa/UploadPDFEstimativa';
 import { RelatorioEstimativaView } from '@/components/estimativa/RelatorioEstimativaView';
@@ -32,8 +34,13 @@ type Lead = Database["public"]["Tables"]["leads"]["Row"];
 const COLUMNS: { id: LeadStatus; title: string }[] = [
   { id: "novo", title: "Novo" },
   { id: "atendimento", title: "Atendimento" },
+  { id: "qualificacao", title: "Qualificação" },
   { id: "visita", title: "Visita" },
+  { id: "medicao_agendada", title: "Medição" },
   { id: "proposta", title: "Proposta" },
+  { id: "orcamento_enviado", title: "Orçamento" },
+  { id: "negociacao", title: "Negociação" },
+  { id: "fechamento", title: "Fechamento" },
   { id: "convertido", title: "Convertido" },
   { id: "perdido", title: "Perdido" },
 ];
@@ -73,9 +80,21 @@ function LeadCard({ lead, onConvert }: { lead: Lead; onConvert: (l: Lead) => voi
       }`}
       style={cardStyle}
     >
-      <p style={{ fontSize: 13, fontWeight: 500, color: "#0D1117" }} className="truncate">
-        {lead.nome}
-      </p>
+      <div className="flex items-center justify-between">
+        <p style={{ fontSize: 13, fontWeight: 500, color: "#0D1117" }} className="truncate flex-1">
+          {lead.nome}
+        </p>
+        {(lead as any).temperatura && (
+          <span
+            className="inline-block w-2 h-2 rounded-full ml-1 flex-shrink-0"
+            title={(lead as any).temperatura}
+            style={{
+              background: (lead as any).temperatura === "quente" ? "#EF4444"
+                : (lead as any).temperatura === "morno" ? "#F59E0B" : "#3B82F6"
+            }}
+          />
+        )}
+      </div>
       {lead.contato && (
         <p className="mt-0.5 truncate" style={{ fontSize: 12, color: "#6B7A90" }}>
           {lead.contato}
@@ -226,7 +245,7 @@ function Column({
   );
 }
 
-type TabKey = "painel" | "pipeline" | "leads";
+type TabKey = "painel" | "pipeline" | "funil" | "leads";
 
 export default function Comercial() {
   const { perfil } = useAuth();
@@ -234,6 +253,8 @@ export default function Comercial() {
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [motivoPerdaLead, setMotivoPerdaLead] = useState<Lead | null>(null);
+  const [pendingDrop, setPendingDrop] = useState<{ id: string; status: LeadStatus } | null>(null);
   const [tab, setTab] = useState<TabKey>("painel");
   const [filterStatus, setFilterStatus] = useState<"all" | LeadStatus>("all");
   const [filterVendedor, setFilterVendedor] = useState<string>("all");
@@ -288,6 +309,14 @@ export default function Comercial() {
     const next = String(overId) as LeadStatus;
     const lead = leads.find((l) => l.id === id);
     if (!lead || lead.status === next) return;
+
+    // Se está movendo para "perdido", abrir dialog de motivo
+    if (next === "perdido") {
+      setMotivoPerdaLead(lead);
+      setPendingDrop({ id, status: next });
+      return;
+    }
+
     updateStatus.mutate({ id, status: next });
   };
 
@@ -312,6 +341,7 @@ export default function Comercial() {
   const TAB_TITLES: Record<TabKey, { title: string; subtitle: string }> = {
     painel: { title: "Comercial", subtitle: "Visão geral do dia" },
     pipeline: { title: "Pipeline", subtitle: "Kanban de leads" },
+    funil: { title: "Funil", subtitle: "Métricas de conversão" },
     leads: { title: "Leads", subtitle: "Todos os leads" },
   };
 
@@ -342,6 +372,7 @@ export default function Comercial() {
         {([
           { key: "painel", label: "Painel" },
           { key: "pipeline", label: "Pipeline" },
+          { key: "funil", label: "Funil" },
           { key: "leads", label: "Leads" },
         ] as { key: TabKey; label: string }[]).map((t) => {
           const active = tab === t.key;
@@ -365,6 +396,8 @@ export default function Comercial() {
 
       {/* Tab Content */}
       {tab === "painel" && <PainelDoDia />}
+
+      {tab === "funil" && <FunilConversao />}
 
       {tab === "leads" && <LeadsTable />}
 
@@ -466,6 +499,23 @@ export default function Comercial() {
       )}
 
       <LeadFormDialog open={formOpen} onOpenChange={setFormOpen} />
+
+      <MotivoPerdaDialog
+        open={!!motivoPerdaLead}
+        leadNome={motivoPerdaLead?.nome}
+        onConfirm={async (motivo) => {
+          if (pendingDrop) {
+            await supabase.from("leads").update({ motivo_perda: motivo }).eq("id", pendingDrop.id);
+            updateStatus.mutate({ id: pendingDrop.id, status: pendingDrop.status });
+          }
+          setMotivoPerdaLead(null);
+          setPendingDrop(null);
+        }}
+        onCancel={() => {
+          setMotivoPerdaLead(null);
+          setPendingDrop(null);
+        }}
+      />
     </div>
   );
 }
