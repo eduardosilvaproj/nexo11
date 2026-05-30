@@ -3645,6 +3645,119 @@ export type Database = {
           },
         ]
       }
+      financiamentos: {
+        Row: {
+          contrato_id: string
+          created_at: string | null
+          created_by: string | null
+          data_aprovacao: string | null
+          data_liberacao: string | null
+          financeira_nome: string
+          fornecedor_id: string | null
+          fornecedor_nome: string | null
+          id: string
+          intera_data_pagamento: string | null
+          intera_paga: boolean | null
+          loja_id: string
+          numero_contrato_financeira: string | null
+          observacoes: string | null
+          perc_direto_fabrica: number | null
+          perc_entrada_loja: number | null
+          status: string | null
+          taxa_financeira: number | null
+          updated_at: string | null
+          valor_compra_material: number | null
+          valor_direto_fabrica: number | null
+          valor_entrada_loja: number | null
+          valor_intera: number | null
+          valor_taxa: number | null
+          valor_total_financiado: number
+        }
+        Insert: {
+          contrato_id: string
+          created_at?: string | null
+          created_by?: string | null
+          data_aprovacao?: string | null
+          data_liberacao?: string | null
+          financeira_nome: string
+          fornecedor_id?: string | null
+          fornecedor_nome?: string | null
+          id?: string
+          intera_data_pagamento?: string | null
+          intera_paga?: boolean | null
+          loja_id: string
+          numero_contrato_financeira?: string | null
+          observacoes?: string | null
+          perc_direto_fabrica?: number | null
+          perc_entrada_loja?: number | null
+          status?: string | null
+          taxa_financeira?: number | null
+          updated_at?: string | null
+          valor_compra_material?: number | null
+          valor_direto_fabrica?: number | null
+          valor_entrada_loja?: number | null
+          valor_intera?: number | null
+          valor_taxa?: number | null
+          valor_total_financiado: number
+        }
+        Update: {
+          contrato_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          data_aprovacao?: string | null
+          data_liberacao?: string | null
+          financeira_nome?: string
+          fornecedor_id?: string | null
+          fornecedor_nome?: string | null
+          id?: string
+          intera_data_pagamento?: string | null
+          intera_paga?: boolean | null
+          loja_id?: string
+          numero_contrato_financeira?: string | null
+          observacoes?: string | null
+          perc_direto_fabrica?: number | null
+          perc_entrada_loja?: number | null
+          status?: string | null
+          taxa_financeira?: number | null
+          updated_at?: string | null
+          valor_compra_material?: number | null
+          valor_direto_fabrica?: number | null
+          valor_entrada_loja?: number | null
+          valor_intera?: number | null
+          valor_taxa?: number | null
+          valor_total_financiado?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financiamentos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financiamentos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financiamentos_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financiamentos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fornecedores: {
         Row: {
           ativo: boolean
@@ -4279,14 +4392,18 @@ export type Database = {
           contato: string | null
           created_at: string
           data_entrada: string
+          data_previsao_fechamento: string | null
           data_ultimo_contato: string | null
           email: string | null
           id: string
           loja_id: string
+          motivo_perda: string | null
           nome: string
           observacoes: string | null
           origem: string | null
+          score: number | null
           status: Database["public"]["Enums"]["lead_status"]
+          temperatura: string | null
           updated_at: string
           valor_estimado: number | null
           vendedor_id: string | null
@@ -4295,14 +4412,18 @@ export type Database = {
           contato?: string | null
           created_at?: string
           data_entrada?: string
+          data_previsao_fechamento?: string | null
           data_ultimo_contato?: string | null
           email?: string | null
           id?: string
           loja_id: string
+          motivo_perda?: string | null
           nome: string
           observacoes?: string | null
           origem?: string | null
+          score?: number | null
           status?: Database["public"]["Enums"]["lead_status"]
+          temperatura?: string | null
           updated_at?: string
           valor_estimado?: number | null
           vendedor_id?: string | null
@@ -4311,14 +4432,18 @@ export type Database = {
           contato?: string | null
           created_at?: string
           data_entrada?: string
+          data_previsao_fechamento?: string | null
           data_ultimo_contato?: string | null
           email?: string | null
           id?: string
           loja_id?: string
+          motivo_perda?: string | null
           nome?: string
           observacoes?: string | null
           origem?: string | null
+          score?: number | null
           status?: Database["public"]["Enums"]["lead_status"]
+          temperatura?: string | null
           updated_at?: string
           valor_estimado?: number | null
           vendedor_id?: string | null
@@ -8667,6 +8792,11 @@ export type Database = {
         | "proposta"
         | "convertido"
         | "perdido"
+        | "qualificacao"
+        | "medicao_agendada"
+        | "orcamento_enviado"
+        | "negociacao"
+        | "fechamento"
       op_status: "aguardando" | "em_corte" | "em_montagem" | "concluido"
       papel_comissao_regra:
         | "contrato_assinado"
@@ -8879,6 +9009,11 @@ export const Constants = {
         "proposta",
         "convertido",
         "perdido",
+        "qualificacao",
+        "medicao_agendada",
+        "orcamento_enviado",
+        "negociacao",
+        "fechamento",
       ],
       op_status: ["aguardando", "em_corte", "em_montagem", "concluido"],
       papel_comissao_regra: [
