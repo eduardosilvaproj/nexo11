@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check, Trash2, Calendar, QrCode } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Check, Trash2, Calendar, QrCode, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PagamentoConfirmDialog } from "./PagamentoConfirmDialog";
@@ -48,9 +51,19 @@ export function ContasCard() {
   const [cobrancaAlvo, setCobrancaAlvo] = useState<{ id: string; descricao: string; valor: number; vencimento: string; contrato_id: string | null; contratos?: { id: string; cliente_nome: string } | null } | null>(null);
   const [filtroReceber, setFiltroReceber] = useState<FiltroKey>("todas");
   const [filtroPagar, setFiltroPagar] = useState<FiltroKey>("todas");
+  const [showNovoLancamento, setShowNovoLancamento] = useState<'receber' | 'pagar' | null>(null);
   const hojeStr = new Date().toISOString().slice(0, 10);
   const { roles } = useAuth();
   const podeGerenciar = canPerform(roles, "financeiro.manage");
+
+  const [formLanc, setFormLanc] = useState({
+    descricao: '',
+    valor: '',
+    vencimento: '',
+    categoria: '',
+    data_pagamento: '',
+    forma_pagamento: '',
+  });
 
 
   async function carregar() {
@@ -80,6 +93,34 @@ export function ContasCard() {
     const { error } = await supabase.from(table).update({ status: "cancelado" }).eq("id", id);
     if (error) { toast.error(error.message); return; }
     toast.success("Lançamento cancelado");
+    carregar();
+  }
+
+  async function handleCriarLancamento() {
+    if (!formLanc.descricao || !formLanc.valor || !formLanc.vencimento) {
+      toast.error("Informe descrição, valor e vencimento");
+      return;
+    }
+    const valor = Number(formLanc.valor.replace(/[^\d.,]/g, '').replace(',', '.'));
+    const table = showNovoLancamento === 'receber' ? "financeiro_contas_receber" : "financeiro_contas_pagar";
+    const payload: any = {
+      descricao: formLanc.descricao,
+      valor,
+      vencimento: formLanc.vencimento,
+      status: formLanc.data_pagamento ? 'pago' : 'pendente',
+      data_pagamento: formLanc.data_pagamento || null,
+    };
+    if (showNovoLancamento === 'pagar' && formLanc.categoria) {
+      payload.categoria = formLanc.categoria;
+    }
+    if (formLanc.forma_pagamento) {
+      payload.forma_pagamento = formLanc.forma_pagamento;
+    }
+    const { error } = await supabase.from(table).insert(payload);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`Lançamento ${showNovoLancamento === 'receber' ? 'a receber' : 'a pagar'} criado`);
+    setShowNovoLancamento(null);
+    setFormLanc({ descricao: '', valor: '', vencimento: '', categoria: '', data_pagamento: '', forma_pagamento: '' });
     carregar();
   }
 
@@ -246,6 +287,18 @@ export function ContasCard() {
 
   return (
     <div className="space-y-6">
+      {/* Botões de novo lançamento */}
+      {podeGerenciar && (
+        <div className="flex items-center gap-2">
+          <Button onClick={() => setShowNovoLancamento('receber')} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+            <Plus className="h-4 w-4 mr-1" /> Novo a Receber
+          </Button>
+          <Button onClick={() => setShowNovoLancamento('pagar')} variant="outline" className="border-red-300 text-red-600 hover:bg-red-50">
+            <Plus className="h-4 w-4 mr-1" /> Novo a Pagar
+          </Button>
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-2">
         <Coluna
           titulo="Contas a Receber"
@@ -278,6 +331,79 @@ export function ContasCard() {
         cobranca={cobrancaAlvo}
         onCobrado={carregar}
       />
+
+      {/* Dialog Novo Lançamento */}
+      <Dialog open={!!showNovoLancamento} onOpenChange={(v) => !v && setShowNovoLancamento(null)}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>
+              {showNovoLancamento === 'receber' ? 'Novo Lançamento a Receber' : 'Novo Lançamento a Pagar'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Descrição *</Label>
+              <Input value={formLanc.descricao} onChange={e => setFormLanc(f => ({ ...f, descricao: e.target.value }))} placeholder="Ex: Parcela 1/3 - Cliente João" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Valor *</Label>
+                <Input inputMode="decimal" placeholder="R$ 0,00" value={formLanc.valor} onChange={e => setFormLanc(f => ({ ...f, valor: e.target.value.replace(/[^\d.,]/g, '') }))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Vencimento *</Label>
+                <Input type="date" value={formLanc.vencimento} onChange={e => setFormLanc(f => ({ ...f, vencimento: e.target.value }))} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Data pagamento (retroativo)</Label>
+                <Input type="date" value={formLanc.data_pagamento} onChange={e => setFormLanc(f => ({ ...f, data_pagamento: e.target.value }))} />
+                <p className="text-[10px] text-slate-400">Preencha se já foi pago</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Forma de pagamento</Label>
+                <Select value={formLanc.forma_pagamento} onValueChange={v => setFormLanc(f => ({ ...f, forma_pagamento: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pix">PIX</SelectItem>
+                    <SelectItem value="boleto">Boleto</SelectItem>
+                    <SelectItem value="cartao">Cartão</SelectItem>
+                    <SelectItem value="transferencia">Transferência</SelectItem>
+                    <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                    <SelectItem value="cheque">Cheque</SelectItem>
+                    <SelectItem value="financiamento">Financiamento</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            {showNovoLancamento === 'pagar' && (
+              <div className="space-y-1.5">
+                <Label>Categoria</Label>
+                <Select value={formLanc.categoria} onValueChange={v => setFormLanc(f => ({ ...f, categoria: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fornecedor">Fornecedor / Fábrica</SelectItem>
+                    <SelectItem value="aluguel">Aluguel</SelectItem>
+                    <SelectItem value="folha">Folha de Pagamento</SelectItem>
+                    <SelectItem value="comissao">Comissão (RT/Arquiteto)</SelectItem>
+                    <SelectItem value="imposto">Imposto</SelectItem>
+                    <SelectItem value="marketing">Marketing</SelectItem>
+                    <SelectItem value="logistica">Logística / Frete</SelectItem>
+                    <SelectItem value="manutencao">Manutenção</SelectItem>
+                    <SelectItem value="reembolso">Reembolso</SelectItem>
+                    <SelectItem value="outro">Outro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNovoLancamento(null)}>Cancelar</Button>
+            <Button className="bg-[#1E6FBF] hover:bg-[#1E6FBF]/90 text-white" onClick={handleCriarLancamento}>Criar Lançamento</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
