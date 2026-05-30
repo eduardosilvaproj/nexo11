@@ -76,8 +76,8 @@ export function CartaoCreditoManager() {
   const [showCartaoForm, setShowCartaoForm] = useState(false);
   const [showCompraForm, setShowCompraForm] = useState(false);
   const [showFaturaDetail, setShowFaturaDetail] = useState<Fatura | null>(null);
-  const { roles } = useAuth();
-  const podeGerenciar = canPerform(roles, "financeiro.manage") || canPerform(roles, "financeiro.aprovacao");
+  const { roles, perfil } = useAuth();
+  const podeGerenciar = canPerform(roles, "financeiro.manage");
 
   const [formCartao, setFormCartao] = useState({
     nome_titular: '', numero_final: '', bandeira: '', banco: '', limite: '', dia_venc: '1',
