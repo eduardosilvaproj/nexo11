@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, FileEdit, Trash2, TrendingUp, TrendingDown, Calendar, Layers, Upload, FileCode } from "lucide-react";
+import { parsePromobXml, type PromobParsed, type PromobCategoria } from "@/lib/promob-xml";
 
 interface Props {
   contratoId: string;
@@ -27,15 +28,15 @@ interface Aditivo {
   motivo: string | null;
   created_by: string;
   created_at: string;
-  xml_itens?: XmlItem[] | null;
+  xml_itens?: PromobXmlResumo[] | null;
 }
 
-interface XmlItem {
-  descricao: string;
-  ncm?: string;
-  quantidade: number;
-  valorUnitario: number;
-  valorTotal: number;
+interface PromobXmlResumo {
+  categoria: string;
+  tabela: number;
+  pedido: number;
+  budget: number;
+  itens: number;
 }
 
 const TIPOS = [
@@ -59,8 +60,9 @@ export function ContratoAditivosTab({ contratoId, lojaId, valorAtual }: Props) {
     data_vigencia: "",
     motivo: "",
   });
-  const [xmlItens, setXmlItens] = useState<XmlItem[]>([]);
+  const [xmlItens, setXmlItens] = useState<PromobXmlResumo[]>([]);
   const [xmlFileName, setXmlFileName] = useState("");
+  const [xmlTotalVenda, setXmlTotalVenda] = useState(0);
   const xmlInputRef = useRef<HTMLInputElement>(null);
 
   const { data: aditivos = [], isLoading } = useQuery({
@@ -76,35 +78,12 @@ export function ContratoAditivosTab({ contratoId, lojaId, valorAtual }: Props) {
     },
   });
 
-  function parseXml(xmlText: string): XmlItem[] {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(xmlText, "text/xml");
-    const itens: XmlItem[] = [];
-
-    // NFe padrão brasileiro
-    const dets = doc.querySelectorAll("det");
-    dets.forEach(det => {
-      const prod = det.querySelector("prod");
-      if (!prod) return;
-
-      const descricao = prod.querySelector("xProd")?.textContent || "Item";
-      const ncm = prod.querySelector("NCM")?.textContent || "";
-      const quantidade = parseFloat(prod.querySelector("qCom")?.textContent || "1");
-      const valorUnitario = parseFloat(prod.querySelector("vUnCom")?.textContent || "0");
-      const valorTotal = parseFloat(prod.querySelector("vProd")?.textContent || "0");
-
-      itens.push({ descricao, ncm, quantidade, valorUnitario, valorTotal });
-    });
-
-    return itens;
-  }
-
   function handleXmlUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (!file.name.endsWith(".xml")) {
-      toast.error("Selecione um arquivo XML");
+      toast.error("Selecione um arquivo XML do Promob");
       return;
     }
 
@@ -112,22 +91,33 @@ export function ContratoAditivosTab({ contratoId, lojaId, valorAtual }: Props) {
     reader.onload = (ev) => {
       try {
         const text = ev.target?.result as string;
-        const itens = parseXml(text);
-        if (itens.length === 0) {
-          toast.error("Nenhum item encontrado no XML. Verifique se é uma NFe válida.");
+        const parsed = parsePromobXml(text);
+
+        if (parsed.categorias.length === 0 && parsed.itens.length === 0) {
+          toast.error("Nenhum item encontrado no XML. Verifique se é um XML do Promob válido.");
           return;
         }
-        const totalXml = itens.reduce((s, i) => s + i.valorTotal, 0);
-        setXmlItens(itens);
+
+        const totalVenda = parsed.total_orcamento || parsed.total_pedido;
+        const resumo: PromobXmlResumo[] = parsed.categorias.map(c => ({
+          categoria: c.description,
+          tabela: c.tabela,
+          pedido: c.pedido,
+          budget: c.budget,
+          itens: c.itens.length,
+        }));
+
+        setXmlItens(resumo);
         setXmlFileName(file.name);
+        setXmlTotalVenda(totalVenda);
         setForm(f => ({
           ...f,
-          valor_novo: totalXml.toFixed(2).replace(".", ","),
-          descricao: f.descricao || `Aditivo via XML - ${itens.length} item(ns) - ${file.name}`,
+          valor_novo: totalVenda.toFixed(2).replace(".", ","),
+          descricao: f.descricao || `Aditivo via XML Promob - ${parsed.categorias.length} ambiente(s)`,
         }));
-        toast.success(`${itens.length} itens extraídos — Total: R$ ${totalXml.toFixed(2).replace(".", ",")}`);
-      } catch {
-        toast.error("Erro ao processar XML");
+        toast.success(`${parsed.categorias.length} ambiente(s) · ${parsed.itens.length} itens — Total: R$ ${totalVenda.toFixed(2).replace(".", ",")}`);
+      } catch (err: any) {
+        toast.error("Erro ao processar XML: " + (err.message || "Arquivo inválido"));
       }
     };
     reader.readAsText(file);
@@ -173,6 +163,7 @@ export function ContratoAditivosTab({ contratoId, lojaId, valorAtual }: Props) {
     setForm({ tipo: "valor", descricao: "", valor_novo: "", data_vigencia: "", motivo: "" });
     setXmlItens([]);
     setXmlFileName("");
+    setXmlTotalVenda(0);
     qc.invalidateQueries({ queryKey: ["contrato_aditivos", contratoId] });
     qc.invalidateQueries({ queryKey: ["contrato_dre_view", contratoId] });
   }
@@ -266,15 +257,16 @@ export function ContratoAditivosTab({ contratoId, lojaId, valorAtual }: Props) {
                 <details className="text-[10px]">
                   <summary className="cursor-pointer text-blue-600 hover:text-blue-800 font-medium">
                     <FileCode className="h-3 w-3 inline mr-1" />
-                    {a.xml_itens.length} itens do XML
+                    {a.xml_itens.length} ambiente(s) do Promob
                   </summary>
                   <div className="mt-1 max-h-24 overflow-y-auto rounded border">
                     <table className="w-full">
                       <tbody>
-                        {(a.xml_itens as XmlItem[]).map((item, i) => (
+                        {(a.xml_itens as PromobXmlResumo[]).map((item, i) => (
                           <tr key={i} className="border-t first:border-0">
-                            <td className="px-1.5 py-0.5 text-slate-600 truncate max-w-[160px]">{item.descricao}</td>
-                            <td className="px-1.5 py-0.5 text-right text-slate-700">{formatBRL(item.valorTotal)}</td>
+                            <td className="px-1.5 py-0.5 text-slate-600 truncate max-w-[160px]">{item.categoria}</td>
+                            <td className="px-1.5 py-0.5 text-right text-slate-500">{item.itens} itens</td>
+                            <td className="px-1.5 py-0.5 text-right text-slate-700">{formatBRL(item.budget || item.pedido)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -324,11 +316,11 @@ export function ContratoAditivosTab({ contratoId, lojaId, valorAtual }: Props) {
                 />
                 <p className="text-[10px] text-slate-400 mt-0.5">Valor atual: {formatBRL(valorAtual)}</p>
 
-                {/* Upload XML */}
+                {/* Upload XML Promob */}
                 <div className="mt-2 rounded-lg border border-dashed border-slate-300 p-3 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-slate-600 font-medium flex items-center gap-1">
-                      <FileCode className="h-3.5 w-3.5" /> Importar XML da NF-e
+                      <FileCode className="h-3.5 w-3.5" /> Importar XML do Promob
                     </span>
                     <Button
                       type="button"
@@ -348,41 +340,41 @@ export function ContratoAditivosTab({ contratoId, lojaId, valorAtual }: Props) {
                     />
                   </div>
                   {xmlFileName && (
-                    <p className="text-[10px] text-emerald-600">✓ {xmlFileName} — {xmlItens.length} itens</p>
+                    <p className="text-[10px] text-emerald-600">✓ {xmlFileName} — {xmlItens.length} ambiente(s)</p>
                   )}
                   {xmlItens.length > 0 && (
                     <div className="max-h-32 overflow-y-auto rounded border text-[10px]">
                       <table className="w-full">
                         <thead className="bg-slate-50 sticky top-0">
                           <tr>
-                            <th className="text-left px-1.5 py-0.5 font-medium text-slate-500">Item</th>
-                            <th className="text-right px-1.5 py-0.5 font-medium text-slate-500">Qtd</th>
+                            <th className="text-left px-1.5 py-0.5 font-medium text-slate-500">Ambiente</th>
+                            <th className="text-right px-1.5 py-0.5 font-medium text-slate-500">Itens</th>
                             <th className="text-right px-1.5 py-0.5 font-medium text-slate-500">Valor</th>
                           </tr>
                         </thead>
                         <tbody>
                           {xmlItens.map((item, i) => (
                             <tr key={i} className="border-t">
-                              <td className="px-1.5 py-0.5 text-slate-700 truncate max-w-[180px]">{item.descricao}</td>
-                              <td className="px-1.5 py-0.5 text-right text-slate-600">{item.quantidade}</td>
+                              <td className="px-1.5 py-0.5 text-slate-700 truncate max-w-[180px]">{item.categoria}</td>
+                              <td className="px-1.5 py-0.5 text-right text-slate-600">{item.itens}</td>
                               <td className="px-1.5 py-0.5 text-right text-slate-700 font-medium">
-                                {formatBRL(item.valorTotal)}
+                                {formatBRL(item.budget || item.pedido)}
                               </td>
                             </tr>
                           ))}
                         </tbody>
                         <tfoot className="bg-slate-50 border-t font-semibold">
                           <tr>
-                            <td className="px-1.5 py-0.5" colSpan={2}>Total</td>
+                            <td className="px-1.5 py-0.5" colSpan={2}>Total (valor de venda)</td>
                             <td className="px-1.5 py-0.5 text-right">
-                              {formatBRL(xmlItens.reduce((s, i) => s + i.valorTotal, 0))}
+                              {formatBRL(xmlTotalVenda)}
                             </td>
                           </tr>
                         </tfoot>
                       </table>
                     </div>
                   )}
-                  <p className="text-[10px] text-slate-400">O valor total do XML será usado como novo valor do contrato</p>
+                  <p className="text-[10px] text-slate-400">O valor de venda do XML Promob será usado como novo valor do contrato</p>
                 </div>
               </div>
             )}
