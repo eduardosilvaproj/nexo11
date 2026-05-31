@@ -4387,6 +4387,66 @@ export type Database = {
           },
         ]
       }
+      lead_anotacoes: {
+        Row: {
+          audio_duracao_seg: number | null
+          audio_url: string | null
+          conteudo: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          imagem_prompt: string | null
+          imagem_url: string | null
+          lead_id: string
+          loja_id: string
+          resumo_ia: string | null
+          tipo: string
+        }
+        Insert: {
+          audio_duracao_seg?: number | null
+          audio_url?: string | null
+          conteudo?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          imagem_prompt?: string | null
+          imagem_url?: string | null
+          lead_id: string
+          loja_id: string
+          resumo_ia?: string | null
+          tipo?: string
+        }
+        Update: {
+          audio_duracao_seg?: number | null
+          audio_url?: string | null
+          conteudo?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          imagem_prompt?: string | null
+          imagem_url?: string | null
+          lead_id?: string
+          loja_id?: string
+          resumo_ia?: string | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_anotacoes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_anotacoes_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           contato: string | null
