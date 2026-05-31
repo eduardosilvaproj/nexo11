@@ -19,6 +19,10 @@ import { LogisticaMontagemSection } from "@/components/analytics/LogisticaMontag
 import { PosVendaSection } from "@/components/analytics/PosVendaSection";
 import { SatisfacaoSection } from "@/components/analytics/SatisfacaoSection";
 import { ExecucaoRealSection } from "@/components/analytics/ExecucaoRealSection";
+import { RelatorioExportPDF } from "@/components/analytics/RelatorioExportPDF";
+import { BenchmarkLojas } from "@/components/analytics/BenchmarkLojas";
+import { ForecastFaturamento } from "@/components/analytics/ForecastFaturamento";
+import { DashboardPersonalizavel } from "@/components/analytics/DashboardPersonalizavel";
 import { Periodo, rangeFromPeriodo } from "@/components/analytics/shared";
 
 type Loja = { id: string; nome: string };
@@ -93,6 +97,18 @@ export default function Analytics() {
           )}
         </div>
       </div>
+
+      {/* Dashboard personalizável + Export PDF */}
+      <div className="flex items-start justify-between gap-4">
+        <DashboardPersonalizavel periodo={periodo} lojaId={lojaId} />
+        <RelatorioExportPDF periodo={periodo} lojaId={lojaId} />
+      </div>
+
+      {/* Forecast */}
+      <ForecastFaturamento periodo={periodo} lojaId={lojaId} />
+
+      {/* Benchmark (franqueador only) */}
+      {isFranqueador && <BenchmarkLojas periodo={periodo} />}
 
       <VisaoGeralSection periodo={periodo} lojaId={lojaId} />
 
