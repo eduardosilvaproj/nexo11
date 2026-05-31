@@ -441,27 +441,27 @@ html {
 @keyframes nx-logo-glow {
   0%, 100% {
     filter:
-      drop-shadow(0 0 32px rgba(26, 155, 232, 0.35))
-      drop-shadow(0 0 72px rgba(26, 155, 232, 0.20))
-      drop-shadow(0 0 10px rgba(255, 255, 255, 0.06));
+      drop-shadow(0 0 28px rgba(26, 155, 232, 0.28))
+      drop-shadow(0 0 64px rgba(26, 155, 232, 0.14))
+      drop-shadow(0 0 8px rgba(255, 255, 255, 0.05));
   }
   50% {
     filter:
-      drop-shadow(0 0 36px rgba(34, 201, 122, 0.35))
-      drop-shadow(0 0 84px rgba(34, 201, 122, 0.20))
-      drop-shadow(0 0 10px rgba(255, 255, 255, 0.06));
+      drop-shadow(0 0 28px rgba(34, 201, 122, 0.28))
+      drop-shadow(0 0 64px rgba(34, 201, 122, 0.14))
+      drop-shadow(0 0 8px rgba(255, 255, 255, 0.05));
   }
 }
 .nx-logo-hero-outer {
   display: inline-block;
   animation:
     nx-logo-enter 1s cubic-bezier(0.16, 1, 0.3, 1) both,
-    nx-logo-breathe 6s ease-in-out 1s infinite;
+    nx-logo-breathe 8s ease-in-out 1s infinite;
   will-change: transform, opacity;
 }
 .nx-logo-hero-inner {
   display: inline-block;
-  animation: nx-logo-glow 7s ease-in-out infinite;
+  animation: nx-logo-glow 10s ease-in-out infinite;
   will-change: filter;
 }
 @media (prefers-reduced-motion: reduce) {
