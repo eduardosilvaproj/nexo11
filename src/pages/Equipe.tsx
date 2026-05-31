@@ -6,6 +6,10 @@ import { NovoMembroDialog } from "@/components/equipe/NovoMembroDialog";
 import { PontoTab } from "@/components/equipe/PontoTab";
 import { DesempenhoTab } from "@/components/equipe/DesempenhoTab";
 import { MontadoresTab } from "@/components/equipe/MontadoresTab";
+import { MetasOKRs } from "@/components/equipe/MetasOKRs";
+import { MuralAvisos } from "@/components/equipe/MuralAvisos";
+import { Organograma } from "@/components/equipe/Organograma";
+import { Gamificacao } from "@/components/equipe/Gamificacao";
 import { useAuth } from "@/contexts/AuthContext";
 import { canPerform } from "@/lib/permissions";
 
@@ -96,6 +100,10 @@ export default function Equipe() {
             { value: "montadores", label: "Técnicos / Montadores" },
             { value: "ponto", label: "Ponto" },
             { value: "desempenho", label: "Desempenho" },
+            { value: "metas", label: "Metas" },
+            { value: "mural", label: "Mural" },
+            { value: "organograma", label: "Organograma" },
+            { value: "gamificacao", label: "Gamificação" },
           ].map((t) => (
             <TabsTrigger
               key={t.value}
@@ -119,6 +127,18 @@ export default function Equipe() {
         </TabsContent>
         <TabsContent value="desempenho" className="mt-6">
           <DesempenhoTab />
+        </TabsContent>
+        <TabsContent value="metas" className="mt-6">
+          <MetasOKRs />
+        </TabsContent>
+        <TabsContent value="mural" className="mt-6">
+          <MuralAvisos />
+        </TabsContent>
+        <TabsContent value="organograma" className="mt-6">
+          <Organograma />
+        </TabsContent>
+        <TabsContent value="gamificacao" className="mt-6">
+          <Gamificacao />
         </TabsContent>
       </Tabs>
 
