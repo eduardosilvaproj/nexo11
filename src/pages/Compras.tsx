@@ -6,7 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EstoqueItemSelector } from "@/components/compras/EstoqueItemSelector";
+import { EstoqueMinimo } from "@/components/compras/EstoqueMinimo";
+import { HistoricoCompras } from "@/components/compras/HistoricoCompras";
+import { OrdemCompra } from "@/components/compras/OrdemCompra";
 import { useAuth } from "@/contexts/AuthContext";
 import { canPerform } from "@/lib/permissions";
 
@@ -197,6 +201,24 @@ export default function Compras() {
         }}
         podeGerenciar={podeGerenciar}
       />
+
+      {/* Tabs extras */}
+      <Tabs defaultValue="estoque" className="mt-6">
+        <TabsList className="bg-transparent p-0 h-auto rounded-none border-b border-[#E8ECF2] w-full justify-start gap-6 mb-4">
+          <TabsTrigger value="estoque" className="rounded-none bg-transparent px-0 pb-3 pt-0 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-[#1E6FBF] data-[state=active]:border-b-2 data-[state=active]:border-[#1E6FBF] text-[#6B7A90] text-sm font-medium">
+            Estoque Mínimo
+          </TabsTrigger>
+          <TabsTrigger value="historico" className="rounded-none bg-transparent px-0 pb-3 pt-0 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-[#1E6FBF] data-[state=active]:border-b-2 data-[state=active]:border-[#1E6FBF] text-[#6B7A90] text-sm font-medium">
+            Histórico
+          </TabsTrigger>
+          <TabsTrigger value="ordens" className="rounded-none bg-transparent px-0 pb-3 pt-0 data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-[#1E6FBF] data-[state=active]:border-b-2 data-[state=active]:border-[#1E6FBF] text-[#6B7A90] text-sm font-medium">
+            Ordens de Compra
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="estoque"><EstoqueMinimo /></TabsContent>
+        <TabsContent value="historico"><HistoricoCompras /></TabsContent>
+        <TabsContent value="ordens"><OrdemCompra /></TabsContent>
+      </Tabs>
     </div>
   );
 }
