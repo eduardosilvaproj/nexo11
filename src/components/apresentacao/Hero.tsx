@@ -39,7 +39,7 @@ export function Hero() {
         vx: (Math.random() - 0.5) * 0.22,
         vy: (Math.random() - 0.5) * 0.22,
         r: Math.random() * 1.4 + 0.4,
-        c: Math.random() > 0.5 ? "#1A9BE8" : "#22C97A",
+        c: Math.random() > 0.5 ? "#00AAFF" : "#12B76A",
       });
     }
 
@@ -51,7 +51,7 @@ export function Hero() {
         if (p.y < 0 || p.y > h) p.vy *= -1;
         ctx!.beginPath();
         ctx!.fillStyle = p.c;
-        ctx!.globalAlpha = 0.5;
+        ctx!.globalAlpha = 0.45;
         ctx!.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx!.fill();
       }
@@ -72,41 +72,42 @@ export function Hero() {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-14">
       <div
-        className="absolute inset-0 opacity-[0.16]"
+        className="absolute inset-0 opacity-[0.14]"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(26,155,232,0.35) 1px, transparent 1px), linear-gradient(90deg, rgba(34,201,122,0.25) 1px, transparent 1px)",
+            "linear-gradient(rgba(0,170,255,0.35) 1px, transparent 1px), linear-gradient(90deg, rgba(18,183,106,0.25) 1px, transparent 1px)",
           backgroundSize: "64px 64px",
           maskImage: "radial-gradient(ellipse at center, #000 35%, transparent 75%)",
           WebkitMaskImage: "radial-gradient(ellipse at center, #000 35%, transparent 75%)",
         }}
       />
-      <div className="absolute top-1/3 left-1/4 w-[480px] h-[480px] rounded-full bg-[#1A9BE8]/20 blur-[140px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[480px] h-[480px] rounded-full bg-[#22C97A]/20 blur-[140px] translate-x-1/2 translate-y-1/2 pointer-events-none" />
+      <div className="absolute top-1/3 left-1/4 w-[520px] h-[520px] rounded-full bg-[#00AAFF]/20 blur-[150px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-[520px] h-[520px] rounded-full bg-[#12B76A]/20 blur-[150px] translate-x-1/2 translate-y-1/2 pointer-events-none" />
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
 
       <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
-        <div className="text-[10px] tracking-[0.4em] uppercase text-white/40 mb-10">
+        <div className="text-[10px] tracking-[0.4em] uppercase text-white/40 mb-12 animate-fade-in">
           Plataforma NEXO
         </div>
 
         <div
-          className="mb-10 flex items-center justify-center text-white"
-          style={{ filter: "drop-shadow(0 0 40px rgba(26,155,232,0.4))" }}
+          className="mb-12 flex items-center justify-center text-white animate-fade-in"
+          style={{
+            filter:
+              "drop-shadow(0 0 60px rgba(0,170,255,0.45)) drop-shadow(0 0 120px rgba(18,183,106,0.25))",
+          }}
         >
-          <div className="text-[88px] md:text-[140px] leading-none">
-            <LogoNexo size="lg" />
-          </div>
+          <LogoNexo size="2xl" />
         </div>
 
-        <h1 className="text-2xl md:text-4xl font-semibold tracking-tight text-white/95 leading-[1.15] mb-5 max-w-3xl mx-auto">
+        <h1 className="text-2xl md:text-4xl font-semibold tracking-tight text-white/95 leading-[1.15] mb-5 max-w-3xl mx-auto animate-fade-in">
           A plataforma que conecta toda a operação de móveis planejados.
         </h1>
-        <p className="text-base md:text-lg text-white/55 max-w-2xl mx-auto mb-12">
+        <p className="text-base md:text-lg text-white/55 max-w-2xl mx-auto mb-14 animate-fade-in">
           Do primeiro contato comercial ao pós-venda, todos os processos integrados em uma única plataforma.
         </p>
 
-        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-xs md:text-sm text-white/60 mb-16">
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-xs md:text-sm text-white/60 mb-20 animate-fade-in">
           {KPIS.map((k, i) => (
             <div key={k} className="flex items-center gap-6">
               <span className="font-medium tracking-wide">{k}</span>
