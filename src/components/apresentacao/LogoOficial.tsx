@@ -21,7 +21,8 @@ export function LogoOficial({
   glow = "soft",
   eager = false,
 }: LogoOficialProps) {
-  const px = SIZE_PX[size];
+  const isHero = size === "hero";
+  const px = isHero ? undefined : SIZE_PX[size as Exclude<Size, "hero">];
   const filter =
     glow === "none"
       ? undefined
@@ -39,7 +40,11 @@ export function LogoOficial({
       decoding="async"
       draggable={false}
       className={`select-none ${className}`}
-      style={{ width: px, height: "auto", filter }}
+      style={{
+        width: isHero ? "clamp(240px, 28vw, 360px)" : px,
+        height: "auto",
+        filter,
+      }}
     />
   );
 }
