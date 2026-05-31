@@ -42,7 +42,8 @@ const DEFAULT_ITEMS: string[] = [
 ];
 
 export function RHOnboarding() {
-  const { loja_id } = useAuth();
+  const { perfil } = useAuth();
+  const loja_id = perfil?.loja_id ?? null;
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPessoa, setSelectedPessoa] = useState("");
