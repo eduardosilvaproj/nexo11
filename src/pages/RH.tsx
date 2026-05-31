@@ -7,6 +7,8 @@ import { RHDocumentos } from "@/components/rh/RHDocumentos";
 import { RHAusencias } from "@/components/rh/RHAusencias";
 import { RHEscalas } from "@/components/rh/RHEscalas";
 import { RHAgendaEquipe } from "@/components/rh/RHAgendaEquipe";
+import { RHAvaliacaoDesempenho } from "@/components/rh/RHAvaliacaoDesempenho";
+import { RHOnboarding } from "@/components/rh/RHOnboarding";
 import { Users, FileText, Calendar, ClipboardCheck, AlertCircle, Clock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { canPerform } from "@/lib/permissions";
@@ -62,6 +64,12 @@ export default function RHPage() {
               <Calendar className="w-4 h-4" />
               Agenda da Equipe
             </TabsTrigger>
+            <TabsTrigger value="avaliacoes" className="flex items-center gap-2">
+              Avaliações
+            </TabsTrigger>
+            <TabsTrigger value="onboarding" className="flex items-center gap-2">
+              Onboarding
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -91,6 +99,14 @@ export default function RHPage() {
 
         <TabsContent value="agenda-equipe">
           <RHAgendaEquipe />
+        </TabsContent>
+
+        <TabsContent value="avaliacoes">
+          <RHAvaliacaoDesempenho />
+        </TabsContent>
+
+        <TabsContent value="onboarding">
+          <RHOnboarding />
         </TabsContent>
       </Tabs>
     </div>
