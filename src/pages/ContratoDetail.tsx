@@ -37,6 +37,10 @@ import { ChecklistProducaoCard } from "@/components/contrato/ChecklistProducaoCa
 import { ChecklistEntradaCard } from "@/components/contrato/ChecklistEntradaCard";
 import { ChecklistMontagemCard } from "@/components/contrato/ChecklistMontagemCard";
 import { ChecklistPosVendaCard } from "@/components/contrato/ChecklistPosVendaCard";
+import { GerarParcelasDialog } from "@/components/contrato/GerarParcelasDialog";
+import { ContratoAditivosTab } from "@/components/contrato/ContratoAditivosTab";
+import { AprovacaoContratoCard } from "@/components/contrato/AprovacaoContratoCard";
+import { ContratoAlertasCard } from "@/components/contrato/ContratoAlertasCard";
 
 
 const STAGE_TO_TAB: Record<string, ContratoTabKey> = {
@@ -348,9 +352,17 @@ export default function ContratoDetail() {
       toast.error(error.message ?? "Não foi possível avançar a etapa");
       return;
     }
-    const result = data as { ok: boolean; status_novo?: string; erro?: string };
+    const result = data as { ok: boolean; status_novo?: string; erro?: string; aprovacao_pendente?: boolean; mensagem?: string };
     if (!result?.ok) {
       toast.error(result?.erro ?? "Não foi possível avançar a etapa");
+      return;
+    }
+
+    // Workflow de aprovação: vendedor solicita, gerente aprova
+    if (result.aprovacao_pendente) {
+      toast.info(result.mensagem || "Solicitação de aprovação enviada ao gerente");
+      qc.invalidateQueries({ queryKey: ["contrato_aprovacoes", id] });
+      qc.invalidateQueries({ queryKey: ["contrato_dre_view", id] });
       return;
     }
 
@@ -496,6 +508,8 @@ export default function ContratoDetail() {
                <ContratoComunicacoesTab contratoId={contrato.id} />
             ) : active === "satisfacao" ? (
                <ContratoSatisfacaoTab contratoId={contrato.id} />
+            ) : active === "aditivos" ? (
+               <ContratoAditivosTab contratoId={contrato.id} lojaId={contrato.loja_id} valorAtual={Number(contrato.valor_venda) || 0} />
             ) : (
 
               <div className="text-sm text-muted-foreground">
@@ -504,10 +518,18 @@ export default function ContratoDetail() {
             )}
           </div>
            <div style={{ pointerEvents: "auto" }} className="flex flex-col gap-4">
-            <PortalClienteManager 
-              contratoId={contrato.id} 
-              clienteId={contrato.cliente_id} 
-              lojaId={contrato.loja_id} 
+            <ContratoAlertasCard
+              contratoId={contrato.id}
+              prazoEntrega={contrato.prazo_entrega}
+              prazoMontagem={contrato.prazo_montagem}
+              status={contrato.status}
+              updatedAt={contrato.updated_at}
+            />
+            <AprovacaoContratoCard contratoId={contrato.id} />
+            <PortalClienteManager
+              contratoId={contrato.id}
+              clienteId={contrato.cliente_id}
+              lojaId={contrato.loja_id}
             />
             <ContratoActivityLog contratoId={contrato.id} />
           </div>

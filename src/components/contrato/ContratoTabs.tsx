@@ -20,7 +20,8 @@ export type ContratoTabKey =
   | "anexos"
   | "indicadores"
   | "satisfacao"
-  | "comunicacoes";
+  | "comunicacoes"
+  | "aditivos";
 
 const TABS: { key: ContratoTabKey; label: string }[] = [
   { key: "comercial", label: "Comercial" },
@@ -33,6 +34,7 @@ const TABS: { key: ContratoTabKey; label: string }[] = [
   { key: "montagem", label: "Montagem" },
   { key: "ambientes", label: "Ambientes" },
   { key: "pos_venda", label: "Pós-venda" },
+  { key: "aditivos", label: "Aditivos" },
   { key: "dre", label: "DRE" },
   { key: "mensagens", label: "Mensagens" },
   { key: "timeline", label: "Linha do Tempo" },
