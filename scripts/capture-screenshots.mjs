@@ -18,7 +18,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 const BASE = process.argv[2] || "https://nexo11.lovable.app";
-const USER = process.env.NEXO_USER || "nexo@nexo.app";
+const USER = process.env.NEXO_USER || "demo@nexo.app";
 const PASS = process.env.NEXO_PASS || "NexoDemo2025!";
 const OUT = resolve("public/screenshots");
 
