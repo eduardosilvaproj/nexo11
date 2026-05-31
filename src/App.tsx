@@ -57,6 +57,7 @@ import FrotaCheckin from "./pages/frota/FrotaCheckin";
 import PortalFuncionario from "./pages/PortalFuncionario";
 import { VersionChecker } from "./components/VersionChecker";
 import NewContract from "./pages/NewContract";
+import Apresentacao from "./pages/Apresentacao";
 
 // Mobile imports - lazy loaded
 import DashboardVendedor from "@/routes/mobile/pages/DashboardVendedor";
@@ -111,6 +112,7 @@ function RootLayoutSwitcher() {
   return (
     <Routes>
       {/* Public routes */}
+      <Route path="/apresentacao" element={<Apresentacao />} />
       <Route path="/login" element={<AuthPage />} />
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/portal" element={<PortalEntrada />} />
