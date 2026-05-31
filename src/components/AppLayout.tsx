@@ -1,8 +1,17 @@
-import { Outlet, useLocation, Link } from "react-router-dom";
+import { Outlet, useLocation, Link, NavLink } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { NotificationsBell } from "@/components/NotificationsBell";
+import { PageTransition } from "@/components/ui/page-transition";
+import {
+  LayoutDashboard,
+  FileText,
+  Factory,
+  Wrench,
+  MoreHorizontal,
+} from "lucide-react";
+import { useState, useEffect } from "react";
 
 const ROUTE_LABELS: Record<string, string> = {
   "": "Dashboard",
@@ -26,12 +35,127 @@ const ROUTE_LABELS: Record<string, string> = {
   rh: "RH",
 };
 
+const BOTTOM_NAV_ITEMS = [
+  { label: "Dashboard", icon: LayoutDashboard, path: "/" },
+  { label: "Contratos", icon: FileText, path: "/contratos" },
+  { label: "Produção", icon: Factory, path: "/producao" },
+  { label: "Montagem", icon: Wrench, path: "/montagem" },
+];
+
 function getInitials(nome?: string | null, email?: string | null) {
   const base = (nome || email || "").trim();
   if (!base) return "?";
   const parts = base.split(/\s+/).filter(Boolean);
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
   return base.slice(0, 2).toUpperCase();
+}
+
+function MobileBottomNav() {
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+  const [showFullMenu, setShowFullMenu] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      // Detect keyboard open: viewport height significantly less than window height
+      const isOpen = window.visualViewport
+        ? window.visualViewport.height < window.innerHeight * 0.75
+        : false;
+      setIsKeyboardOpen(isOpen);
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", handleResize);
+      return () => window.visualViewport?.removeEventListener("resize", handleResize);
+    }
+  }, []);
+
+  if (isKeyboardOpen) return null;
+
+  return (
+    <>
+      {/* Full menu overlay */}
+      {showFullMenu && (
+        <div
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden"
+          onClick={() => setShowFullMenu(false)}
+        />
+      )}
+      {showFullMenu && (
+        <div className="fixed bottom-[72px] left-3 right-3 z-50 rounded-2xl border border-slate-200/80 bg-white/95 p-4 shadow-xl backdrop-blur-xl md:hidden">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+            Menu completo
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {Object.entries(ROUTE_LABELS)
+              .filter(([key]) => key !== "")
+              .map(([key, label]) => (
+                <NavLink
+                  key={key}
+                  to={`/${key}`}
+                  onClick={() => setShowFullMenu(false)}
+                  className={({ isActive }) =>
+                    `flex flex-col items-center gap-1 rounded-xl p-2 text-center text-[10px] font-medium transition-colors ${
+                      isActive
+                        ? "bg-sky-50 text-sky-600"
+                        : "text-slate-500 hover:bg-slate-50"
+                    }`
+                  }
+                >
+                  {label}
+                </NavLink>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {/* Bottom navigation bar */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/60 bg-white/80 pb-safe backdrop-blur-xl md:hidden">
+        <div className="flex h-[68px] items-center justify-around px-2">
+          {BOTTOM_NAV_ITEMS.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              end={item.path === "/"}
+              className={({ isActive }) =>
+                `flex flex-col items-center gap-0.5 rounded-xl px-3 py-1.5 text-[10px] font-medium transition-colors ${
+                  isActive
+                    ? "text-sky-600"
+                    : "text-slate-400 hover:text-slate-600"
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <item.icon
+                    className={`h-5 w-5 transition-transform ${
+                      isActive ? "scale-110" : ""
+                    }`}
+                    strokeWidth={isActive ? 2.2 : 1.8}
+                  />
+                  <span>{item.label}</span>
+                  {isActive && (
+                    <span className="absolute -top-0.5 h-0.5 w-5 rounded-full bg-sky-500" />
+                  )}
+                </>
+              )}
+            </NavLink>
+          ))}
+          {/* More button */}
+          <button
+            onClick={() => setShowFullMenu((v) => !v)}
+            className={`flex flex-col items-center gap-0.5 rounded-xl px-3 py-1.5 text-[10px] font-medium transition-colors ${
+              showFullMenu
+                ? "text-sky-600"
+                : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            <MoreHorizontal className="h-5 w-5" strokeWidth={1.8} />
+            <span>Mais</span>
+          </button>
+        </div>
+      </nav>
+    </>
+  );
 }
 
 export default function AppLayout() {
@@ -55,7 +179,7 @@ export default function AppLayout() {
         <AppSidebar />
         <div className="relative z-[1] flex flex-1 flex-col">
           <header
-            className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/70 bg-white/78 px-4 shadow-sm shadow-slate-900/[0.03] backdrop-blur-xl md:px-6"
+            className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/70 bg-white/78 px-4 shadow-sm shadow-slate-900/[0.03] backdrop-blur-xl md:px-6 md:rounded-none rounded-b-xl"
           >
             <div className="flex items-center gap-2 md:gap-4">
               <SidebarTrigger className="rounded-xl border border-slate-200 bg-white shadow-sm md:hidden" />
@@ -93,11 +217,15 @@ export default function AppLayout() {
               </div>
             </div>
           </header>
-          <main className="relative flex-1 overflow-x-hidden p-4 md:p-6">
+          <main className="relative flex-1 overflow-x-hidden p-4 pb-20 md:p-6 md:pb-6">
             <div className="mx-auto w-full max-w-[1600px]">
-              <Outlet />
+              <PageTransition key={location.pathname}>
+                <Outlet />
+              </PageTransition>
             </div>
           </main>
+          {/* Mobile bottom navigation */}
+          <MobileBottomNav />
         </div>
       </div>
     </SidebarProvider>

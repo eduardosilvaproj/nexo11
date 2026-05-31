@@ -1,0 +1,112 @@
+/* ============================================
+   NEXO Responsive Utilities
+   Mobile-first responsive helpers
+   ============================================ */
+
+/* Hide scrollbar but keep scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Responsive padding for page containers */
+.page-container {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+@media (min-width: 640px) {
+  .page-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+@media (min-width: 1024px) {
+  .page-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* Bottom safe area for mobile (iOS notch) */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Touch-friendly tap targets (min 44px) */
+@media (pointer: coarse) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Responsive text utilities */
+.text-responsive-xs {
+  font-size: 0.65rem;
+}
+@media (min-width: 640px) {
+  .text-responsive-xs {
+    font-size: 0.75rem;
+  }
+}
+
+.text-responsive-sm {
+  font-size: 0.75rem;
+}
+@media (min-width: 640px) {
+  .text-responsive-sm {
+    font-size: 0.875rem;
+  }
+}
+
+.text-responsive-base {
+  font-size: 0.875rem;
+}
+@media (min-width: 640px) {
+  .text-responsive-base {
+    font-size: 1rem;
+  }
+}
+
+.text-responsive-lg {
+  font-size: 1rem;
+}
+@media (min-width: 640px) {
+  .text-responsive-lg {
+    font-size: 1.125rem;
+  }
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.card-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Smooth transitions for all interactive elements */
+.interactive {
+  transition: all 0.15s ease;
+}
+.interactive:hover {
+  opacity: 0.9;
+}
+.interactive:active {
+  transform: scale(0.98);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .card-hover,
+  .interactive,
+  .animate-page-transition {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
