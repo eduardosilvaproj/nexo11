@@ -54,7 +54,7 @@ const Apresentacao = () => {
                 Módulos
               </div>
               <h2 className="text-3xl md:text-5xl font-semibold text-white tracking-tight max-w-3xl mx-auto leading-tight">
-                Onze capítulos. Uma única operação.
+                Doze capítulos. Uma única operação.
               </h2>
             </div>
             {MODULOS.map((m, i) => (

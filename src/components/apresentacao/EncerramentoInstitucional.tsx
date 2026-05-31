@@ -1,4 +1,4 @@
-import { LogoNexo } from "@/components/LogoNexo";
+import { LogoOficial } from "./LogoOficial";
 import { Reveal } from "./Reveal";
 
 export function EncerramentoInstitucional() {
@@ -11,14 +11,8 @@ export function EncerramentoInstitucional() {
 
       <div className="relative max-w-4xl mx-auto text-center">
         <Reveal>
-          <div
-            className="flex items-center justify-center text-white mb-12"
-            style={{
-              filter:
-                "drop-shadow(0 0 60px rgba(0,170,255,0.45)) drop-shadow(0 0 120px rgba(18,183,106,0.25))",
-            }}
-          >
-            <LogoNexo size="2xl" />
+          <div className="flex items-center justify-center mb-12">
+            <LogoOficial size="2xl" glow="premium" />
           </div>
         </Reveal>
 
