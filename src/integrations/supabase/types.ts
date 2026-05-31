@@ -7989,6 +7989,134 @@ export type Database = {
           },
         ]
       }
+      tecnico_agendamentos: {
+        Row: {
+          contrato_id: string
+          created_at: string | null
+          created_by: string | null
+          data_agendada: string
+          endereco: string | null
+          horario: string | null
+          id: string
+          loja_id: string
+          observacoes: string | null
+          responsavel_id: string | null
+          status: string
+          tipo: string
+        }
+        Insert: {
+          contrato_id: string
+          created_at?: string | null
+          created_by?: string | null
+          data_agendada: string
+          endereco?: string | null
+          horario?: string | null
+          id?: string
+          loja_id: string
+          observacoes?: string | null
+          responsavel_id?: string | null
+          status?: string
+          tipo?: string
+        }
+        Update: {
+          contrato_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          data_agendada?: string
+          endereco?: string | null
+          horario?: string | null
+          id?: string
+          loja_id?: string
+          observacoes?: string | null
+          responsavel_id?: string | null
+          status?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tecnico_agendamentos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tecnico_agendamentos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tecnico_agendamentos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tecnico_fotos: {
+        Row: {
+          ambiente_id: string | null
+          anotacao: string | null
+          contrato_id: string
+          created_at: string | null
+          created_by: string | null
+          etapa: string
+          id: string
+          loja_id: string
+          storage_path: string | null
+          url: string
+        }
+        Insert: {
+          ambiente_id?: string | null
+          anotacao?: string | null
+          contrato_id: string
+          created_at?: string | null
+          created_by?: string | null
+          etapa?: string
+          id?: string
+          loja_id?: string
+          storage_path?: string | null
+          url: string
+        }
+        Update: {
+          ambiente_id?: string | null
+          anotacao?: string | null
+          contrato_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          etapa?: string
+          id?: string
+          loja_id?: string
+          storage_path?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tecnico_fotos_ambiente_id_fkey"
+            columns: ["ambiente_id"]
+            isOneToOne: false
+            referencedRelation: "contrato_ambientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tecnico_fotos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tecnico_fotos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transacoes: {
         Row: {
           categoria: string
