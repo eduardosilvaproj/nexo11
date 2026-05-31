@@ -152,15 +152,15 @@ export function BriefingLeadDialog({ open, onOpenChange, leadId, leadNome }: Pro
     }
     setGerandoResumo(true);
     try {
-      const { data, error } = await supabase.functions.invoke("lead-briefing-ia", {
+      const resp = await supabase.functions.invoke("lead-briefing-ia", {
         body: { action: "resumo", lead_id: leadId, lead_nome: leadNome },
       });
-      if (error) throw new Error(error.message || JSON.stringify(error));
-      if (data?.error) throw new Error(data.error);
+      if (resp.error) throw new Error(resp.error.message || "Erro na Edge Function");
+      if (resp.data?.error) throw new Error(resp.data.error);
       toast.success("Resumo gerado!");
       carregar();
     } catch (err: any) {
-      toast.error("Erro ao gerar resumo: " + (err.message || "Verifique a Edge Function"));
+      toast.error("Erro: " + (err.message || "Verifique a Edge Function e OPENAI_API_KEY"));
     }
     setGerandoResumo(false);
   }
@@ -174,15 +174,15 @@ export function BriefingLeadDialog({ open, onOpenChange, leadId, leadNome }: Pro
     }
     setGerandoImagem(true);
     try {
-      const { data, error } = await supabase.functions.invoke("lead-briefing-ia", {
+      const resp = await supabase.functions.invoke("lead-briefing-ia", {
         body: { action: "imagem", lead_id: leadId, lead_nome: leadNome },
       });
-      if (error) throw new Error(error.message || JSON.stringify(error));
-      if (data?.error) throw new Error(data.error);
+      if (resp.error) throw new Error(resp.error.message || "Erro na Edge Function");
+      if (resp.data?.error) throw new Error(resp.data.error);
       toast.success("Imagem gerada!");
       carregar();
     } catch (err: any) {
-      toast.error("Erro ao gerar imagem: " + (err.message || "Verifique a Edge Function"));
+      toast.error("Erro: " + (err.message || "Verifique a Edge Function e OPENAI_API_KEY"));
     }
     setGerandoImagem(false);
   }
