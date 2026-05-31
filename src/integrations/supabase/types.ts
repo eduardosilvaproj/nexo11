@@ -1921,6 +1921,73 @@ export type Database = {
           },
         ]
       }
+      contrato_aditivos: {
+        Row: {
+          aprovado_por: string | null
+          contrato_id: string
+          created_at: string | null
+          created_by: string
+          data_vigencia: string | null
+          descricao: string
+          id: string
+          loja_id: string
+          motivo: string | null
+          tipo: string
+          valor_anterior: number | null
+          valor_novo: number | null
+        }
+        Insert: {
+          aprovado_por?: string | null
+          contrato_id: string
+          created_at?: string | null
+          created_by: string
+          data_vigencia?: string | null
+          descricao: string
+          id?: string
+          loja_id: string
+          motivo?: string | null
+          tipo: string
+          valor_anterior?: number | null
+          valor_novo?: number | null
+        }
+        Update: {
+          aprovado_por?: string | null
+          contrato_id?: string
+          created_at?: string | null
+          created_by?: string
+          data_vigencia?: string | null
+          descricao?: string
+          id?: string
+          loja_id?: string
+          motivo?: string | null
+          tipo?: string
+          valor_anterior?: number | null
+          valor_novo?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrato_aditivos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrato_aditivos_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrato_aditivos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contrato_ambientes: {
         Row: {
           aprovacao_solicitada_em: string | null
@@ -2147,6 +2214,70 @@ export type Database = {
           },
         ]
       }
+      contrato_aprovacoes: {
+        Row: {
+          aprovado_por: string | null
+          contrato_id: string
+          created_at: string | null
+          etapa_destino: string
+          etapa_origem: string
+          id: string
+          loja_id: string
+          motivo_rejeicao: string | null
+          resolved_at: string | null
+          solicitado_por: string
+          status: string
+        }
+        Insert: {
+          aprovado_por?: string | null
+          contrato_id: string
+          created_at?: string | null
+          etapa_destino: string
+          etapa_origem: string
+          id?: string
+          loja_id: string
+          motivo_rejeicao?: string | null
+          resolved_at?: string | null
+          solicitado_por: string
+          status?: string
+        }
+        Update: {
+          aprovado_por?: string | null
+          contrato_id?: string
+          created_at?: string | null
+          etapa_destino?: string
+          etapa_origem?: string
+          id?: string
+          loja_id?: string
+          motivo_rejeicao?: string | null
+          resolved_at?: string | null
+          solicitado_por?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contrato_aprovacoes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrato_aprovacoes_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contrato_aprovacoes_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contrato_eventos: {
         Row: {
           contrato_id: string
@@ -2273,6 +2404,8 @@ export type Database = {
       }
       contratos: {
         Row: {
+          aprovacao_pendente: boolean | null
+          aprovado_por: string | null
           asaas_customer_id: string | null
           assinado: boolean
           assinado_em: string | null
@@ -2290,6 +2423,7 @@ export type Database = {
           cliente_id: string | null
           cliente_nome: string
           comprovante_fabrica_url: string | null
+          condicao_pagamento: Json | null
           conferencia_aprovada_gerente: boolean | null
           conferencia_concluida_em: string | null
           conferencia_responsavel_id: string | null
@@ -2329,6 +2463,8 @@ export type Database = {
           planta_hidraulica_status: string | null
           posvenda_aprovado: boolean | null
           posvenda_pesquisa_status: string | null
+          prazo_entrega: string | null
+          prazo_montagem: string | null
           producao_nf_url: string | null
           producao_previsao_entrega: string | null
           producao_status: string | null
@@ -2352,6 +2488,8 @@ export type Database = {
           viagem_qtd_veiculos: number | null
         }
         Insert: {
+          aprovacao_pendente?: boolean | null
+          aprovado_por?: string | null
           asaas_customer_id?: string | null
           assinado?: boolean
           assinado_em?: string | null
@@ -2369,6 +2507,7 @@ export type Database = {
           cliente_id?: string | null
           cliente_nome: string
           comprovante_fabrica_url?: string | null
+          condicao_pagamento?: Json | null
           conferencia_aprovada_gerente?: boolean | null
           conferencia_concluida_em?: string | null
           conferencia_responsavel_id?: string | null
@@ -2408,6 +2547,8 @@ export type Database = {
           planta_hidraulica_status?: string | null
           posvenda_aprovado?: boolean | null
           posvenda_pesquisa_status?: string | null
+          prazo_entrega?: string | null
+          prazo_montagem?: string | null
           producao_nf_url?: string | null
           producao_previsao_entrega?: string | null
           producao_status?: string | null
@@ -2431,6 +2572,8 @@ export type Database = {
           viagem_qtd_veiculos?: number | null
         }
         Update: {
+          aprovacao_pendente?: boolean | null
+          aprovado_por?: string | null
           asaas_customer_id?: string | null
           assinado?: boolean
           assinado_em?: string | null
@@ -2448,6 +2591,7 @@ export type Database = {
           cliente_id?: string | null
           cliente_nome?: string
           comprovante_fabrica_url?: string | null
+          condicao_pagamento?: Json | null
           conferencia_aprovada_gerente?: boolean | null
           conferencia_concluida_em?: string | null
           conferencia_responsavel_id?: string | null
@@ -2487,6 +2631,8 @@ export type Database = {
           planta_hidraulica_status?: string | null
           posvenda_aprovado?: boolean | null
           posvenda_pesquisa_status?: string | null
+          prazo_entrega?: string | null
+          prazo_montagem?: string | null
           producao_nf_url?: string | null
           producao_previsao_entrega?: string | null
           producao_status?: string | null

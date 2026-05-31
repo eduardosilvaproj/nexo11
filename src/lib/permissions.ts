@@ -11,6 +11,7 @@ export type PermissionAction =
   | "comercial.view"
   | "clientes.view"
   | "contratos.view"
+  | "contrato.aprovar"
   | "tecnico.view"
   | "producao.view"
   | "logistica.view"
