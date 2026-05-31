@@ -19,6 +19,8 @@ import {
 import { RefreshCw } from "lucide-react";
 import { ComissoesRelatorioTab, REGRA_PADRAO, type RegraComissao } from "@/components/comissoes/ComissoesRelatorioTab";
 import { PapeisTab } from "@/components/comissoes/PapeisTab";
+import { ComissoesDashboard } from "@/components/comissoes/ComissoesDashboard";
+import { RegrasAvancadas } from "@/components/comissoes/RegrasAvancadas";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -346,7 +348,9 @@ export default function Comissoes() {
         >
           {[
             { v: "relatorio", l: "Relatório" },
+            { v: "dashboard", l: "Dashboard" },
             { v: "papeis", l: "Papéis" },
+            { v: "regras", l: "Regras Avançadas" },
           ].map((t) => (
             <TabsTrigger
               key={t.v}
@@ -370,6 +374,14 @@ export default function Comissoes() {
 
         <TabsContent value="papeis" className="mt-4">
           <PapeisTab lojaId={lojaId} podeEditar={podeEditarRegra} />
+        </TabsContent>
+
+        <TabsContent value="dashboard" className="mt-4">
+          <ComissoesDashboard mes={mes} lojaId={lojaId} />
+        </TabsContent>
+
+        <TabsContent value="regras" className="mt-4">
+          {lojaId && <RegrasAvancadas lojaId={lojaId} />}
         </TabsContent>
       </Tabs>
 
