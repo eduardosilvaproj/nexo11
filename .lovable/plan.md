@@ -1,53 +1,63 @@
-## Objetivo
-Transformar o logo da Hero em um elemento mais memorável e sofisticado, com aparência de tecnologia premium corporativa — sem aumentar tamanho, sem neon, sem efeitos gamer.
+# Refino Premium do Logo da Hero
 
-## Mudanças
+Objetivo: tornar o logo mais sofisticado, corporativo e integrado — removendo o efeito de energia percorrendo o símbolo e substituindo por sombra, profundidade e micro animações elegantes.
 
-### 1. `src/components/apresentacao/LogoOficial.tsx`
-- Reduzir levemente o tamanho do hero para reequilibrar a composição:
-  - De `clamp(425px, 47vw, 660px)` → `clamp(380px, 42vw, 580px)` (~-10%).
-- Manter `glow="none"` (o brilho vem das camadas externas).
+## 1. Remover efeitos chamativos
 
-### 2. `src/components/apresentacao/Hero.tsx`
-Substituir o stack atual de halo/aurora por **4 camadas** dentro de `.nx-logo-hero-outer`, todas `aria-hidden`, `pointer-events-none`, `z-index: 0`:
+Em `src/components/apresentacao/Hero.tsx`:
+- Remover a camada **Sweep de energia** (span com `nx-energy-sweep`, `mixBlendMode: overlay`, gradiente 115° e máscara radial).
+- Remover a camada **Anel cônico** (`nx-ring-spin`, conic-gradient) — gira lentamente mas ainda adiciona movimento desnecessário.
+- Manter apenas duas camadas de fundo: aurora base (azul/verde) e halo branco interno, ambas com opacidades reduzidas (ver §3).
 
-1. **Aurora base (azul → verde)** — elíptica ampla
-   - `radial-gradient(ellipse at 30% 45%, rgba(26,155,232,0.18), transparent 55%), radial-gradient(ellipse at 70% 55%, rgba(34,201,122,0.16), transparent 55%)`
-   - `filter: blur(110px)`, `transform: scale(2.1, 1.45)`
-   - classe: `nx-aurora-drift` (deslocamento horizontal lentíssimo, 14s)
+Em `src/index.css`:
+- Remover keyframes `nx-energy-sweep` e `nx-ring-spin` (e suas regras em `prefers-reduced-motion`).
 
-2. **Halo branco interno** — profundidade central
-   - `radial-gradient(circle, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 38%, transparent 68%)`
-   - `filter: blur(60px)`, `transform: scale(1.5)`
-   - classe: `nx-halo-breathe` (opacidade 0.7→1→0.7, 10s)
+## 2. Sombra premium + suavização de bordas
 
-3. **Anel cônico sutil** — toque de iluminação dinâmica
-   - `conic-gradient(from 0deg, rgba(26,155,232,0.10), rgba(34,201,122,0.10), rgba(26,155,232,0.10))`
-   - `border-radius: 50%`, `filter: blur(40px)`, `transform: scale(1.3)`, `opacity: 0.6`
-   - classe: `nx-ring-spin` (rotação contínua 30s, linear)
+Em `src/components/apresentacao/LogoOficial.tsx` (variant `hero`):
+- Aplicar no `<img>` do logo um `filter` combinando sombras suaves multicamadas (sem sombras duras):
+  ```
+  filter:
+    drop-shadow(0 1px 1px rgba(0,0,0,0.18))
+    drop-shadow(0 8px 24px rgba(0,0,0,0.28))
+    drop-shadow(0 24px 60px rgba(8,18,32,0.45));
+  ```
+- Para suavizar bordas do PNG e reduzir percepção de recorte, somar um leve blur antes via SVG feather opcional; abordagem mais simples e estável: adicionar `drop-shadow(0 0 0.6px rgba(255,255,255,0.35))` como primeira camada (anti-alias percebido) e manter `image-rendering: auto`.
+- Garantir `will-change: transform, filter` apenas no hero.
 
-4. **Sweep de energia sobre o símbolo** — faixa diagonal translúcida
-   - Aplicada com `mix-blend-mode: overlay` em um span **na frente** do logo (`z-index: 2`), com mask que limita ao bounding-box do símbolo.
-   - `background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.18) 50%, transparent 65%)`
-   - `mask-image: radial-gradient(circle, #000 55%, transparent 75%)` para confinar ao símbolo central.
-   - classe: `nx-energy-sweep` (translateX -120% → 120%, 9s, ease-in-out, infinite com longo delay entre passagens)
+## 3. Glow discreto (cores da marca)
 
-### 3. `src/index.css`
-Manter `nx-logo-enter` e o wrapper, e **substituir/adicionar**:
+Em `Hero.tsx`, reduzir intensidade das duas camadas restantes:
+- **Aurora base:** azul `rgba(26,155,232,0.10)` + verde `rgba(34,201,122,0.09)`, `blur(120px)`, `scale(2.0, 1.4)`, animação `nx-aurora-drift` mantida (14s) mas com amplitude reduzida.
+- **Halo branco:** `rgba(255,255,255,0.06)` no centro → `rgba(255,255,255,0.02)` 40% → transparente 70%, `blur(70px)`, `scale(1.5)`, animação `nx-halo-breathe` mantida (10s) com opacidade entre 0.55 e 0.75.
 
-- `nx-logo-breathe` (já existe) — manter 8s, scale 1→1.02→1.
-- `nx-logo-glow` — reduzir ainda mais para ficar discreto:
-  - blue: `0.16 / 0.08`, green: `0.16 / 0.08`, white: `0.03`. Duração 12s.
-- **Novos keyframes**:
-  - `@keyframes nx-aurora-drift` — `transform: scale(2.1,1.45) translateX(-2%)` → `translateX(2%)` → volta; 14s ease-in-out infinite.
-  - `@keyframes nx-halo-breathe` — `opacity: 0.6 → 1 → 0.6`; 10s ease-in-out infinite.
-  - `@keyframes nx-ring-spin` — `rotate(0) → rotate(360deg)`; 30s linear infinite.
-  - `@keyframes nx-energy-sweep` — `transform: translateX(-120%)` → `translateX(120%)`; 9s ease-in-out infinite (passagem rápida mas com vento longo de invisibilidade percebida pela máscara).
-- Respeitar `prefers-reduced-motion`: desligar todas as novas animações.
+Objetivo: o glow apenas separa o logo do fundo, não compete com ele.
 
-## Fora do escopo
-- Tamanho não cresce (na verdade reduz levemente).
-- Não tocar em screenshots, timeline lateral, partículas do canvas, KPIs ou tipografia.
+## 4. Animação: respiração suave + flutuação opcional
+
+Em `src/index.css`:
+- Atualizar/criar `nx-logo-breathe`:
+  ```
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-2px) scale(1.01); }
+  ```
+  Duração **10s**, `ease-in-out`, `infinite`.
+- Remover/desativar `nx-logo-glow` (animação de cor pulsante azul↔verde no filtro do logo) — substituída por glow estático das camadas de fundo.
+- Em `prefers-reduced-motion`: desativar `nx-logo-breathe`, `nx-aurora-drift`, `nx-halo-breathe`.
+
+Em `LogoOficial.tsx`:
+- Aplicar `animation: nx-logo-breathe 10s ease-in-out infinite` no wrapper do hero (não no `<img>` diretamente, para não conflitar com `filter`).
+
+## 5. Tamanho
+
+Manter `clamp(380px, 42vw, 580px)` — sem alteração.
+
+## Arquivos alterados
+
+- `src/components/apresentacao/Hero.tsx` — remover sweep e anel cônico; reduzir opacidades de aurora e halo.
+- `src/components/apresentacao/LogoOficial.tsx` — aplicar drop-shadow multicamada no `<img>` hero; mover animação para o wrapper.
+- `src/index.css` — remover `nx-energy-sweep`, `nx-ring-spin` e `nx-logo-glow`; ajustar `nx-logo-breathe` para 10s com flutuação de 2px e escala 1.01.
 
 ## Resultado esperado
-Logo com aurora azul/verde difusa derivando suavemente, halo respirando, anel cônico girando muito devagar e uma faixa discreta de energia atravessando o símbolo de tempos em tempos — visual corporativo, calmo, premium.
+
+Logo sem efeitos percorrendo o símbolo. Sombra profunda e suave dá presença corporativa. Glow discreto apenas separa do fundo. Respiração lenta com micro flutuação transmite vida sem distrair.
