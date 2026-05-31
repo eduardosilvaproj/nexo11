@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Plus, Box, Truck, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { LogisticaDashboard } from "@/components/logistica/LogisticaDashboard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -153,6 +154,9 @@ export default function Logistica() {
           </Button>
         )}
       </div>
+
+      {/* Dashboard KPIs */}
+      <LogisticaDashboard />
 
       <Tabs defaultValue="agenda" className="space-y-6">
         <TabsList className="bg-slate-100 p-1 rounded-lg">
