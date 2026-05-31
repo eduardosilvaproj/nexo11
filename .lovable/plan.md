@@ -1,129 +1,209 @@
 
-# Landing Page Premium NEXO — /apresentacao
+# Refatoração da página `/apresentacao` — Apresentação Executiva NEXO
 
-## Visão geral
-Reescrever `src/pages/Apresentacao.tsx` (rota pública já existente em `App.tsx`, fora do `AppLayout`) como uma landing institucional dark, futurista, com screenshots reais capturados via Playwright da conta demo.
+## 1. Princípios
 
-## 1. Captura de screenshots (Playwright)
+- Não é landing, não vende, não converte. É **apresentação institucional** para sócios, equipe, gestores, parceiros, clientes selecionados e investidores.
+- Tom: Apple Keynote / Stripe Docs / Linear / Arc. Calmo, denso, premium, técnico.
+- **Screenshots reais existentes em `/public/screenshots/*.{png,webp}` são o ativo principal** — preservados, ampliados, valorizados.
+- Zero CTAs de vendas/login na superfície. Único elemento de navegação ativo: scroll + timeline lateral.
 
-**Script:** `scripts/capture-screenshots.mjs` (executado localmente/manual, não em runtime).
+## 2. Remoções
 
-- Instalar dev dep: `playwright` + browsers (`npx playwright install chromium`).
-- Login em `https://nexo11.lovable.app/login` com `nexo@nexo.app` / `NexoDemo2025!`.
-- Viewport 1440x900, `deviceScaleFactor: 2` (retina).
-- Para cada módulo, navegar até a rota, aguardar `networkidle`, esperar 1.2s para animações, capturar `fullPage: false`.
-- Salvar PNG em `/public/screenshots/{modulo}.png` e converter para WebP via `sharp` (`{modulo}.webp`, quality 85).
-- Gerar também versões `@2x` para retina.
+- Botão "Acessar Sistema" da `NavBar` e do `Hero`.
+- CTA gradiente do `Footer` ("Entrar no Sistema").
+- Toda linguagem de conversão ("Acessar", "Entrar", "Comece agora").
+- Badge "Plataforma de gestão para móveis planejados" estilo pill comercial — substituído por marcação institucional (ex: `NEXO · APRESENTAÇÃO INSTITUCIONAL · v2026`).
 
-Rotas a capturar:
-| Módulo | Rota |
-|---|---|
-| comercial | /comercial |
-| contratos | /contratos |
-| tecnico | /tecnico |
-| producao | /producao |
-| logistica | /logistica |
-| montagem | /montagem |
-| pos-venda | /pos-venda |
-| comissoes | /comissoes |
-| compras | /compras |
-| rh | /rh |
-| equipe | /equipe |
-| analytics | /analytics |
-| portal-funcionario | /portal-funcionario (viewport mobile 390x844) |
+## 3. Estrutura final da página
 
-Comando: `node scripts/capture-screenshots.mjs`. Documentar no README a etapa manual.
-
-## 2. Estrutura da página
-
-Arquivo único: `src/pages/Apresentacao.tsx` + componentes auxiliares em `src/components/apresentacao/`.
-
-```
-Apresentacao.tsx
-└─ components/apresentacao/
-   ├─ NavBar.tsx              (glass, links âncora, CTA Entrar)
-   ├─ Hero.tsx                (grid animado SVG + partículas canvas + glow)
-   ├─ FluxoOperacional.tsx    (timeline horizontal animada com 7 etapas)
-   ├─ KpisStrip.tsx           (4 KPIs em cards glass)
-   ├─ ModuloSection.tsx       (template alternado img/texto, recebe props)
-   ├─ AppFuncionarioShowcase.tsx (mockup smartphone + 3 screenshots empilhados)
-   ├─ TecnologiaGrid.tsx      (badges das stacks)
-   ├─ DiferenciaisGrid.tsx    (6 cards "Por que o NEXO?")
-   ├─ Footer.tsx
-   └─ ImageZoomModal.tsx      (Dialog shadcn p/ ampliar screenshot)
+```text
+┌─────────────────────────────────────────────────────────────┐
+│ TopBar minimal (logo NEXO + label institucional, sem CTA)   │
+├──────────┬──────────────────────────────────────────────────┤
+│          │ HERO                                             │
+│ Timeline │ VISÃO GERAL — fluxo operacional animado          │
+│ lateral  │ CAPÍTULO 01 — Comercial                          │
+│ fixa     │ CAPÍTULO 02 — Contratos                          │
+│ (desk-   │ ...                                              │
+│ top)     │ CAPÍTULO 11 — Analytics                          │
+│          │ APP DO FUNCIONÁRIO                               │
+│          │ ECOSSISTEMA NEXO (módulos ao redor do core)      │
+│          │ ARQUITETURA DA PLATAFORMA                        │
+│          │ ENCERRAMENTO INSTITUCIONAL                       │
+└──────────┴──────────────────────────────────────────────────┘
 ```
 
-## 3. Identidade visual
+## 4. Seções — detalhamento
 
-- Background base `#0A0E1A`, com radial gradients sutis `#1A9BE8/10` e `#22C97A/10`.
-- Tokens locais via CSS vars no escopo da página (não tocar no design system global):
-  - `--nx-bg: #0A0E1A`
-  - `--nx-blue: #1A9BE8`
-  - `--nx-green: #22C97A`
-- Glass: `bg-white/[0.04] backdrop-blur-xl border border-white/10`.
-- Glow: `box-shadow: 0 0 80px -20px #1A9BE8`.
-- Tipografia: manter Inter (já no projeto); pesos 600/700/800 para títulos, tracking apertado.
-- Gradiente de texto NEXO: `linear-gradient(135deg,#1A9BE8 0%,#22C97A 100%)`.
+### 4.1 TopBar (`NavBar.tsx` reescrita)
+- Glass, altura 56px, sem links âncora longos.
+- Esquerda: `LogoNexo`. Direita: texto pequeno `APRESENTAÇÃO INSTITUCIONAL` + ano.
+- **Sem botão de login.**
 
-## 4. Animações
+### 4.2 Hero (`Hero.tsx` ajustada)
+- Mantém grid + partículas + glow.
+- Tipografia:
+  - Eyebrow: `PLATAFORMA NEXO`
+  - H1 gigante: `NEXO`
+  - Sub: "A plataforma que conecta toda a operação de móveis planejados."
+  - Parágrafo: "Do primeiro contato comercial ao pós-venda, todos os processos integrados em uma única plataforma."
+- Faixa de 4 KPIs logo abaixo (não é card pesado, é linha com separadores verticais):
+  `11 Módulos Integrados · 50+ Funcionalidades · Tempo Real · Multi-Loja`
+- Substituir os 2 botões por **um único affordance de scroll**: seta animada (chevron down com bounce sutil) + texto `Explorar a plataforma`. Clique → `scrollIntoView` suave para `#visao-geral`.
 
-- `framer-motion` (já disponível) para fade-in + slide-up no scroll com `whileInView`, stagger nos cards.
-- Hero: SVG grid animado (linhas com `stroke-dasharray` animado) + canvas leve com ~40 partículas (60fps, `requestAnimationFrame`, pausável via `prefers-reduced-motion`).
-- Fluxo operacional: linha conectora desenhada via SVG path com `pathLength` animado ao entrar na viewport.
-- Hover screenshots: scale 1.02 + glow azul/verde.
+### 4.3 Visão Geral — Fluxo Operacional (`FluxoOperacional.tsx` reescrita)
+- 7 etapas: Comercial → Contratos → Técnico → Produção → Logística → Montagem → Pós-venda.
+- Cada etapa: ícone + nome + 1 linha descritiva.
+- Linha conectora SVG com `pathLength` animado via Framer Motion `whileInView`.
+- Stagger: etapas aparecem progressivamente (delay 120ms cada).
+- Em mobile: timeline vertical.
 
-## 5. Seções (ordem)
+### 4.4 Timeline lateral fixa (novo `TimelineLateral.tsx`)
+- Posição: `fixed left-6 top-1/2 -translate-y-1/2`, escondida abaixo de `lg`.
+- Lista vertical de 11 módulos + âncoras (#cap-comercial, #cap-contratos, …, #cap-analytics).
+- Estados visuais:
+  - `✓` (cinza esverdeado) — seção já passada
+  - `●` (azul/verde com glow) — seção atual
+  - `○` (cinza fraco) — futura
+- Implementação: `IntersectionObserver` em cada `<section id="cap-…">` atualiza um índice ativo no estado.
+- Hover: revela rótulo expandido com transição.
+- Clique: scroll suave até a seção.
 
-1. **NavBar fixa glass** — logo NEXO + âncoras (Visão, Módulos, App, Tecnologia, Diferenciais) + botão "Acessar Sistema" → `/login`.
-2. **Hero** — logo grande com glow, H1, subtítulo, CTA primário (gradient azul→verde) + secundário "Ver módulos", grid + partículas atrás.
-3. **Fluxo Operacional** — 7 chips conectados (Comercial → ... → Pós-venda) com animação sequencial.
-4. **KPIs** — 4 cards glass: 11+ Módulos / 50+ Funcionalidades / Tempo Real / Multi-Loja.
-5. **Módulos (12 seções alternadas)** — cada uma com ícone lucide, título, descrição, lista de 4 features com checks, screenshot real WebP clicável (abre modal). Layout alterna left/right.
-6. **App do Funcionário** — frame de smartphone (SVG/CSS) com screenshot real do `/portal-funcionario`, ao lado lista de features.
-7. **Tecnologia** — grid 7 badges (React, TypeScript, Supabase, Real Time, Multi Tenant, Segurança por Loja, Permissões por Papel) em cards glass com ícones.
-8. **Diferenciais — "Por que o NEXO?"** — grid 6 cards com ícones gradient.
-9. **CTA Final** — full-width, gradient sutil, botão grande "Entrar no Sistema".
-10. **Footer** — logo + tagline "Gestão que conecta. Resultado que multiplica." + CTA.
+### 4.5 Capítulos dos módulos (`ModuloSection.tsx` reescrita + `data.ts` ajustado)
+Para cada um dos 11 módulos (comercial, contratos, técnico, produção, logística, montagem, pós-venda, compras, rh, equipe, analytics):
 
-## 6. Modal de zoom
+Layout vertical com screenshot dominante (não mais 50/50 lado a lado em todos):
 
-`ImageZoomModal` usa `Dialog` shadcn, fundo `bg-black/90 backdrop-blur`, exibe imagem em até 95vw/90vh com cursor zoom; fechar com Esc/click fora.
+```text
+┌──────────────────────────────────────────────┐
+│ CAPÍTULO 01            ──────────── 01 / 11 │
+│                                              │
+│ COMERCIAL                                    │
+│ Gestão completa do processo comercial.       │
+│                                              │
+│ [4 chips de features curtas]                 │
+│                                              │
+│ ┌──────────────────────────────────────────┐ │
+│ │                                          │ │
+│ │       SCREENSHOT GIGANTE (browser frame) │ │
+│ │                                          │ │
+│ └──────────────────────────────────────────┘ │
+└──────────────────────────────────────────────┘
+```
 
-## 7. Performance
+- Número do capítulo grande, peso institucional.
+- Screenshot ocupa ~90% do width do container (max-w-6xl), proporção real do print.
+- Frame "browser" minimalista (3 dots + URL `nexo.app/<rota>`).
+- Borda glass, sombra dupla (escura embaixo + glow colorido do módulo embaixo difuso).
+- Hover: scale 1.01, glow intensifica, ícone `Maximize2` aparece.
+- Clique: abre `ImageZoomModalGaleria` (ver §4.6).
+- Animação de entrada: blur reveal — `filter: blur(12px) → blur(0)` + opacity 0→1 + translateY 24→0, duração 700ms ease-out.
 
-- Todas as `<img>` com `loading="lazy"`, `decoding="async"`, `width`/`height` explícitos, `srcSet` `1x/2x`.
-- Servir `.webp` (fallback `.png` via `<picture>`).
-- `React.lazy` para `ImageZoomModal` (carrega no primeiro clique).
-- `prefers-reduced-motion` desliga partículas e animações pesadas.
-- Sem libs novas além de `playwright` (dev) e `sharp` (dev). `framer-motion` já existe.
+### 4.6 Modal de galeria (`ImageZoomModalGaleria.tsx`, substitui `ImageZoomModal`)
+- Fullscreen `bg-[#0A0E1A]/98 backdrop-blur-2xl`.
+- Setas ← → (teclado + on-screen) para navegar entre módulos.
+- Barra inferior: nome do módulo + indicador `03 / 11` + botões `−` `+` `Reset` para zoom (CSS transform scale 1 → 3).
+- Drag para pan quando zoom > 1.
+- Fechar: Esc / X / clique no backdrop.
 
-## 8. SEO / Open Graph
+### 4.7 App do Funcionário (`AppFuncionarioShowcase.tsx` reescrita)
+- Mantém mockup de smartphone (frame premium com bezels, notch, reflexo sutil).
+- Screenshot real de `/portal-funcionario.webp` dentro do frame.
+- Ao lado, 5 destaques com ícone + título + 1 linha:
+  - Ponto por geolocalização
+  - Solicitações RH
+  - Comunicação interna
+  - Metas
+  - Aplicativo de campo
+- Fundo: gradiente radial suave azul→transparente.
 
-- `react-helmet-async` já listado? Se não, adicionar e envolver app em `HelmetProvider` em `src/main.tsx`.
-- `<Helmet>` em `Apresentacao.tsx`:
-  - title: "NEXO — Gestão Inteligente para Móveis Planejados"
-  - description, canonical `https://nexo11.lovable.app/apresentacao`
-  - og:title, og:description, og:type=website, og:url, og:image=`/screenshots/comercial.webp`
-  - twitter:card=summary_large_image
-  - JSON-LD `SoftwareApplication`.
-- Remover `<link rel="canonical">` do `index.html` se houver conflito.
+### 4.8 Ecossistema NEXO (novo `EcossistemaNexo.tsx`)
+- Diagrama circular SVG: nó central "NEXO" (logo com glow), 11 nós orbitais (cada módulo com ícone).
+- Linhas conectoras com gradiente azul→verde, animação de "pulso" leve (stroke-dashoffset).
+- Em mobile: vira grid 3×4 de cards conectados visualmente por linhas verticais.
+- Texto curto: "Onze módulos. Um único ecossistema."
 
-## 9. Arquivos a criar/alterar
+### 4.9 Arquitetura da Plataforma (novo `ArquiteturaPlataforma.tsx`)
+- Grid de 8 cards glass:
+  - Frontend — React + TypeScript
+  - Backend — Supabase (Postgres + Edge)
+  - Tempo Real — sincronização em milissegundos
+  - Multi-Loja — isolamento por `loja_id`
+  - Controle de Permissões — RLS server-side
+  - Segurança por Papéis — perfis e escopos
+  - Escalabilidade — arquitetura horizontal
+  - Responsividade — desktop, tablet, mobile
+- Ícones lucide. Sem números de marketing.
+
+### 4.10 Encerramento (`Footer.tsx` reescrita)
+- Centralizado, tipografia grande:
+  - Título: `Gestão que conecta.` / `Resultado que multiplica.` (gradient na segunda linha).
+  - Parágrafo: "Uma plataforma construída para integrar pessoas, processos e informações em toda a operação de móveis planejados."
+- **Sem botões. Sem CTA. Sem links.**
+- Rodapé minúsculo: `© 2026 NEXO · Apresentação institucional`.
+
+## 5. Design tokens (escopo da página)
+
+Mantidos:
+- `--nx-bg: #0A0E1A`
+- `--nx-blue: #1A9BE8`
+- `--nx-green: #22C97A`
+- Glass: `bg-white/[0.04] backdrop-blur-xl border border-white/10`
+
+Adicionados (CSS vars locais no wrapper da página):
+- `--nx-ink-1: rgba(255,255,255,0.92)` (títulos)
+- `--nx-ink-2: rgba(255,255,255,0.62)` (corpo)
+- `--nx-ink-3: rgba(255,255,255,0.38)` (eyebrow/meta)
+- `--nx-rule: rgba(255,255,255,0.08)` (réguas finas separadoras entre capítulos)
+
+Réguas finas (1px, gradiente) entre capítulos para reforçar leitura tipo documento executivo.
+
+## 6. Animações (Framer Motion, já no projeto)
+
+- Entrada por seção: `whileInView` com `viewport={{ once: true, margin: "-15%" }}`.
+- Variantes: `fade`, `slide-up`, `blur-reveal`, `stagger-children`.
+- Hero: partículas canvas + grid (já existem, mantidos).
+- Fluxo Operacional: `pathLength` animado.
+- Ecossistema: `strokeDashoffset` em loop sutil (3s ease-in-out infinite).
+- **Respeitar `prefers-reduced-motion`**: desliga partículas, blur reveal e loops.
+
+## 7. Performance & técnico
+
+- `<picture>` com `<source type="image/webp">` + fallback PNG (já existe, mantido).
+- Todas as `<img>` com `loading="lazy"`, `decoding="async"`, `width`/`height` explícitos.
+- `React.lazy` para `ImageZoomModalGaleria` (importa no primeiro clique).
+- Sem novas dependências — usar apenas o que já existe (`framer-motion`, `lucide-react`, `react-helmet-async`).
+- Manter Helmet com SEO básico já presente; atualizar `og:description` para tom institucional ("Apresentação institucional da plataforma NEXO.").
+- Lighthouse alvo: ≥ 90 perf / 100 a11y / 100 best-practices.
+
+## 8. Arquivos
 
 **Criar:**
-- `scripts/capture-screenshots.mjs`
-- `src/components/apresentacao/*` (10 arquivos)
-- `public/screenshots/*.webp` (gerados pelo script)
+- `src/components/apresentacao/TimelineLateral.tsx`
+- `src/components/apresentacao/EcossistemaNexo.tsx`
+- `src/components/apresentacao/ArquiteturaPlataforma.tsx`
+- `src/components/apresentacao/ImageZoomModalGaleria.tsx`
+- `src/components/apresentacao/CapituloHeader.tsx` (cabeçalho `CAPÍTULO NN / 11` reutilizável)
 
-**Alterar:**
-- `src/pages/Apresentacao.tsx` (reescrever)
-- `src/main.tsx` (envolver com `HelmetProvider` se ainda não estiver)
-- `package.json` (devDeps: `playwright`, `sharp`, `react-helmet-async`)
-- `index.html` (limpar canonical conflitante se necessário)
+**Reescrever:**
+- `src/pages/Apresentacao.tsx` (nova ordem, timeline, sem CTA)
+- `src/components/apresentacao/NavBar.tsx` (sem botão de login)
+- `src/components/apresentacao/Hero.tsx` (sem CTAs, com seta de scroll + KPIs)
+- `src/components/apresentacao/FluxoOperacional.tsx` (animação progressiva)
+- `src/components/apresentacao/ModuloSection.tsx` (layout vertical, screenshot dominante, chapter header)
+- `src/components/apresentacao/AppFuncionarioShowcase.tsx` (frame smartphone premium)
+- `src/components/apresentacao/Footer.tsx` (encerramento institucional, sem CTA)
 
-## 10. Riscos / observações
+**Ajustar:**
+- `src/components/apresentacao/data.ts` (garantir 11 módulos na ordem da timeline, com descrição em tom institucional)
 
-- **Captura não roda em runtime**: o script Playwright deve ser executado manualmente uma vez (e re-executado quando o sistema mudar visualmente). Vou documentar isso; sem isso as imagens em `/public/screenshots` não existem.
-- A rota `/apresentacao` já está pública em `App.tsx` — confirmar antes de mexer.
-- Não alterar tela de login nem logo do login.
-- Tokens dark da landing ficam isolados na própria página (não impactam o restante do ERP que é claro).
+**Remover:**
+- `src/components/apresentacao/ImageZoomModal.tsx` (substituído pela galeria)
+- `src/components/apresentacao/TecnologiaGrid.tsx` e `DiferenciaisGrid.tsx` (substituídos por `ArquiteturaPlataforma.tsx` e absorvidos no Ecossistema)
+
+## 9. Fora do escopo
+
+- Não tocar em tela de login, AppLayout, design system global do ERP.
+- Não re-capturar screenshots — usar os PNG/WebP já existentes em `public/screenshots/`.
+- Sem backend, sem migrations, sem auth.

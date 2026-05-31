@@ -1,87 +1,99 @@
 import { useState } from "react";
-import { Check, Maximize2 } from "lucide-react";
+import { Maximize2 } from "lucide-react";
 import { Reveal } from "./Reveal";
-import { ImageZoomModal } from "./ImageZoomModal";
+import { CapituloHeader } from "./CapituloHeader";
 import type { ModuloApresentacao } from "./data";
+import { MODULOS } from "./data";
+import { ImageZoomModalGaleria } from "./ImageZoomModalGaleria";
 
 export function ModuloSection({ modulo, index }: { modulo: ModuloApresentacao; index: number }) {
-  const [zoom, setZoom] = useState(false);
+  const [zoomIdx, setZoomIdx] = useState<number | null>(null);
   const Icon = modulo.icon;
-  const reverse = index % 2 === 1;
   const cor = modulo.cor === "blue" ? "#1A9BE8" : "#22C97A";
   const screenshot = `/screenshots/${modulo.slug}.webp`;
   const fallback = `/screenshots/${modulo.slug}.png`;
 
   return (
-    <section className="py-20 px-6">
-      <div className="max-w-7xl mx-auto">
-        <div className={`grid lg:grid-cols-2 gap-12 lg:gap-16 items-center ${reverse ? "lg:[&>*:first-child]:order-2" : ""}`}>
-          <Reveal>
-            <div>
-              <div
-                className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-6 bg-white/[0.04] border border-white/10 backdrop-blur-xl"
-                style={{ boxShadow: `0 0 32px -8px ${cor}` }}
-              >
-                <Icon className="w-7 h-7" style={{ color: cor }} />
-              </div>
-              <div className="text-xs font-semibold tracking-[0.3em] uppercase mb-3" style={{ color: cor }}>
-                Módulo
-              </div>
-              <h3 className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-4">
+    <section id={`cap-${modulo.slug}`} className="py-24 px-6 scroll-mt-20">
+      <div className="max-w-6xl mx-auto">
+        <Reveal>
+          <CapituloHeader numero={index + 1} total={MODULOS.length} />
+
+          <div className="flex items-start gap-5 mb-6">
+            <div
+              className="shrink-0 w-12 h-12 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center"
+              style={{ boxShadow: `0 0 28px -10px ${cor}` }}
+            >
+              <Icon className="w-5 h-5" style={{ color: cor }} />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-3xl md:text-5xl font-semibold text-white tracking-tight leading-[1.05]">
                 {modulo.titulo}
               </h3>
-              <p className="text-white/60 text-lg mb-8 leading-relaxed">{modulo.descricao}</p>
-              <ul className="grid grid-cols-2 gap-3">
-                {modulo.features.map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-white/80 text-sm">
-                    <Check className="w-4 h-4 shrink-0" style={{ color: cor }} />
-                    {f}
-                  </li>
-                ))}
-              </ul>
+              <p className="text-white/55 text-base md:text-lg mt-3 max-w-2xl">
+                {modulo.descricao}
+              </p>
             </div>
-          </Reveal>
+          </div>
 
-          <Reveal delay={120}>
-            <button
-              type="button"
-              onClick={() => setZoom(true)}
-              className="group relative w-full rounded-2xl overflow-hidden bg-white/[0.03] border border-white/10 backdrop-blur-xl transition-all duration-300 hover:scale-[1.015] hover:border-white/20"
-              style={{ boxShadow: `0 30px 80px -30px ${cor}66` }}
-            >
-              <div className="flex items-center gap-1.5 px-4 py-3 border-b border-white/10 bg-white/[0.02]">
-                <span className="w-2.5 h-2.5 rounded-full bg-white/20" />
-                <span className="w-2.5 h-2.5 rounded-full bg-white/20" />
-                <span className="w-2.5 h-2.5 rounded-full bg-white/20" />
-                <span className="ml-3 text-[10px] text-white/40 font-mono">nexo.app{modulo.rota}</span>
-              </div>
-              <picture>
-                <source srcSet={screenshot} type="image/webp" />
-                <img
-                  src={fallback}
-                  alt={`Tela do módulo ${modulo.titulo}`}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-auto block bg-[#0A0E1A]"
-                  width={1440}
-                  height={900}
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).style.display = "none";
-                  }}
-                />
-              </picture>
-              <div className="absolute top-14 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 backdrop-blur-md rounded-lg px-2.5 py-1.5 text-xs text-white flex items-center gap-1.5">
-                <Maximize2 className="w-3 h-3" /> Ampliar
-              </div>
-              <div
-                className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
-                style={{ background: `radial-gradient(circle at 50% 50%, ${cor}14, transparent 70%)` }}
+          <div className="flex flex-wrap gap-2 mb-10">
+            {modulo.features.map((f) => (
+              <span
+                key={f}
+                className="text-[11px] px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-white/70 tracking-wide"
+              >
+                {f}
+              </span>
+            ))}
+          </div>
+        </Reveal>
+
+        <Reveal delay={120}>
+          <button
+            type="button"
+            onClick={() => setZoomIdx(index)}
+            className="group relative w-full rounded-2xl overflow-hidden bg-white/[0.03] border border-white/10 backdrop-blur-xl transition-all duration-500 hover:scale-[1.008] hover:border-white/20 blur-reveal"
+            style={{
+              boxShadow: `0 50px 120px -40px ${cor}55, 0 20px 50px -20px rgba(0,0,0,0.6)`,
+            }}
+          >
+            <div className="flex items-center gap-1.5 px-4 py-3 border-b border-white/10 bg-white/[0.02]">
+              <span className="w-2.5 h-2.5 rounded-full bg-white/15" />
+              <span className="w-2.5 h-2.5 rounded-full bg-white/15" />
+              <span className="w-2.5 h-2.5 rounded-full bg-white/15" />
+              <span className="ml-3 text-[10px] text-white/40 font-mono">
+                nexo.app{modulo.rota}
+              </span>
+            </div>
+            <picture>
+              <source srcSet={screenshot} type="image/webp" />
+              <img
+                src={fallback}
+                alt={`Tela do módulo ${modulo.titulo}`}
+                loading="lazy"
+                decoding="async"
+                width={1440}
+                height={900}
+                className="w-full h-auto block bg-[#0A0E1A]"
               />
-            </button>
-          </Reveal>
-        </div>
+            </picture>
+            <div className="absolute top-14 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 backdrop-blur-md rounded-lg px-2.5 py-1.5 text-xs text-white flex items-center gap-1.5">
+              <Maximize2 className="w-3 h-3" /> Ampliar
+            </div>
+            <div
+              className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
+              style={{ background: `radial-gradient(circle at 50% 50%, ${cor}14, transparent 70%)` }}
+            />
+          </button>
+        </Reveal>
       </div>
-      <ImageZoomModal open={zoom} onOpenChange={setZoom} src={screenshot} alt={modulo.titulo} />
+
+      {zoomIdx !== null && (
+        <ImageZoomModalGaleria
+          startIndex={zoomIdx}
+          onClose={() => setZoomIdx(null)}
+        />
+      )}
     </section>
   );
 }

@@ -1,72 +1,55 @@
 import { Reveal } from "./Reveal";
+import { Briefcase, FileSignature, Ruler, Factory, Truck, Hammer, HeadphonesIcon } from "lucide-react";
 
-const ETAPAS = ["Comercial", "Contratos", "Técnico", "Produção", "Logística", "Montagem", "Pós-venda"];
-
-const KPIS = [
-  { v: "11+", l: "Módulos" },
-  { v: "50+", l: "Funcionalidades" },
-  { v: "Tempo Real", l: "Sincronização" },
-  { v: "Multi-Loja", l: "Arquitetura" },
+const ETAPAS = [
+  { nome: "Comercial", desc: "Captação e fechamento", icon: Briefcase },
+  { nome: "Contratos", desc: "Formalização e XML", icon: FileSignature },
+  { nome: "Técnico", desc: "Medição e conferência", icon: Ruler },
+  { nome: "Produção", desc: "Fábrica e rastreio", icon: Factory },
+  { nome: "Logística", desc: "Rotas e expedição", icon: Truck },
+  { nome: "Montagem", desc: "Equipes e ocorrências", icon: Hammer },
+  { nome: "Pós-venda", desc: "SLA, NPS e retenção", icon: HeadphonesIcon },
 ];
 
 export function FluxoOperacional() {
   return (
-    <section id="visao" className="relative py-28 px-6">
+    <section id="visao-geral" className="relative py-32 px-6">
       <div className="max-w-7xl mx-auto">
         <Reveal>
-          <div className="text-center mb-16">
-            <div className="text-xs font-semibold tracking-[0.3em] text-[#22C97A] uppercase mb-3">Visão Geral</div>
-            <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
+          <div className="text-center mb-20">
+            <div className="text-[10px] font-semibold tracking-[0.4em] text-white/40 uppercase mb-4">
+              Visão Geral
+            </div>
+            <h2 className="text-3xl md:text-5xl font-semibold text-white tracking-tight max-w-3xl mx-auto leading-tight">
               Um fluxo único, da venda à entrega
             </h2>
-            <p className="text-white/60 mt-4 max-w-2xl mx-auto">
-              Todas as etapas operacionais conectadas em uma única plataforma, sem ilhas de informação.
+            <p className="text-white/55 mt-5 max-w-2xl mx-auto">
+              Sete etapas operacionais conectadas. A informação percorre o sistema sem ilhas, sem retrabalho.
             </p>
           </div>
         </Reveal>
 
-        <Reveal>
-          <div className="relative flex flex-wrap items-center justify-center gap-3 md:gap-2 mb-20">
+        <div className="relative">
+          <div className="hidden md:block absolute top-7 left-[6%] right-[6%] h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-6 md:gap-3 relative">
             {ETAPAS.map((e, i) => (
-              <div key={e} className="flex items-center gap-2 md:gap-3">
-                <div
-                  className="px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 backdrop-blur-xl text-sm font-semibold text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-                  style={{
-                    animation: `fluxoPulse 4s ${i * 0.4}s ease-in-out infinite`,
-                  }}
-                >
-                  <span className="bg-gradient-to-r from-[#1A9BE8] to-[#22C97A] bg-clip-text text-transparent">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span className="ml-2">{e}</span>
+              <Reveal key={e.nome} delay={i * 140}>
+                <div className="flex flex-col items-center text-center">
+                  <div className="relative w-14 h-14 rounded-full bg-[#0A0E1A] border border-white/15 flex items-center justify-center mb-4 shadow-[0_0_30px_-8px_rgba(26,155,232,0.5)]">
+                    <e.icon className="w-5 h-5 text-white/80" />
+                    <span className="absolute -top-1 -right-1 text-[9px] font-mono tracking-tight px-1.5 py-0.5 rounded-full bg-white/[0.06] border border-white/10 text-white/50">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                  </div>
+                  <div className="text-sm font-semibold text-white">{e.nome}</div>
+                  <div className="text-[11px] text-white/45 mt-1">{e.desc}</div>
                 </div>
-                {i < ETAPAS.length - 1 && (
-                  <div className="w-6 md:w-8 h-px bg-gradient-to-r from-[#1A9BE8]/40 to-[#22C97A]/40" />
-                )}
-              </div>
+              </Reveal>
             ))}
           </div>
-        </Reveal>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {KPIS.map((k, i) => (
-            <Reveal key={k.l} delay={i * 80}>
-              <div className="p-6 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur-xl hover:border-[#1A9BE8]/40 transition-colors">
-                <div className="text-3xl md:text-4xl font-extrabold bg-gradient-to-r from-[#1A9BE8] to-[#22C97A] bg-clip-text text-transparent">
-                  {k.v}
-                </div>
-                <div className="text-xs uppercase tracking-widest text-white/50 mt-2">{k.l}</div>
-              </div>
-            </Reveal>
-          ))}
         </div>
       </div>
-      <style>{`
-        @keyframes fluxoPulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(26,155,232,0); }
-          50% { box-shadow: 0 0 24px -4px rgba(26,155,232,0.4); }
-        }
-      `}</style>
     </section>
   );
 }

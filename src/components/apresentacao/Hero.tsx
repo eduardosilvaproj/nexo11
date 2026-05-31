@@ -1,7 +1,8 @@
-import { Link } from "react-router-dom";
 import { useEffect, useRef } from "react";
 import { LogoNexo } from "@/components/LogoNexo";
-import { ArrowRight } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+
+const KPIS = ["11 Módulos Integrados", "50+ Funcionalidades", "Tempo Real", "Multi-Loja"];
 
 export function Hero() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -9,8 +10,7 @@ export function Hero() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
@@ -27,18 +27,18 @@ export function Hero() {
       canvas!.height = h * dpr;
       canvas!.style.width = `${w}px`;
       canvas!.style.height = `${h}px`;
+      ctx!.setTransform(1, 0, 0, 1, 0, 0);
       ctx!.scale(dpr, dpr);
     }
     resize();
     window.addEventListener("resize", resize);
 
-    const COUNT = 36;
-    for (let i = 0; i < COUNT; i++) {
+    for (let i = 0; i < 36; i++) {
       particles.push({
         x: Math.random() * w, y: Math.random() * h,
-        vx: (Math.random() - 0.5) * 0.25,
-        vy: (Math.random() - 0.5) * 0.25,
-        r: Math.random() * 1.6 + 0.4,
+        vx: (Math.random() - 0.5) * 0.22,
+        vy: (Math.random() - 0.5) * 0.22,
+        r: Math.random() * 1.4 + 0.4,
         c: Math.random() > 0.5 ? "#1A9BE8" : "#22C97A",
       });
     }
@@ -51,7 +51,7 @@ export function Hero() {
         if (p.y < 0 || p.y > h) p.vy *= -1;
         ctx!.beginPath();
         ctx!.fillStyle = p.c;
-        ctx!.globalAlpha = 0.55;
+        ctx!.globalAlpha = 0.5;
         ctx!.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx!.fill();
       }
@@ -65,65 +65,64 @@ export function Hero() {
     };
   }, []);
 
+  const scrollNext = () => {
+    document.getElementById("visao-geral")?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
-      {/* grid */}
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-14">
       <div
-        className="absolute inset-0 opacity-[0.18]"
+        className="absolute inset-0 opacity-[0.16]"
         style={{
           backgroundImage:
             "linear-gradient(rgba(26,155,232,0.35) 1px, transparent 1px), linear-gradient(90deg, rgba(34,201,122,0.25) 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
+          backgroundSize: "64px 64px",
           maskImage: "radial-gradient(ellipse at center, #000 35%, transparent 75%)",
           WebkitMaskImage: "radial-gradient(ellipse at center, #000 35%, transparent 75%)",
         }}
       />
-      {/* glows */}
       <div className="absolute top-1/3 left-1/4 w-[480px] h-[480px] rounded-full bg-[#1A9BE8]/20 blur-[140px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-[480px] h-[480px] rounded-full bg-[#22C97A]/20 blur-[140px] translate-x-1/2 translate-y-1/2 pointer-events-none" />
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
 
       <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium text-white/70 bg-white/[0.04] border border-white/10 backdrop-blur-xl mb-8">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#22C97A] animate-pulse" />
-          Plataforma de gestão para móveis planejados
+        <div className="text-[10px] tracking-[0.4em] uppercase text-white/40 mb-10">
+          Plataforma NEXO
         </div>
 
-        <div className="mb-8 flex items-center justify-center text-white" style={{ filter: "drop-shadow(0 0 40px rgba(26,155,232,0.4))" }}>
-          <div className="text-7xl md:text-8xl">
+        <div
+          className="mb-10 flex items-center justify-center text-white"
+          style={{ filter: "drop-shadow(0 0 40px rgba(26,155,232,0.4))" }}
+        >
+          <div className="text-[88px] md:text-[140px] leading-none">
             <LogoNexo size="lg" />
           </div>
         </div>
 
-        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white leading-[1.05] mb-6">
-          Gestão Inteligente para{" "}
-          <span className="bg-gradient-to-r from-[#1A9BE8] to-[#22C97A] bg-clip-text text-transparent">
-            Móveis Planejados
-          </span>
+        <h1 className="text-2xl md:text-4xl font-semibold tracking-tight text-white/95 leading-[1.15] mb-5 max-w-3xl mx-auto">
+          A plataforma que conecta toda a operação de móveis planejados.
         </h1>
-        <p className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto mb-10">
-          Do comercial à pós-venda, tudo em um só lugar. Um ERP especializado, multi-loja, em tempo real.
+        <p className="text-base md:text-lg text-white/55 max-w-2xl mx-auto mb-12">
+          Do primeiro contato comercial ao pós-venda, todos os processos integrados em uma única plataforma.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            to="/login"
-            className="group inline-flex items-center justify-center gap-2 px-7 h-12 rounded-xl font-semibold text-white bg-gradient-to-r from-[#1A9BE8] to-[#22C97A] shadow-[0_0_40px_-8px_#1A9BE8] hover:shadow-[0_0_60px_-4px_#22C97A] transition-shadow"
-          >
-            Acessar Sistema
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
-          <a
-            href="#modulos"
-            className="inline-flex items-center justify-center px-7 h-12 rounded-xl font-semibold text-white bg-white/[0.04] border border-white/15 hover:bg-white/[0.08] backdrop-blur-xl transition-colors"
-          >
-            Ver módulos
-          </a>
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-xs md:text-sm text-white/60 mb-16">
+          {KPIS.map((k, i) => (
+            <div key={k} className="flex items-center gap-6">
+              <span className="font-medium tracking-wide">{k}</span>
+              {i < KPIS.length - 1 && <span className="text-white/15">·</span>}
+            </div>
+          ))}
         </div>
-      </div>
 
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/30 text-xs tracking-widest uppercase animate-bounce">
-        Scroll
+        <button
+          type="button"
+          onClick={scrollNext}
+          className="group inline-flex flex-col items-center gap-2 text-white/50 hover:text-white transition-colors"
+        >
+          <span className="text-[10px] tracking-[0.3em] uppercase">Explorar a Plataforma</span>
+          <ChevronDown className="w-5 h-5 animate-bounce" />
+        </button>
       </div>
     </section>
   );
