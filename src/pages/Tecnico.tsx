@@ -10,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, Settings, Paperclip, ClipboardList } from "lucide-react";
 import { ChecklistTemplateDialog } from "@/components/tecnico/ChecklistTemplateDialog";
+import { TecnicoDashboard } from "@/components/tecnico/TecnicoDashboard";
+import { AgendaMedicoes } from "@/components/tecnico/AgendaMedicoes";
+import { TecnicoAlertas } from "@/components/tecnico/TecnicoAlertas";
 
 type SubEtapa = "medicao" | "conferencia";
 
@@ -247,6 +250,17 @@ export default function Tecnico() {
             </button>
           );
         })}
+      </div>
+
+      {/* Dashboard KPIs */}
+      <TecnicoDashboard aba={aba} />
+
+      {/* Alertas + Agenda lado a lado */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2">
+          <AgendaMedicoes />
+        </div>
+        <TecnicoAlertas />
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
