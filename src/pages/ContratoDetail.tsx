@@ -37,7 +37,7 @@ import { ChecklistProducaoCard } from "@/components/contrato/ChecklistProducaoCa
 import { ChecklistEntradaCard } from "@/components/contrato/ChecklistEntradaCard";
 import { ChecklistMontagemCard } from "@/components/contrato/ChecklistMontagemCard";
 import { ChecklistPosVendaCard } from "@/components/contrato/ChecklistPosVendaCard";
-import { GerarParcelasDialog } from "@/components/contrato/GerarParcelasDialog";
+
 import { ContratoAditivosTab } from "@/components/contrato/ContratoAditivosTab";
 import { AprovacaoContratoCard } from "@/components/contrato/AprovacaoContratoCard";
 import { ContratoAlertasCard } from "@/components/contrato/ContratoAlertasCard";
