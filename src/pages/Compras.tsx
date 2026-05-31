@@ -15,6 +15,7 @@ import { CompraAvulsaTab } from "@/components/compras/CompraAvulsaTab";
 import { CotacoesListTab } from "@/components/compras/CotacoesListTab";
 import { useAuth } from "@/contexts/AuthContext";
 import { canPerform } from "@/lib/permissions";
+import { PageHeader } from "@/components/ui/page-header";
 
 const sb = supabase as unknown as { from: (t: string) => any };
 
@@ -127,16 +128,16 @@ export default function Compras() {
 
   return (
     <div className="p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 600, color: "#0D1117" }}>NEXO Compras</h1>
-          <p style={{ fontSize: 13, color: "#6B7A90" }}>Requisições de itens extras vindas da Conferência técnica.</p>
-        </div>
-        <Button variant="outline" onClick={() => window.location.href = '/almoxarifado'}>
-          <Package size={16} className="mr-2" />
-          Ver almoxarifado
-        </Button>
-      </div>
+      <PageHeader
+        title="NEXO Compras"
+        subtitle="Requisições de itens extras vindas da Conferência técnica."
+        actions={
+          <Button variant="outline" onClick={() => window.location.href = '/almoxarifado'}>
+            <Package size={16} className="mr-2" />
+            Ver almoxarifado
+          </Button>
+        }
+      />
 
       <div className="grid grid-cols-3 gap-4 mb-6">
         <StatCard icon={ClipboardList} label="Requisições pendentes" value={totals.pendentes} color="#1E6FBF" />

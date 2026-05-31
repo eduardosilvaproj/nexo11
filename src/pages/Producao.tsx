@@ -2,16 +2,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { TerceirizadaTab } from "@/components/producao/TerceirizadaTab";
 import { InternaKanban } from "@/components/producao/InternaKanban";
 import { ProducaoDashboard } from "@/components/producao/ProducaoDashboard";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default function Producao() {
   return (
     <div className="p-4 md:p-8">
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 600, color: "#0D1117" }}>NEXO Produção</h1>
-          <p style={{ fontSize: 13, color: "#6B7A90" }}>Ordens de produção ativas</p>
-        </div>
-      </div>
+      <PageHeader title="NEXO Produção" subtitle="Ordens de produção ativas" />
 
       {/* Dashboard KPIs + Alertas */}
       <ProducaoDashboard />

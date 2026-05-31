@@ -13,6 +13,7 @@ import { StatusBadge, type StatusVisual } from "@/components/logistica/StatusBad
 import { MateriaisSeparadosTab } from "@/components/logistica/MateriaisSeparadosTab";
 import { useAuth } from "@/contexts/AuthContext";
 import { canPerform } from "@/lib/permissions";
+import { PageHeader } from "@/components/ui/page-header";
 import {
   addDays,
   dayShortNames,
@@ -143,17 +144,17 @@ export default function Logistica() {
 
   return (
     <div className="p-4 md:p-8">
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-[22px] font-semibold text-foreground">NEXO Logística</h1>
-          <p className="text-sm text-muted-foreground">Agenda visual semanal de entregas</p>
-        </div>
-        {canPerform(roles, "logistica.update") && (
-          <Button onClick={() => { setCreateDate(undefined); setCreateTurno(undefined); setCreateOpen(true); }} className="w-full sm:w-auto">
-            <Plus className="mr-1 h-4 w-4" /> Nova Entrega
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        title="NEXO Logística"
+        subtitle="Agenda visual semanal de entregas"
+        actions={
+          canPerform(roles, "logistica.update") ? (
+            <Button onClick={() => { setCreateDate(undefined); setCreateTurno(undefined); setCreateOpen(true); }} className="w-full sm:w-auto">
+              <Plus className="mr-1 h-4 w-4" /> Nova Entrega
+            </Button>
+          ) : undefined
+        }
+      />
 
       {/* Dashboard KPIs */}
       <LogisticaDashboard />

@@ -36,6 +36,7 @@ import { AmbientesMontagemList } from "@/components/montagem/AmbientesMontagemLi
 import { MateriaisMontagemResumo, calcularLiberacao, LiberacaoBadge, type LiberacaoStatus } from "@/components/montagem/MateriaisMontagemResumo";
 import { MontagemDashboard } from "@/components/montagem/MontagemDashboard";
 import { CheckCircle2, AlertTriangle, Clock as ClockIcon, Package } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
 
 const STATUS_BADGE: Record<string, { bg: string; fg: string; label: string }> = {
   agendado: { bg: "#E6F3FF", fg: "#1E6FBF", label: "Agendado" },
@@ -154,13 +155,8 @@ export default function Montagem() {
   const editAgendamento = agendamentos.find((a) => a.id === editId) ?? null;
 
   return (
-    <div className="flex flex-col gap-6 p-8">
-      <div>
-        <h1 style={{ fontSize: 24, fontWeight: 600, color: "#0D1117" }}>NEXO Montagem</h1>
-        <p style={{ fontSize: 13, color: "#6B7A90", marginTop: 4 }}>
-          Agenda e capacidade das equipes
-        </p>
-      </div>
+    <div className="flex flex-col gap-6 p-4 md:p-8">
+      <PageHeader title="NEXO Montagem" subtitle="Agenda e capacidade das equipes" />
 
       {/* Dashboard KPIs */}
       <MontagemDashboard />
