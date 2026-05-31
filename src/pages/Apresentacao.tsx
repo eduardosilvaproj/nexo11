@@ -7,6 +7,7 @@ import { ModuloSection } from "@/components/apresentacao/ModuloSection";
 import { AppFuncionarioShowcase } from "@/components/apresentacao/AppFuncionarioShowcase";
 import { EcossistemaNexo } from "@/components/apresentacao/EcossistemaNexo";
 import { ArquiteturaPlataforma } from "@/components/apresentacao/ArquiteturaPlataforma";
+import { EncerramentoInstitucional } from "@/components/apresentacao/EncerramentoInstitucional";
 import { Footer } from "@/components/apresentacao/Footer";
 import { MODULOS } from "@/components/apresentacao/data";
 
@@ -14,7 +15,7 @@ const Apresentacao = () => {
   const url = "https://nexo11.lovable.app/apresentacao";
 
   return (
-    <div className="min-h-screen bg-[#0A0E1A] text-white relative overflow-x-hidden font-sans antialiased">
+    <div className="min-h-screen bg-[#060d1a] text-white relative overflow-x-hidden font-sans antialiased">
       <Helmet>
         <html lang="pt-BR" />
         <title>NEXO — Apresentação Institucional</title>
@@ -31,13 +32,13 @@ const Apresentacao = () => {
           content="Plataforma integrada para a operação completa de móveis planejados."
         />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="theme-color" content="#0A0E1A" />
+        <meta name="theme-color" content="#060d1a" />
       </Helmet>
 
       {/* Ambient gradients sitewide */}
       <div className="fixed inset-0 pointer-events-none opacity-60">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-[#1A9BE8]/8 blur-[160px] rounded-full" />
-        <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-[#22C97A]/8 blur-[160px] rounded-full" />
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-[#00AAFF]/10 blur-[160px] rounded-full" />
+        <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-[#12B76A]/10 blur-[160px] rounded-full" />
       </div>
 
       <div className="relative z-10">
@@ -64,6 +65,7 @@ const Apresentacao = () => {
           <AppFuncionarioShowcase />
           <EcossistemaNexo />
           <ArquiteturaPlataforma />
+          <EncerramentoInstitucional />
         </main>
         <Footer />
       </div>
