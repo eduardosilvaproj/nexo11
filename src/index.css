@@ -441,15 +441,15 @@ html {
 @keyframes nx-logo-glow {
   0%, 100% {
     filter:
-      drop-shadow(0 0 28px rgba(26, 155, 232, 0.28))
-      drop-shadow(0 0 64px rgba(26, 155, 232, 0.14))
-      drop-shadow(0 0 8px rgba(255, 255, 255, 0.05));
+      drop-shadow(0 0 28px rgba(26, 155, 232, 0.20))
+      drop-shadow(0 0 64px rgba(26, 155, 232, 0.10))
+      drop-shadow(0 0 8px rgba(255, 255, 255, 0.04));
   }
   50% {
     filter:
-      drop-shadow(0 0 28px rgba(34, 201, 122, 0.28))
-      drop-shadow(0 0 64px rgba(34, 201, 122, 0.14))
-      drop-shadow(0 0 8px rgba(255, 255, 255, 0.05));
+      drop-shadow(0 0 28px rgba(34, 201, 122, 0.20))
+      drop-shadow(0 0 64px rgba(34, 201, 122, 0.10))
+      drop-shadow(0 0 8px rgba(255, 255, 255, 0.04));
   }
 }
 .nx-logo-hero-outer {
