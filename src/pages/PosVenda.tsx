@@ -33,6 +33,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import type { Database } from "@/integrations/supabase/types";
+import PosVendaDashboard from "@/components/pos-venda/PosVendaDashboard";
+import PosVendaSLA from "@/components/pos-venda/PosVendaSLA";
+import BaseConhecimento from "@/components/pos-venda/BaseConhecimento";
 
 type ChamadoTipo = Database["public"]["Enums"]["chamado_tipo"];
 type ChamadoStatus = Database["public"]["Enums"]["chamado_status"];
@@ -106,7 +109,7 @@ function MetricCard({
 export default function PosVenda() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<"chamados" | "nps">("chamados");
+  const [tab, setTab] = useState<"chamados" | "nps" | "sla" | "base">("chamados");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [tipoFilter, setTipoFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
@@ -596,6 +599,9 @@ export default function PosVenda() {
         />
       </div>
 
+      {/* Dashboard KPIs */}
+      <PosVendaDashboard />
+
       <div
         className="mb-4 flex items-center gap-6"
         style={{ borderBottom: "0.5px solid #E8ECF2" }}
@@ -603,6 +609,8 @@ export default function PosVenda() {
         {([
           ["chamados", "Chamados"],
           ["nps", "NPS"],
+          ["sla", "SLA"],
+          ["base", "Base de Conhecimento"],
         ] as const).map(([key, label]) => {
           const active = tab === key;
           return (
@@ -954,6 +962,10 @@ export default function PosVenda() {
           </div>
         );
       })()}
+
+      {tab === "sla" && <PosVendaSLA />}
+
+      {tab === "base" && <BaseConhecimento />}
 
       <Dialog open={npsOpen} onOpenChange={setNpsOpen}>
         <DialogContent>
