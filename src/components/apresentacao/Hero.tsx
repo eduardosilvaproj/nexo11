@@ -98,9 +98,9 @@ export function Hero() {
               className="absolute inset-0 pointer-events-none"
               style={{
                 background:
-                  "radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 35%, transparent 65%)",
-                filter: "blur(40px)",
-                transform: "scale(1.4)",
+                  "radial-gradient(circle, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.04) 35%, transparent 65%)",
+                filter: "blur(60px)",
+                transform: "scale(1.5)",
                 zIndex: 0,
               }}
             />
@@ -110,9 +110,9 @@ export function Hero() {
               className="absolute inset-0 pointer-events-none"
               style={{
                 background:
-                  "radial-gradient(circle at 35% 40%, rgba(26,155,232,0.18), transparent 55%), radial-gradient(circle at 65% 60%, rgba(34,201,122,0.16), transparent 55%), radial-gradient(circle at 50% 50%, rgba(255,255,255,0.10), transparent 60%)",
-                filter: "blur(60px)",
-                transform: "scale(1.6)",
+                  "radial-gradient(circle at 35% 40%, rgba(26,155,232,0.14), transparent 55%), radial-gradient(circle at 65% 60%, rgba(34,201,122,0.12), transparent 55%), radial-gradient(circle at 50% 50%, rgba(255,255,255,0.08), transparent 60%)",
+                filter: "blur(80px)",
+                transform: "scale(1.7)",
                 zIndex: 0,
               }}
             />
