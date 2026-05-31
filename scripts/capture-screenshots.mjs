@@ -61,7 +61,11 @@ async function capture(page, { slug, path }) {
 
 async function main() {
   await mkdir(OUT, { recursive: true });
-  const browser = await chromium.launch();
+  const executablePath = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
+  const browser = await chromium.launch({
+    ...(executablePath ? { executablePath } : {}),
+    args: executablePath ? ["--no-sandbox"] : [],
+  });
 
   // Desktop
   const ctxD = await browser.newContext({
