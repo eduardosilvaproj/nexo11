@@ -92,27 +92,27 @@ export function Hero() {
 
         <div className="mb-16 flex items-center justify-center">
           <span className="nx-logo-hero-outer relative inline-flex items-center justify-center">
-            {/* Halo branco difuso — suaviza bordas do PNG */}
+            {/* Halo branco sutil — suaviza bordas do PNG */}
             <span
               aria-hidden
               className="absolute inset-0 pointer-events-none"
               style={{
                 background:
-                  "radial-gradient(circle, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.04) 35%, transparent 65%)",
-                filter: "blur(60px)",
-                transform: "scale(1.5)",
+                  "radial-gradient(circle, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 40%, transparent 70%)",
+                filter: "blur(70px)",
+                transform: "scale(1.6)",
                 zIndex: 0,
               }}
             />
-            {/* Iluminação radial premium — branco + azul + verde */}
+            {/* Aurora tecnológica — azul à esquerda, verde à direita, véu central */}
             <span
               aria-hidden
               className="absolute inset-0 pointer-events-none"
               style={{
                 background:
-                  "radial-gradient(circle at 35% 40%, rgba(26,155,232,0.14), transparent 55%), radial-gradient(circle at 65% 60%, rgba(34,201,122,0.12), transparent 55%), radial-gradient(circle at 50% 50%, rgba(255,255,255,0.08), transparent 60%)",
-                filter: "blur(80px)",
-                transform: "scale(1.7)",
+                  "radial-gradient(ellipse at 25% 50%, rgba(26,155,232,0.16), transparent 60%), radial-gradient(ellipse at 75% 50%, rgba(34,201,122,0.14), transparent 60%), radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.05), transparent 65%)",
+                filter: "blur(100px)",
+                transform: "scale(2, 1.4)",
                 zIndex: 0,
               }}
             />
