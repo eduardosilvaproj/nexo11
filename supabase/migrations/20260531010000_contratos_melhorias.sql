@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS public.contrato_aditivos (
   valor_novo NUMERIC(14,2),
   data_vigencia DATE,
   motivo TEXT,
+  xml_itens JSONB,
   aprovado_por UUID REFERENCES auth.users(id),
   created_by UUID NOT NULL REFERENCES auth.users(id),
   created_at TIMESTAMPTZ DEFAULT now()
