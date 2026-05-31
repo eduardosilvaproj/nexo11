@@ -194,7 +194,7 @@ Máximo 200 palavras. Responda APENAS com o prompt, sem explicações.`,
       const promptData = await promptResp.json();
       const imagePrompt = promptData.choices[0]?.message?.content || "";
 
-      // Gerar imagem com DALL-E 2 (fallback compatível)
+      // Gerar imagem
       const dalleResp = await fetch("https://api.openai.com/v1/images/generations", {
         method: "POST",
         headers: {
@@ -202,8 +202,7 @@ Máximo 200 palavras. Responda APENAS com o prompt, sem explicações.`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "dall-e-2",
-          prompt: `Professional interior design photo: ${imagePrompt}`,
+          prompt: `Professional interior design photo, photorealistic: ${imagePrompt}`,
           n: 1,
           size: "1024x1024",
         }),
