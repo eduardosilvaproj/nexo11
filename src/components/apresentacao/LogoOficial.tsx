@@ -23,12 +23,13 @@ export function LogoOficial({
 }: LogoOficialProps) {
   const isHero = size === "hero";
   const px = isHero ? undefined : SIZE_PX[size as Exclude<Size, "hero">];
-  const filter =
-    glow === "none"
-      ? undefined
-      : glow === "premium"
-      ? "drop-shadow(0 0 48px rgba(0,170,255,0.55)) drop-shadow(0 0 96px rgba(18,183,106,0.30)) drop-shadow(0 0 16px rgba(255,255,255,0.08))"
-      : "drop-shadow(0 0 24px rgba(0,170,255,0.40)) drop-shadow(0 0 48px rgba(18,183,106,0.20))";
+  const filter = isHero
+    ? "drop-shadow(0 0 0.6px rgba(255,255,255,0.35)) drop-shadow(0 1px 1px rgba(0,0,0,0.18)) drop-shadow(0 8px 24px rgba(0,0,0,0.28)) drop-shadow(0 24px 60px rgba(8,18,32,0.45))"
+    : glow === "none"
+    ? undefined
+    : glow === "premium"
+    ? "drop-shadow(0 0 48px rgba(0,170,255,0.55)) drop-shadow(0 0 96px rgba(18,183,106,0.30)) drop-shadow(0 0 16px rgba(255,255,255,0.08))"
+    : "drop-shadow(0 0 24px rgba(0,170,255,0.40)) drop-shadow(0 0 48px rgba(18,183,106,0.20))";
 
   return (
     <img
@@ -44,7 +45,9 @@ export function LogoOficial({
         width: isHero ? "clamp(380px, 42vw, 580px)" : px,
         height: "auto",
         filter,
+        willChange: isHero ? "transform, filter" : undefined,
       }}
     />
   );
 }
+
