@@ -441,16 +441,34 @@ html {
 @keyframes nx-logo-glow {
   0%, 100% {
     filter:
-      drop-shadow(0 0 28px rgba(26, 155, 232, 0.20))
-      drop-shadow(0 0 64px rgba(26, 155, 232, 0.10))
-      drop-shadow(0 0 8px rgba(255, 255, 255, 0.04));
+      drop-shadow(0 0 28px rgba(26, 155, 232, 0.16))
+      drop-shadow(0 0 64px rgba(26, 155, 232, 0.08))
+      drop-shadow(0 0 8px rgba(255, 255, 255, 0.03));
   }
   50% {
     filter:
-      drop-shadow(0 0 28px rgba(34, 201, 122, 0.20))
-      drop-shadow(0 0 64px rgba(34, 201, 122, 0.10))
-      drop-shadow(0 0 8px rgba(255, 255, 255, 0.04));
+      drop-shadow(0 0 28px rgba(34, 201, 122, 0.16))
+      drop-shadow(0 0 64px rgba(34, 201, 122, 0.08))
+      drop-shadow(0 0 8px rgba(255, 255, 255, 0.03));
   }
+}
+@keyframes nx-aurora-drift {
+  0%, 100% { transform: scale(2.1, 1.45) translateX(-2%); }
+  50%      { transform: scale(2.1, 1.45) translateX(2%); }
+}
+@keyframes nx-halo-breathe {
+  0%, 100% { opacity: 0.6; transform: scale(1.5); }
+  50%      { opacity: 1;   transform: scale(1.55); }
+}
+@keyframes nx-ring-spin {
+  from { transform: scale(1.3) rotate(0deg); }
+  to   { transform: scale(1.3) rotate(360deg); }
+}
+@keyframes nx-energy-sweep {
+  0%   { transform: translateX(-120%); opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translateX(120%); opacity: 0; }
 }
 .nx-logo-hero-outer {
   display: inline-block;
@@ -461,12 +479,20 @@ html {
 }
 .nx-logo-hero-inner {
   display: inline-block;
-  animation: nx-logo-glow 10s ease-in-out infinite;
+  animation: nx-logo-glow 12s ease-in-out infinite;
   will-change: filter;
 }
+.nx-aurora-drift { animation: nx-aurora-drift 14s ease-in-out infinite; will-change: transform; }
+.nx-halo-breathe { animation: nx-halo-breathe 10s ease-in-out infinite; will-change: opacity, transform; }
+.nx-ring-spin    { animation: nx-ring-spin 30s linear infinite; will-change: transform; }
+.nx-energy-sweep { animation: nx-energy-sweep 9s ease-in-out 2s infinite; will-change: transform, opacity; }
 @media (prefers-reduced-motion: reduce) {
   .nx-logo-hero-outer,
-  .nx-logo-hero-inner {
+  .nx-logo-hero-inner,
+  .nx-aurora-drift,
+  .nx-halo-breathe,
+  .nx-ring-spin,
+  .nx-energy-sweep {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
