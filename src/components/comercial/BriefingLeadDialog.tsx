@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Mic, MicOff, Play, Pause, Send, Sparkles, Image, Loader2, Trash2, FileText } from "lucide-react";
+import { Mic, MicOff, Play, Pause, Send, Sparkles, Image, Loader2, Trash2, FileText, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -195,6 +195,112 @@ export function BriefingLeadDialog({ open, onOpenChange, leadId, leadNome }: Pro
     else carregar();
   }
 
+  async function gerarPDF() {
+    const { jsPDF } = await import("jspdf");
+    const doc = new jsPDF();
+    const margin = 15;
+    let y = margin;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const maxWidth = pageWidth - margin * 2;
+
+    function checkPage(needed: number) {
+      if (y + needed > doc.internal.pageSize.getHeight() - margin) {
+        doc.addPage();
+        y = margin;
+      }
+    }
+
+    // Header
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Briefing — ${leadNome}`, margin, y);
+    y += 8;
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Gerado em: ${new Date().toLocaleString("pt-BR")}`, margin, y);
+    y += 12;
+
+    // Separador
+    doc.setDrawColor(200);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 8;
+
+    for (const a of anotacoes) {
+      checkPage(30);
+
+      // Badge do tipo
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      const tipoLabel = a.tipo === "texto" ? "NOTA" : a.tipo === "audio" ? "ÁUDIO" : a.tipo === "resumo_ia" ? "RESUMO IA" : "IMAGEM IA";
+      const dataStr = new Date(a.created_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+      doc.text(`[${tipoLabel}] ${dataStr}`, margin, y);
+      y += 5;
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+
+      if (a.tipo === "texto" && a.conteudo) {
+        const lines = doc.splitTextToSize(a.conteudo, maxWidth);
+        checkPage(lines.length * 5);
+        doc.text(lines, margin, y);
+        y += lines.length * 5 + 4;
+      }
+
+      if (a.tipo === "audio") {
+        const txt = a.conteudo ? `Transcrição: ${a.conteudo}` : `Áudio (${a.audio_duracao_seg || 0}s) — sem transcrição`;
+        const lines = doc.splitTextToSize(txt, maxWidth);
+        checkPage(lines.length * 5);
+        doc.text(lines, margin, y);
+        y += lines.length * 5 + 4;
+      }
+
+      if (a.tipo === "resumo_ia" && (a.resumo_ia || a.conteudo)) {
+        const txt = a.resumo_ia || a.conteudo || "";
+        const lines = doc.splitTextToSize(txt, maxWidth);
+        checkPage(lines.length * 5);
+        doc.text(lines, margin, y);
+        y += lines.length * 5 + 4;
+      }
+
+      if (a.tipo === "imagem_ia") {
+        if (a.imagem_prompt) {
+          doc.setFontSize(9);
+          doc.setFont("helvetica", "italic");
+          const promptLines = doc.splitTextToSize(`Prompt: ${a.imagem_prompt}`, maxWidth);
+          checkPage(promptLines.length * 4);
+          doc.text(promptLines, margin, y);
+          y += promptLines.length * 4 + 2;
+        }
+        if (a.imagem_url) {
+          try {
+            checkPage(80);
+            const imgResp = await fetch(a.imagem_url);
+            const imgBlob = await imgResp.blob();
+            const imgBase64 = await new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result as string);
+              reader.readAsDataURL(imgBlob);
+            });
+            doc.addImage(imgBase64, "PNG", margin, y, 80, 80);
+            y += 85;
+          } catch {
+            doc.text("[Imagem não disponível]", margin, y);
+            y += 6;
+          }
+        }
+      }
+
+      // Separador entre anotações
+      y += 2;
+      doc.setDrawColor(230);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 6;
+    }
+
+    doc.save(`briefing-${leadNome.replace(/\s+/g, "-").toLowerCase()}.pdf`);
+    toast.success("PDF gerado!");
+  }
+
   function fmtTempo(seg: number) {
     const m = Math.floor(seg / 60);
     const s = seg % 60;
@@ -265,6 +371,10 @@ export function BriefingLeadDialog({ open, onOpenChange, leadId, leadNome }: Pro
             <Button size="sm" variant="outline" onClick={gerarImagemIA} disabled={gerandoImagem} className="gap-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50">
               {gerandoImagem ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Image className="h-3.5 w-3.5" />}
               Gerar Imagem IA
+            </Button>
+            <Button size="sm" variant="outline" onClick={gerarPDF} disabled={anotacoes.length === 0} className="gap-1 border-blue-200 text-blue-700 hover:bg-blue-50">
+              <Download className="h-3.5 w-3.5" />
+              Exportar PDF
             </Button>
           </div>
 
