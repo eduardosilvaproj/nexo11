@@ -58,16 +58,14 @@ export function EcossistemaNexo() {
 
               {/* núcleo */}
               <div
-                className="absolute flex items-center justify-center w-28 h-28 rounded-full bg-[#060d1a] border border-white/15 text-white"
+                className="absolute flex items-center justify-center w-32 h-32 rounded-full bg-[#060d1a] border border-white/15 text-white"
                 style={{
-                  left: center - 56,
-                  top: center - 56,
-                  boxShadow: "0 0 80px -10px #00AAFF, inset 0 0 40px rgba(18,183,106,0.2)",
+                  left: center - 64,
+                  top: center - 64,
+                  boxShadow: "0 0 80px -10px #00AAFF, inset 0 0 40px rgba(18,183,106,0.25)",
                 }}
               >
-                <div className="text-2xl">
-                  <LogoNexo size="lg" />
-                </div>
+                <LogoNexo size="lg" />
               </div>
 
               {/* nós */}
