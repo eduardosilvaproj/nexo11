@@ -34,6 +34,7 @@ import { canPerform } from "@/lib/permissions";
 
 import { AmbientesMontagemList } from "@/components/montagem/AmbientesMontagemList";
 import { MateriaisMontagemResumo, calcularLiberacao, LiberacaoBadge, type LiberacaoStatus } from "@/components/montagem/MateriaisMontagemResumo";
+import { MontagemDashboard } from "@/components/montagem/MontagemDashboard";
 import { CheckCircle2, AlertTriangle, Clock as ClockIcon, Package } from "lucide-react";
 
 const STATUS_BADGE: Record<string, { bg: string; fg: string; label: string }> = {
@@ -160,6 +161,9 @@ export default function Montagem() {
           Agenda e capacidade das equipes
         </p>
       </div>
+
+      {/* Dashboard KPIs */}
+      <MontagemDashboard />
 
       <Tabs defaultValue="ambientes">
         <TabsList>
