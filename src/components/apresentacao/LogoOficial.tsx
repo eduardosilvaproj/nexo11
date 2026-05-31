@@ -24,7 +24,7 @@ export function LogoOficial({
   const isHero = size === "hero";
   const px = isHero ? undefined : SIZE_PX[size as Exclude<Size, "hero">];
   const filter = isHero
-    ? "drop-shadow(0 0 0.6px rgba(255,255,255,0.35)) drop-shadow(0 1px 1px rgba(0,0,0,0.18)) drop-shadow(0 8px 24px rgba(0,0,0,0.28)) drop-shadow(0 24px 60px rgba(8,18,32,0.45))"
+    ? "url(#nx-logo-feather) drop-shadow(0 0 0.5px rgba(255,255,255,0.25)) drop-shadow(0 1px 1px rgba(0,0,0,0.16)) drop-shadow(0 8px 24px rgba(0,0,0,0.26)) drop-shadow(0 24px 60px rgba(8,18,32,0.42))"
     : glow === "none"
     ? undefined
     : glow === "premium"
@@ -32,22 +32,44 @@ export function LogoOficial({
     : "drop-shadow(0 0 24px rgba(0,170,255,0.40)) drop-shadow(0 0 48px rgba(18,183,106,0.20))";
 
   return (
-    <img
-      src="/nexo-logo.png"
-      alt="NEXO"
-      width={px}
-      height={px}
-      loading={eager ? "eager" : "lazy"}
-      decoding="async"
-      draggable={false}
-      className={`select-none ${className}`}
-      style={{
-        width: isHero ? "clamp(380px, 42vw, 580px)" : px,
-        height: "auto",
-        filter,
-        willChange: isHero ? "transform, filter" : undefined,
-      }}
-    />
+    <>
+      {isHero && (
+        <svg
+          width="0"
+          height="0"
+          aria-hidden
+          style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}
+        >
+          <defs>
+            {/* Feather edges: blur alpha lightly, then erode-ish recomposite to soften PNG cut */}
+            <filter id="nx-logo-feather" x="-5%" y="-5%" width="110%" height="110%" colorInterpolationFilters="sRGB">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="0.75" result="blurA" />
+              <feComposite in="SourceGraphic" in2="blurA" operator="in" result="softened" />
+              <feMerge>
+                <feMergeNode in="softened" />
+              </feMerge>
+            </filter>
+          </defs>
+        </svg>
+      )}
+      <img
+        src="/nexo-logo.png"
+        alt="NEXO"
+        width={px}
+        height={px}
+        loading={eager ? "eager" : "lazy"}
+        decoding="async"
+        draggable={false}
+        className={`select-none ${className}`}
+        style={{
+          width: isHero ? "clamp(380px, 42vw, 580px)" : px,
+          height: "auto",
+          filter,
+          willChange: isHero ? "transform, filter" : undefined,
+        }}
+      />
+    </>
   );
 }
+
 
