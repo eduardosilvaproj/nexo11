@@ -1,6 +1,6 @@
 import { Reveal } from "./Reveal";
 import { MODULOS } from "./data";
-import { LogoNexo } from "@/components/LogoNexo";
+import { LogoOficial } from "./LogoOficial";
 
 export function EcossistemaNexo() {
   const total = MODULOS.length;
@@ -17,7 +17,7 @@ export function EcossistemaNexo() {
               Ecossistema NEXO
             </div>
             <h2 className="text-3xl md:text-5xl font-semibold text-white tracking-tight max-w-3xl mx-auto leading-tight">
-              Onze módulos. Um único ecossistema.
+              Doze módulos. Um único ecossistema.
             </h2>
             <p className="text-white/55 mt-5 max-w-2xl mx-auto">
               Cada módulo opera de forma especializada, mas conversa em tempo real com todos os outros.
@@ -58,14 +58,14 @@ export function EcossistemaNexo() {
 
               {/* núcleo */}
               <div
-                className="absolute flex items-center justify-center w-32 h-32 rounded-full bg-[#060d1a] border border-white/15 text-white"
+                className="absolute flex items-center justify-center w-36 h-36 rounded-full bg-[#060d1a] border border-white/15"
                 style={{
-                  left: center - 64,
-                  top: center - 64,
+                  left: center - 72,
+                  top: center - 72,
                   boxShadow: "0 0 80px -10px #00AAFF, inset 0 0 40px rgba(18,183,106,0.25)",
                 }}
               >
-                <LogoNexo size="lg" />
+                <LogoOficial size="lg" glow="soft" />
               </div>
 
               {/* nós */}

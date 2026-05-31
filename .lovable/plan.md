@@ -1,128 +1,129 @@
+# Refinamento premium da página /apresentacao
 
-# Refatoração da página /apresentacao — Apresentação Executiva NEXO
-
-Boa parte da estrutura já foi construída no ciclo anterior (Hero com partículas, Timeline lateral, 11 capítulos, Ecossistema, Arquitetura, Galeria de zoom). Este plano foca em **elevar o nível** — não recomeçar — corrigindo identidade visual, hierarquia, polimento e removendo qualquer resíduo comercial.
+A estrutura atual já contempla Hero, Timeline lateral, 11 capítulos, Ecossistema, Arquitetura, Galeria de zoom e Encerramento. Este plano **eleva o nível visual** sem reconstruir nada e sem tocar nos screenshots já capturados.
 
 ---
 
-## 1. Identidade visual — alinhar 100% com /login
+## 1. Logo oficial como elemento de marca
 
-A página de login usa fundo `#060d1a`, ondas em canvas (`CanvasWaves`) e o `LogoNexo` em tamanho grande com glow azul-verde. Vamos espelhar essa linguagem.
+Substituir o `<LogoNexo />` (texto NE-X-O) pelo PNG oficial `/nexo-logo.png` (já presente em `public/`) em **todos os pontos institucionais** da apresentação.
 
-- **Cor de fundo base**: trocar `#0A0E1A` por `#060d1a` (igual ao login) em `Apresentacao.tsx`, `NavBar`, `Footer`, modais e mockups.
-- **Logo unificado**: garantir uso exclusivo de `<LogoNexo />` (mesmo componente do login). Remover qualquer texto "NEXO" hardcoded ao lado do logo. Criar variante `xl` no `LogoNexo` (≈ 96px) e `2xl` (≈ 160px) para Hero/Footer institucional.
-- **Glow do logo**: usar exatamente o gradiente do "X" (`#00AAFF → #1E6FBF → #12B76A`) como fonte de cor para sombras e auras, substituindo os tons antigos `#1A9BE8 / #22C97A` onde fizer sentido (tokens CSS).
-- **Background ambient**: reaproveitar `CanvasWaves` (do login) como camada de fundo opcional do Hero, em opacidade baixa (~0.35), por trás das partículas — reforça consistência visual com /login sem poluir.
+- Criar `src/components/apresentacao/LogoOficial.tsx`:
+  - `<img src="/nexo-logo.png" alt="NEXO" />` com `loading="eager"` no hero/nav, `lazy` no footer/encerramento.
+  - Props: `size` (`sm` 28px · `md` 40px · `lg` 96px · `xl` 160px · `2xl` 240px).
+  - Glow premium via `filter: drop-shadow(0 0 48px rgba(0,170,255,0.55)) drop-shadow(0 0 96px rgba(18,183,106,0.3))`.
+- Substituir uso em: `NavBar.tsx` (size `md`), `Hero.tsx` (size `2xl`), `EncerramentoInstitucional.tsx` (size `2xl`), `Footer.tsx` (size `lg`), `EcossistemaNexo.tsx` (núcleo central, size `lg`).
+- Manter `LogoNexo.tsx` intacto (usado pelo /login e resto do app) — escopo apenas em /apresentacao.
 
-## 2. Remover resíduos comerciais
+## 2. Hero premium
 
-Auditoria final para garantir tom institucional:
+- Logo oficial `2xl` (240px) com glow azul+verde triplo.
+- Eyebrow: `PLATAFORMA NEXO` (tracking 0.4em, white/40).
+- Título grande: `A plataforma que conecta toda a operação de móveis planejados.`
+- Subtítulo: `Do primeiro contato comercial ao pós-venda, todos os processos integrados em uma única plataforma.`
+- Linha de KPIs: `11 Módulos Integrados · 50+ Funcionalidades · Tempo Real · Multi-Loja`.
+- Substituir botão por **scroll cue** animado: chevron + "Explorar Plataforma", scroll suave até `#visao-geral`.
+- Fundo: manter grid + partículas canvas + dois blobs gradientes (azul `#00AAFF` / verde `#12B76A`) já existentes.
+- Fade-in escalonado 500–700ms com `cubic-bezier(.16,1,.3,1)`; respeitar `prefers-reduced-motion`.
 
-- Remover qualquer rastro de "Acessar Sistema", "Login", "Começar", "Falar com", "Demo" em `NavBar`, `Footer`, `Hero`, `AppFuncionarioShowcase` e `ArquiteturaPlataforma`.
-- NavBar: apenas logo + label institucional ("Apresentação Institucional · 2026"). Sem links de navegação clicáveis para outras rotas do app.
-- Footer: logo grande centralizado, frase institucional, copyright discreto. Zero botões.
-- Substituir qualquer copy de marketing ("transforme", "potencialize", "aumente vendas") por linguagem descritiva-operacional.
+## 3. Remoção de resíduos comerciais
 
-## 3. Hero premium
+Auditoria final em `NavBar`, `Footer`, `Hero`, `AppFuncionarioShowcase`, `ArquiteturaPlataforma`:
+- Remover qualquer "Acessar Sistema / Login / Entrar / Demo / Falar com".
+- NavBar = logo + label "Apresentação Institucional · 2026". Sem links.
+- Footer = logo oficial + copyright + frase institucional. Zero botões.
 
-- Logo central em tamanho `2xl` com `drop-shadow` triplo (azul + verde + branco suave) para criar a "aura premium".
-- Acima do logo: eyebrow `PLATAFORMA NEXO` em tracking largo.
-- Abaixo: título institucional + subtítulo (já existentes), revisar copy.
-- KPIs (`11 Módulos · 50+ Funcionalidades · Tempo Real · Multi-Loja`) em linha divisora fina.
-- Substituir botão por **indicador de scroll** animado (chevron + label "EXPLORAR PLATAFORMA"), apenas comportamento de scroll suave para `#visao-geral`.
-- Animações: fade-in escalonado (logo → título → subtítulo → KPIs → scroll cue), duração 500-700ms, easing `cubic-bezier(.16,1,.3,1)`.
+## 4. Capítulos (CAPÍTULO 01–12)
 
-## 4. Estrutura de capítulos e fluxo
-
-Já existe `CapituloHeader` e `ModuloSection`. Refinos:
-
-- Padronizar espaçamento vertical entre capítulos para `py-32` (desktop) / `py-20` (mobile) para dar mais respiro.
-- Reordenar capítulos para refletir o fluxo operacional real: Comercial → Contratos → Técnico → Produção → Logística → Montagem → Pós-venda → Compras → RH → Equipe → Analytics (ajustar `MODULOS` em `data.ts`).
-- `FluxoOperacional`: revisar para exibir os 7 estágios do core operacional com setas/linhas animadas em SVG, com `pathLength` revelando no scroll.
+- Ajustar `MODULOS` em `data.ts` para incluir **Comissões** entre Pós-venda e Compras (atualmente 11 itens; pedido lista 12).
+- Ordem final: Comercial → Contratos → Técnico → Produção → Logística → Montagem → Pós-venda → Comissões → Compras → RH → Equipe → Analytics.
+- `CapituloHeader.tsx` já formata "Capítulo 01" — só refinar tracking e adicionar leve fade.
+- Padronizar espaçamento `py-32` desktop / `py-20` mobile em `ModuloSection`.
 
 ## 5. Timeline lateral
 
-Componente já criado. Ajustes:
+- Estados visuais: `○` pendente · `●` ativo (gradiente do X) · `✓` concluído (verde `#12B76A`).
+- Transição 300ms entre estados.
+- Itens clicáveis com scroll suave para `#cap-<slug>`.
+- Visível apenas em `xl:` (≥1280px), posição `left-6`.
 
-- Estado visual: `○` pendente, `●` ativo (cor do gradiente X), `✓` concluído (verde).
-- Reduzir largura, posicionar `left-6` em desktop ≥1280px, ocultar abaixo disso.
-- Itens clicáveis com scroll suave para o capítulo correspondente.
-- Animação de transição entre estados (300ms).
+## 6. Fluxo operacional
 
-## 6. Screenshots — destaque máximo
+`FluxoOperacional.tsx`: 7 estágios (Comercial → Contratos → Técnico → Produção → Logística → Montagem → Pós-venda) em SVG horizontal/vertical responsivo, com linhas conectando e `pathLength` animado no scroll (Framer Motion `whileInView`).
 
-`ModuloSection` e `ImageZoomModalGaleria` já estão bons. Polimento:
+## 7. Screenshots — protagonistas
 
-- Frame glass: aumentar `backdrop-blur`, borda `rgba(255,255,255,0.08)`, sombra dupla (ambiente + accent do módulo).
-- Hover: `scale-[1.01]`, sombra cresce, overlay sutil com gradiente do módulo.
-- Garantir `loading="lazy"` + `decoding="async"` (já presente).
-- Modal: manter zoom/pan/keyboard nav, ajustar fundo para `#060d1a/98`.
+- **Preservar 100% dos PNG/WebP em `public/screenshots/`.**
+- `ModuloSection`: frame glass `bg-white/[0.03] border-white/10 backdrop-blur-xl`, sombra dupla (ambiente + accent do módulo), hover `scale-[1.008]` com overlay gradiente sutil.
+- Barra superior estilo browser (3 dots + URL `nexo.app/<rota>`).
+- `ImageZoomModalGaleria`: já permite zoom/pan/keyboard nav entre módulos — apenas confirmar fundo `#060d1a/98` e botões prev/next visíveis.
 
-## 7. App do Funcionário
+## 8. App do Funcionário
 
-Já existe seção. Refinar:
+`AppFuncionarioShowcase.tsx`: mockup smartphone premium (notch, bezels finos, reflexo de tela) ao lado de lista de features:
+- Ponto por geolocalização
+- Solicitações RH
+- Comunicação interna
+- Metas individuais
+- Modo campo offline
 
-- Mockup smartphone premium (notch, bezels finos, reflexo de tela sutil).
-- Lista de features ao lado: Ponto por geolocalização, Solicitações RH, Comunicação interna, Metas individuais, Modo campo offline.
-- Cor de destaque alinhada ao gradiente do logo X.
+Cor de destaque: gradiente do X.
 
-## 8. Ecossistema e Arquitetura
+## 9. Ecossistema e Arquitetura
 
-Componentes já criados. Pequenos ajustes:
+- `EcossistemaNexo`: núcleo central = **logo oficial PNG** (`lg`), 12 módulos ao redor em SVG circular, linhas com gradiente `#00AAFF → #12B76A` e dash animado.
+- `ArquiteturaPlataforma`: 8 cards glass — Frontend (React + TS), Backend (Supabase), Tempo Real, Multi-Loja, Permissões por Papel, Segurança por Loja, Escalabilidade, Responsividade.
 
-- `EcossistemaNexo`: núcleo central usa `<LogoNexo size="xl" />`, conexões com gradiente azul→verde do logo.
-- `ArquiteturaPlataforma`: 8 cards glass — Frontend (React + TS), Backend (Supabase), Tempo Real, Multi-Loja, Segurança por Loja, Permissões por Papel, Escalabilidade, Responsividade. Ícones lucide, tipografia institucional.
+## 10. Encerramento institucional
 
-## 9. Encerramento institucional
+`EncerramentoInstitucional.tsx`:
+- Logo oficial `2xl` centralizado com glow forte.
+- Título com gradient text: `Gestão que conecta.` / `Resultado que multiplica.`
+- Parágrafo: `Uma plataforma construída para integrar pessoas, processos e informações em toda a operação de móveis planejados.`
+- Zero botões.
 
-Nova seção final antes do Footer:
+## 11. Tokens, animações, performance
 
-- Logo NEXO em tamanho `2xl` centralizado com glow.
-- Título: "Gestão que conecta. Resultado que multiplica."
-- Parágrafo: "Uma plataforma construída para integrar pessoas, processos e informações em toda a operação de móveis planejados."
-- Zero botões. Apenas tipografia + glow.
-- Footer logo abaixo, com logo do login + copyright.
-
-## 10. Tokens, animações e performance
-
-- CSS vars em `src/index.css` (escopadas em `.apresentacao-root`): `--nx-bg: #060d1a`, `--nx-ink-1/2/3`, `--nx-rule`, `--nx-accent-from: #00AAFF`, `--nx-accent-mid: #1E6FBF`, `--nx-accent-to: #12B76A`.
-- Animações via Framer Motion `whileInView` + `once: true`, durações 400-700ms, respeitar `prefers-reduced-motion`.
-- Manter lazy load do modal de galeria; nenhum pacote novo.
+- Cor base unificada `#060d1a`, accents `#00AAFF` e `#12B76A`.
+- Framer Motion `whileInView` + `once: true`, 400–700ms.
+- `prefers-reduced-motion` respeitado em hero/fluxo/timeline.
+- Logo PNG servido estaticamente, sem novos pacotes.
 
 ---
 
-## Arquivos afetados
+## Arquivos
 
-**Editar:**
-- `src/components/LogoNexo.tsx` — adicionar tamanhos `xl` e `2xl`.
-- `src/pages/Apresentacao.tsx` — cor de fundo `#060d1a`, ordem das seções, nova seção de encerramento institucional.
-- `src/components/apresentacao/Hero.tsx` — logo gigante com glow, remoção de botão CTA-like, scroll cue.
-- `src/components/apresentacao/NavBar.tsx` — limpar, fundo `#060d1a`.
-- `src/components/apresentacao/Footer.tsx` — logo grande + frase institucional, sem CTAs.
-- `src/components/apresentacao/FluxoOperacional.tsx` — 7 estágios com SVG animado.
-- `src/components/apresentacao/TimelineLateral.tsx` — estados visuais ✓/●/○, clique para scroll.
-- `src/components/apresentacao/ModuloSection.tsx` — polimento glass/sombra.
-- `src/components/apresentacao/ImageZoomModalGaleria.tsx` — fundo `#060d1a`.
-- `src/components/apresentacao/EcossistemaNexo.tsx` — núcleo com `LogoNexo xl`, cores do gradiente do logo.
-- `src/components/apresentacao/ArquiteturaPlataforma.tsx` — confirmar 8 cards na ordem pedida.
-- `src/components/apresentacao/AppFuncionarioShowcase.tsx` — mockup refinado.
-- `src/components/apresentacao/data.ts` — ordem dos módulos no fluxo operacional.
-- `src/index.css` — tokens `--nx-*` escopados.
+**Criar**
+- `src/components/apresentacao/LogoOficial.tsx`
 
-**Criar:**
-- `src/components/apresentacao/EncerramentoInstitucional.tsx` — seção final com logo + frase, sem CTA.
+**Editar**
+- `src/components/apresentacao/NavBar.tsx`
+- `src/components/apresentacao/Hero.tsx`
+- `src/components/apresentacao/Footer.tsx`
+- `src/components/apresentacao/EncerramentoInstitucional.tsx`
+- `src/components/apresentacao/EcossistemaNexo.tsx`
+- `src/components/apresentacao/CapituloHeader.tsx`
+- `src/components/apresentacao/ModuloSection.tsx`
+- `src/components/apresentacao/TimelineLateral.tsx`
+- `src/components/apresentacao/FluxoOperacional.tsx`
+- `src/components/apresentacao/AppFuncionarioShowcase.tsx`
+- `src/components/apresentacao/ArquiteturaPlataforma.tsx`
+- `src/components/apresentacao/data.ts` (adicionar capítulo Comissões na ordem)
+- `src/pages/Apresentacao.tsx` (orquestração)
 
-**Não tocar:** screenshots em `public/screenshots/`, scripts de captura, backend, autenticação, RLS, edge functions, qualquer outra rota.
+**Não tocar**
+- `src/components/LogoNexo.tsx` (usado pelo /login e app)
+- `public/screenshots/*`
+- `scripts/capture-screenshots.mjs`
+- Backend, autenticação, RLS, edge functions, outras rotas
 
 ---
 
 ## Resultado esperado
 
-Página /apresentacao com:
-- Mesma identidade visual de /login (fundo, logo, gradiente do X como cor de marca).
-- Zero referência a vendas, login, CTAs comerciais.
-- Hero com logo gigante e glow premium.
-- 11 capítulos com screenshots em destaque máximo (frame glass + galeria fullscreen).
-- Timeline lateral com progresso visual.
-- Fluxo operacional animado, Ecossistema, Arquitetura e Encerramento institucional.
-- Sensação geral: apresentação executiva navegável, calma, densa, tecnológica.
+Apresentação executiva premium com:
+- Logo oficial PNG forte e consistente como âncora de marca.
+- Zero resíduo comercial.
+- 12 capítulos numerados, screenshots reais em destaque máximo.
+- Timeline lateral com progresso, fluxo operacional animado, ecossistema e arquitetura institucionais.
+- Encerramento sóbrio com logo + frase. Sensação: maturidade, robustez, integração, escalabilidade.

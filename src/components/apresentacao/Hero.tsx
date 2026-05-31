@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { LogoNexo } from "@/components/LogoNexo";
+import { LogoOficial } from "./LogoOficial";
 import { ChevronDown } from "lucide-react";
 
 const KPIS = ["11 Módulos Integrados", "50+ Funcionalidades", "Tempo Real", "Multi-Loja"];
@@ -90,14 +90,8 @@ export function Hero() {
           Plataforma NEXO
         </div>
 
-        <div
-          className="mb-12 flex items-center justify-center text-white animate-fade-in"
-          style={{
-            filter:
-              "drop-shadow(0 0 60px rgba(0,170,255,0.45)) drop-shadow(0 0 120px rgba(18,183,106,0.25))",
-          }}
-        >
-          <LogoNexo size="2xl" />
+        <div className="mb-12 flex items-center justify-center animate-fade-in">
+          <LogoOficial size="2xl" glow="premium" eager />
         </div>
 
         <h1 className="text-2xl md:text-4xl font-semibold tracking-tight text-white/95 leading-[1.15] mb-5 max-w-3xl mx-auto animate-fade-in">
