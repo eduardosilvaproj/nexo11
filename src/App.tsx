@@ -43,6 +43,17 @@ import ConfigFornecedores from "./pages/ConfigFornecedores";
 import Compras from "./pages/Compras";
 import EstimativaOrcamento from "./pages/EstimativaOrcamento";
 
+import FrotaLayout from "./pages/frota/FrotaLayout";
+import FrotaDashboard from "./pages/frota/FrotaDashboard";
+import FrotaVeiculos from "./pages/frota/FrotaVeiculos";
+import FrotaAbastecimentos from "./pages/frota/FrotaAbastecimentos";
+import FrotaManutencoes from "./pages/frota/FrotaManutencoes";
+import FrotaMultas from "./pages/frota/FrotaMultas";
+import FrotaPostos from "./pages/frota/FrotaPostos";
+import FrotaCnh from "./pages/frota/FrotaCnh";
+import FrotaRelatorios from "./pages/frota/FrotaRelatorios";
+import FrotaCheckin from "./pages/frota/FrotaCheckin";
+
 import AcompanhamentoCriacao from "./pages/AcompanhamentoCriacao";
 import AcessoAcompanhamento from "./pages/AcessoAcompanhamento";
 import AcompanhamentoPublico from "./pages/AcompanhamentoPublico";
@@ -217,6 +228,17 @@ function RootLayoutSwitcher() {
         {/* Inteligência */}
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/integracoes" element={<Integracoes />} />
+        <Route path="/frota" element={<FrotaLayout />}>
+          <Route index element={<FrotaDashboard />} />
+          <Route path="veiculos" element={<FrotaVeiculos />} />
+          <Route path="abastecimentos" element={<FrotaAbastecimentos />} />
+          <Route path="manutencoes" element={<FrotaManutencoes />} />
+          <Route path="multas" element={<FrotaMultas />} />
+          <Route path="postos" element={<FrotaPostos />} />
+          <Route path="cnh" element={<FrotaCnh />} />
+          <Route path="relatorios" element={<FrotaRelatorios />} />
+          <Route path="checkin" element={<FrotaCheckin />} />
+        </Route>
         <Route path="/configuracoes/pagamento" element={<ConfigPagamento />} />
         <Route path="/configuracoes/fornecedores" element={<ConfigFornecedores />} />
         <Route path="/estimativa-orcamento" element={<EstimativaOrcamento />} />
