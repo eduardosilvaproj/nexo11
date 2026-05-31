@@ -69,13 +69,14 @@ function getCurrentMonthRef(): string {
 }
 
 export function Gamificacao() {
-  const { lojaId } = useAuth();
+  const { perfil } = useAuth();
+  const lojaId = perfil?.loja_id ?? null;
   const mesRef = getCurrentMonthRef();
 
   const { data: pessoas = [] } = useQuery({
     queryKey: ["gamificacao_pessoas", lojaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("pessoas")
         .select("id, nome, avatar_url, data_admissao")
         .eq("loja_id", lojaId!)

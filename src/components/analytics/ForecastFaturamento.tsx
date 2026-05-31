@@ -57,10 +57,10 @@ async function fetchForecast(periodo: Periodo, lojaId: string): Promise<Forecast
   }
 
   // Pipeline: active contracts by stage
-  let pQ = supabase
+  let pQ: any = supabase
     .from("contratos")
     .select("id, valor_venda, status, loja_id")
-    .in("status", Object.keys(STAGE_PROB));
+    .in("status", Object.keys(STAGE_PROB) as any);
   if (lojaId !== "all") pQ = pQ.eq("loja_id", lojaId);
   const { data: pipelineContratos } = await pQ;
 

@@ -52,12 +52,13 @@ function classifyPessoa(p: Pessoa): string {
 }
 
 export function Organograma() {
-  const { lojaId } = useAuth();
+  const { perfil } = useAuth();
+  const lojaId = perfil?.loja_id ?? null;
 
   const { data: pessoas = [], isLoading } = useQuery({
     queryKey: ["organograma_pessoas", lojaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("pessoas")
         .select("id, nome, cargo, funcoes, avatar_url, ativo")
         .eq("loja_id", lojaId!)

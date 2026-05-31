@@ -117,7 +117,7 @@ async function fetchWidgetData(periodo: Periodo, lojaId: string): Promise<Widget
   }
 
   // Chamados abertos
-  let chQ = supabase
+  let chQ: any = supabase
     .from("chamados_pos_venda")
     .select("id", { count: "exact", head: true })
     .eq("status", "aberto");

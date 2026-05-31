@@ -62,7 +62,8 @@ function formatDate(iso: string) {
 }
 
 export function MuralAvisos() {
-  const { roles, lojaId, user } = useAuth();
+  const { roles, perfil, user } = useAuth();
+  const lojaId = perfil?.loja_id ?? null;
   const queryClient = useQueryClient();
   const canManage = canPerform(roles, "equipe.manage");
   const [open, setOpen] = useState(false);

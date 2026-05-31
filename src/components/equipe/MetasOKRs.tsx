@@ -68,7 +68,8 @@ function getProgressColor(meta: Meta): string {
 }
 
 export function MetasOKRs() {
-  const { roles, lojaId } = useAuth();
+  const { roles, perfil } = useAuth();
+  const lojaId = perfil?.loja_id ?? null;
   const queryClient = useQueryClient();
   const canManage = canPerform(roles, "equipe.manage");
   const [open, setOpen] = useState(false);
