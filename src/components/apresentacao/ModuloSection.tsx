@@ -9,7 +9,7 @@ import { ImageZoomModalGaleria } from "./ImageZoomModalGaleria";
 export function ModuloSection({ modulo, index }: { modulo: ModuloApresentacao; index: number }) {
   const [zoomIdx, setZoomIdx] = useState<number | null>(null);
   const Icon = modulo.icon;
-  const cor = modulo.cor === "blue" ? "#1A9BE8" : "#22C97A";
+  const cor = modulo.cor === "blue" ? "#00AAFF" : "#12B76A";
   const screenshot = `/screenshots/${modulo.slug}.webp`;
   const fallback = `/screenshots/${modulo.slug}.png`;
 
@@ -74,7 +74,7 @@ export function ModuloSection({ modulo, index }: { modulo: ModuloApresentacao; i
                 decoding="async"
                 width={1440}
                 height={900}
-                className="w-full h-auto block bg-[#0A0E1A]"
+                className="w-full h-auto block bg-[#060d1a]"
               />
             </picture>
             <div className="absolute top-14 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 backdrop-blur-md rounded-lg px-2.5 py-1.5 text-xs text-white flex items-center gap-1.5">

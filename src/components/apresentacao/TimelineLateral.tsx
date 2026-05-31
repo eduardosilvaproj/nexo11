@@ -50,7 +50,7 @@ export function TimelineLateral() {
               className={[
                 "flex items-center justify-center w-4 h-4 rounded-full border transition-all",
                 state === "current"
-                  ? "border-[#22C97A] bg-[#22C97A] shadow-[0_0_16px_2px_rgba(34,201,122,0.6)]"
+                  ? "border-[#12B76A] bg-[#12B76A] shadow-[0_0_16px_2px_rgba(18,183,106,0.6)]"
                   : state === "past"
                   ? "border-white/30 bg-white/20"
                   : "border-white/15 bg-transparent",

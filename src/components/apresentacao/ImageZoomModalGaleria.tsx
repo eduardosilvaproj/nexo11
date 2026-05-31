@@ -65,7 +65,7 @@ export function ImageZoomModalGaleria({
 
   return (
     <div
-      className="fixed inset-0 z-[100] bg-[#0A0E1A]/98 backdrop-blur-2xl flex flex-col"
+      className="fixed inset-0 z-[100] bg-[#060d1a]/98 backdrop-blur-2xl flex flex-col"
       role="dialog"
       aria-modal="true"
       onClick={(e) => {

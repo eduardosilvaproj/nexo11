@@ -32,8 +32,8 @@ export function EcossistemaNexo() {
               <svg width={size} height={size} className="absolute inset-0">
                 <defs>
                   <linearGradient id="conn" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#1A9BE8" stopOpacity="0.5" />
-                    <stop offset="100%" stopColor="#22C97A" stopOpacity="0.5" />
+                    <stop offset="0%" stopColor="#00AAFF" stopOpacity="0.5" />
+                    <stop offset="100%" stopColor="#12B76A" stopOpacity="0.5" />
                   </linearGradient>
                 </defs>
                 {MODULOS.map((_, i) => {
@@ -58,11 +58,11 @@ export function EcossistemaNexo() {
 
               {/* núcleo */}
               <div
-                className="absolute flex items-center justify-center w-28 h-28 rounded-full bg-[#0A0E1A] border border-white/15 text-white"
+                className="absolute flex items-center justify-center w-28 h-28 rounded-full bg-[#060d1a] border border-white/15 text-white"
                 style={{
                   left: center - 56,
                   top: center - 56,
-                  boxShadow: "0 0 80px -10px #1A9BE8, inset 0 0 40px rgba(34,201,122,0.2)",
+                  boxShadow: "0 0 80px -10px #00AAFF, inset 0 0 40px rgba(18,183,106,0.2)",
                 }}
               >
                 <div className="text-2xl">
@@ -76,7 +76,7 @@ export function EcossistemaNexo() {
                 const x = center + Math.cos(a) * radius;
                 const y = center + Math.sin(a) * radius;
                 const Icon = m.icon;
-                const cor = m.cor === "blue" ? "#1A9BE8" : "#22C97A";
+                const cor = m.cor === "blue" ? "#00AAFF" : "#12B76A";
                 return (
                   <div
                     key={m.slug}
@@ -84,7 +84,7 @@ export function EcossistemaNexo() {
                     style={{ left: x, top: y }}
                   >
                     <div
-                      className="w-12 h-12 rounded-xl bg-[#0A0E1A] border border-white/10 flex items-center justify-center"
+                      className="w-12 h-12 rounded-xl bg-[#060d1a] border border-white/10 flex items-center justify-center"
                       style={{ boxShadow: `0 0 24px -8px ${cor}` }}
                     >
                       <Icon className="w-4 h-4" style={{ color: cor }} />
@@ -102,7 +102,7 @@ export function EcossistemaNexo() {
           <div className="md:hidden grid grid-cols-3 gap-3">
             {MODULOS.map((m) => {
               const Icon = m.icon;
-              const cor = m.cor === "blue" ? "#1A9BE8" : "#22C97A";
+              const cor = m.cor === "blue" ? "#00AAFF" : "#12B76A";
               return (
                 <div
                   key={m.slug}
