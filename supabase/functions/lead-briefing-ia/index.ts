@@ -202,6 +202,7 @@ Máximo 200 palavras. Responda APENAS com o prompt, sem explicações.`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          model: "gpt-image-1",
           prompt: `Professional interior design photo, photorealistic: ${imagePrompt}`,
           n: 1,
           size: "1024x1024",
