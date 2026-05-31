@@ -145,9 +145,15 @@ export function AppSidebar() {
             <img src="/nexo-logo-internal.png" alt="Logo" className="h-7 w-7 object-contain" />
           </div>
         ) : (
-          <div className="flex flex-col gap-1.5">
-            <img src="/nexo-logo-internal.png" alt="NEXO Logo" className="h-auto w-28 object-contain drop-shadow" />
-            <p className="mt-0.5 nexo-sidebar-subtitle">Gestão de Planejados</p>
+          <div className="flex flex-col items-start">
+            <img
+              src="/nexo-logo-internal.png"
+              alt="NEXO Logo"
+              className="h-auto w-36 object-contain"
+              style={{
+                filter: "drop-shadow(0 4px 12px rgba(26,155,232,0.4)) drop-shadow(0 2px 4px rgba(0,0,0,0.5))",
+              }}
+            />
           </div>
         )}
       </SidebarHeader>
