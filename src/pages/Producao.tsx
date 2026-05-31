@@ -1,6 +1,7 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { TerceirizadaTab } from "@/components/producao/TerceirizadaTab";
 import { InternaKanban } from "@/components/producao/InternaKanban";
+import { ProducaoDashboard } from "@/components/producao/ProducaoDashboard";
 
 export default function Producao() {
   return (
@@ -12,7 +13,10 @@ export default function Producao() {
         </div>
       </div>
 
-      <Tabs defaultValue="terceirizada" className="w-full">
+      {/* Dashboard KPIs + Alertas */}
+      <ProducaoDashboard />
+
+      <Tabs defaultValue="terceirizada" className="w-full mt-6">
         <TabsList className="bg-transparent p-0 h-auto rounded-none border-b border-[#E8ECF2] w-full justify-start gap-6 mb-6">
           <TabsTrigger
             value="terceirizada"
