@@ -55,6 +55,7 @@ import FrotaRelatorios from "./pages/frota/FrotaRelatorios";
 import FrotaCheckin from "./pages/frota/FrotaCheckin";
 
 import PortalFuncionario from "./pages/PortalFuncionario";
+import { VersionChecker } from "./components/VersionChecker";
 import AcompanhamentoCriacao from "./pages/AcompanhamentoCriacao";
 import AcessoAcompanhamento from "./pages/AcessoAcompanhamento";
 import AcompanhamentoPublico from "./pages/AcompanhamentoPublico";
@@ -257,6 +258,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <VersionChecker />
       <BrowserRouter>
         <AuthProvider>
           <RootLayoutSwitcher />
