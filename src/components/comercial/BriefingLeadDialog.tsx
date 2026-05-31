@@ -117,13 +117,14 @@ export function BriefingLeadDialog({ open, onOpenChange, leadId, leadNome }: Pro
     const { error: upErr } = await supabase.storage.from("lead-audios").upload(fileName, audioBlob, { contentType: "audio/webm" });
     if (upErr) { toast.error("Erro ao salvar áudio: " + upErr.message); setLoading(false); return; }
 
-    const { data: urlData } = supabase.storage.from("lead-audios").getPublicUrl(fileName);
+    // Usar signed URL pois o bucket é privado
+    const { data: urlData } = await supabase.storage.from("lead-audios").createSignedUrl(fileName, 60 * 60 * 24 * 365); // 1 ano
 
     const { error } = await supabase.from("lead_anotacoes").insert({
       lead_id: leadId,
       loja_id: perfil?.loja_id,
       tipo: "audio",
-      audio_url: urlData.publicUrl,
+      audio_url: urlData?.signedUrl || fileName,
       audio_duracao_seg: tempoGravacao,
       created_by: user?.id,
     });

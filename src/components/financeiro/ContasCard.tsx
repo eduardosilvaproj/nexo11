@@ -53,7 +53,7 @@ export function ContasCard() {
   const [filtroPagar, setFiltroPagar] = useState<FiltroKey>("todas");
   const [showNovoLancamento, setShowNovoLancamento] = useState<'receber' | 'pagar' | null>(null);
   const hojeStr = new Date().toISOString().slice(0, 10);
-  const { roles } = useAuth();
+  const { roles, perfil } = useAuth();
   const podeGerenciar = canPerform(roles, "financeiro.manage");
 
   const [formLanc, setFormLanc] = useState({
@@ -101,16 +101,21 @@ export function ContasCard() {
       toast.error("Informe descrição, valor e vencimento");
       return;
     }
+    if (showNovoLancamento === 'pagar' && !formLanc.categoria) {
+      toast.error("Informe a categoria da despesa");
+      return;
+    }
     const valor = Number(formLanc.valor.replace(/[^\d.,]/g, '').replace(',', '.'));
     const table = showNovoLancamento === 'receber' ? "financeiro_contas_receber" : "financeiro_contas_pagar";
     const payload: any = {
+      loja_id: perfil?.loja_id,
       descricao: formLanc.descricao,
       valor,
       vencimento: formLanc.vencimento,
       status: formLanc.data_pagamento ? 'pago' : 'pendente',
       data_pagamento: formLanc.data_pagamento || null,
     };
-    if (showNovoLancamento === 'pagar' && formLanc.categoria) {
+    if (showNovoLancamento === 'pagar') {
       payload.categoria = formLanc.categoria;
     }
     if (formLanc.forma_pagamento) {

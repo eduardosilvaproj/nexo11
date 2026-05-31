@@ -214,9 +214,30 @@ Máximo 200 palavras. Responda APENAS com o prompt, sem explicações.`,
       }
 
       const dalleData = await dalleResp.json();
-      const imageUrl = dalleData.data[0]?.url;
+      const tempImageUrl = dalleData.data[0]?.url;
 
-      if (!imageUrl) throw new Error("Imagem não gerada");
+      if (!tempImageUrl) throw new Error("Imagem não gerada");
+
+      // Download da imagem e upload para Storage (URLs do DALL-E expiram em ~1h)
+      let finalImageUrl = tempImageUrl;
+      try {
+        const imgResp = await fetch(tempImageUrl);
+        const imgBuffer = await imgResp.arrayBuffer();
+        const imgFileName = `lead-images/${lead_id}/${Date.now()}.png`;
+
+        const { error: storageErr } = await supabase.storage
+          .from("lead-audios")
+          .upload(imgFileName, imgBuffer, { contentType: "image/png" });
+
+        if (!storageErr) {
+          const { data: signedData } = await supabase.storage
+            .from("lead-audios")
+            .createSignedUrl(imgFileName, 60 * 60 * 24 * 365);
+          if (signedData?.signedUrl) finalImageUrl = signedData.signedUrl;
+        }
+      } catch (e) {
+        console.error("Erro ao salvar imagem no storage:", e);
+      }
 
       // Buscar loja_id
       const { data: leadData } = await supabase
@@ -230,12 +251,12 @@ Máximo 200 palavras. Responda APENAS com o prompt, sem explicações.`,
         lead_id,
         loja_id: leadData?.loja_id,
         tipo: "imagem_ia",
-        imagem_url: imageUrl,
+        imagem_url: finalImageUrl,
         imagem_prompt: imagePrompt,
         created_by: null,
       });
 
-      return new Response(JSON.stringify({ success: true, image_url: imageUrl }), {
+      return new Response(JSON.stringify({ success: true, image_url: finalImageUrl }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

@@ -132,6 +132,7 @@ export function CartaoCreditoManager() {
       const d = new Date(dataBase);
       d.setMonth(d.getMonth() + i);
       entradas.push({
+        loja_id: perfil?.loja_id,
         cartao_id: formCompra.cartao_id,
         descricao: `${formCompra.descricao} (${i}/${parcelas})`,
         valor: valorParcela,
@@ -139,6 +140,7 @@ export function CartaoCreditoManager() {
         total_parcelas: parcelas,
         parcela_numero: i,
         fornecedor_id: formCompra.fornecedor_id || null,
+        categoria: 'cartao',
         status: 'pendente',
       });
     }
