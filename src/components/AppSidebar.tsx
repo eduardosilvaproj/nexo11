@@ -142,11 +142,11 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(26,155,232,0.16),transparent_18rem),#0a0e1a] px-4 py-5">
         {collapsed ? (
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] shadow-inner">
-            <img src="/nexo-logo.png" alt="Logo" className="h-7 w-7 object-contain" />
+            <img src="/nexo-logo-internal.png" alt="Logo" className="h-7 w-7 object-contain" />
           </div>
         ) : (
           <div className="flex flex-col gap-1.5">
-            <img src="/nexo-logo.png" alt="NEXO Logo" className="h-auto w-28 object-contain drop-shadow" />
+            <img src="/nexo-logo-internal.png" alt="NEXO Logo" className="h-auto w-28 object-contain drop-shadow" />
             <p className="mt-0.5 nexo-sidebar-subtitle">Gestão de Planejados</p>
           </div>
         )}
