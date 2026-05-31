@@ -1,20 +1,22 @@
-# Logo da Hero — destaque premium + respiração
+# Ajuste fino do logo NEXO na Hero
 
 ## Mudanças
 
-1. **`LogoOficial.tsx`** — novo tamanho `hero` (≈ 360px desktop / 240px mobile via `clamp(240px, 28vw, 360px)`), preservando proporção.
-2. **`Hero.tsx`** — trocar `size="2xl"` por `size="hero"`, aumentar margin-bottom (`mb-16`) entre logo e título, envolver em wrapper com classes de animação.
-3. **`index.css`** — adicionar keyframes globais:
-   - `logo-enter`: opacity 0 → 1 + scale 0.92 → 1, duração 1s, easing `cubic-bezier(.16,1,.3,1)`, executa uma vez.
-   - `logo-breathe`: scale 1 → 1.03 → 1, duração 6s, `ease-in-out infinite`, inicia após `logo-enter`.
-   - `logo-glow`: alterna intensidade do `filter: drop-shadow` entre azul `#1A9BE8` e verde `#22C97A`, duração 7s, infinito, suave.
-   - Combinar via duas camadas: wrapper externo cuida de `breathe`, interno cuida de `glow` (para o `filter` não conflitar com `transform`).
-   - Respeitar `prefers-reduced-motion`: desligar `breathe` e `glow`, manter apenas opacidade final.
+1. **Tamanho** — em `LogoOficial.tsx`, aumentar `size="hero"` de `clamp(240px, 28vw, 360px)` para `clamp(300px, 34vw, 460px)` (~28% maior, dentro da faixa 20–35%).
+
+2. **Halo de suavização** — em `Hero.tsx`, envolver o logo num wrapper relativo contendo, atrás do `<img>`:
+   - Camada 1: círculo `radial-gradient(circle, rgba(255,255,255,0.18) 0%, transparent 65%)` com `blur(40px)`, escala 1.4× — derrete as bordas do PNG.
+   - Camada 2: radial discreto misturando branco + `#1A9BE8` + `#22C97A` em opacidades baixas (0.12 / 0.10 / 0.10), `blur(60px)`, escala 1.6× — iluminação premium.
+   - Ambas `pointer-events-none`, `z-index: 0`; logo em `z-index: 1`.
+
+3. **Animação** — em `index.css`:
+   - Reduzir `nx-logo-breathe` de scale 1.03 → **1.02**.
+   - Reduzir intensidade das `drop-shadow` em `nx-logo-glow` (mais suave, menos saturado): manter alternância azul/verde mas com opacidades 0.35/0.20 (era 0.55/0.30).
+   - Manter `nx-logo-enter` igual.
 
 ## Arquivos
+- `src/components/apresentacao/LogoOficial.tsx`
+- `src/components/apresentacao/Hero.tsx`
+- `src/index.css`
 
-- editar `src/components/apresentacao/LogoOficial.tsx` (tamanho `hero`, deixar `glow="none"` quando solicitado para que o CSS controle)
-- editar `src/components/apresentacao/Hero.tsx`
-- editar `src/index.css`
-
-Sem tocar em screenshots, dados, backend ou demais seções.
+Sem mexer em screenshots, dados, ou demais seções.

@@ -41,7 +41,7 @@ export function LogoOficial({
       draggable={false}
       className={`select-none ${className}`}
       style={{
-        width: isHero ? "clamp(240px, 28vw, 360px)" : px,
+        width: isHero ? "clamp(300px, 34vw, 460px)" : px,
         height: "auto",
         filter,
       }}
