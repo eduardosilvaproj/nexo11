@@ -56,9 +56,6 @@ import FrotaCheckin from "./pages/frota/FrotaCheckin";
 
 import PortalFuncionario from "./pages/PortalFuncionario";
 import { VersionChecker } from "./components/VersionChecker";
-import AcompanhamentoCriacao from "./pages/AcompanhamentoCriacao";
-import AcessoAcompanhamento from "./pages/AcessoAcompanhamento";
-import AcompanhamentoPublico from "./pages/AcompanhamentoPublico";
 import NewContract from "./pages/NewContract";
 
 // Mobile imports - lazy loaded
@@ -119,8 +116,6 @@ function RootLayoutSwitcher() {
       <Route path="/portal" element={<PortalEntrada />} />
       <Route path="/portal/:token" element={<PortalCliente />} />
       <Route path="/portal-funcionario" element={<ProtectedRoute><PortalFuncionario /></ProtectedRoute>} />
-      <Route path="/acesso-acompanhamento" element={<AcessoAcompanhamento />} />
-      <Route path="/acompanhamento-publico" element={<AcompanhamentoPublico />} />
 
       {/* Mobile routes — always use AppShellMobile */}
       <Route
@@ -177,12 +172,6 @@ function RootLayoutSwitcher() {
         }
       >
         <Route path="/" element={<Dashboard />} />
-        <Route path="/acompanhamento-criacao" element={
-          <ProtectedRoute roles={["admin"]}>
-            <AcompanhamentoCriacao />
-          </ProtectedRoute>
-        } />
-
         {/* Operação */}
         <Route path="/comercial" element={<Comercial />} />
         <Route path="/contratos" element={<Contratos />} />
