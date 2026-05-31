@@ -36,7 +36,7 @@ export function FluxoOperacional() {
             {ETAPAS.map((e, i) => (
               <Reveal key={e.nome} delay={i * 140}>
                 <div className="flex flex-col items-center text-center">
-                  <div className="relative w-14 h-14 rounded-full bg-[#0A0E1A] border border-white/15 flex items-center justify-center mb-4 shadow-[0_0_30px_-8px_rgba(26,155,232,0.5)]">
+                  <div className="relative w-14 h-14 rounded-full bg-[#060d1a] border border-white/15 flex items-center justify-center mb-4 shadow-[0_0_30px_-8px_rgba(0,170,255,0.5)]">
                     <e.icon className="w-5 h-5 text-white/80" />
                     <span className="absolute -top-1 -right-1 text-[9px] font-mono tracking-tight px-1.5 py-0.5 rounded-full bg-white/[0.06] border border-white/10 text-white/50">
                       {String(i + 1).padStart(2, "0")}
