@@ -215,16 +215,28 @@ Máximo 200 palavras. Responda APENAS com o prompt, sem explicações.`,
       }
 
       const dalleData = await dalleResp.json();
+      const imageB64 = dalleData.data[0]?.b64_json;
       const tempImageUrl = dalleData.data[0]?.url;
 
-      if (!tempImageUrl) throw new Error("Imagem não gerada");
+      if (!imageB64 && !tempImageUrl) throw new Error("Imagem não gerada");
 
-      // Download da imagem e upload para Storage (URLs do DALL-E expiram em ~1h)
-      let finalImageUrl = tempImageUrl;
+      // Upload para Storage
+      let finalImageUrl = tempImageUrl || "";
       try {
-        const imgResp = await fetch(tempImageUrl);
-        const imgBuffer = await imgResp.arrayBuffer();
         const imgFileName = `lead-images/${lead_id}/${Date.now()}.png`;
+        let imgBuffer: ArrayBuffer;
+
+        if (imageB64) {
+          // Decode base64
+          const binaryStr = atob(imageB64);
+          const bytes = new Uint8Array(binaryStr.length);
+          for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+          imgBuffer = bytes.buffer;
+        } else {
+          // Download from temp URL
+          const imgResp = await fetch(tempImageUrl);
+          imgBuffer = await imgResp.arrayBuffer();
+        }
 
         const { error: storageErr } = await supabase.storage
           .from("lead-audios")
@@ -239,6 +251,8 @@ Máximo 200 palavras. Responda APENAS com o prompt, sem explicações.`,
       } catch (e) {
         console.error("Erro ao salvar imagem no storage:", e);
       }
+
+      if (!finalImageUrl) throw new Error("Não foi possível salvar a imagem");
 
       // Buscar loja_id
       const { data: leadData } = await supabase
