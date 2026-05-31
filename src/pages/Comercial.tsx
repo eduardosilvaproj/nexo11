@@ -203,18 +203,20 @@ function Column({
   title,
   leads,
   onConvert,
+  columnCount,
 }: {
   status: LeadStatus;
   title: string;
   leads: Lead[];
   onConvert: (l: Lead) => void;
+  columnCount: number;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
     <div
-      className="flex h-full flex-col"
-      style={{ width: 155, minWidth: 155, background: "#F5F7FA", borderRadius: 8 }}
+      className="flex h-full flex-col flex-1"
+      style={{ minWidth: 155, background: "#F5F7FA", borderRadius: 8 }}
     >
       <div className="flex items-center justify-between px-3 py-2.5">
         <span
@@ -504,6 +506,7 @@ export default function Comercial() {
                     title={col.title}
                     leads={col.leads}
                     onConvert={(lead) => navigate(`/contratos/novo?leadId=${lead.id}`)}
+                    columnCount={grouped.length}
                   />
                 ))}
               </div>
