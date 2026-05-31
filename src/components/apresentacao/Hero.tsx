@@ -90,8 +90,12 @@ export function Hero() {
           Plataforma NEXO
         </div>
 
-        <div className="mb-12 flex items-center justify-center animate-fade-in">
-          <LogoOficial size="2xl" glow="premium" eager />
+        <div className="mb-16 flex items-center justify-center">
+          <span className="nx-logo-hero-outer">
+            <span className="nx-logo-hero-inner">
+              <LogoOficial size="hero" glow="none" eager />
+            </span>
+          </span>
         </div>
 
         <h1 className="text-2xl md:text-4xl font-semibold tracking-tight text-white/95 leading-[1.15] mb-5 max-w-3xl mx-auto animate-fade-in">

@@ -1,6 +1,6 @@
-type Size = "sm" | "md" | "lg" | "xl" | "2xl";
+type Size = "sm" | "md" | "lg" | "xl" | "2xl" | "hero";
 
-const SIZE_PX: Record<Size, number> = {
+const SIZE_PX: Record<Exclude<Size, "hero">, number> = {
   sm: 28,
   md: 40,
   lg: 96,
@@ -21,7 +21,8 @@ export function LogoOficial({
   glow = "soft",
   eager = false,
 }: LogoOficialProps) {
-  const px = SIZE_PX[size];
+  const isHero = size === "hero";
+  const px = isHero ? undefined : SIZE_PX[size as Exclude<Size, "hero">];
   const filter =
     glow === "none"
       ? undefined
@@ -39,7 +40,11 @@ export function LogoOficial({
       decoding="async"
       draggable={false}
       className={`select-none ${className}`}
-      style={{ width: px, height: "auto", filter }}
+      style={{
+        width: isHero ? "clamp(240px, 28vw, 360px)" : px,
+        height: "auto",
+        filter,
+      }}
     />
   );
 }
