@@ -62,47 +62,84 @@ export function PortalCampo() {
     queryKey: ["portal-campo-agendamentos", pessoaId],
     enabled: !!pessoaId,
     queryFn: async () => {
-      // Try agendamentos_montagem first
+      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+      // Try agendamentos_montagem
       const { data: montagem } = await (supabase as any)
         .from("agendamentos_montagem")
-        .select("*")
-        .eq("responsavel_id", pessoaId)
-        .gte("data_agendamento", startOfTodayISO())
-        .lte("data_agendamento", endOfTodayISO())
-        .order("data_agendamento", { ascending: true });
+        .select("*, contratos:contrato_id(cliente_nome, cliente_contato), equipes:equipe_id(nome)")
+        .eq("data", today)
+        .in("status", ["agendado", "em_execucao"]);
 
       // Also try tecnico_agendamentos
       const { data: tecnico } = await (supabase as any)
         .from("tecnico_agendamentos")
         .select("*")
-        .eq("tecnico_id", pessoaId)
-        .gte("data_agendamento", startOfTodayISO())
-        .lte("data_agendamento", endOfTodayISO())
-        .order("data_agendamento", { ascending: true });
+        .eq("data", today)
+        .in("status", ["agendado", "em_andamento"]);
+
+      // Entregas do dia (para motoristas/logística)
+      const { data: entregas } = await (supabase as any)
+        .from("entregas")
+        .select("*, contratos:contrato_id(cliente_nome, cliente_contato)")
+        .eq("data_prevista", today)
+        .in("status_visual", ["agendado", "em_rota"]);
 
       const all = [
-        ...(montagem || []).map((m: any) => ({ ...m, _source: "montagem" })),
-        ...(tecnico || []).map((t: any) => ({ ...t, _source: "tecnico" })),
+        ...(montagem || []).map((m: any) => ({
+          id: m.id,
+          cliente_nome: m.contratos?.cliente_nome || "Cliente",
+          endereco: null,
+          hora_inicio: m.hora_inicio,
+          hora_fim: m.hora_fim,
+          status: m.status,
+          checklist: m.checklist_obra_json || [],
+          _source: "montagem",
+        })),
+        ...(tecnico || []).map((t: any) => ({
+          id: t.id,
+          cliente_nome: t.cliente_nome || "Cliente",
+          endereco: t.endereco || t.local,
+          hora_inicio: t.hora_inicio,
+          hora_fim: t.hora_fim,
+          status: t.status,
+          checklist: t.checklist || [],
+          _source: "tecnico",
+        })),
+        ...(entregas || []).map((e: any) => ({
+          id: e.id,
+          cliente_nome: e.contratos?.cliente_nome || "Cliente",
+          endereco: e.endereco,
+          hora_inicio: e.turno === "tarde" ? "13:00" : "08:00",
+          hora_fim: e.turno === "tarde" ? "18:00" : "12:00",
+          status: e.status_visual === "em_rota" ? "em_execucao" : "agendado",
+          checklist: [],
+          turno: e.turno,
+          _source: "entrega",
+        })),
       ];
 
-      return all.sort(
-        (a: any, b: any) =>
-          new Date(a.data_agendamento).getTime() -
-          new Date(b.data_agendamento).getTime()
-      );
+      return all;
     },
   });
 
   // Conclude assignment
   const concluirMutation = useMutation({
     mutationFn: async ({ id, source }: { id: string; source: string }) => {
-      const table =
-        source === "montagem" ? "agendamentos_montagem" : "tecnico_agendamentos";
-      const { error } = await (supabase as any)
-        .from(table)
-        .update({ status: "concluido" })
-        .eq("id", id);
-      if (error) throw error;
+      if (source === "entrega") {
+        const { error } = await (supabase as any)
+          .from("entregas")
+          .update({ status: "confirmada", status_visual: "entregue", data_confirmacao: new Date().toISOString() })
+          .eq("id", id);
+        if (error) throw error;
+      } else {
+        const table = source === "montagem" ? "agendamentos_montagem" : "tecnico_agendamentos";
+        const { error } = await (supabase as any)
+          .from(table)
+          .update({ status: "concluido" })
+          .eq("id", id);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       toast.success("Serviço concluído!");
@@ -150,7 +187,7 @@ export function PortalCampo() {
           Serviços de Hoje
         </h3>
         <Badge variant="secondary" className="text-[10px] ml-auto">
-          {(agendamentos || []).length} agendamento(s)
+          {(agendamentos || []).length} serviço(s)
         </Badge>
       </div>
 
