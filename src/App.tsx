@@ -54,6 +54,7 @@ import FrotaCnh from "./pages/frota/FrotaCnh";
 import FrotaRelatorios from "./pages/frota/FrotaRelatorios";
 import FrotaCheckin from "./pages/frota/FrotaCheckin";
 
+import PortalFuncionario from "./pages/PortalFuncionario";
 import AcompanhamentoCriacao from "./pages/AcompanhamentoCriacao";
 import AcessoAcompanhamento from "./pages/AcessoAcompanhamento";
 import AcompanhamentoPublico from "./pages/AcompanhamentoPublico";
@@ -116,6 +117,7 @@ function RootLayoutSwitcher() {
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/portal" element={<PortalEntrada />} />
       <Route path="/portal/:token" element={<PortalCliente />} />
+      <Route path="/portal-funcionario" element={<ProtectedRoute><PortalFuncionario /></ProtectedRoute>} />
       <Route path="/acesso-acompanhamento" element={<AcessoAcompanhamento />} />
       <Route path="/acompanhamento-publico" element={<AcompanhamentoPublico />} />
 
