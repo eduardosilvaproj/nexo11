@@ -92,14 +92,14 @@ export function Hero() {
 
         <div className="mb-16 flex items-center justify-center">
           <span className="nx-logo-hero-outer relative inline-flex items-center justify-center">
-            {/* Aurora base azul→verde derivando lentamente */}
+            {/* Aurora base azul→verde — glow discreto que apenas separa do fundo */}
             <span
               aria-hidden
               className="nx-aurora-drift absolute inset-0 pointer-events-none"
               style={{
                 background:
-                  "radial-gradient(ellipse at 30% 45%, rgba(26,155,232,0.18), transparent 55%), radial-gradient(ellipse at 70% 55%, rgba(34,201,122,0.16), transparent 55%)",
-                filter: "blur(110px)",
+                  "radial-gradient(ellipse at 30% 45%, rgba(26,155,232,0.10), transparent 55%), radial-gradient(ellipse at 70% 55%, rgba(34,201,122,0.09), transparent 55%)",
+                filter: "blur(120px)",
                 zIndex: 0,
               }}
             />
@@ -109,43 +109,16 @@ export function Hero() {
               className="nx-halo-breathe absolute inset-0 pointer-events-none"
               style={{
                 background:
-                  "radial-gradient(circle, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 38%, transparent 68%)",
-                filter: "blur(60px)",
+                  "radial-gradient(circle, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 40%, transparent 70%)",
+                filter: "blur(70px)",
                 transform: "scale(1.5)",
-                zIndex: 0,
-              }}
-            />
-            {/* Anel cônico — iluminação dinâmica muito discreta */}
-            <span
-              aria-hidden
-              className="nx-ring-spin absolute inset-0 pointer-events-none"
-              style={{
-                background:
-                  "conic-gradient(from 0deg, rgba(26,155,232,0.10), rgba(34,201,122,0.10), rgba(26,155,232,0.10))",
-                borderRadius: "50%",
-                filter: "blur(40px)",
-                transform: "scale(1.3)",
-                opacity: 0.6,
                 zIndex: 0,
               }}
             />
             <span className="nx-logo-hero-inner relative" style={{ zIndex: 1 }}>
               <LogoOficial size="hero" glow="none" eager />
-              {/* Sweep de energia sobre o símbolo */}
-              <span
-                aria-hidden
-                className="nx-energy-sweep absolute inset-0 pointer-events-none"
-                style={{
-                  background:
-                    "linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.18) 50%, transparent 65%)",
-                  WebkitMaskImage:
-                    "radial-gradient(circle, #000 55%, transparent 75%)",
-                  maskImage: "radial-gradient(circle, #000 55%, transparent 75%)",
-                  mixBlendMode: "overlay",
-                  zIndex: 2,
-                }}
-              />
             </span>
+
           </span>
         </div>
 
