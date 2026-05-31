@@ -48,7 +48,8 @@ const CATEGORIAS_LABELS: Record<keyof Categorias, string> = {
 };
 
 export function RHAvaliacaoDesempenho() {
-  const { loja_id } = useAuth();
+  const { perfil } = useAuth();
+  const loja_id = perfil?.loja_id ?? null;
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [search, setSearch] = useState("");
