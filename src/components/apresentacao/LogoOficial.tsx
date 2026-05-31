@@ -1,6 +1,6 @@
-type Size = "sm" | "md" | "lg" | "xl" | "2xl";
+type Size = "sm" | "md" | "lg" | "xl" | "2xl" | "hero";
 
-const SIZE_PX: Record<Size, number> = {
+const SIZE_PX: Record<Exclude<Size, "hero">, number> = {
   sm: 28,
   md: 40,
   lg: 96,
