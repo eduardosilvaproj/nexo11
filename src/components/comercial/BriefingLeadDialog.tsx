@@ -155,7 +155,8 @@ export function BriefingLeadDialog({ open, onOpenChange, leadId, leadNome }: Pro
       const { data, error } = await supabase.functions.invoke("lead-briefing-ia", {
         body: { action: "resumo", lead_id: leadId, lead_nome: leadNome },
       });
-      if (error) throw error;
+      if (error) throw new Error(error.message || JSON.stringify(error));
+      if (data?.error) throw new Error(data.error);
       toast.success("Resumo gerado!");
       carregar();
     } catch (err: any) {
@@ -176,7 +177,8 @@ export function BriefingLeadDialog({ open, onOpenChange, leadId, leadNome }: Pro
       const { data, error } = await supabase.functions.invoke("lead-briefing-ia", {
         body: { action: "imagem", lead_id: leadId, lead_nome: leadNome },
       });
-      if (error) throw error;
+      if (error) throw new Error(error.message || JSON.stringify(error));
+      if (data?.error) throw new Error(data.error);
       toast.success("Imagem gerada!");
       carregar();
     } catch (err: any) {
