@@ -1,51 +1,54 @@
-# Refinamento Premium do Logo NEXO — Hero
+# Refinamento Final da Hero NEXO
 
-Ajustes finos, sem alterar a identidade visual. Foco em sofisticação, profundidade e presença.
+Ajustes pontuais. Sem mudança de identidade visual. Screenshots e timeline lateral **já existem** e serão mantidos como estão.
 
-## 1. Tamanho (+~20%)
+## 1. Logo (+~18%)
 
 **Arquivo:** `src/components/apresentacao/LogoOficial.tsx`
 
-- Alterar `size="hero"` de `clamp(300px, 34vw, 460px)` para `clamp(360px, 40vw, 560px)` (~20% maior, dentro da faixa 15–25%).
-- Manter proporção e qualidade originais (apenas `width`, `height: auto`).
+- `size="hero"`: de `clamp(360px, 40vw, 560px)` para `clamp(425px, 47vw, 660px)` (~18%, dentro de 15–20%).
+- Proporção e qualidade preservadas (`height: auto`).
 
-## 2. Halo + Iluminação Radial (profundidade e suavização do PNG)
+## 2. Aurora Tecnológica (profundidade)
 
 **Arquivo:** `src/components/apresentacao/Hero.tsx`
 
-Ajustar as duas camadas já existentes atrás do logo para ficarem mais discretas e premium:
+Substituir as duas camadas atrás do logo por uma **aurora** mais ampla e difusa, em baixa opacidade:
 
-- **Camada 1 — halo branco difuso:** `radial-gradient(circle, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.04) 35%, transparent 65%)`, `blur(60px)`, `scale(1.5)`. Suaviza bordas do recorte PNG.
-- **Camada 2 — iluminação radial azul+verde:** mistura discreta de `rgba(26,155,232,0.14)` + `rgba(34,201,122,0.12)` + `rgba(255,255,255,0.08)`, `blur(80px)`, `scale(1.7)`. Cria profundidade premium sem aparência neon.
+- **Camada 1 — halo branco sutil:** `radial-gradient(circle, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 40%, transparent 70%)`, `blur(70px)`, `scale(1.6)`.
+- **Camada 2 — aurora azul+verde:** gradiente elíptico horizontal misturando `rgba(26,155,232,0.16)` (esquerda) + `rgba(34,201,122,0.14)` (direita) + véu branco `rgba(255,255,255,0.05)` central, `blur(100px)`, `scale(2.0, 1.4)`. Forma alongada (aurora), não disco.
 
-Ambas `pointer-events-none`, `z-index: 0`. Logo permanece em `z-index: 1`.
+Ambas `aria-hidden`, `pointer-events-none`, `z-index: 0`. Logo permanece `z-index: 1`.
 
-## 3. Animação de Respiração (8s, ultra suave)
+## 3. Animação de Respiração
 
 **Arquivo:** `src/index.css` — keyframe `nx-logo-breathe`
 
 - Curva: `scale(1) → scale(1.02) → scale(1)`.
-- Duração: **8s** (era 6s).
-- Easing: `ease-in-out` para movimento orgânico.
+- Duração: **8s**, `ease-in-out`, `infinite`.
 - Aplicada em `.nx-logo-hero-outer`.
+- Glow dinâmico (`nx-logo-glow`) **reduzido** ainda mais para não competir com a aurora: azul/verde `0.20/0.10`, branco `0.04`. Ciclo 10s mantido.
 
-## 4. Glow Dinâmico Azul ↔ Verde (10s, baixa intensidade)
+## 4. Screenshots — Preservar
 
-**Arquivo:** `src/index.css` — keyframe `nx-logo-glow`
+`ModuloSection.tsx` e `ImageZoomModalGaleria.tsx` **já implementam**:
 
-- Ciclo: azul → verde → azul.
-- Duração: **10s** (faixa 8–12s).
-- Intensidades reduzidas para evitar neon/gamer:
-  - Azul: `drop-shadow(0 0 28px rgba(26,155,232,0.28)) drop-shadow(0 0 64px rgba(26,155,232,0.14))`
-  - Verde: `drop-shadow(0 0 28px rgba(34,201,122,0.28)) drop-shadow(0 0 64px rgba(34,201,122,0.14))`
-  - Base branca constante: `drop-shadow(0 0 8px rgba(255,255,255,0.05))`
-- Aplicada em `.nx-logo-hero-inner`.
+- Visualização fullscreen premium (modal)
+- Zoom (botão "Ampliar")
+- Navegação entre módulos (galeria)
+- Animações suaves (fade/scale, `blur-reveal`)
 
-## 5. Preservar
+Nada será alterado. Apenas confirmação de que tudo está ativo.
 
-- Animação de entrada `nx-logo-enter` (1s fade + scale 0.92→1) — mantida.
-- `prefers-reduced-motion` — mantido (desliga animações).
-- Identidade visual, cores da marca, proporções do PNG — intactos.
+## 5. Timeline Lateral — Preservar
+
+`TimelineLateral.tsx` **já existe** e é renderizada em `Apresentacao.tsx`:
+
+- Fixa à esquerda, acompanha o scroll via `IntersectionObserver`
+- Estados past / current / future
+- Click → scroll suave para o módulo
+
+Nenhuma mudança necessária.
 
 ## Arquivos tocados
 
@@ -55,4 +58,4 @@ Ambas `pointer-events-none`, `z-index: 0`. Logo permanece em `z-index: 1`.
 
 ## Resultado esperado
 
-Logo ~20% maior, com halo radial suave que dissimula o recorte do PNG, respiração lenta de 8s e glow azul↔verde de 10s em baixa intensidade — presença visual dominante na Hero, com aparência corporativa premium, sem qualquer apelo gamer ou neon.
+Logo ~18% maior, sobre uma aurora azul↔verde difusa e elegante que reforça profundidade sem aparência neon. Respiração lenta de 8s. Screenshots reais e timeline lateral seguem como principal narrativa visual — Hero passa a ter abertura de produto premium corporativo.
