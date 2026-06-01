@@ -70,27 +70,27 @@ export function Hero() {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-14">
+    <section className="relative min-h-[100svh] flex items-center justify-center overflow-hidden pt-14 px-4 sm:px-6">
       <div
         className="absolute inset-0 opacity-[0.14]"
         style={{
           backgroundImage:
             "linear-gradient(rgba(0,170,255,0.35) 1px, transparent 1px), linear-gradient(90deg, rgba(18,183,106,0.25) 1px, transparent 1px)",
-          backgroundSize: "64px 64px",
+          backgroundSize: "clamp(32px, 6vw, 64px) clamp(32px, 6vw, 64px)",
           maskImage: "radial-gradient(ellipse at center, #000 35%, transparent 75%)",
           WebkitMaskImage: "radial-gradient(ellipse at center, #000 35%, transparent 75%)",
         }}
       />
-      <div className="absolute top-1/3 left-1/4 w-[520px] h-[520px] rounded-full bg-[#00AAFF]/20 blur-[150px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-[520px] h-[520px] rounded-full bg-[#12B76A]/20 blur-[150px] translate-x-1/2 translate-y-1/2 pointer-events-none" />
+      <div className="absolute top-1/3 left-1/4 w-[60vw] h-[60vw] max-w-[520px] max-h-[520px] rounded-full bg-[#00AAFF]/20 blur-[120px] sm:blur-[150px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-[60vw] h-[60vw] max-w-[520px] max-h-[520px] rounded-full bg-[#12B76A]/20 blur-[120px] sm:blur-[150px] translate-x-1/2 translate-y-1/2 pointer-events-none" />
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
-        <div className="text-[10px] tracking-[0.4em] uppercase text-white/40 mb-12 animate-fade-in">
+      <div className="relative z-10 w-full max-w-5xl mx-auto text-center">
+        <div className="text-[10px] tracking-[0.4em] uppercase text-white/40 mb-8 sm:mb-12 animate-fade-in">
           Plataforma NEXO
         </div>
 
-        <div className="mb-16 flex items-center justify-center">
+        <div className="mb-10 sm:mb-16 flex items-center justify-center">
           <span className="nx-logo-hero-outer relative inline-flex items-center justify-center">
             {/* Aurora base azul→verde — glow discreto que apenas separa do fundo */}
             <span
