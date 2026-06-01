@@ -16,20 +16,20 @@ const CARDS = [
 
 export function ArquiteturaPlataforma() {
   return (
-    <section className="relative py-32 px-6">
+    <section className="relative py-20 sm:py-32 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto">
         <Reveal>
-          <div className="text-center mb-16">
+          <div className="text-center mb-10 sm:mb-16">
             <div className="text-[10px] font-semibold tracking-[0.4em] text-white/40 uppercase mb-4">
               Arquitetura da Plataforma
             </div>
-            <h2 className="text-3xl md:text-5xl font-semibold text-white tracking-tight max-w-3xl mx-auto leading-tight">
+            <h2 className="text-[clamp(1.75rem,5vw,3rem)] font-semibold text-white tracking-tight max-w-3xl mx-auto leading-tight">
               Construída para escalar com a operação.
             </h2>
           </div>
         </Reveal>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {CARDS.map((c, i) => (
             <Reveal key={c.title} delay={i * 60}>
               <div className="h-full p-6 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl hover:border-white/20 transition-colors">
