@@ -49,11 +49,11 @@ const Apresentacao = () => {
           <FluxoOperacional />
 
           <section>
-            <div className="max-w-6xl mx-auto px-6 text-center pt-24 pb-4">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 text-center pt-16 sm:pt-24 pb-4">
               <div className="text-[10px] font-semibold tracking-[0.4em] text-white/40 uppercase mb-4">
                 Módulos
               </div>
-              <h2 className="text-3xl md:text-5xl font-semibold text-white tracking-tight max-w-3xl mx-auto leading-tight">
+              <h2 className="text-[clamp(1.75rem,5vw,3rem)] font-semibold text-white tracking-tight max-w-3xl mx-auto leading-tight">
                 Doze capítulos. Uma única operação.
               </h2>
             </div>
