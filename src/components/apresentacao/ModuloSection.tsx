@@ -14,23 +14,23 @@ export function ModuloSection({ modulo, index }: { modulo: ModuloApresentacao; i
   const fallback = `/screenshots/${modulo.slug}.png`;
 
   return (
-    <section id={`cap-${modulo.slug}`} className="py-24 px-6 scroll-mt-20">
+    <section id={`cap-${modulo.slug}`} className="py-16 sm:py-24 px-4 sm:px-6 scroll-mt-20">
       <div className="max-w-6xl mx-auto">
         <Reveal>
           <CapituloHeader numero={index + 1} total={MODULOS.length} />
 
-          <div className="flex items-start gap-5 mb-6">
+          <div className="flex items-start gap-3 sm:gap-5 mb-6">
             <div
-              className="shrink-0 w-12 h-12 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center"
+              className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center"
               style={{ boxShadow: `0 0 28px -10px ${cor}` }}
             >
-              <Icon className="w-5 h-5" style={{ color: cor }} />
+              <Icon className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: cor }} />
             </div>
-            <div className="flex-1">
-              <h3 className="text-3xl md:text-5xl font-semibold text-white tracking-tight leading-[1.05]">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-[clamp(1.5rem,5vw,3rem)] font-semibold text-white tracking-tight leading-[1.1]">
                 {modulo.titulo}
               </h3>
-              <p className="text-white/55 text-base md:text-lg mt-3 max-w-2xl">
+              <p className="text-white/55 text-sm sm:text-base md:text-lg mt-3 max-w-2xl">
                 {modulo.descricao}
               </p>
             </div>

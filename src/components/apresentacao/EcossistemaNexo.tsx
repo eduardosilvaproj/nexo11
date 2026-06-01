@@ -9,17 +9,17 @@ export function EcossistemaNexo() {
   const radius = 220;
 
   return (
-    <section className="relative py-32 px-6 overflow-hidden">
+    <section className="relative py-20 sm:py-32 px-4 sm:px-6 overflow-hidden">
       <div className="max-w-6xl mx-auto">
         <Reveal>
-          <div className="text-center mb-16">
+          <div className="text-center mb-12 sm:mb-16">
             <div className="text-[10px] font-semibold tracking-[0.4em] text-white/40 uppercase mb-4">
               Ecossistema NEXO
             </div>
-            <h2 className="text-3xl md:text-5xl font-semibold text-white tracking-tight max-w-3xl mx-auto leading-tight">
+            <h2 className="text-[clamp(1.75rem,5vw,3rem)] font-semibold text-white tracking-tight max-w-3xl mx-auto leading-tight">
               Doze módulos. Um único ecossistema.
             </h2>
-            <p className="text-white/55 mt-5 max-w-2xl mx-auto">
+            <p className="text-white/55 text-sm sm:text-base mt-4 sm:mt-5 max-w-2xl mx-auto">
               Cada módulo opera de forma especializada, mas conversa em tempo real com todos os outros.
             </p>
           </div>

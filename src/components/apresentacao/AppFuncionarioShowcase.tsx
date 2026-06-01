@@ -11,30 +11,36 @@ const FEATURES = [
 
 export function AppFuncionarioShowcase() {
   return (
-    <section className="relative py-32 px-6 overflow-hidden">
+    <section className="relative py-20 sm:py-32 px-4 sm:px-6 overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,170,255,0.08),transparent_65%)]" />
       <div className="relative max-w-6xl mx-auto">
         <Reveal>
-          <div className="text-center mb-20">
+          <div className="text-center mb-12 sm:mb-20">
             <div className="text-[10px] font-semibold tracking-[0.4em] text-white/40 uppercase mb-4">
               App do Funcionário
             </div>
-            <h2 className="text-3xl md:text-5xl font-semibold text-white tracking-tight max-w-3xl mx-auto leading-tight">
+            <h2 className="text-[clamp(1.75rem,5vw,3rem)] font-semibold text-white tracking-tight max-w-3xl mx-auto leading-tight">
               Toda a operação no bolso da equipe
             </h2>
-            <p className="text-white/55 mt-5 max-w-2xl mx-auto">
+            <p className="text-white/55 text-sm sm:text-base mt-4 sm:mt-5 max-w-2xl mx-auto">
               Um aplicativo dedicado para cada papel — vendedor, medidor, conferente, montador, entregador e admin.
             </p>
           </div>
         </Reveal>
 
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <div className="grid lg:grid-cols-2 gap-12 sm:gap-16 items-center">
           <Reveal delay={120}>
             <div className="flex justify-center">
-              <div className="relative" style={{ filter: "drop-shadow(0 50px 100px rgba(0,170,255,0.35))" }}>
-                <div className="relative w-[300px] h-[620px] rounded-[48px] bg-gradient-to-b from-[#1a1f2e] to-[#060d1a] border-[10px] border-[#060d1a] shadow-[inset_0_0_0_1.5px_#2a3142,0_0_60px_-10px_#00AAFF]">
-                  <div className="absolute top-3 left-1/2 -translate-x-1/2 w-28 h-6 bg-black rounded-full z-10" />
-                  <div className="absolute inset-0 rounded-[36px] overflow-hidden bg-[#060d1a]">
+              <div
+                className="relative"
+                style={{
+                  filter: "drop-shadow(0 50px 100px rgba(0,170,255,0.35))",
+                  width: "clamp(220px, 70vw, 300px)",
+                }}
+              >
+                <div className="relative w-full aspect-[300/620] rounded-[12%] bg-gradient-to-b from-[#1a1f2e] to-[#060d1a] border-[8px] sm:border-[10px] border-[#060d1a] shadow-[inset_0_0_0_1.5px_#2a3142,0_0_60px_-10px_#00AAFF]">
+                  <div className="absolute top-2 sm:top-3 left-1/2 -translate-x-1/2 w-[30%] h-[3.5%] bg-black rounded-full z-10" />
+                  <div className="absolute inset-0 rounded-[9%] overflow-hidden bg-[#060d1a]">
                     <picture>
                       <source srcSet="/screenshots/portal-funcionario.webp" type="image/webp" />
                       <img

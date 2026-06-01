@@ -13,17 +13,17 @@ const ETAPAS = [
 
 export function FluxoOperacional() {
   return (
-    <section id="visao-geral" className="relative py-32 px-6">
+    <section id="visao-geral" className="relative py-20 sm:py-32 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto">
         <Reveal>
-          <div className="text-center mb-20">
+          <div className="text-center mb-12 sm:mb-20">
             <div className="text-[10px] font-semibold tracking-[0.4em] text-white/40 uppercase mb-4">
               Visão Geral
             </div>
-            <h2 className="text-3xl md:text-5xl font-semibold text-white tracking-tight max-w-3xl mx-auto leading-tight">
+            <h2 className="text-[clamp(1.75rem,5vw,3rem)] font-semibold text-white tracking-tight max-w-3xl mx-auto leading-tight">
               Um fluxo único, da venda à entrega
             </h2>
-            <p className="text-white/55 mt-5 max-w-2xl mx-auto">
+            <p className="text-white/55 text-sm sm:text-base mt-4 sm:mt-5 max-w-2xl mx-auto">
               Sete etapas operacionais conectadas. A informação percorre o sistema sem ilhas, sem retrabalho.
             </p>
           </div>
@@ -32,7 +32,7 @@ export function FluxoOperacional() {
         <div className="relative">
           <div className="hidden md:block absolute top-7 left-[6%] right-[6%] h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-6 md:gap-3 relative">
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 sm:gap-6 md:gap-3 relative">
             {ETAPAS.map((e, i) => (
               <Reveal key={e.nome} delay={i * 140}>
                 <div className="flex flex-col items-center text-center">
