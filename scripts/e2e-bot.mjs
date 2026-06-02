@@ -13,7 +13,7 @@ import { chromium } from "playwright";
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-const BASE_URL = process.env.BASE_URL || "https://pllvwcszoyjhfvnzshzw.lovableproject.com";
+const BASE_URL = process.env.BASE_URL || "http://localhost:8080";
 const EMAIL = "demo@nexo.app";
 const PASSWORD = "NexoDemo2025!";
 const OUT_DIR = resolve("test-results");
@@ -150,43 +150,52 @@ async function main() {
   // ========== LOGIN ==========
   console.log("🔐 Fazendo login...");
   try {
-    await page.goto(`${BASE_URL}/login`, { waitUntil: "networkidle", timeout: 30000 });
-    await page.waitForTimeout(2000);
+    await page.goto(`${BASE_URL}/login`, { waitUntil: "domcontentloaded", timeout: 30000 });
+    await page.waitForTimeout(5000);
 
-    const emailInput = page.locator('input[type="email"]').first();
-    const passInput = page.locator('input[type="password"]').first();
+    // Try multiple selectors for email input
+    const emailInput = page.locator('input[type="email"], input[placeholder*="email" i], input[placeholder*="nexo" i], #email').first();
+    const passInput = page.locator('input[type="password"], #password').first();
+
+    await emailInput.waitFor({ state: "visible", timeout: 10000 }).catch(() => {});
 
     if (await emailInput.isVisible()) {
       await emailInput.fill(EMAIL);
       await passInput.fill(PASSWORD);
-      const submitBtn = page.locator('button[type="submit"]').first();
+      const submitBtn = page.locator('button[type="submit"], button:has-text("Entrar")').first();
       await submitBtn.click();
-      await page.waitForTimeout(4000);
+      await page.waitForTimeout(5000);
 
-      // Fechar wizard de onboarding se aparecer
-      const skipBtn = page.locator('button:has-text("Começar"), button:has-text("Pular")').first();
-      if (await skipBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-        // Click through wizard
-        await skipBtn.click();
-        await page.waitForTimeout(500);
-        const nextBtns = page.locator('button:has-text("Próximo")');
-        for (let i = 0; i < 3; i++) {
-          const nb = nextBtns.first();
-          if (await nb.isVisible({ timeout: 1000 }).catch(() => false)) {
-            await nb.click();
-            await page.waitForTimeout(500);
-          }
+      // Set localStorage to skip onboarding wizard
+      const userId = await page.evaluate(() => {
+        const key = Object.keys(localStorage).find(k => k.startsWith("sb-") && k.endsWith("-auth-token"));
+        if (key) {
+          try {
+            const data = JSON.parse(localStorage.getItem(key));
+            return data?.user?.id || null;
+          } catch { return null; }
         }
-        const enterBtn = page.locator('button:has-text("Entrar")').first();
-        if (await enterBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
-          await enterBtn.click();
-        }
-        await page.waitForTimeout(1000);
+        return null;
+      });
+      if (userId) {
+        await page.evaluate((uid) => {
+          localStorage.setItem(`nexo_onboarding_done_${uid}`, "true");
+        }, userId);
+        await page.reload({ waitUntil: "networkidle" });
+        await page.waitForTimeout(2000);
       }
 
-      console.log("✅ Login OK\n");
+      // Check if we're still on login page
+      const currentUrl = page.url();
+      if (currentUrl.includes("/login") || currentUrl.includes("/auth")) {
+        console.log("⚠️  Ainda na tela de login após submit — verifique credenciais\n");
+      } else {
+        console.log("✅ Login OK\n");
+      }
     } else {
-      console.log("⚠️  Campos de login não encontrados\n");
+      console.log("⚠️  Campos de login não encontrados — tentando screenshot...");
+      await page.screenshot({ path: resolve(SCREENSHOT_DIR, "_login_debug.png") });
+      console.log("   Screenshot salvo: _login_debug.png\n");
     }
   } catch (err) {
     console.log(`❌ Erro no login: ${err.message}\n`);
@@ -244,6 +253,13 @@ async function main() {
     try {
       await page.goto(`${BASE_URL}${action.path}`, { waitUntil: "networkidle", timeout: 20000 });
       await page.waitForTimeout(2000);
+
+      // Dismiss any overlay/wizard that might be blocking
+      const overlay = page.locator('[class*="fixed inset-0"][class*="z-50"]').first();
+      if (await overlay.isVisible({ timeout: 500 }).catch(() => false)) {
+        await page.keyboard.press("Escape");
+        await page.waitForTimeout(500);
+      }
 
       const result = await action.steps(page);
       results.push({ name: `[Ação] ${action.name}`, path: action.path, status: result.success ? "pass" : "warning", detail: result.detail });
