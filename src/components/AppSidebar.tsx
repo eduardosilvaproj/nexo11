@@ -26,6 +26,13 @@ import {
   MessageSquare,
   FileText,
   Car,
+  Package,
+  Zap,
+  Radio,
+  Activity,
+  Gauge,
+  Map,
+  Bell,
 } from "lucide-react";
 import {
   Sidebar,
@@ -61,6 +68,7 @@ const operacao: MenuItem[] = [
   { title: "Produção", url: "/producao", icon: Factory, roles: ["admin", "gerente", "tecnico", "franqueador"] },
   { title: "Logística", url: "/logistica", icon: Truck, roles: ["admin", "gerente", "franqueador"] },
   { title: "Montagem", url: "/montagem", icon: Wrench, roles: ["admin", "gerente", "montador", "franqueador"] },
+  { title: "Almoxarifado", url: "/almoxarifado", icon: Package, roles: ["admin", "gerente", "franqueador"] },
   { title: "Frota", url: "/frota", icon: Car, roles: ["admin", "gerente", "franqueador"] },
   { title: "Pós-venda", url: "/pos-venda", icon: HeadphonesIcon },
   { title: "Mensagens", url: "/mensagens", icon: MessageSquare },
@@ -80,6 +88,11 @@ const gestao: MenuItem[] = [
 
 const inteligencia: MenuItem[] = [
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
+  { title: "Indicadores", url: "/indicadores", icon: Gauge, roles: ["admin", "gerente", "franqueador"] },
+  { title: "Automações", url: "/automacoes", icon: Zap, roles: ["admin", "gerente", "franqueador"] },
+  { title: "Comunicação", url: "/central-comunicacao", icon: Radio, roles: ["admin", "gerente", "franqueador"] },
+  { title: "Notificações", url: "/notificacoes", icon: Bell },
+  { title: "Modo Campo", url: "/modo-campo", icon: Map, roles: ["admin", "gerente", "montador", "tecnico"] },
   { title: "Integrações", url: "/integracoes", icon: Plug },
   { title: "Estimativa PDF", url: "/estimativa-orcamento", icon: MessageSquare },
 ];

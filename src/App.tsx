@@ -42,6 +42,14 @@ import OrcamentoNegociacao from "./pages/OrcamentoNegociacao";
 import ConfigFornecedores from "./pages/ConfigFornecedores";
 import Compras from "./pages/Compras";
 import EstimativaOrcamento from "./pages/EstimativaOrcamento";
+import Almoxarifado from "./pages/Almoxarifado";
+import Automacoes from "./pages/Automacoes";
+import CentralComunicacao from "./pages/CentralComunicacao";
+import Execucao from "./pages/Execucao";
+import IndicadoresOperacionais from "./pages/IndicadoresOperacionais";
+import ModoCampo from "./pages/ModoCampo";
+import Notificacoes from "./pages/Notificacoes";
+import Apresentacao from "./pages/Apresentacao";
 
 import FrotaLayout from "./pages/frota/FrotaLayout";
 import FrotaDashboard from "./pages/frota/FrotaDashboard";
@@ -57,7 +65,6 @@ import FrotaCheckin from "./pages/frota/FrotaCheckin";
 import PortalFuncionario from "./pages/PortalFuncionario";
 import { VersionChecker } from "./components/VersionChecker";
 import NewContract from "./pages/NewContract";
-import Apresentacao from "./pages/Apresentacao";
 
 // Mobile imports - lazy loaded
 import DashboardVendedor from "@/routes/mobile/pages/DashboardVendedor";
@@ -236,6 +243,13 @@ function RootLayoutSwitcher() {
         <Route path="/configuracoes/pagamento" element={<ConfigPagamento />} />
         <Route path="/configuracoes/fornecedores" element={<ConfigFornecedores />} />
         <Route path="/estimativa-orcamento" element={<EstimativaOrcamento />} />
+        <Route path="/almoxarifado" element={<Almoxarifado />} />
+        <Route path="/automacoes" element={<Automacoes />} />
+        <Route path="/central-comunicacao" element={<CentralComunicacao />} />
+        <Route path="/execucao" element={<Execucao />} />
+        <Route path="/indicadores" element={<IndicadoresOperacionais />} />
+        <Route path="/modo-campo" element={<ModoCampo />} />
+        <Route path="/notificacoes" element={<Notificacoes />} />
         <Route path="/sem-permissao" element={<SemPermissao />} />
       </Route>
 

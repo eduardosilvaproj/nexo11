@@ -1,100 +1,115 @@
-/**
- * Captura screenshots reais do NEXO para a landing /apresentacao.
- *
- * Uso:
- *   npx playwright install chromium   (uma vez)
- *   node scripts/capture-screenshots.mjs [BASE_URL]
- *
- * BASE_URL padrão: https://nexo11.lovable.app
- *
- * Saída:
- *   public/screenshots/{slug}.png      (1440x900 retina 2x)
- *   public/screenshots/{slug}.webp     (otimizado)
- *   public/screenshots/portal-funcionario.* (390x844)
- */
+// Script para capturar screenshots de cada módulo do NEXO
+// Rodar: npx playwright install chromium && node scripts/capture-screenshots.mjs
+
 import { chromium } from "playwright";
-import sharp from "sharp";
-import { mkdir, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const BASE = process.argv[2] || "https://nexo11.lovable.app";
-const USER = process.env.NEXO_USER || "demo@nexo.app";
-const PASS = process.env.NEXO_PASS || "NexoDemo2025!";
-const OUT = resolve("public/screenshots");
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const OUTPUT_DIR = path.resolve(__dirname, "../public/screenshots");
 
-const DESKTOP = [
-  { slug: "comercial", path: "/comercial" },
-  { slug: "contratos", path: "/contratos" },
-  { slug: "tecnico", path: "/tecnico" },
-  { slug: "producao", path: "/producao" },
-  { slug: "logistica", path: "/logistica" },
-  { slug: "montagem", path: "/montagem" },
-  { slug: "pos-venda", path: "/pos-venda" },
-  { slug: "comissoes", path: "/comissoes" },
-  { slug: "compras", path: "/compras" },
-  { slug: "rh", path: "/rh" },
-  { slug: "equipe", path: "/equipe" },
-  { slug: "analytics", path: "/analytics" },
+// URL do app (Lovable deploy ou local)
+const BASE_URL = process.env.BASE_URL || "https://pllvwcszoyjhfvnzshzw.lovableproject.com";
+
+// Credenciais demo
+const EMAIL = "demo@nexo.app";
+const PASSWORD = "NexoDemo2025!";
+
+// Módulos para capturar
+const PAGES = [
+  { name: "dashboard", path: "/", waitFor: 3000 },
+  { name: "comercial", path: "/comercial", waitFor: 3000 },
+  { name: "contratos", path: "/contratos", waitFor: 3000 },
+  { name: "tecnico", path: "/tecnico", waitFor: 3000 },
+  { name: "producao", path: "/producao", waitFor: 3000 },
+  { name: "logistica", path: "/logistica", waitFor: 3000 },
+  { name: "montagem", path: "/montagem", waitFor: 3000 },
+  { name: "pos-venda", path: "/pos-venda", waitFor: 3000 },
+  { name: "comissoes", path: "/comissoes", waitFor: 3000 },
+  { name: "compras", path: "/compras", waitFor: 3000 },
+  { name: "rh", path: "/rh", waitFor: 3000 },
+  { name: "equipe", path: "/equipe", waitFor: 3000 },
+  { name: "analytics", path: "/analytics", waitFor: 3000 },
+  { name: "financeiro", path: "/financeiro", waitFor: 3000 },
+  { name: "portal-funcionario", path: "/portal-funcionario", waitFor: 3000 },
 ];
 
-const MOBILE = [{ slug: "portal-funcionario", path: "/portal-funcionario" }];
-
-async function login(page) {
-  await page.goto(`${BASE}/login`, { waitUntil: "networkidle" });
-  await page.fill('input[type="email"]', USER);
-  await page.fill('input[type="password"]', PASS);
-  await Promise.all([
-    page.waitForLoadState("networkidle"),
-    page.click('button[type="submit"]'),
-  ]);
-  await page.waitForTimeout(1500);
-}
-
-async function capture(page, { slug, path }) {
-  console.log(`→ ${slug}`);
-  await page.goto(`${BASE}${path}`, { waitUntil: "networkidle" });
-  await page.waitForTimeout(1500);
-  const png = await page.screenshot({ type: "png" });
-  await writeFile(`${OUT}/${slug}.png`, png);
-  await sharp(png).webp({ quality: 85 }).toFile(`${OUT}/${slug}.webp`);
-}
-
 async function main() {
-  await mkdir(OUT, { recursive: true });
-  const executablePath = process.env.CHROMIUM_PATH || process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
-  const browser = await chromium.launch({
-    ...(executablePath ? { executablePath } : {}),
-    args: executablePath ? ["--no-sandbox"] : [],
-  });
+  console.log("🚀 Iniciando captura de screenshots...");
+  console.log(`📍 URL: ${BASE_URL}`);
+  console.log(`📁 Output: ${OUTPUT_DIR}\n`);
 
-  // Desktop
-  const ctxD = await browser.newContext({
+  const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
-    deviceScaleFactor: 2,
+    deviceScaleFactor: 2, // Retina quality
   });
-  const pageD = await ctxD.newPage();
-  await login(pageD);
-  for (const m of DESKTOP) {
-    try { await capture(pageD, m); } catch (e) { console.error(`!! ${m.slug}`, e.message); }
-  }
-  await ctxD.close();
+  const page = await context.newPage();
 
-  // Mobile
-  const ctxM = await browser.newContext({
-    viewport: { width: 390, height: 844 },
-    deviceScaleFactor: 3,
-    isMobile: true,
-    hasTouch: true,
-  });
-  const pageM = await ctxM.newPage();
-  await login(pageM);
-  for (const m of MOBILE) {
-    try { await capture(pageM, m); } catch (e) { console.error(`!! ${m.slug}`, e.message); }
+  // Login
+  console.log("🔐 Fazendo login...");
+  await page.goto(`${BASE_URL}/login`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(2000);
+
+  // Preencher email e senha
+  const emailInput = page.locator('input[type="email"], input[name="email"], input[placeholder*="email" i]');
+  const passwordInput = page.locator('input[type="password"]');
+
+  if (await emailInput.count() > 0) {
+    await emailInput.fill(EMAIL);
+    await passwordInput.fill(PASSWORD);
+
+    // Clicar no botão de login
+    const loginBtn = page.locator('button[type="submit"], button:has-text("Entrar"), button:has-text("Login")');
+    await loginBtn.first().click();
+
+    // Esperar redirecionamento
+    await page.waitForTimeout(4000);
+    console.log("✅ Login realizado!\n");
+  } else {
+    console.log("⚠️  Campos de login não encontrados. Tentando continuar...\n");
   }
-  await ctxM.close();
+
+  // Capturar cada página
+  for (const { name, path: pagePath, waitFor } of PAGES) {
+    try {
+      console.log(`📸 Capturando: ${name}...`);
+      await page.goto(`${BASE_URL}${pagePath}`, { waitUntil: "networkidle" });
+      await page.waitForTimeout(waitFor);
+
+      // Esconder a sidebar para screenshot mais limpo (opcional)
+      // await page.evaluate(() => {
+      //   const sidebar = document.querySelector('[data-sidebar]');
+      //   if (sidebar) sidebar.style.display = 'none';
+      // });
+
+      await page.screenshot({
+        path: path.resolve(OUTPUT_DIR, `${name}.png`),
+        fullPage: false, // Só a viewport (1440x900)
+      });
+
+      console.log(`   ✅ ${name}.png salvo`);
+    } catch (err) {
+      console.log(`   ❌ Erro em ${name}: ${err.message}`);
+    }
+  }
+
+  // Screenshot mobile do portal do funcionário
+  console.log("\n📱 Capturando versão mobile do portal...");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(`${BASE_URL}/portal-funcionario`, { waitUntil: "networkidle" });
+  await page.waitForTimeout(3000);
+  await page.screenshot({
+    path: path.resolve(OUTPUT_DIR, "portal-funcionario-mobile.png"),
+    fullPage: false,
+  });
+  console.log("   ✅ portal-funcionario-mobile.png salvo");
 
   await browser.close();
-  console.log("✓ done");
+  console.log("\n🎉 Pronto! Screenshots salvos em public/screenshots/");
 }
 
-main().catch((e) => { console.error(e); process.exit(1); });
+main().catch((err) => {
+  console.error("Erro fatal:", err);
+  process.exit(1);
+});
