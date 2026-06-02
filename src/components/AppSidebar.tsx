@@ -72,6 +72,8 @@ const operacao: MenuItem[] = [
   { title: "Almoxarifado", url: "/almoxarifado", icon: Package, roles: ["admin", "gerente", "franqueador"] },
   { title: "Frota", url: "/frota", icon: Car, roles: ["admin", "gerente", "franqueador"] },
   { title: "Pós-venda", url: "/pos-venda", icon: HeadphonesIcon },
+  { title: "Mapa Operações", url: "/mapa-operacoes", icon: Map, roles: ["admin", "gerente", "franqueador"] },
+  { title: "Radar Equipe", url: "/radar-equipe", icon: Activity, roles: ["admin", "gerente", "franqueador"] },
   { title: "Mensagens", url: "/mensagens", icon: MessageSquare },
   { title: "DRE", url: "/dre", icon: TrendingUp, roles: ["admin", "gerente", "franqueador"] },
 ];
@@ -90,6 +92,8 @@ const gestao: MenuItem[] = [
 const inteligencia: MenuItem[] = [
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Indicadores", url: "/indicadores", icon: Gauge, roles: ["admin", "gerente", "franqueador"] },
+  { title: "WhatsApp", url: "/automacao-whatsapp", icon: Zap, roles: ["admin", "gerente", "franqueador"] },
+  { title: "Push", url: "/push-notificacoes", icon: Bell, roles: ["admin", "gerente", "franqueador"] },
   { title: "Automações", url: "/automacoes", icon: Zap, roles: ["admin", "gerente", "franqueador"] },
   { title: "Comunicação", url: "/central-comunicacao", icon: Radio, roles: ["admin", "gerente", "franqueador"] },
   { title: "Notificações", url: "/notificacoes", icon: Bell },

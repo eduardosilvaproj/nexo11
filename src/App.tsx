@@ -48,6 +48,10 @@ import CentralComunicacao from "./pages/CentralComunicacao";
 import Execucao from "./pages/Execucao";
 import Feedback from "./pages/Feedback";
 import Ajuda from "./pages/Ajuda";
+import MapaOperacoes from "./pages/MapaOperacoes";
+import RadarEquipe from "./pages/RadarEquipe";
+import AutomacaoWhatsapp from "./pages/AutomacaoWhatsapp";
+import PushNotificacoes from "./pages/PushNotificacoes";
 import IndicadoresOperacionais from "./pages/IndicadoresOperacionais";
 import ModoCampo from "./pages/ModoCampo";
 import Notificacoes from "./pages/Notificacoes";
@@ -255,6 +259,10 @@ function RootLayoutSwitcher() {
         <Route path="/notificacoes" element={<Notificacoes />} />
         <Route path="/feedback" element={<Feedback />} />
         <Route path="/ajuda" element={<Ajuda />} />
+        <Route path="/mapa-operacoes" element={<MapaOperacoes />} />
+        <Route path="/radar-equipe" element={<RadarEquipe />} />
+        <Route path="/automacao-whatsapp" element={<AutomacaoWhatsapp />} />
+        <Route path="/push-notificacoes" element={<PushNotificacoes />} />
         <Route path="/sem-permissao" element={<SemPermissao />} />
       </Route>
 
