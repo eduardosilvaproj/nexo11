@@ -33,6 +33,7 @@ import {
   Gauge,
   Map,
   Bell,
+  HelpCircle,
 } from "lucide-react";
 import {
   Sidebar,
@@ -92,6 +93,8 @@ const inteligencia: MenuItem[] = [
   { title: "Automações", url: "/automacoes", icon: Zap, roles: ["admin", "gerente", "franqueador"] },
   { title: "Comunicação", url: "/central-comunicacao", icon: Radio, roles: ["admin", "gerente", "franqueador"] },
   { title: "Notificações", url: "/notificacoes", icon: Bell },
+  { title: "Feedback", url: "/feedback", icon: MessageSquare },
+  { title: "Ajuda", url: "/ajuda", icon: HelpCircle },
   { title: "Modo Campo", url: "/modo-campo", icon: Map, roles: ["admin", "gerente", "montador", "tecnico"] },
   { title: "Integrações", url: "/integracoes", icon: Plug },
   { title: "Estimativa PDF", url: "/estimativa-orcamento", icon: MessageSquare },

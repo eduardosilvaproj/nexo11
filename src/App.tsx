@@ -46,6 +46,8 @@ import Almoxarifado from "./pages/Almoxarifado";
 import Automacoes from "./pages/Automacoes";
 import CentralComunicacao from "./pages/CentralComunicacao";
 import Execucao from "./pages/Execucao";
+import Feedback from "./pages/Feedback";
+import Ajuda from "./pages/Ajuda";
 import IndicadoresOperacionais from "./pages/IndicadoresOperacionais";
 import ModoCampo from "./pages/ModoCampo";
 import Notificacoes from "./pages/Notificacoes";
@@ -64,6 +66,7 @@ import FrotaCheckin from "./pages/frota/FrotaCheckin";
 
 import PortalFuncionario from "./pages/PortalFuncionario";
 import { VersionChecker } from "./components/VersionChecker";
+import { AgentWidget } from "./components/agent/AgentWidget";
 import NewContract from "./pages/NewContract";
 
 // Mobile imports - lazy loaded
@@ -250,6 +253,8 @@ function RootLayoutSwitcher() {
         <Route path="/indicadores" element={<IndicadoresOperacionais />} />
         <Route path="/modo-campo" element={<ModoCampo />} />
         <Route path="/notificacoes" element={<Notificacoes />} />
+        <Route path="/feedback" element={<Feedback />} />
+        <Route path="/ajuda" element={<Ajuda />} />
         <Route path="/sem-permissao" element={<SemPermissao />} />
       </Route>
 
@@ -267,6 +272,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <RootLayoutSwitcher />
+          <AgentWidget />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
