@@ -13,7 +13,13 @@ export const useEstimativaPDF = () => {
 
     try {
       setProgress('Enviando PDF...');
-      const fileName = `${Date.now()}_${file.name}`;
+      // Sanitizar nome do arquivo (remover acentos e caracteres especiais)
+      const safeName = file.name
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .replace(/[^a-zA-Z0-9._-]/g, '_')
+        .replace(/_+/g, '_');
+      const fileName = `${Date.now()}_${safeName}`;
       const { error: uploadError } = await supabase.storage
         .from('estimativas')
         .upload(fileName, file);
