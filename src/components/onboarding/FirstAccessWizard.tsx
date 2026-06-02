@@ -279,13 +279,15 @@ export function FirstAccessWizard() {
 function StepWelcome({ userName, onNext }: { userName: string; onNext: () => void }) {
   return (
     <div className="flex flex-col items-center text-center px-8 pt-10 pb-4">
-      {/* Logo with glow */}
-      <div
-        className="nexo-logo-glow w-20 h-20 rounded-2xl flex items-center justify-center mb-6"
-        style={{ backgroundColor: "#1E6FBF" }}
-      >
-        <span className="text-white font-bold text-2xl tracking-tight">NEXO</span>
-      </div>
+      {/* Logo */}
+      <img
+        src="/nexo-logo-internal.png"
+        alt="NEXO Logo"
+        className="w-36 h-auto mb-6"
+        style={{
+          filter: "drop-shadow(0 4px 12px rgba(26,155,232,0.4)) drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+        }}
+      />
 
       <h1 className="text-2xl font-bold mb-2" style={{ color: "#0D1117" }}>
         Bem-vindo ao NEXO! 🎉
