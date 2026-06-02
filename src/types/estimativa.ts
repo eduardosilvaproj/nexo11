@@ -48,6 +48,7 @@ export interface RelatorioEstimativa {
   total_maximo: number;
   total_medio: number;
   observacoes_gerais: string[];
+  comentarios_ambientes?: Record<string, string>;
   erro?: string;
 }
 
@@ -60,6 +61,12 @@ export interface TabelaPrecoBase {
 }
 
 export type TipoProjeto = 'residencial' | 'comercial' | 'corporativo' | string;
+
+export const LABEL_TIPO_PROJETO: Record<string, string> = {
+  residencial: 'Residencial',
+  comercial: 'Comercial',
+  corporativo: 'Corporativo',
+};
 
 export interface ContextoEstimativa {
   tipo_projeto?: TipoProjeto;
