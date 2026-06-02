@@ -119,7 +119,8 @@ export const useEstimativaPDF = () => {
 
     } catch (err) {
       console.error('Erro:', err);
-      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      const msg = err instanceof Error ? err.message : 'Erro desconhecido';
+      setError(humanizeError(msg));
       setLoading(false);
       return null;
     }
@@ -127,6 +128,36 @@ export const useEstimativaPDF = () => {
 
   return { analisarPDF, loading, progress, error };
 };
+
+function humanizeError(msg: string): string {
+  const lower = msg.toLowerCase();
+  if (lower.includes('503') || lower.includes('unavailable') || lower.includes('high demand') || lower.includes('overloaded')) {
+    return 'Servidor temporariamente sobrecarregado. Aguarde alguns instantes e tente novamente.';
+  }
+  if (lower.includes('timeout') || lower.includes('timed out')) {
+    return 'A análise demorou mais que o esperado. Tente novamente em alguns segundos.';
+  }
+  if (lower.includes('429') || lower.includes('rate limit') || lower.includes('quota')) {
+    return 'Limite de requisições atingido. Aguarde 1 minuto e tente novamente.';
+  }
+  if (lower.includes('401') || lower.includes('unauthorized') || lower.includes('api key')) {
+    return 'Erro de autenticação com o serviço de IA. Contate o suporte.';
+  }
+  if (lower.includes('network') || lower.includes('fetch') || lower.includes('connection')) {
+    return 'Falha na conexão. Verifique sua internet e tente novamente.';
+  }
+  if (lower.includes('invalid') && lower.includes('key')) {
+    return 'Nome do arquivo contém caracteres inválidos. Renomeie o PDF removendo acentos e tente novamente.';
+  }
+  if (lower.includes('size') || lower.includes('too large') || lower.includes('payload')) {
+    return 'Arquivo muito grande. Tente com um PDF menor (máx. 10MB).';
+  }
+  if (lower.includes('502') || lower.includes('bad gateway')) {
+    return 'Serviço temporariamente indisponível. Tente novamente em alguns instantes.';
+  }
+  // Fallback genérico
+  return 'Não foi possível processar o PDF. Tente novamente em alguns instantes.';
+}
 
 function getTabelaPreco(tipo: string): { min: number; max: number; fixo_min: number; fixo_max: number } {
   // Normaliza o tipo recebido da IA para um dos tipos conhecidos
