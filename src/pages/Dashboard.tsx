@@ -13,6 +13,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { QuickShortcuts } from "@/components/dashboard/QuickShortcuts";
 
 const ETAPAS_CONFIG: { key: string; label: string; border: string; text: string; iconBg: string }[] = [
   { key: "comercial", label: "Comercial", border: "#378ADD", text: "#0C447C", iconBg: "#E6F1FB" },
@@ -176,6 +177,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-7">
+      <QuickShortcuts />
       <div className="relative overflow-hidden rounded-[28px] border border-sky-100 bg-gradient-to-br from-white via-sky-50/70 to-emerald-50/60 p-6 shadow-sm shadow-slate-200/70">
         <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-sky-200/30 blur-3xl" />
         <div className="absolute bottom-0 right-28 h-32 w-32 rounded-full bg-emerald-200/30 blur-3xl" />

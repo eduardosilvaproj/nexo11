@@ -71,6 +71,8 @@ import FrotaCheckin from "./pages/frota/FrotaCheckin";
 import PortalFuncionario from "./pages/PortalFuncionario";
 import { VersionChecker } from "./components/VersionChecker";
 import { AgentWidget } from "./components/agent/AgentWidget";
+import { FirstAccessWizard } from "./components/onboarding/FirstAccessWizard";
+import { HintsOverlay } from "./components/onboarding/HintsOverlay";
 import NewContract from "./pages/NewContract";
 
 // Mobile imports - lazy loaded
@@ -281,6 +283,8 @@ const App = () => (
         <AuthProvider>
           <RootLayoutSwitcher />
           <AgentWidget />
+          <FirstAccessWizard />
+          <HintsOverlay />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
