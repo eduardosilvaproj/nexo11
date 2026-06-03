@@ -50,6 +50,13 @@ export interface RelatorioEstimativa {
   observacoes_gerais: string[];
   comentarios_ambientes?: Record<string, string>;
   erro?: string;
+  contexto?: ContextoEstimativa;
+  comparacao_orcamento?: {
+    orcamento_cliente: number;
+    estimativa_media: number;
+    diferenca_valor: number;
+    diferenca_pct: number;
+  };
 }
 
 export interface TabelaPrecoBase {
