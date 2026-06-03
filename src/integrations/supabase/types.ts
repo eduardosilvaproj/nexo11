@@ -186,6 +186,118 @@ export type Database = {
           },
         ]
       }
+      agent_conversas: {
+        Row: {
+          created_at: string | null
+          id: string
+          loja_id: string | null
+          mensagens: Json | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          loja_id?: string | null
+          mensagens?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          loja_id?: string | null
+          mensagens?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_conversas_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_faq: {
+        Row: {
+          ativo: boolean | null
+          categoria: string | null
+          created_at: string | null
+          id: string
+          keywords: string[] | null
+          loja_id: string | null
+          pergunta: string
+          resposta: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          categoria?: string | null
+          created_at?: string | null
+          id?: string
+          keywords?: string[] | null
+          loja_id?: string | null
+          pergunta: string
+          resposta: string
+        }
+        Update: {
+          ativo?: boolean | null
+          categoria?: string | null
+          created_at?: string | null
+          id?: string
+          keywords?: string[] | null
+          loja_id?: string | null
+          pergunta?: string
+          resposta?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_faq_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ajuda_artigos: {
+        Row: {
+          ativo: boolean | null
+          categoria: string
+          conteudo: string
+          created_at: string | null
+          id: string
+          modulo: string | null
+          ordem: number | null
+          titulo: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          categoria: string
+          conteudo: string
+          created_at?: string | null
+          id?: string
+          modulo?: string | null
+          ordem?: number | null
+          titulo: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          categoria?: string
+          conteudo?: string
+          created_at?: string | null
+          id?: string
+          modulo?: string | null
+          ordem?: number | null
+          titulo?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       ambiente_itens_extras: {
         Row: {
           ambiente_id: string
@@ -3510,6 +3622,94 @@ export type Database = {
             columns: ["cartao_id"]
             isOneToOne: false
             referencedRelation: "cartoes_credito"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback_votos: {
+        Row: {
+          created_at: string | null
+          feedback_id: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          feedback_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          feedback_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_votos_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedbacks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedbacks: {
+        Row: {
+          created_at: string | null
+          descricao: string | null
+          id: string
+          loja_id: string | null
+          modulo: string | null
+          prioridade: string | null
+          resposta_admin: string | null
+          screenshot_url: string | null
+          status: string | null
+          tipo: string
+          titulo: string
+          updated_at: string | null
+          user_id: string | null
+          votos: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          loja_id?: string | null
+          modulo?: string | null
+          prioridade?: string | null
+          resposta_admin?: string | null
+          screenshot_url?: string | null
+          status?: string | null
+          tipo: string
+          titulo: string
+          updated_at?: string | null
+          user_id?: string | null
+          votos?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          loja_id?: string | null
+          modulo?: string | null
+          prioridade?: string | null
+          resposta_admin?: string | null
+          screenshot_url?: string | null
+          status?: string | null
+          tipo?: string
+          titulo?: string
+          updated_at?: string | null
+          user_id?: string | null
+          votos?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedbacks_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
             referencedColumns: ["id"]
           },
         ]
@@ -8116,6 +8316,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tour_progresso: {
+        Row: {
+          completado: boolean | null
+          created_at: string | null
+          id: string
+          pagina: string
+          step_atual: number | null
+          user_id: string | null
+        }
+        Insert: {
+          completado?: boolean | null
+          created_at?: string | null
+          id?: string
+          pagina: string
+          step_atual?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          completado?: boolean | null
+          created_at?: string | null
+          id?: string
+          pagina?: string
+          step_atual?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       transacoes: {
         Row: {
