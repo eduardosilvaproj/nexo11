@@ -33,7 +33,7 @@ export function EcossistemaNexo() {
                 <defs>
                   <linearGradient id="conn" x1="0" y1="0" x2="1" y2="1">
                     <stop offset="0%" stopColor="#00AAFF" stopOpacity="0.5" />
-                    <stop offset="100%" stopColor="#12B76A" stopOpacity="0.5" />
+                    <stop offset="100%" stopColor="#2DD4BF" stopOpacity="0.5" />
                   </linearGradient>
                 </defs>
                 {MODULOS.map((_, i) => {
@@ -62,7 +62,7 @@ export function EcossistemaNexo() {
                 style={{
                   left: center - 72,
                   top: center - 72,
-                  boxShadow: "0 0 80px -10px #00AAFF, inset 0 0 40px rgba(18,183,106,0.25)",
+                  boxShadow: "0 0 80px -10px #00AAFF, inset 0 0 40px rgba(45,212,191,0.25)",
                 }}
               >
                 <LogoOficial size="lg" glow="soft" />
@@ -74,7 +74,7 @@ export function EcossistemaNexo() {
                 const x = center + Math.cos(a) * radius;
                 const y = center + Math.sin(a) * radius;
                 const Icon = m.icon;
-                const cor = m.cor === "blue" ? "#00AAFF" : "#12B76A";
+                const cor = m.cor === "blue" ? "#00AAFF" : "#2DD4BF";
                 return (
                   <div
                     key={m.slug}
@@ -100,7 +100,7 @@ export function EcossistemaNexo() {
           <div className="md:hidden grid grid-cols-3 gap-3">
             {MODULOS.map((m) => {
               const Icon = m.icon;
-              const cor = m.cor === "blue" ? "#00AAFF" : "#12B76A";
+              const cor = m.cor === "blue" ? "#00AAFF" : "#2DD4BF";
               return (
                 <div
                   key={m.slug}

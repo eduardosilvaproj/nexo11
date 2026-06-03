@@ -63,7 +63,7 @@ export function AppFuncionarioShowcase() {
               {FEATURES.map((f) => (
                 <div key={f.title} className="flex gap-4">
                   <div className="w-11 h-11 shrink-0 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center">
-                    <f.icon className="w-4 h-4 text-[#12B76A]" />
+                    <f.icon className="w-4 h-4 text-[#2DD4BF]" />
                   </div>
                   <div>
                     <div className="text-white font-semibold">{f.title}</div>
