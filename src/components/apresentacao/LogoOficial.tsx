@@ -28,8 +28,8 @@ export function LogoOficial({
     : glow === "none"
     ? undefined
     : glow === "premium"
-    ? "drop-shadow(0 0 48px rgba(0,170,255,0.55)) drop-shadow(0 0 96px rgba(18,183,106,0.30)) drop-shadow(0 0 16px rgba(255,255,255,0.08))"
-    : "drop-shadow(0 0 24px rgba(0,170,255,0.40)) drop-shadow(0 0 48px rgba(18,183,106,0.20))";
+    ? "drop-shadow(0 0 48px rgba(0,170,255,0.55)) drop-shadow(0 0 96px rgba(45,212,191,0.30)) drop-shadow(0 0 16px rgba(255,255,255,0.08))"
+    : "drop-shadow(0 0 24px rgba(0,170,255,0.40)) drop-shadow(0 0 48px rgba(45,212,191,0.20))";
 
   return (
     <>
@@ -41,7 +41,6 @@ export function LogoOficial({
           style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}
         >
           <defs>
-            {/* Feather edges: blur alpha lightly, then erode-ish recomposite to soften PNG cut */}
             <filter id="nx-logo-feather" x="-5%" y="-5%" width="110%" height="110%" colorInterpolationFilters="sRGB">
               <feGaussianBlur in="SourceAlpha" stdDeviation="0.75" result="blurA" />
               <feComposite in="SourceGraphic" in2="blurA" operator="in" result="softened" />
@@ -53,8 +52,8 @@ export function LogoOficial({
         </svg>
       )}
       <img
-        src="/nexo-logo.png"
-        alt="NEXO"
+        src="/arandu-logo.png"
+        alt="ARANDU"
         width={px}
         height={px}
         loading={eager ? "eager" : "lazy"}
@@ -71,5 +70,3 @@ export function LogoOficial({
     </>
   );
 }
-
-

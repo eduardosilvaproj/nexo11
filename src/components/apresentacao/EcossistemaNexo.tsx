@@ -1,9 +1,20 @@
 import { Reveal } from "./Reveal";
-import { MODULOS } from "./data";
 import { LogoOficial } from "./LogoOficial";
+import { Briefcase, Compass, Factory, Wrench, Wallet, HeadphonesIcon, Users, BarChart3 } from "lucide-react";
+
+const NODES = [
+  { titulo: "Comercial", icon: Briefcase, cor: "blue" as const },
+  { titulo: "Projetos", icon: Compass, cor: "cyan" as const },
+  { titulo: "Produção", icon: Factory, cor: "blue" as const },
+  { titulo: "Montagem", icon: Wrench, cor: "cyan" as const },
+  { titulo: "Financeiro", icon: Wallet, cor: "blue" as const },
+  { titulo: "Atendimento", icon: HeadphonesIcon, cor: "cyan" as const },
+  { titulo: "Equipe", icon: Users, cor: "blue" as const },
+  { titulo: "Indicadores", icon: BarChart3, cor: "cyan" as const },
+];
 
 export function EcossistemaNexo() {
-  const total = MODULOS.length;
+  const total = NODES.length;
   const size = 560;
   const center = size / 2;
   const radius = 220;
@@ -14,29 +25,28 @@ export function EcossistemaNexo() {
         <Reveal>
           <div className="text-center mb-12 sm:mb-16">
             <div className="text-[10px] font-semibold tracking-[0.4em] text-white/40 uppercase mb-4">
-              Ecossistema NEXO
+              Seção 03 · A Conexão
             </div>
             <h2 className="text-[clamp(1.75rem,5vw,3rem)] font-semibold text-white tracking-tight max-w-3xl mx-auto leading-tight">
-              Doze módulos. Um único ecossistema.
+              O ponto onde tudo se conecta.
             </h2>
             <p className="text-white/55 text-sm sm:text-base mt-4 sm:mt-5 max-w-2xl mx-auto">
-              Cada módulo opera de forma especializada, mas conversa em tempo real com todos os outros.
+              Fluxo de informações convergindo para um único núcleo de inteligência.
             </p>
           </div>
         </Reveal>
 
         <Reveal>
-          {/* Desktop: diagrama circular */}
           <div className="hidden md:flex justify-center">
             <div className="relative" style={{ width: size, height: size }}>
               <svg width={size} height={size} className="absolute inset-0">
                 <defs>
                   <linearGradient id="conn" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#00AAFF" stopOpacity="0.5" />
-                    <stop offset="100%" stopColor="#12B76A" stopOpacity="0.5" />
+                    <stop offset="0%" stopColor="#00AAFF" stopOpacity="0.55" />
+                    <stop offset="100%" stopColor="#2DD4BF" stopOpacity="0.55" />
                   </linearGradient>
                 </defs>
-                {MODULOS.map((_, i) => {
+                {NODES.map((_, i) => {
                   const a = (i / total) * Math.PI * 2 - Math.PI / 2;
                   const x = center + Math.cos(a) * radius;
                   const y = center + Math.sin(a) * radius;
@@ -50,34 +60,32 @@ export function EcossistemaNexo() {
                       stroke="url(#conn)"
                       strokeWidth="1"
                       strokeDasharray="4 6"
-                      style={{ animation: `dash 6s linear ${i * 0.25}s infinite` }}
+                      style={{ animation: `dash 5s linear ${i * 0.25}s infinite` }}
                     />
                   );
                 })}
               </svg>
 
-              {/* núcleo */}
               <div
-                className="absolute flex items-center justify-center w-36 h-36 rounded-full bg-[#060d1a] border border-white/15"
+                className="absolute flex items-center justify-center w-44 h-44 rounded-full bg-[#060d1a] border border-white/15"
                 style={{
-                  left: center - 72,
-                  top: center - 72,
-                  boxShadow: "0 0 80px -10px #00AAFF, inset 0 0 40px rgba(18,183,106,0.25)",
+                  left: center - 88,
+                  top: center - 88,
+                  boxShadow: "0 0 90px -10px #00AAFF, inset 0 0 40px rgba(45,212,191,0.25)",
                 }}
               >
-                <LogoOficial size="lg" glow="soft" />
+                <LogoOficial size="lg" glow="soft" className="!w-[120px] h-auto" />
               </div>
 
-              {/* nós */}
-              {MODULOS.map((m, i) => {
+              {NODES.map((m, i) => {
                 const a = (i / total) * Math.PI * 2 - Math.PI / 2;
                 const x = center + Math.cos(a) * radius;
                 const y = center + Math.sin(a) * radius;
                 const Icon = m.icon;
-                const cor = m.cor === "blue" ? "#00AAFF" : "#12B76A";
+                const cor = m.cor === "blue" ? "#00AAFF" : "#2DD4BF";
                 return (
                   <div
-                    key={m.slug}
+                    key={m.titulo}
                     className="absolute flex flex-col items-center gap-1.5 -translate-x-1/2 -translate-y-1/2"
                     style={{ left: x, top: y }}
                   >
@@ -87,7 +95,7 @@ export function EcossistemaNexo() {
                     >
                       <Icon className="w-4 h-4" style={{ color: cor }} />
                     </div>
-                    <span className="text-[10px] text-white/60 font-medium whitespace-nowrap">
+                    <span className="text-[10px] text-white/65 font-medium whitespace-nowrap">
                       {m.titulo}
                     </span>
                   </div>
@@ -96,21 +104,30 @@ export function EcossistemaNexo() {
             </div>
           </div>
 
-          {/* Mobile: grid */}
-          <div className="md:hidden grid grid-cols-3 gap-3">
-            {MODULOS.map((m) => {
-              const Icon = m.icon;
-              const cor = m.cor === "blue" ? "#00AAFF" : "#12B76A";
-              return (
-                <div
-                  key={m.slug}
-                  className="flex flex-col items-center gap-2 p-4 rounded-xl bg-white/[0.03] border border-white/10"
-                >
-                  <Icon className="w-5 h-5" style={{ color: cor }} />
-                  <span className="text-[10px] text-white/70 text-center">{m.titulo}</span>
-                </div>
-              );
-            })}
+          <div className="md:hidden">
+            <div className="flex justify-center mb-6">
+              <div
+                className="flex items-center justify-center w-32 h-32 rounded-full bg-[#060d1a] border border-white/15"
+                style={{ boxShadow: "0 0 60px -10px #00AAFF, inset 0 0 30px rgba(45,212,191,0.25)" }}
+              >
+                <LogoOficial size="md" glow="soft" className="!w-[80px] h-auto" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {NODES.map((m) => {
+                const Icon = m.icon;
+                const cor = m.cor === "blue" ? "#00AAFF" : "#2DD4BF";
+                return (
+                  <div
+                    key={m.titulo}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/10"
+                  >
+                    <Icon className="w-4 h-4" style={{ color: cor }} />
+                    <span className="text-xs text-white/80">{m.titulo}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </Reveal>
       </div>

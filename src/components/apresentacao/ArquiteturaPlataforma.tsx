@@ -1,17 +1,13 @@
 import { Reveal } from "./Reveal";
-import {
-  Code2, Database, Zap, Building2, Shield, KeyRound, Network, Smartphone,
-} from "lucide-react";
+import { TrendingUp, Eye, Route, Gauge, Brain, Database } from "lucide-react";
 
 const CARDS = [
-  { icon: Code2, title: "Frontend", desc: "React + TypeScript com Vite e Tailwind." },
-  { icon: Database, title: "Backend", desc: "Supabase: Postgres, Auth, Storage e Edge Functions." },
-  { icon: Zap, title: "Tempo Real", desc: "Sincronização entre dispositivos em milissegundos." },
-  { icon: Building2, title: "Multi-Loja", desc: "Isolamento total de dados por unidade operacional." },
-  { icon: Shield, title: "Controle de Permissões", desc: "RLS aplicado no servidor, sem brechas no cliente." },
-  { icon: KeyRound, title: "Segurança por Papéis", desc: "Perfis, escopos e auditoria de ações sensíveis." },
-  { icon: Network, title: "Escalabilidade", desc: "Arquitetura horizontal pronta para crescimento." },
-  { icon: Smartphone, title: "Responsividade", desc: "Desktop, tablet e mobile com experiências dedicadas." },
+  { icon: TrendingUp, title: "Previsibilidade", desc: "Antecipe resultados, gargalos e oportunidades antes que aconteçam." },
+  { icon: Eye, title: "Visibilidade", desc: "Enxergue toda a operação em tempo real, em um único lugar." },
+  { icon: Route, title: "Rastreabilidade", desc: "Cada movimento, cada decisão, cada entrega — registrados ponta a ponta." },
+  { icon: Gauge, title: "Produtividade", desc: "Menos retrabalho, menos ruído, mais foco no que gera valor." },
+  { icon: Brain, title: "Tomada de Decisão", desc: "Informação na hora certa, no formato certo, para a pessoa certa." },
+  { icon: Database, title: "Gestão por Dados", desc: "Decisões sustentadas por evidências, não por suposições." },
 ];
 
 export function ArquiteturaPlataforma() {
@@ -21,23 +17,26 @@ export function ArquiteturaPlataforma() {
         <Reveal>
           <div className="text-center mb-10 sm:mb-16">
             <div className="text-[10px] font-semibold tracking-[0.4em] text-white/40 uppercase mb-4">
-              Arquitetura da Plataforma
+              Seção 05 · A Camada de Inteligência
             </div>
             <h2 className="text-[clamp(1.75rem,5vw,3rem)] font-semibold text-white tracking-tight max-w-3xl mx-auto leading-tight">
-              Construída para escalar com a operação.
+              A inteligência por trás da operação.
             </h2>
           </div>
         </Reveal>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {CARDS.map((c, i) => (
-            <Reveal key={c.title} delay={i * 60}>
-              <div className="h-full p-6 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl hover:border-white/20 transition-colors">
-                <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center mb-5">
-                  <c.icon className="w-4 h-4 text-white/80" />
+            <Reveal key={c.title} delay={i * 70}>
+              <div className="h-full p-7 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl hover:border-white/20 transition-colors group">
+                <div
+                  className="w-11 h-11 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center mb-5"
+                  style={{ boxShadow: "0 0 28px -10px #00AAFF" }}
+                >
+                  <c.icon className="w-4 h-4 text-[#7DD3FC] group-hover:text-[#2DD4BF] transition-colors" />
                 </div>
-                <div className="text-white font-semibold mb-1.5">{c.title}</div>
-                <div className="text-white/50 text-sm leading-relaxed">{c.desc}</div>
+                <div className="text-white font-semibold mb-2 text-base">{c.title}</div>
+                <div className="text-white/55 text-sm leading-relaxed">{c.desc}</div>
               </div>
             </Reveal>
           ))}

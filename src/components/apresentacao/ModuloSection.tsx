@@ -9,7 +9,7 @@ import { ImageZoomModalGaleria } from "./ImageZoomModalGaleria";
 export function ModuloSection({ modulo, index }: { modulo: ModuloApresentacao; index: number }) {
   const [zoomIdx, setZoomIdx] = useState<number | null>(null);
   const Icon = modulo.icon;
-  const cor = modulo.cor === "blue" ? "#00AAFF" : "#12B76A";
+  const cor = modulo.cor === "blue" ? "#00AAFF" : "#2DD4BF";
   const screenshot = `/screenshots/${modulo.slug}.webp`;
   const fallback = `/screenshots/${modulo.slug}.png`;
 
