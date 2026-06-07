@@ -72,14 +72,14 @@ const files = [
 ];
 
 files.forEach(f => {
-  const svgPath = \`\${dirs[0]}/\${f.name}.svg\`;
+  const svgPath = dirs[0] + '/' + f.name + '.svg';
   fs.writeFileSync(svgPath, getSvg(f.variant));
 });
 
 const iconSizes = [32, 64, 192, 512];
 iconSizes.forEach(size => {
-  const svg = getSvg('symbol').replace('width="100"', \`width="\${size}"\`).replace('height="100"', \`height="\${size}"\`);
-  fs.writeFileSync(\`public/nexus/icons/icon-\${size}.svg\`, svg);
+  const svg = getSvg('symbol').replace('width="100"', 'width="' + size + '"').replace('height="100"', 'height="' + size + '"');
+  fs.writeFileSync('public/nexus/icons/icon-' + size + '.svg', svg);
 });
 
 fs.writeFileSync('public/nexus-logo.svg', getSvg('main'));
