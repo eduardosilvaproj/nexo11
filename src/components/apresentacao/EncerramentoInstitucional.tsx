@@ -18,10 +18,10 @@ export function EncerramentoInstitucional() {
 
         <Reveal delay={150}>
           <h2 className="text-[clamp(2rem,7vw,3.75rem)] font-semibold tracking-tight text-white leading-[1.05]">
-            Transformando informação
+            Sua indústria mais
             <br />
-            <span className="bg-gradient-to-r from-[#7DD3FC] via-[#22D3EE] to-[#2DD4BF] bg-clip-text text-transparent">
-              em decisão.
+            <span className="bg-gradient-to-r from-[#1A9BE8] via-[#22C97A] to-[#1A9BE8] bg-clip-text text-transparent">
+              conectada e lucrativa.
             </span>
           </h2>
         </Reveal>
@@ -29,19 +29,18 @@ export function EncerramentoInstitucional() {
         <Reveal delay={300}>
           <div className="text-white/60 text-base sm:text-lg mt-10 max-w-2xl mx-auto leading-relaxed space-y-5">
             <p>
-              Escolhemos o nome <span className="text-white">Arandu</span> porque ele representa exatamente o
-              que acreditamos.
+              O <span className="text-white">NEXUS</span> nasceu para ser o ponto de conexão central de toda a sua operação.
             </p>
             <p>
-              Empresas não crescem apenas por trabalhar mais. Crescem quando conseguem transformar
-              experiência, processos e dados em decisões melhores.
+              Entendemos que no mercado de móveis planejados, a excelência não está apenas no design, 
+              mas na precisão com que a informação flui entre venda, fábrica e montagem.
             </p>
             <p className="text-white/85">
-              Arandu significa <em>sabedoria</em>. E é isso que queremos entregar.
+              Nexus significa <em>elo, conexão</em>.
             </p>
             <p>
-              Uma plataforma capaz de organizar informações, conectar setores e gerar inteligência para que
-              empresas tomem decisões mais rápidas, mais seguras e mais lucrativas.
+              Nossa missão é eliminar gargalos e transformar cada processo em um diferencial competitivo, 
+              garantindo que sua empresa escale com eficiência, segurança e total controle.
             </p>
           </div>
         </Reveal>
