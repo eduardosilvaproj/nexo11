@@ -182,19 +182,11 @@ export function validateProject(
     const length = calculateLength(wall.startPoint, wall.endPoint);
 
     if (length < CAPTURE_DEFAULTS.MIN_WALL_LENGTH) {
-      errors.push({
-        type: 'wall_too_short',
-        message: `Parede muito curta: ${length.toFixed(0)}mm (mínimo: ${CAPTURE_DEFAULTS.MIN_WALL_LENGTH}mm)`,
-        entityId: wall.id,
-      });
+      errors.push(`Parede muito curta: ${length.toFixed(0)}mm (mínimo: ${CAPTURE_DEFAULTS.MIN_WALL_LENGTH}mm)`);
     }
 
     if (length > CAPTURE_DEFAULTS.MAX_WALL_LENGTH) {
-      errors.push({
-        type: 'wall_too_long',
-        message: `Parede muito longa: ${length.toFixed(0)}mm (máximo: ${CAPTURE_DEFAULTS.MAX_WALL_LENGTH}mm)`,
-        entityId: wall.id,
-      });
+      errors.push(`Parede muito longa: ${length.toFixed(0)}mm (máximo: ${CAPTURE_DEFAULTS.MAX_WALL_LENGTH}mm)`);
     }
   }
 
