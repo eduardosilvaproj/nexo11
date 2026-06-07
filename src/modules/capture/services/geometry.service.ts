@@ -197,11 +197,7 @@ export function validateProject(
     for (const opening of wall.openings) {
       if (opening.type === 'door') {
         if (opening.position + opening.width > wallLength) {
-          errors.push({
-            type: 'door_exceeds_wall',
-            message: `Porta excede o comprimento da parede`,
-            entityId: wall.id,
-          });
+          errors.push(`Porta excede o comprimento da parede`);
         }
       }
     }
