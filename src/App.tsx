@@ -56,6 +56,7 @@ import IndicadoresOperacionais from "./pages/IndicadoresOperacionais";
 import ModoCampo from "./pages/ModoCampo";
 import Notificacoes from "./pages/Notificacoes";
 import Apresentacao from "./pages/Apresentacao";
+import CapturePage from "./pages/Capture";
 
 import FrotaLayout from "./pages/frota/FrotaLayout";
 import FrotaDashboard from "./pages/frota/FrotaDashboard";
@@ -265,6 +266,7 @@ function RootLayoutSwitcher() {
         <Route path="/radar-equipe" element={<RadarEquipe />} />
         <Route path="/automacao-whatsapp" element={<AutomacaoWhatsapp />} />
         <Route path="/push-notificacoes" element={<PushNotificacoes />} />
+        <Route path="/capture" element={<CapturePage />} />
         <Route path="/sem-permissao" element={<SemPermissao />} />
       </Route>
 

@@ -34,6 +34,7 @@ import {
   Map,
   Bell,
   HelpCircle,
+  UploadCloud,
 } from "lucide-react";
 import {
   Sidebar,
@@ -94,6 +95,7 @@ const inteligencia: MenuItem[] = [
   { title: "Indicadores", url: "/indicadores", icon: Gauge, roles: ["admin", "gerente", "franqueador"] },
   { title: "WhatsApp", url: "/automacao-whatsapp", icon: Zap, roles: ["admin", "gerente", "franqueador"] },
   { title: "Push", url: "/push-notificacoes", icon: Bell, roles: ["admin", "gerente", "franqueador"] },
+  { title: "Capture", url: "/capture", icon: UploadCloud, roles: ["admin", "gerente", "franqueador"] },
   { title: "Automações", url: "/automacoes", icon: Zap, roles: ["admin", "gerente", "franqueador"] },
   { title: "Comunicação", url: "/central-comunicacao", icon: Radio, roles: ["admin", "gerente", "franqueador"] },
   { title: "Notificações", url: "/notificacoes", icon: Bell },
