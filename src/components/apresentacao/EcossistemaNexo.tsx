@@ -116,7 +116,7 @@ export function EcossistemaNexo() {
             <div className="grid grid-cols-2 gap-3">
               {NODES.map((m) => {
                 const Icon = m.icon;
-                const cor = m.cor === "blue" ? "#00AAFF" : "#2DD4BF";
+                const cor = m.cor === "blue" ? "#1A9BE8" : "#22C97A";
                 return (
                   <div
                     key={m.titulo}
