@@ -210,7 +210,7 @@ export default function AppLayout() {
             <div className="flex items-center gap-3">
               <NotificationsBell />
               <div
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/80 bg-[linear-gradient(135deg,#1a7fe8,#22c97a)] text-xs font-bold text-white shadow-lg shadow-sky-900/15 ring-4 ring-slate-100"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/80 bg-[linear-gradient(135deg,#1A9BE8,#22C97A)] text-xs font-bold text-white shadow-lg shadow-sky-900/15 ring-4 ring-slate-100"
                 title={perfil?.nome ?? perfil?.email ?? ""}
               >
                 {initials}
