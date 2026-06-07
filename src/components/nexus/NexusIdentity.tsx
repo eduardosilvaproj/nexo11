@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogoOficial } from './LogoOficial';
+import { LogoOficial } from '../apresentacao/LogoOficial';
 
 const NEXUS_COLORS = [
   { name: 'Nexus Blue', hex: '#1A9BE8', tailwind: 'bg-[#1A9BE8]' },
