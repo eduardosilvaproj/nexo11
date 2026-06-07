@@ -269,7 +269,6 @@ export function detectRooms(walls: Wall[]): Room[] {
 
       rooms.push({
         id: uuid(),
-        projectId: walls[0].projectId,
         name: `Ambiente ${rooms.length + 1}`,
         wallIds: roomWalls.map((w) => w.id),
         area: Math.round(area * 100) / 100,
