@@ -210,11 +210,7 @@ export function validateProject(
     for (const opening of wall.openings) {
       if (opening.type === 'window') {
         if (opening.position + opening.width > wallLength) {
-          errors.push({
-            type: 'window_exceeds_wall',
-            message: `Janela excede o comprimento da parede`,
-            entityId: wall.id,
-          });
+          errors.push(`Janela excede o comprimento da parede`);
         }
       }
     }
