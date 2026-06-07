@@ -1,0 +1,226 @@
+// ============================================
+// NEXO CAPTURE — Prisma Schema
+// ============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// Models
+// ============================================
+
+model CaptureProject {
+  id            String          @id @default(uuid())
+  tenantId      String
+  name          String
+  status        ProjectStatus   @default(PENDING)
+  sourceType    SourceType
+  sourceFileUrl String?
+  skpFileUrl    String?
+
+  // Stats
+  wallCount     Int             @default(0)
+  doorCount     Int             @default(0)
+  windowCount   Int             @default(0)
+  totalArea     Float           @default(0)
+
+  // Config (JSON)
+  config        Json
+
+  // Timestamps
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  completedAt   DateTime?
+
+  // Relations
+  walls         CaptureWall[]
+  rooms         CaptureRoom[]
+  jobs          CaptureJob[]
+
+  // Index
+  @@index([tenantId])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+}
+
+model CaptureWall {
+  id          String   @id @default(uuid())
+  projectId   String
+  project     CaptureProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Geometry (stored in mm)
+  startX      Float
+  startY      Float
+  endX        Float
+  endY        Float
+  thickness   Float
+  height      Float
+
+  // Metadata
+  layer       String   @default("PAREDES")
+  isExterior  Boolean  @default(false)
+  componentId String?
+
+  // Timestamps
+  createdAt   DateTime @default(now())
+
+  // Relations
+  openings    CaptureOpening[]
+
+  // Index
+  @@index([projectId])
+}
+
+model CaptureOpening {
+  id        String      @id @default(uuid())
+  wallId    String
+  wall      CaptureWall @relation(fields: [wallId], references: [id], onDelete: Cascade)
+
+  type      OpeningType
+  position  Float       // mm from wall start
+  width     Float       // mm
+  height    Float       // mm
+  sillLevel Float?      // mm (for windows only)
+
+  // Type-specific
+  openingType String?   // 'pivot', 'corredeira', etc.
+
+  createdAt DateTime @default(now())
+
+  @@index([wallId])
+}
+
+model CaptureRoom {
+  id        String   @id @default(uuid())
+  projectId String
+  project   CaptureProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  name      String
+  area      Float    // m²
+  perimeter Float    // m
+
+  // Wall IDs stored as JSON array
+  wallIds   Json
+
+  ceilingHeight Float @default(2700)
+
+  createdAt DateTime @default(now())
+
+  @@index([projectId])
+}
+
+model CaptureJob {
+  id          String      @id @default(uuid())
+  projectId   String
+  project     CaptureProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // BullMQ job reference
+  jobId       String?     @unique
+  jobType     JobType
+  status      JobStatus   @default(PENDING)
+
+  // Progress
+  progress    Int         @default(0)
+  currentStep String?
+  steps       Json?      // Array of step status
+
+  // Result
+  result      Json?
+  error       String?
+
+  createdAt   DateTime    @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  @@index([projectId])
+  @@index([status])
+}
+
+// ============================================
+// Enums
+// ============================================
+
+enum ProjectStatus {
+  PENDING
+  PARSING
+  VALIDATING
+  GENERATING
+  COMPLETED
+  FAILED
+}
+
+enum SourceType {
+  DWG
+  JSON
+  PDF
+  IMAGE
+}
+
+enum OpeningType {
+  DOOR
+  WINDOW
+}
+
+enum JobType {
+  PARSE
+  VALIDATE
+  GENERATE_SKP
+  EXPORT_PROMOB
+}
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// ============================================
+// Example Queries
+// ============================================
+
+// Create project
+// const project = await prisma.captureProject.create({
+//   data: {
+//     tenantId: 'tenant-123',
+//     name: 'Quarto Suite',
+//     status: 'PENDING',
+//     sourceType: 'JSON',
+//     config: {
+//       wallHeight: 2700,
+//       wallThickness: 150,
+//       floorLevel: 0,
+//       units: 'mm',
+//       originX: 0,
+//       originY: 0,
+//       scale: 1,
+//     },
+//   },
+// });
+
+// Get project with walls
+// const project = await prisma.captureProject.findUnique({
+//   where: { id: 'uuid' },
+//   include: {
+//     walls: {
+//       include: { openings: true }
+//     },
+//     rooms: true,
+//   },
+// });
+
+// Update job status
+// await prisma.captureJob.update({
+//   where: { id: 'job-uuid' },
+//   data: {
+//     status: 'PROCESSING',
+//     progress: 50,
+//     currentStep: 'Gerando arquivo SketchUp',
+//   },
+// });
