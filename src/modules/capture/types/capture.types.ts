@@ -57,6 +57,8 @@ export interface Room {
   wallIds: string[];
   area: number;
   projectId?: string;
+  perimeter?: number;
+  ceilingHeight?: number;
 }
 
 export interface ProjectConfig {
@@ -128,9 +130,14 @@ export interface ValidationResult {
 }
 
 export interface BoundingBox {
-  min: Point;
-  max: Point;
-  minX?: number; // Added for legacy code support if needed
+  min?: Point;
+  max?: Point;
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+  width: number;
+  height: number;
 }
 
 export type CaptureProjectLegacy = any;

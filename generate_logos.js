@@ -26,25 +26,23 @@ const getSvg = (variant) => {
     textSub = 'rgba(0,0,0,0.7)';
   }
 
-  const symbol = \`
-    <g transform="translate(10,10) scale(0.8)">
-      <defs>
-        <linearGradient id="grad-\${variant}" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="\${c1}" />
-          <stop offset="100%" stop-color="\${c2}" />
-        </linearGradient>
-      </defs>
-      <path d="M30 20L50 40L70 20" stroke="url(#grad-\${variant})" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
-      <path d="M30 80L50 60L70 80" stroke="url(#grad-\${variant})" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
-      <path d="M20 30L40 50L20 70" stroke="url(#grad-\${variant})" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
-      <path d="M80 30L60 50L80 70" stroke="url(#grad-\${variant})" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
-    </g>\`;
+  const symbol = '<g transform="translate(10,10) scale(0.8)">' +
+    '<defs>' +
+    '<linearGradient id="grad-' + variant + '" x1="0%" y1="0%" x2="100%" y2="100%">' +
+    '<stop offset="0%" stop-color="' + c1 + '" />' +
+    '<stop offset="100%" stop-color="' + c2 + '" />' +
+    '</linearGradient>' +
+    '</defs>' +
+    '<path d="M30 20L50 40L70 20" stroke="url(#grad-' + variant + ')" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />' +
+    '<path d="M30 80L50 60L70 80" stroke="url(#grad-' + variant + ')" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />' +
+    '<path d="M20 30L40 50L20 70" stroke="url(#grad-' + variant + ')" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />' +
+    '<path d="M80 30L60 50L80 70" stroke="url(#grad-' + variant + ')" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />' +
+    '</g>';
 
-  const text = \`
-    <g transform="translate(100, 35)">
-      <text fill="\${textMain}" font-family="sans-serif" font-weight="900" font-style="italic" font-size="42" letter-spacing="-2">NEXUS</text>
-      <text fill="\${textSub}" font-family="sans-serif" font-weight="500" font-size="10" letter-spacing="4" transform="translate(2, 50)">PLANEJADOS</text>
-    </g>\`;
+  const text = '<g transform="translate(100, 35)">' +
+    '<text fill="' + textMain + '" font-family="sans-serif" font-weight="900" font-style="italic" font-size="42" letter-spacing="-2">NEXUS</text>' +
+    '<text fill="' + textSub + '" font-family="sans-serif" font-weight="500" font-size="10" letter-spacing="4" transform="translate(2, 50)">PLANEJADOS</text>' +
+    '</g>';
 
   if (variant === 'symbol') {
     return '<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' + symbol + '</svg>';
@@ -64,7 +62,7 @@ const getSvg = (variant) => {
 };
 
 const dirs = ['public/nexus/logos', 'public/nexus/icons'];
-dirs.forEach(d => fs.mkdirSync(d, { recursive: true }));
+dirs.forEach(d => { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); });
 
 const files = [
   { name: 'logo-main', variant: 'main' },
