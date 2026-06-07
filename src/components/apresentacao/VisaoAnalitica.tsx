@@ -57,8 +57,8 @@ export function VisaoAnalitica() {
                 <svg viewBox="0 0 600 160" className="w-full h-32">
                   <defs>
                     <linearGradient id="va-fill" x1="0" x2="0" y1="0" y2="1">
-                      <stop offset="0%" stopColor="#2DD4BF" stopOpacity="0.35" />
-                      <stop offset="100%" stopColor="#2DD4BF" stopOpacity="0" />
+                      <stop offset="0%" stopColor="#22C97A" stopOpacity="0.35" />
+                      <stop offset="100%" stopColor="#22C97A" stopOpacity="0" />
                     </linearGradient>
                     <linearGradient id="va-line" x1="0" x2="1" y1="0" y2="0">
                       <stop offset="0%" stopColor="#00AAFF" />
