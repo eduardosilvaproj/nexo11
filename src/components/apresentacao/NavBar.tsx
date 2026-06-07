@@ -7,11 +7,11 @@ export function NavBar() {
         <div className="flex items-center gap-3 min-w-0">
           <LogoOficial size="md" eager glow="soft" />
           <span className="hidden sm:inline text-[10px] tracking-[0.3em] uppercase text-white/40 truncate">
-            Inteligência Operacional
+            Gestão que conecta
           </span>
         </div>
         <div className="hidden sm:block text-[10px] tracking-[0.3em] uppercase text-white/40 truncate">
-          ARANDU · usearandu.com.br
+          NEXUS · Nexus Planejados
         </div>
       </div>
     </header>
