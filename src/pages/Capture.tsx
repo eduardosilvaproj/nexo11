@@ -2,9 +2,10 @@
 // NEXO CAPTURE — Página Principal
 // ============================================
 
-import { useState, useRef, useEffect } from 'react';
-import { Upload, FileText, Download, Eye, Settings, CheckCircle, XCircle, Loader2, UploadCloud, Layers, Box, Ruler, RotateCcw, ZoomIn, ZoomOut, FileDown } from 'lucide-react';
-import { generateDXF, downloadDXF } from '@/modules/capture/infrastructure/dxf-generator';
+import { useState } from 'react';
+import { Upload, Download, Eye, CheckCircle, XCircle, Loader2, UploadCloud, Layers, Box, Ruler, RotateCcw, FileDown, Code, ExternalLink, Info } from 'lucide-react';
+import { Viewer3D } from '@/modules/capture/components/Viewer3D';
+import { generateSketchUpRubyScript } from '@/modules/capture/infrastructure/sketchup-ruby-generator';
 
 // ============================================
 // Types
@@ -19,7 +20,6 @@ interface Project {
   windowCount: number;
   totalArea: number;
   createdAt: string;
-  skpUrl?: string;
   walls: Array<{
     start: [number, number];
     end: [number, number];
@@ -73,6 +73,7 @@ export default function CapturePage() {
   const [project, setProject] = useState<Project | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
 
   const handleJSONImport = async () => {
     try {
@@ -103,11 +104,12 @@ export default function CapturePage() {
         windowCount: data.windows?.length || 0,
         totalArea: calculateArea(data.walls),
         createdAt: new Date().toISOString(),
-        skpUrl: '#',
         walls: data.walls,
         doors: data.doors || [],
         windows: data.windows || [],
       });
+
+      setShowPreview(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro ao processar');
     } finally {
@@ -115,10 +117,24 @@ export default function CapturePage() {
     }
   };
 
-  const handleDownloadDXF = () => {
+  const handleDownloadRubyScript = () => {
     if (!project) return;
+    const script = generateSketchUpRubyScript({
+      name: project.name,
+      walls: project.walls,
+      doors: project.doors,
+      windows: project.windows,
+    });
 
-    downloadDXF(project);
+    const blob = new Blob([script], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `nexo-capture-${project.id.slice(0, 8)}.rb`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const loadExample = () => {
@@ -153,13 +169,13 @@ export default function CapturePage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-slate-900">NEXO Capture</h1>
-            <p className="text-slate-500">Importar plantas e gerar arquivos SketchUp</p>
+            <p className="text-slate-500">Visualize e gere SKP para Promob Connect</p>
           </div>
         </div>
       </div>
 
       {/* Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
@@ -210,7 +226,7 @@ export default function CapturePage() {
                 className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1"
               >
                 <RotateCcw className="w-3 h-3" />
-                Novo projeto
+                Novo
               </button>
             )}
           </div>
@@ -260,7 +276,7 @@ export default function CapturePage() {
   "doors": [...],
   "windows": [...]
 }`}
-                  className="w-full h-56 p-4 font-mono text-sm border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none disabled:opacity-50"
+                  className="w-full h-40 p-4 font-mono text-sm border border-slate-200 rounded-xl bg-slate-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none disabled:opacity-50"
                 />
                 {!project && (
                   <button
@@ -276,24 +292,11 @@ export default function CapturePage() {
                     ) : (
                       <>
                         <Upload className="w-4 h-4" />
-                        Importar e Gerar DXF
+                        Processar Planta
                       </>
                     )}
                   </button>
                 )}
-              </div>
-            )}
-
-            {/* DWG/PDF Placeholder */}
-            {importType !== 'json' && (
-              <div className="border-2 border-dashed border-slate-300 rounded-xl p-12 text-center">
-                <FileText className="w-12 h-12 mx-auto text-slate-400 mb-4" />
-                <p className="text-slate-600 mb-2">
-                  Upload de {importType.toUpperCase()}
-                </p>
-                <p className="text-sm text-slate-400">
-                  Disponível em breve
-                </p>
               </div>
             )}
 
@@ -326,22 +329,22 @@ export default function CapturePage() {
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-50 rounded-xl p-4">
-                    <p className="text-xs text-slate-500 mb-1">Paredes</p>
+                <div className="grid grid-cols-4 gap-3">
+                  <div className="bg-slate-50 rounded-xl p-3 text-center">
                     <p className="text-2xl font-bold text-slate-900">{project.wallCount}</p>
+                    <p className="text-xs text-slate-500">Paredes</p>
                   </div>
-                  <div className="bg-slate-50 rounded-xl p-4">
-                    <p className="text-xs text-slate-500 mb-1">Portas</p>
+                  <div className="bg-slate-50 rounded-xl p-3 text-center">
                     <p className="text-2xl font-bold text-slate-900">{project.doorCount}</p>
+                    <p className="text-xs text-slate-500">Portas</p>
                   </div>
-                  <div className="bg-slate-50 rounded-xl p-4">
-                    <p className="text-xs text-slate-500 mb-1">Janelas</p>
+                  <div className="bg-slate-50 rounded-xl p-3 text-center">
                     <p className="text-2xl font-bold text-slate-900">{project.windowCount}</p>
+                    <p className="text-xs text-slate-500">Janelas</p>
                   </div>
-                  <div className="bg-slate-50 rounded-xl p-4">
-                    <p className="text-xs text-slate-500 mb-1">Área</p>
-                    <p className="text-2xl font-bold text-slate-900">{project.totalArea}m²</p>
+                  <div className="bg-slate-50 rounded-xl p-3 text-center">
+                    <p className="text-2xl font-bold text-slate-900">{project.totalArea}</p>
+                    <p className="text-xs text-slate-500">m²</p>
                   </div>
                 </div>
 
@@ -349,39 +352,57 @@ export default function CapturePage() {
                 {project.status === 'completed' && (
                   <div className="flex gap-3 pt-2">
                     <button
-                      onClick={handleDownloadDXF}
+                      onClick={handleDownloadRubyScript}
                       className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-medium hover:from-green-600 hover:to-emerald-600 flex items-center justify-center gap-2 shadow-lg shadow-green-500/30"
                     >
-                      <FileDown className="w-4 h-4" />
-                      Download DXF
+                      <Code className="w-4 h-4" />
+                      Baixar Script SKP
                     </button>
                     <button
-                      onClick={() => setShowPreview(!showPreview)}
-                      className="px-4 py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 flex items-center justify-center gap-2"
+                      onClick={() => setShowInstructions(!showInstructions)}
+                      className="px-4 py-3 bg-amber-100 text-amber-700 rounded-xl font-medium hover:bg-amber-200 flex items-center justify-center gap-2"
                     >
-                      <Eye className="w-4 h-4" />
-                      {showPreview ? 'Ocultar' : 'Preview'}
+                      <Info className="w-4 h-4" />
+                      Como usar
                     </button>
                   </div>
                 )}
 
-                {/* Preview 2D */}
+                {/* Instructions */}
+                {showInstructions && (
+                  <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <h4 className="font-semibold text-amber-900 mb-2 flex items-center gap-2">
+                      <Info className="w-4 h-4" />
+                      Como gerar o arquivo .SKP
+                    </h4>
+                    <ol className="text-sm text-amber-800 space-y-1.5 list-decimal list-inside">
+                      <li>Baixe o script Ruby acima</li>
+                      <li>Abra o <strong>SketchUp</strong> (qualquer versão)</li>
+                      <li>Menu <strong>Window → Ruby Console</strong></li>
+                      <li>Copie o conteúdo do arquivo <code className="bg-amber-200 px-1 rounded">.rb</code></li>
+                      <li>Cole no console e pressione Enter</li>
+                      <li>O SKP será gerado e salvo automaticamente</li>
+                      <li>Importe o .SKP no <strong>Promob Connect</strong></li>
+                    </ol>
+                  </div>
+                )}
+
+                {/* Preview 3D */}
                 {showPreview && project && (
                   <div className="mt-4">
-                    <div className="bg-slate-900 rounded-xl p-4">
-                      <PlanPreview project={project} />
-                    </div>
-                    <p className="text-xs text-slate-500 mt-2 text-center">
-                      Planta 2D — Clique para ampliar
-                    </p>
+                    <Viewer3D
+                      walls={project.walls}
+                      doors={project.doors}
+                      windows={project.windows}
+                    />
                   </div>
                 )}
               </div>
             ) : (
               <div className="text-center py-12">
-                <Settings className="w-12 h-12 mx-auto text-slate-300 mb-4" />
+                <UploadCloud className="w-12 h-12 mx-auto text-slate-300 mb-4" />
                 <p className="text-slate-500">
-                  Importe uma planta para ver o resultado
+                  Importe uma planta para visualizar
                 </p>
               </div>
             )}
@@ -408,149 +429,8 @@ export default function CapturePage() {
       {/* Footer Info */}
       <div className="mt-8 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100">
         <p className="text-sm text-green-800 text-center">
-          <strong>Formato DXF:</strong> Paredes, portas e janelas em camadas compatíveis com Promob Connect.
-          Altura: 2700mm | Espessura: 150mm | Unidades em milímetros
+          <strong>Workflow Promob:</strong> Baixe o script Ruby → Rode no SketchUp → Importe o .SKP no Promob Connect
         </p>
-      </div>
-    </div>
-  );
-}
-
-// ============================================
-// Plan Preview 2D Component
-// ============================================
-
-function PlanPreview({ project }: { project: Project }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [zoom, setZoom] = useState(1);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Set canvas size
-    canvas.width = 400;
-    canvas.height = 400;
-
-    // Clear
-    ctx.fillStyle = '#1e293b';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Calculate bounds
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    for (const w of project.walls) {
-      minX = Math.min(minX, w.start[0], w.end[0]);
-      minY = Math.min(minY, w.start[1], w.end[1]);
-      maxX = Math.max(maxX, w.start[0], w.end[0]);
-      maxY = Math.max(maxY, w.start[1], w.end[1]);
-    }
-
-    // Add padding
-    const padding = 50;
-    const planWidth = maxX - minX + padding * 2;
-    const planHeight = maxY - minY + padding * 2;
-    const scale = Math.min(350 / planWidth, 350 / planHeight) * zoom;
-
-    // Center offset
-    const offsetX = (400 - (maxX - minX) * scale) / 2 - minX * scale + padding * scale;
-    const offsetY = (400 - (maxY - minY) * scale) / 2 - minY * scale + padding * scale;
-
-    // Transform function
-    const transform = (x: number, y: number) => ({
-      x: x * scale + offsetX,
-      y: 400 - (y * scale + offsetY),
-    });
-
-    // Draw walls
-    ctx.strokeStyle = '#f1f5f9';
-    ctx.lineWidth = 4;
-    ctx.lineCap = 'round';
-
-    for (const wall of project.walls) {
-      const start = transform(wall.start[0], wall.start[1]);
-      const end = transform(wall.end[0], wall.end[1]);
-
-      ctx.beginPath();
-      ctx.moveTo(start.x, start.y);
-      ctx.lineTo(end.x, end.y);
-      ctx.stroke();
-    }
-
-    // Draw doors
-    ctx.fillStyle = '#22c97a';
-    for (const door of project.doors) {
-      if (door.wallIndex < project.walls.length) {
-        const wall = project.walls[door.wallIndex];
-        const length = Math.sqrt(
-          Math.pow(wall.end[0] - wall.start[0], 2) +
-          Math.pow(wall.end[1] - wall.start[1], 2)
-        );
-        const angle = Math.atan2(wall.end[1] - wall.start[1], wall.end[0] - wall.start[0]);
-
-        const dx = Math.cos(angle) * door.position;
-        const dy = Math.sin(angle) * door.position;
-        const pos = transform(wall.start[0] + dx, wall.start[1] + dy);
-
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, 8, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    // Draw windows
-    ctx.fillStyle = '#1a9be8';
-    for (const win of project.windows) {
-      if (win.wallIndex < project.walls.length) {
-        const wall = project.walls[win.wallIndex];
-        const length = Math.sqrt(
-          Math.pow(wall.end[0] - wall.start[0], 2) +
-          Math.pow(wall.end[1] - wall.start[1], 2)
-        );
-        const angle = Math.atan2(wall.end[1] - wall.start[1], wall.end[0] - wall.start[0]);
-
-        const dx = Math.cos(angle) * win.position;
-        const dy = Math.sin(angle) * win.position;
-        const pos = transform(wall.start[0] + dx, wall.start[1] + dy);
-
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, 6, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    // Legend
-    ctx.font = '10px Inter';
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillText('🟢 Porta', 10, 390);
-    ctx.fillStyle = '#38bdf8';
-    ctx.fillText('🔵 Janela', 70, 390);
-
-  }, [project, zoom]);
-
-  return (
-    <div className="flex flex-col items-center">
-      <canvas
-        ref={canvasRef}
-        className="rounded-lg cursor-pointer"
-        onClick={() => setZoom(z => z === 1 ? 2 : 1)}
-      />
-      <div className="flex items-center gap-2 mt-2">
-        <button
-          onClick={() => setZoom(z => Math.max(0.5, z - 0.25))}
-          className="p-1 bg-slate-700 rounded hover:bg-slate-600"
-        >
-          <ZoomOut className="w-4 h-4 text-slate-300" />
-        </button>
-        <span className="text-xs text-slate-400">{Math.round(zoom * 100)}%</span>
-        <button
-          onClick={() => setZoom(z => Math.min(3, z + 0.25))}
-          className="p-1 bg-slate-700 rounded hover:bg-slate-600"
-        >
-          <ZoomIn className="w-4 h-4 text-slate-300" />
-        </button>
       </div>
     </div>
   );
