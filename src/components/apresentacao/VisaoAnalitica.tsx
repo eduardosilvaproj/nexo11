@@ -61,8 +61,8 @@ export function VisaoAnalitica() {
                       <stop offset="100%" stopColor="#22C97A" stopOpacity="0" />
                     </linearGradient>
                     <linearGradient id="va-line" x1="0" x2="1" y1="0" y2="0">
-                      <stop offset="0%" stopColor="#00AAFF" />
-                      <stop offset="100%" stopColor="#2DD4BF" />
+                      <stop offset="0%" stopColor="#1A9BE8" />
+                      <stop offset="100%" stopColor="#22C97A" />
                     </linearGradient>
                   </defs>
                   <path
