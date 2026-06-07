@@ -12,18 +12,23 @@
 @layer base {
   :root {
     /* === NEXO Brand Tokens (requested palette) === */
-    --nexo-bg-dark: #060d1a;
-    --nexo-sidebar-dark: #0a0e1a;
-    --nexo-surface-dark: #0c1526;
-    --nexo-border-dark: rgba(255, 255, 255, 0.06);
+    --nexus-bg-dark: #1B1F28;
+    --nexus-blue: #1A9BE8;
+    --nexus-green: #22C97A;
+    --nexus-white: #FFFFFF;
+
+    --nexo-bg-dark: #1B1F28;
+    --nexo-sidebar-dark: #0B0D11;
+    --nexo-surface-dark: #1F242E;
+    --nexo-border-dark: rgba(255, 255, 255, 0.08);
     --nexo-text-primary: #1e293b;
     --nexo-text-secondary: #64748b;
-    --nexo-blue: #1a9be8;
-    --nexo-green: #22c97a;
+    --nexo-blue: #1A9BE8;
+    --nexo-green: #22C97A;
 
-    --nexo-gradient-primary: linear-gradient(90deg, #1a7fe8, #22c97a);
-    --nexo-gradient-x: linear-gradient(90deg, #1a7fe8, #22c97a);
-    --nexo-gradient-soft: linear-gradient(135deg, rgba(26,127,232,0.12), rgba(34,201,122,0.10));
+    --nexo-gradient-primary: linear-gradient(90deg, #1A9BE8, #22C97A);
+    --nexo-gradient-x: linear-gradient(90deg, #1A9BE8, #22C97A);
+    --nexo-gradient-soft: linear-gradient(135deg, rgba(26,155,232,0.12), rgba(34,201,122,0.10));
     --nexo-shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.08);
     --nexo-shadow-card: 0 10px 30px rgba(15, 23, 42, 0.06);
 
