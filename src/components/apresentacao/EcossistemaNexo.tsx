@@ -82,7 +82,7 @@ export function EcossistemaNexo() {
                 const x = center + Math.cos(a) * radius;
                 const y = center + Math.sin(a) * radius;
                 const Icon = m.icon;
-                const cor = m.cor === "blue" ? "#00AAFF" : "#2DD4BF";
+                const cor = m.cor === "blue" ? "#1A9BE8" : "#22C97A";
                 return (
                   <div
                     key={m.titulo}
