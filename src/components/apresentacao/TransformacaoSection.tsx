@@ -22,7 +22,7 @@ export function TransformacaoSection() {
               Transformando informação em decisão.
             </h2>
             <p className="text-white/55 text-sm sm:text-base mt-4 sm:mt-5 max-w-2xl mx-auto">
-              O ARANDU transforma tudo isso em conhecimento acionável.
+              O NEXUS transforma tudo isso em conhecimento acionável.
             </p>
           </div>
         </Reveal>
