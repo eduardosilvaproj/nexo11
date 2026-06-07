@@ -37,8 +37,8 @@ export function VisaoAnalitica() {
               ].map((k) => (
                 <div key={k.label} className="rounded-2xl p-5 bg-white/[0.03] border border-white/10">
                   <div className="flex items-center justify-between mb-4">
-                    <k.icon className="w-4 h-4 text-[#2DD4BF]" />
-                    <span className="text-[10px] text-[#2DD4BF] font-semibold tracking-wide">{k.trend}</span>
+                    <k.icon className="w-4 h-4 text-[#22D3EE]" />
+                    <span className="text-[10px] text-[#22D3EE] font-semibold tracking-wide">{k.trend}</span>
                   </div>
                   <div className="text-2xl font-semibold text-white tracking-tight">{k.value}</div>
                   <div className="text-[11px] text-white/50 mt-1 tracking-wide uppercase">{k.label}</div>
