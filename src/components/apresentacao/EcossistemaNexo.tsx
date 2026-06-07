@@ -108,7 +108,7 @@ export function EcossistemaNexo() {
             <div className="flex justify-center mb-6">
               <div
                 className="flex items-center justify-center w-32 h-32 rounded-full bg-[#060d1a] border border-white/15"
-                style={{ boxShadow: "0 0 60px -10px #00AAFF, inset 0 0 30px rgba(45,212,191,0.25)" }}
+                style={{ boxShadow: "0 0 60px -10px #1A9BE8, inset 0 0 30px rgba(34,201,122,0.25)" }}
               >
                 <LogoOficial size="md" glow="soft" className="!w-[80px] h-auto" />
               </div>
