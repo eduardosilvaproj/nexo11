@@ -12,7 +12,7 @@ import { EncerramentoInstitucional } from "@/components/apresentacao/Encerrament
 import { Footer } from "@/components/apresentacao/Footer";
 
 const Apresentacao = () => {
-  const url = "https://usearandu.com.br";
+  const url = "https://nexusplanejados.com.br";
 
   return (
     <div className="min-h-screen bg-[#060d1a] text-white relative overflow-x-hidden font-sans antialiased">
