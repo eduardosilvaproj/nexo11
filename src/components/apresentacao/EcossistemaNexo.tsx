@@ -71,7 +71,7 @@ export function EcossistemaNexo() {
                 style={{
                   left: center - 88,
                   top: center - 88,
-                  boxShadow: "0 0 90px -10px #00AAFF, inset 0 0 40px rgba(45,212,191,0.25)",
+                  boxShadow: "0 0 90px -10px #1A9BE8, inset 0 0 40px rgba(34,201,122,0.25)",
                 }}
               >
                 <LogoOficial size="lg" glow="soft" className="!w-[120px] h-auto" />
