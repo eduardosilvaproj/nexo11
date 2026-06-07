@@ -42,8 +42,8 @@ export function EcossistemaNexo() {
               <svg width={size} height={size} className="absolute inset-0">
                 <defs>
                   <linearGradient id="conn" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#00AAFF" stopOpacity="0.55" />
-                    <stop offset="100%" stopColor="#2DD4BF" stopOpacity="0.55" />
+                    <stop offset="0%" stopColor="#1A9BE8" stopOpacity="0.55" />
+                    <stop offset="100%" stopColor="#22C97A" stopOpacity="0.55" />
                   </linearGradient>
                 </defs>
                 {NODES.map((_, i) => {
