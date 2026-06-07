@@ -8,7 +8,7 @@ const COLORS = {
   black: '#000000'
 };
 
-const getSvg = (variant) => {
+const getSvg = (variant, internal = false) => {
   let c1 = COLORS.blue;
   let c2 = COLORS.green;
   let textMain = COLORS.white;
@@ -28,15 +28,15 @@ const getSvg = (variant) => {
 
   const symbol = '<g transform="translate(10,10) scale(0.8)">' +
     '<defs>' +
-    '<linearGradient id="grad-' + variant + '" x1="0%" y1="0%" x2="100%" y2="100%">' +
+    '<linearGradient id="grad-' + variant + (internal ? '-int' : '') + '" x1="0%" y1="0%" x2="100%" y2="100%">' +
     '<stop offset="0%" stop-color="' + c1 + '" />' +
     '<stop offset="100%" stop-color="' + c2 + '" />' +
     '</linearGradient>' +
     '</defs>' +
-    '<path d="M30 20L50 40L70 20" stroke="url(#grad-' + variant + ')" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />' +
-    '<path d="M30 80L50 60L70 80" stroke="url(#grad-' + variant + ')" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />' +
-    '<path d="M20 30L40 50L20 70" stroke="url(#grad-' + variant + ')" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />' +
-    '<path d="M80 30L60 50L80 70" stroke="url(#grad-' + variant + ')" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />' +
+    '<path d="M30 20L50 40L70 20" stroke="url(#grad-' + variant + (internal ? '-int' : '') + ')" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />' +
+    '<path d="M30 80L50 60L70 80" stroke="url(#grad-' + variant + (internal ? '-int' : '') + ')" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />' +
+    '<path d="M20 30L40 50L20 70" stroke="url(#grad-' + variant + (internal ? '-int' : '') + ')" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />' +
+    '<path d="M80 30L60 50L80 70" stroke="url(#grad-' + variant + (internal ? '-int' : '') + ')" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />' +
     '</g>';
 
   const text = '<g transform="translate(100, 35)">' +
@@ -85,3 +85,4 @@ iconSizes.forEach(size => {
 });
 
 fs.writeFileSync('public/nexus-logo.svg', getSvg('main'));
+fs.writeFileSync('public/nexus-logo-internal.svg', getSvg('main', true));
