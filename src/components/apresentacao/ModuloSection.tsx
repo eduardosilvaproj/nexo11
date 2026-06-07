@@ -62,7 +62,7 @@ export function ModuloSection({ modulo, index }: { modulo: ModuloApresentacao; i
               <span className="w-2.5 h-2.5 rounded-full bg-white/15" />
               <span className="w-2.5 h-2.5 rounded-full bg-white/15" />
               <span className="ml-3 text-[10px] text-white/40 font-mono">
-                nexo.app{modulo.rota}
+                nexus.app{modulo.rota}
               </span>
             </div>
             <picture>
