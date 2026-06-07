@@ -3,7 +3,7 @@
 // ============================================
 
 import { useState } from 'react';
-import { Upload, Download, Eye, CheckCircle, XCircle, Loader2, UploadCloud, Layers, Box, Ruler, RotateCcw, Code, Info, Box as BoxIcon, Globe, FileBox } from 'lucide-react';
+import { Upload, Download, Eye, CheckCircle, XCircle, Loader2, UploadCloud, Layers, Box, Ruler, RotateCcw, Code, Info, Box as BoxIcon, Globe, FileBox, Server } from 'lucide-react';
 import { Viewer3D } from '@/modules/capture/components/Viewer3D';
 import { generateSketchUpRubyScript } from '@/modules/capture/infrastructure/sketchup-ruby-generator';
 import { downloadGLB, downloadGLTF } from '@/modules/capture/infrastructure/gltf-exporter';
@@ -415,6 +415,25 @@ export default function CapturePage() {
                       <Code className="w-3.5 h-3.5" />
                       Baixar script Ruby (alternativa)
                     </button>
+
+                    {/* Servidor de SKP - Em Breve */}
+                    <div className="relative bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl p-4">
+                      <div className="absolute -top-2 -right-2 bg-amber-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-md">
+                        Em breve
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-slate-200 flex items-center justify-center flex-shrink-0">
+                          <Server className="w-5 h-5 text-slate-500" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-slate-700 text-sm">Servidor de SKP Automático</h4>
+                          <p className="text-xs text-slate-500 mt-1">
+                            Geração 100% automática via servidor com SketchUp Pro.
+                            Sem precisar instalar nada nem converter manualmente.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
 
