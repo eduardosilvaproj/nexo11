@@ -3,7 +3,8 @@
 // ============================================
 
 import { useState, useRef, useEffect } from 'react';
-import { Upload, FileText, Download, Eye, Settings, CheckCircle, XCircle, Loader2, UploadCloud, Layers, Box, Ruler, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
+import { Upload, FileText, Download, Eye, Settings, CheckCircle, XCircle, Loader2, UploadCloud, Layers, Box, Ruler, RotateCcw, ZoomIn, ZoomOut, FileDown } from 'lucide-react';
+import { generateDXF, downloadDXF } from '@/modules/capture/infrastructure/dxf-generator';
 
 // ============================================
 // Types
@@ -114,20 +115,10 @@ export default function CapturePage() {
     }
   };
 
-  const handleDownloadSKP = () => {
+  const handleDownloadDXF = () => {
     if (!project) return;
 
-    // Gerar arquivo de descrição SKP (mock)
-    const skpContent = generateSKPContent(project);
-    const blob = new Blob([skpContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `nexo-capture-${project.id.slice(0, 8)}.skp`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    downloadDXF(project);
   };
 
   const loadExample = () => {
@@ -285,7 +276,7 @@ export default function CapturePage() {
                     ) : (
                       <>
                         <Upload className="w-4 h-4" />
-                        Importar e Gerar SKP
+                        Importar e Gerar DXF
                       </>
                     )}
                   </button>
@@ -358,11 +349,11 @@ export default function CapturePage() {
                 {project.status === 'completed' && (
                   <div className="flex gap-3 pt-2">
                     <button
-                      onClick={handleDownloadSKP}
+                      onClick={handleDownloadDXF}
                       className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-medium hover:from-green-600 hover:to-emerald-600 flex items-center justify-center gap-2 shadow-lg shadow-green-500/30"
                     >
-                      <Download className="w-4 h-4" />
-                      Download SKP
+                      <FileDown className="w-4 h-4" />
+                      Download DXF
                     </button>
                     <button
                       onClick={() => setShowPreview(!showPreview)}
@@ -415,10 +406,10 @@ export default function CapturePage() {
       )}
 
       {/* Footer Info */}
-      <div className="mt-8 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-4 border border-blue-100">
-        <p className="text-sm text-blue-800 text-center">
-          <strong>Formato SKP:</strong> Paredes, portas e janelas são criados como componentes SketchUp compatíveis com Promob Connect.
-          Altura padrão: 2700mm | Espessura: 150mm | Unidade: milímetros
+      <div className="mt-8 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100">
+        <p className="text-sm text-green-800 text-center">
+          <strong>Formato DXF:</strong> Paredes, portas e janelas em camadas compatíveis com Promob Connect.
+          Altura: 2700mm | Espessura: 150mm | Unidades em milímetros
         </p>
       </div>
     </div>
@@ -581,57 +572,6 @@ function calculateArea(walls: { start: [number, number]; end: [number, number] }
   const width = (maxX - minX) / 1000;
   const height = (maxY - minY) / 1000;
   return Math.round(width * height * 100) / 100;
-}
-
-function generateSKPContent(project: Project): string {
-  return `# NEXO CAPTURE - SketchUp Export
-# Generated: ${new Date().toISOString()}
-# Project: ${project.name}
-
-# ============================================
-# CONFIGURAÇÃO
-# ============================================
-WALL_HEIGHT=2700
-WALL_THICKNESS=150
-UNITS=mm
-
-# ============================================
-# PAREDES (${project.wallCount})
-# ============================================
-${project.walls.map((w, i) =>
-  `# Wall ${i + 1}\nWALL_${i + 1}=[${w.start[0]},${w.start[1]}],[${w.end[0]},${w.end[1]}]`
-).join('\n')}
-
-# ============================================
-# PORTAS (${project.doorCount})
-# ============================================
-${project.doors.map((d, i) =>
-  `# Door ${i + 1}\nDOOR_${i + 1}=wall:${d.wallIndex},pos:${d.position},width:${d.width},height:${d.height || 2100}`
-).join('\n')}
-
-# ============================================
-# JANELAS (${project.windowCount})
-# ============================================
-${project.windows.map((w, i) =>
-  `# Window ${i + 1}\nWINDOW_${i + 1}=wall:${w.wallIndex},pos:${w.position},width:${w.width},height:${w.height},sill:${w.sill || 1100}`
-).join('\n')}
-
-# ============================================
-# RESUMO
-# ============================================
-TOTAL_WALLS=${project.wallCount}
-TOTAL_DOORS=${project.doorCount}
-TOTAL_WINDOWS=${project.windowCount}
-TOTAL_AREA=${project.totalArea}m²
-
-# ============================================
-# NOTA
-# ============================================
-# Este arquivo contém os dados estruturados.
-# Para gerar o .SKP, use o Script Ruby em:
-# src/modules/capture/scripts/generate_walls.rb
-# com o SketchUp Ruby Console.
-`;
 }
 
 function StatusBadge({ status }: { status: Project['status'] }) {
