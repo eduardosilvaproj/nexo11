@@ -111,7 +111,6 @@ export function createWall(
 ): Wall {
   return {
     id: uuid(),
-    projectId,
     startPoint: { x: start.x, y: start.y, z: config.floorLevel },
     endPoint: { x: end.x, y: end.y, z: config.floorLevel },
     thickness: config.wallThickness,
