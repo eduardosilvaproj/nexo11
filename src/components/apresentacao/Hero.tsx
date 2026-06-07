@@ -103,7 +103,7 @@ export function Hero() {
 
       <div className="relative z-10 w-full max-w-5xl mx-auto text-center">
         <div className="text-[10px] tracking-[0.4em] uppercase text-white/40 mb-8 sm:mb-12 animate-fade-in">
-          Inteligência Operacional
+          Gestão que conecta. Resultado que multiplica.
         </div>
 
         <div className="mb-10 sm:mb-16 flex items-center justify-center">
