@@ -233,11 +233,7 @@ export function validateProject(
       const next = sortedOpenings[i + 1];
 
       if (current.position + current.width > next.position) {
-        warnings.push({
-          type: 'overlapping_doors',
-          message: `Aberturas sobrepostas na mesma parede`,
-          entityId: wall.id,
-        });
+        warnings.push(`Aberturas sobrepostas na mesma parede`);
       }
     }
   }
