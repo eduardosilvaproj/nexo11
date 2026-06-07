@@ -7,14 +7,14 @@ export function Footer() {
         <div className="flex items-center gap-3">
           <LogoOficial size="lg" glow="soft" className="!w-[80px] h-auto" />
           <div className="flex flex-col">
-            <span className="text-[11px] tracking-[0.3em] uppercase text-white/60 font-semibold">ARANDU</span>
+            <span className="text-[11px] tracking-[0.3em] uppercase text-white/60 font-semibold">NEXUS</span>
             <span className="text-[10px] tracking-[0.2em] uppercase text-white/35">
-              Mais do que dados · Inteligência para decidir
+              Gestão que conecta · Resultado que multiplica
             </span>
           </div>
         </div>
         <div className="text-[10px] tracking-[0.3em] uppercase text-white/30">
-          © {new Date().getFullYear()} ARANDU
+          © {new Date().getFullYear()} NEXUS Planejados
         </div>
       </div>
     </footer>
