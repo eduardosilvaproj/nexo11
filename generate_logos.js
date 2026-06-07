@@ -13,12 +13,16 @@ const getSvg = (variant) => {
   let c2 = COLORS.green;
   let textMain = COLORS.white;
   let textSub = 'rgba(255,255,255,0.7)';
-  let bg = 'transparent';
-
+  
   if (variant === 'white') {
-    c1 = c2 = textMain = textSub = COLORS.white;
+    c1 = COLORS.white;
+    c2 = COLORS.white;
+    textMain = COLORS.white;
+    textSub = COLORS.white;
   } else if (variant === 'black') {
-    c1 = c2 = textMain = COLORS.black;
+    c1 = COLORS.black;
+    c2 = COLORS.black;
+    textMain = COLORS.black;
     textSub = 'rgba(0,0,0,0.7)';
   }
 
@@ -43,20 +47,20 @@ const getSvg = (variant) => {
     </g>\`;
 
   if (variant === 'symbol') {
-    return \`<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">\${symbol}</svg>\`;
+    return '<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' + symbol + '</svg>';
   }
 
   if (variant === 'vertical') {
-    return \`<svg width="300" height="400" viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">
-      <g transform="translate(100, 50)">\${symbol}</g>
-      <g transform="translate(50, 180) scale(1.2)">\${text}</g>
-    </svg>\`;
+    return '<svg width="300" height="400" viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg">' +
+      '<g transform="translate(100, 50)">' + symbol + '</g>' +
+      '<g transform="translate(50, 180) scale(1.2)">' + text + '</g>' +
+      '</svg>';
   }
 
-  return \`<svg width="500" height="120" viewBox="0 0 500 120" xmlns="http://www.w3.org/2000/svg">
-    \${symbol}
-    \${text}
-  </svg>\`;
+  return '<svg width="500" height="120" viewBox="0 0 500 120" xmlns="http://www.w3.org/2000/svg">' +
+    symbol +
+    text +
+    '</svg>';
 };
 
 const dirs = ['public/nexus/logos', 'public/nexus/icons'];

@@ -8,16 +8,30 @@ export type SourceType = 'json' | 'dwg' | 'pdf' | 'image';
 export interface Point {
   x: number;
   y: number;
+  z?: number;
+}
+
+export interface Opening {
+  id: string;
+  type: 'door' | 'window';
+  position: number;
+  width: number;
+  height: number;
+  sillLevel?: number;
 }
 
 export interface Wall {
   id: string;
-  start: Point;
-  end: Point;
+  projectId?: string;
+  startPoint: Point;
+  endPoint: Point;
   thickness: number;
   height: number;
   hasDoor?: boolean;
   hasWindow?: boolean;
+  layer?: string;
+  isExterior?: boolean;
+  openings: Opening[];
 }
 
 export interface Door {
@@ -42,6 +56,7 @@ export interface Room {
   name: string;
   wallIds: string[];
   area: number;
+  projectId?: string;
 }
 
 export interface ProjectConfig {
@@ -100,16 +115,25 @@ export interface ImportJSONRequest {
   config?: Partial<ProjectConfig>;
 }
 
+export interface ValidationError {
+  type: string;
+  message: string;
+  entityId: string;
+}
+
 export interface ValidationResult {
   valid: boolean;
-  errors: string[];
-  warnings: string[];
+  errors: (string | ValidationError)[];
+  warnings: (string | ValidationError)[];
 }
 
 export interface BoundingBox {
   min: Point;
   max: Point;
+  minX?: number; // Added for legacy code support if needed
 }
+
+export type CaptureProjectLegacy = any;
 
 export const CAPTURE_DEFAULTS = {
   WALL_HEIGHT: 2700,
@@ -119,6 +143,10 @@ export const CAPTURE_DEFAULTS = {
   WINDOW_WIDTH: 1200,
   WINDOW_HEIGHT: 1100,
   WINDOW_SILL: 1000,
+  MIN_WALL_LENGTH: 100,
+  MAX_WALL_LENGTH: 50000,
+  FLOOR_LEVEL: 0,
+  UNITS: 'mm' as const,
 };
 
 export interface CaptureData {
@@ -127,3 +155,6 @@ export interface CaptureData {
   data: any;
   createdAt: string;
 }
+
+export type CaptureProjectStatus = ProjectStatus;
+export { type CaptureProject as CaptureProjectInterface };
