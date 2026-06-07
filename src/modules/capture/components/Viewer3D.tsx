@@ -1,10 +1,11 @@
 // ============================================
 // NEXO CAPTURE — Three.js 3D Viewer
-// Visualizador 3D em tempo real das paredes
+// Visualizador 3D interativo em tempo real
 // ============================================
 
 import { useRef, useEffect, useState } from 'react';
-import { ZoomIn, ZoomOut, RotateCcw, Eye, Move3D, Maximize2 } from 'lucide-react';
+import { Box, Maximize2, Download, RotateCw } from 'lucide-react';
+import * as THREE from 'three';
 
 interface Wall {
   start: [number, number];
@@ -31,21 +32,24 @@ interface Viewer3DProps {
   walls: Wall[];
   doors: Door[];
   windows: Window[];
+  height?: number;
 }
 
-export function Viewer3D({ walls, doors, windows }: Viewer3DProps) {
+export function Viewer3D({ walls, doors, windows, height = 2.7 }: Viewer3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [viewMode, setViewMode] = useState<'3d' | 'top' | 'front'>('3d');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isRotating, setIsRotating] = useState(true);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    // Clear existing
-    container.innerHTML = '';
+    // Limpar
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
 
-    // Calculate bounds
+    // Calcular bounds
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     for (const w of walls) {
       minX = Math.min(minX, w.start[0], w.end[0]);
@@ -55,60 +59,306 @@ export function Viewer3D({ walls, doors, windows }: Viewer3DProps) {
     }
 
     if (!isFinite(minX) || !isFinite(maxX)) {
-      container.innerHTML = '<div class="flex items-center justify-center h-full text-slate-400">Sem dados para visualizar</div>';
+      const msg = document.createElement('div');
+      msg.className = 'flex items-center justify-center h-full text-slate-400';
+      msg.textContent = 'Sem dados para visualizar';
+      container.appendChild(msg);
       return;
     }
 
+    // Setup Three.js
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0f172a);
+
+    const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    // Center
     const centerX = (minX + maxX) / 2;
-    const centerY = (minY + maxY) / 2;
-    const width = (maxX - minX) / 1000; // meters
-    const height = (maxY - minY) / 1000;
-    const scale = Math.max(width, height, 4);
+    const centerZ = (minY + maxY) / 2;
+    const planWidth = (maxX - minX) / 1000;
+    const planDepth = (maxY - minY) / 1000;
+    const maxDim = Math.max(planWidth, planDepth, 4);
 
-    // Create SVG for visualization (lightweight, no external deps)
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('width', '100%');
-    svg.setAttribute('height', '100%');
-    svg.setAttribute('viewBox', `${-scale} ${-scale} ${scale * 2} ${scale * 2}`);
-    svg.style.background = 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)';
-    svg.style.borderRadius = '12px';
+    // Camera position
+    camera.position.set(maxDim * 1.5, maxDim * 1.2, maxDim * 1.5);
+    camera.lookAt(0, 1, 0);
 
-    // Render based on view mode
-    if (viewMode === 'top') {
-      renderTopView(svg, walls, doors, windows, centerX, centerY, scale);
-    } else if (viewMode === 'front') {
-      renderFrontView(svg, walls, doors, windows, centerX, centerY, scale);
-    } else {
-      renderIsometricView(svg, walls, doors, windows, centerX, centerY, scale);
+    // Lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(10, 20, 10);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 1024;
+    dirLight.shadow.mapSize.height = 1024;
+    scene.add(dirLight);
+
+    // Floor
+    const floorSize = maxDim * 2;
+    const floorGeometry = new THREE.PlaneGeometry(floorSize, floorSize);
+    const floorMaterial = new THREE.MeshStandardMaterial({
+      color: 0x1e293b,
+      roughness: 0.8,
+    });
+    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.set(0, 0, 0);
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // Grid
+    const grid = new THREE.GridHelper(floorSize, 20, 0x334155, 0x1e293b);
+    scene.add(grid);
+
+    // Wall material
+    const wallMaterial = new THREE.MeshStandardMaterial({
+      color: 0xe2e8f0,
+      roughness: 0.7,
+      metalness: 0.1,
+    });
+
+    const wallEdges = new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1));
+    const wallLineMaterial = new THREE.LineBasicMaterial({ color: 0x64748b });
+
+    // Build walls
+    const wallGroup = new THREE.Group();
+
+    for (const wall of walls) {
+      const startX = (wall.start[0] - centerX) / 1000;
+      const startZ = (wall.start[1] - centerZ) / 1000;
+      const endX = (wall.end[0] - centerX) / 1000;
+      const endZ = (wall.end[1] - centerZ) / 1000;
+
+      const dx = endX - startX;
+      const dz = endZ - startZ;
+      const length = Math.sqrt(dx * dx + dz * dz);
+      if (length === 0) continue;
+
+      const thickness = (wall.thickness || 150) / 1000;
+      const wallHeight = height;
+
+      // Criar box para a parede
+      const geometry = new THREE.BoxGeometry(length, wallHeight, thickness);
+      const mesh = new THREE.Mesh(geometry, wallMaterial);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+
+      // Posição no centro da parede
+      const midX = (startX + endX) / 2;
+      const midZ = (startZ + endZ) / 2;
+      mesh.position.set(midX, wallHeight / 2, midZ);
+
+      // Rotação
+      const angle = Math.atan2(dx, dz);
+      mesh.rotation.y = angle;
+
+      // Adicionar edges
+      const edges = new THREE.LineSegments(wallEdges, wallLineMaterial);
+      edges.scale.copy(mesh.scale);
+      edges.position.copy(mesh.position);
+      edges.rotation.copy(mesh.rotation);
+      edges.scale.set(length, wallHeight, thickness);
+
+      wallGroup.add(mesh);
+      wallGroup.add(edges);
+    }
+    scene.add(wallGroup);
+
+    // Doors (representados como boxes verdes)
+    const doorMaterial = new THREE.MeshStandardMaterial({
+      color: 0x22c97a,
+      roughness: 0.5,
+      transparent: true,
+      opacity: 0.8,
+    });
+
+    for (const door of doors) {
+      if (door.wallIndex >= walls.length) continue;
+      const wall = walls[door.wallIndex];
+      const startX = (wall.start[0] - centerX) / 1000;
+      const startZ = (wall.start[1] - centerZ) / 1000;
+      const endX = (wall.end[0] - centerX) / 1000;
+      const endZ = (wall.end[1] - centerZ) / 1000;
+      const dx = endX - startX;
+      const dz = endZ - startZ;
+      const length = Math.sqrt(dx * dx + dz * dz);
+
+      const doorPos = door.position / 1000;
+      const doorWidth = door.width / 1000;
+      const doorHeight = (door.height || 2100) / 1000;
+
+      const midX = startX + dx * (doorPos + doorWidth / 2) / length;
+      const midZ = startZ + dz * (doorPos + doorWidth / 2) / length;
+
+      const geometry = new THREE.BoxGeometry(doorWidth, doorHeight, 0.05);
+      const mesh = new THREE.Mesh(geometry, doorMaterial);
+      mesh.position.set(midX, doorHeight / 2, midZ);
+      const angle = Math.atan2(dx, dz);
+      mesh.rotation.y = angle;
+
+      scene.add(mesh);
     }
 
-    container.appendChild(svg);
+    // Windows (representados como boxes azuis)
+    const windowMaterial = new THREE.MeshStandardMaterial({
+      color: 0x1a9be8,
+      roughness: 0.3,
+      transparent: true,
+      opacity: 0.6,
+    });
+
+    for (const win of windows) {
+      if (win.wallIndex >= walls.length) continue;
+      const wall = walls[win.wallIndex];
+      const startX = (wall.start[0] - centerX) / 1000;
+      const startZ = (wall.start[1] - centerZ) / 1000;
+      const endX = (wall.end[0] - centerX) / 1000;
+      const endZ = (wall.end[1] - centerZ) / 1000;
+      const dx = endX - startX;
+      const dz = endZ - startZ;
+      const length = Math.sqrt(dx * dx + dz * dz);
+
+      const winPos = win.position / 1000;
+      const winWidth = win.width / 1000;
+      const winHeight = win.height / 1000;
+      const winSill = (win.sill || 1100) / 1000;
+
+      const midX = startX + dx * (winPos + winWidth / 2) / length;
+      const midZ = startZ + dz * (winPos + winWidth / 2) / length;
+
+      const yPos = winSill - winHeight / 2;
+
+      const geometry = new THREE.BoxGeometry(winWidth, winHeight, 0.05);
+      const mesh = new THREE.Mesh(geometry, windowMaterial);
+      mesh.position.set(midX, yPos, midZ);
+      const angle = Math.atan2(dx, dz);
+      mesh.rotation.y = angle;
+
+      scene.add(mesh);
+    }
+
+    // Animation
+    let frameId: number;
+    const startTime = Date.now();
+
+    const animate = () => {
+      frameId = requestAnimationFrame(animate);
+      const elapsed = (Date.now() - startTime) / 1000;
+
+      if (isRotating) {
+        const angle = elapsed * 0.3;
+        const distance = maxDim * 1.5;
+        camera.position.x = Math.cos(angle) * distance;
+        camera.position.z = Math.sin(angle) * distance;
+        camera.position.y = maxDim * 1.2;
+        camera.lookAt(0, 1, 0);
+      }
+
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    // Resize handler
+    const handleResize = () => {
+      if (!container) return;
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    };
+    window.addEventListener('resize', handleResize);
+
+    // Mouse controls
+    let isMouseDown = false;
+    let mouseX = 0;
+    let mouseY = 0;
+    let cameraTheta = Math.atan2(camera.position.x, camera.position.z);
+    let cameraPhi = Math.acos(camera.position.y / camera.position.length());
+
+    const onMouseDown = (e: MouseEvent) => {
+      isMouseDown = true;
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!isMouseDown) return;
+      const dx = e.clientX - mouseX;
+      const dy = e.clientY - mouseY;
+      cameraTheta -= dx * 0.01;
+      cameraPhi = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, cameraPhi - dy * 0.01));
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      updateCamera();
+    };
+
+    const onMouseUp = () => {
+      isMouseDown = false;
+    };
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const scale = e.deltaY > 0 ? 1.1 : 0.9;
+      const newLength = camera.position.length() * scale;
+      if (newLength > 2 && newLength < 100) {
+        camera.position.normalize().multiplyScalar(newLength);
+        camera.lookAt(0, 1, 0);
+      }
+    };
+
+    const updateCamera = () => {
+      if (isRotating) return;
+      const distance = camera.position.length();
+      camera.position.x = distance * Math.sin(cameraPhi) * Math.sin(cameraTheta);
+      camera.position.z = distance * Math.sin(cameraPhi) * Math.cos(cameraTheta);
+      camera.position.y = distance * Math.cos(cameraPhi);
+      camera.lookAt(0, 1, 0);
+    };
+
+    renderer.domElement.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    renderer.domElement.addEventListener('wheel', onWheel, { passive: false });
 
     return () => {
-      if (container) container.innerHTML = '';
+      cancelAnimationFrame(frameId);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      renderer.domElement.removeEventListener('mousedown', onMouseDown);
+      renderer.domElement.removeEventListener('wheel', onWheel);
+      renderer.dispose();
+      if (container.contains(renderer.domElement)) {
+        container.removeChild(renderer.domElement);
+      }
     };
-  }, [walls, doors, windows, viewMode]);
+  }, [walls, doors, windows, height, isRotating]);
 
   return (
     <div className="w-full">
       {/* Toolbar */}
       <div className="flex items-center justify-between mb-3 px-2">
-        <div className="flex items-center gap-1">
-          {(['3d', 'top', 'front'] as const).map((mode) => (
-            <button
-              key={mode}
-              onClick={() => setViewMode(mode)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                viewMode === mode
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              {mode.toUpperCase()}
-            </button>
-          ))}
+        <div className="flex items-center gap-2 text-sm text-slate-600">
+          <Box className="w-4 h-4" />
+          <span>Visualizador 3D</span>
         </div>
         <div className="flex items-center gap-1">
+          <button
+            onClick={() => setIsRotating(!isRotating)}
+            className={`p-1.5 rounded-md ${
+              isRotating ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-600'
+            }`}
+            title={isRotating ? 'Parar rotação' : 'Rotacionar'}
+          >
+            <RotateCw className="w-4 h-4" />
+          </button>
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
             className="p-1.5 bg-slate-100 rounded-md hover:bg-slate-200"
@@ -145,351 +395,4 @@ export function Viewer3D({ walls, doors, windows }: Viewer3DProps) {
       </div>
     </div>
   );
-}
-
-// ============================================
-// Top View (planta)
-// ============================================
-
-function renderTopView(
-  svg: SVGSVGElement,
-  walls: Wall[],
-  doors: Door[],
-  windows: Window[],
-  centerX: number,
-  centerY: number,
-  scale: number
-) {
-  // Grid
-  for (let i = -10; i <= 10; i++) {
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', String(i));
-    line.setAttribute('y1', String(-10));
-    line.setAttribute('x2', String(i));
-    line.setAttribute('y2', String(10));
-    line.setAttribute('stroke', '#334155');
-    line.setAttribute('stroke-width', '0.02');
-    svg.appendChild(line);
-  }
-  for (let i = -10; i <= 10; i++) {
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', String(-10));
-    line.setAttribute('y1', String(i));
-    line.setAttribute('x2', String(10));
-    line.setAttribute('y2', String(i));
-    line.setAttribute('stroke', '#334155');
-    line.setAttribute('stroke-width', '0.02');
-    svg.appendChild(line);
-  }
-
-  // Convert to meters for display
-  const toM = (mm: number) => (mm - centerX) / 1000;
-
-  // Walls
-  for (const wall of walls) {
-    const x1 = toM(wall.start[0]);
-    const y1 = toM(wall.start[1]);
-    const x2 = toM(wall.end[0]);
-    const y2 = toM(wall.end[1]);
-
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    const length = Math.sqrt(dx * dx + dy * dy);
-    const thickness = (wall.thickness || 150) / 1000;
-    const nx = -dy / length * thickness;
-    const ny = dx / length * thickness;
-
-    // Wall as polygon
-    const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-    polygon.setAttribute('points', `
-      ${x1 + nx},${y1 + ny}
-      ${x2 + nx},${y2 + ny}
-      ${x2 - nx},${y2 - ny}
-      ${x1 - nx},${y1 - ny}
-    `);
-    polygon.setAttribute('fill', '#cbd5e1');
-    polygon.setAttribute('stroke', '#94a3b8');
-    polygon.setAttribute('stroke-width', '0.02');
-    svg.appendChild(polygon);
-  }
-
-  // Doors
-  for (const door of doors) {
-    if (door.wallIndex >= walls.length) continue;
-    const wall = walls[door.wallIndex];
-    const dx = toM(wall.end[0]) - toM(wall.start[0]);
-    const dy = toM(wall.end[1]) - toM(wall.start[1]);
-    const length = Math.sqrt(dx * dx + dy * dy);
-    const posRatio = (door.position + door.width / 2) / 1000 / length;
-    const cx = toM(wall.start[0]) + dx * posRatio;
-    const cy = toM(wall.start[1]) + dy * posRatio;
-    const r = door.width / 2000;
-
-    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    circle.setAttribute('cx', String(cx));
-    circle.setAttribute('cy', String(cy));
-    circle.setAttribute('r', String(r));
-    circle.setAttribute('fill', '#22c97a');
-    circle.setAttribute('opacity', '0.7');
-    svg.appendChild(circle);
-
-    // Arc
-    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    const x1 = cx + r * Math.cos((angle - 90) * Math.PI / 180);
-    const y1 = cy + r * Math.sin((angle - 90) * Math.PI / 180);
-    const x2 = cx + r * Math.cos((angle + 90) * Math.PI / 180);
-    const y2 = cy + r * Math.sin((angle + 90) * Math.PI / 180);
-    path.setAttribute('d', `M ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2}`);
-    path.setAttribute('fill', 'none');
-    path.setAttribute('stroke', '#22c97a');
-    path.setAttribute('stroke-width', '0.03');
-    svg.appendChild(path);
-  }
-
-  // Windows
-  for (const win of windows) {
-    if (win.wallIndex >= walls.length) continue;
-    const wall = walls[win.wallIndex];
-    const dx = toM(wall.end[0]) - toM(wall.start[0]);
-    const dy = toM(wall.end[1]) - toM(wall.start[1]);
-    const length = Math.sqrt(dx * dx + dy * dy);
-    const posRatio = (win.position + win.width / 2) / 1000 / length;
-    const cx = toM(wall.start[0]) + dx * posRatio;
-    const cy = toM(wall.start[1]) + dy * posRatio;
-    const r = win.width / 2000;
-
-    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    circle.setAttribute('cx', String(cx));
-    circle.setAttribute('cy', String(cy));
-    circle.setAttribute('r', String(r));
-    circle.setAttribute('fill', '#1a9be8');
-    circle.setAttribute('opacity', '0.7');
-    svg.appendChild(circle);
-  }
-}
-
-// ============================================
-// Front View (corte)
-// ============================================
-
-function renderFrontView(
-  svg: SVGSVGElement,
-  walls: Wall[],
-  _doors: Door[],
-  _windows: Window[],
-  centerX: number,
-  centerY: number,
-  scale: number
-) {
-  // Ground
-  const ground = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-  ground.setAttribute('x', String(-scale));
-  ground.setAttribute('y', '2.5');
-  ground.setAttribute('width', String(scale * 2));
-  ground.setAttribute('height', '0.3');
-  ground.setAttribute('fill', '#475569');
-  svg.appendChild(ground);
-
-  // Wall section
-  if (walls.length > 0) {
-    const wall = walls[0];
-    const length = Math.sqrt(
-      Math.pow(wall.end[0] - wall.start[0], 2) +
-      Math.pow(wall.end[1] - wall.start[1], 2)
-    );
-    const lengthM = length / 1000;
-
-    // Main wall rectangle
-    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    rect.setAttribute('x', String(-lengthM / 2));
-    rect.setAttribute('y', String(-2.7));
-    rect.setAttribute('width', String(lengthM));
-    rect.setAttribute('height', '2.7');
-    rect.setAttribute('fill', '#cbd5e1');
-    rect.setAttribute('stroke', '#94a3b8');
-    rect.setAttribute('stroke-width', '0.02');
-    svg.appendChild(rect);
-
-    // Door
-    const doorWidth = 0.8;
-    const doorHeight = 2.1;
-    const doorX = -doorWidth / 2;
-
-    const doorRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    doorRect.setAttribute('x', String(doorX));
-    doorRect.setAttribute('y', '0');
-    doorRect.setAttribute('width', String(doorWidth));
-    doorRect.setAttribute('height', String(doorHeight));
-    doorRect.setAttribute('fill', '#22c97a');
-    doorRect.setAttribute('opacity', '0.6');
-    svg.appendChild(doorRect);
-
-    // Window
-    const windowWidth = 1.2;
-    const windowHeight = 1.0;
-    const windowSill = 1.1;
-    const windowX = 1.5;
-
-    const windowRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-    windowRect.setAttribute('x', String(windowX));
-    windowRect.setAttribute('y', String(-windowSill));
-    windowRect.setAttribute('width', String(windowWidth));
-    windowRect.setAttribute('height', String(windowHeight));
-    windowRect.setAttribute('fill', '#1a9be8');
-    windowRect.setAttribute('opacity', '0.5');
-    svg.appendChild(windowRect);
-  }
-}
-
-// ============================================
-// Isometric View (3D fake)
-// ============================================
-
-function renderIsometricView(
-  svg: SVGSVGElement,
-  walls: Wall[],
-  doors: Door[],
-  windows: Window[],
-  centerX: number,
-  centerY: number,
-  scale: number
-) {
-  // First, render the floor plan (base)
-  // Then add "height" offset for top edges
-  const wallHeight = 2.7; // meters
-
-  // Convert to meters
-  const toM = (mm: number) => (mm - centerX) / 1000;
-
-  // Background grid
-  for (let i = -10; i <= 10; i++) {
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', String(i * 0.5));
-    line.setAttribute('y1', String(-scale));
-    line.setAttribute('x2', String(i * 0.5));
-    line.setAttribute('y2', String(scale));
-    line.setAttribute('stroke', '#1e293b');
-    line.setAttribute('stroke-width', '0.01');
-    svg.appendChild(line);
-  }
-
-  // Draw walls as 3D blocks
-  for (const wall of walls) {
-    const x1 = toM(wall.start[0]);
-    const y1 = toM(wall.start[1]);
-    const x2 = toM(wall.end[0]);
-    const y2 = toM(wall.end[1]);
-
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    const length = Math.sqrt(dx * dx + dy * dy);
-    const thickness = (wall.thickness || 150) / 1000;
-    const nx = -dy / length * thickness;
-    const ny = dx / length * thickness;
-
-    // Bottom face
-    const bottom = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-    bottom.setAttribute('points', `
-      ${x1 + nx},${y1 + ny}
-      ${x2 + nx},${y2 + ny}
-      ${x2 - nx},${y2 - ny}
-      ${x1 - nx},${y1 - ny}
-    `);
-    bottom.setAttribute('fill', '#94a3b8');
-    bottom.setAttribute('stroke', '#64748b');
-    bottom.setAttribute('stroke-width', '0.02');
-    svg.appendChild(bottom);
-
-    // Top face (offset upward)
-    const topOffset = 0.5; // visual offset for 3D effect
-    const top = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-    top.setAttribute('points', `
-      ${x1 + nx},${y1 + ny - topOffset}
-      ${x2 + nx},${y2 + ny - topOffset}
-      ${x2 - nx},${y2 - ny - topOffset}
-      ${x1 - nx},${y1 - ny - topOffset}
-    `);
-    top.setAttribute('fill', '#cbd5e1');
-    top.setAttribute('stroke', '#64748b');
-    top.setAttribute('stroke-width', '0.02');
-    svg.appendChild(top);
-
-    // Connect bottom and top (sides)
-    const side1 = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-    side1.setAttribute('points', `
-      ${x1 + nx},${y1 + ny}
-      ${x2 + nx},${y2 + ny}
-      ${x2 + nx},${y2 + ny - topOffset}
-      ${x1 + nx},${y1 + ny - topOffset}
-    `);
-    side1.setAttribute('fill', '#cbd5e1');
-    side1.setAttribute('stroke', '#64748b');
-    side1.setAttribute('stroke-width', '0.01');
-    svg.appendChild(side1);
-
-    const side2 = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-    side2.setAttribute('points', `
-      ${x2 - nx},${y2 - ny}
-      ${x1 - nx},${y1 - ny}
-      ${x1 - nx},${y1 - ny - topOffset}
-      ${x2 - nx},${y2 - ny - topOffset}
-    `);
-    side2.setAttribute('fill', '#94a3b8');
-    side2.setAttribute('stroke', '#64748b');
-    side2.setAttribute('stroke-width', '0.01');
-    svg.appendChild(side2);
-  }
-
-  // Doors (on top of walls)
-  for (const door of doors) {
-    if (door.wallIndex >= walls.length) continue;
-    const wall = walls[door.wallIndex];
-    const dx = toM(wall.end[0]) - toM(wall.start[0]);
-    const dy = toM(wall.end[1]) - toM(wall.start[1]);
-    const length = Math.sqrt(dx * dx + dy * dy);
-    const posRatio = (door.position + door.width / 2) / 1000 / length;
-    const cx = toM(wall.start[0]) + dx * posRatio;
-    const cy = toM(wall.start[1]) + dy * posRatio;
-    const r = door.width / 2000;
-
-    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    circle.setAttribute('cx', String(cx));
-    circle.setAttribute('cy', String(cy));
-    circle.setAttribute('r', String(r));
-    circle.setAttribute('fill', '#22c97a');
-    circle.setAttribute('opacity', '0.7');
-    svg.appendChild(circle);
-  }
-
-  // Windows
-  for (const win of windows) {
-    if (win.wallIndex >= walls.length) continue;
-    const wall = walls[win.wallIndex];
-    const dx = toM(wall.end[0]) - toM(wall.start[0]);
-    const dy = toM(wall.end[1]) - toM(wall.start[1]);
-    const length = Math.sqrt(dx * dx + dy * dy);
-    const posRatio = (win.position + win.width / 2) / 1000 / length;
-    const cx = toM(wall.start[0]) + dx * posRatio;
-    const cy = toM(wall.start[1]) + dy * posRatio;
-    const r = win.width / 2000;
-
-    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    circle.setAttribute('cx', String(cx));
-    circle.setAttribute('cy', String(cy));
-    circle.setAttribute('r', String(r));
-    circle.setAttribute('fill', '#1a9be8');
-    circle.setAttribute('opacity', '0.7');
-    svg.appendChild(circle);
-  }
-
-  // Height indicator
-  const heightLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  heightLabel.setAttribute('x', '0');
-  heightLabel.setAttribute('y', String(-scale + 0.5));
-  heightLabel.setAttribute('text-anchor', 'middle');
-  heightLabel.setAttribute('fill', '#64748b');
-  heightLabel.setAttribute('font-size', '0.3');
-  heightLabel.textContent = `H = ${wallHeight}m`;
-  svg.appendChild(heightLabel);
 }

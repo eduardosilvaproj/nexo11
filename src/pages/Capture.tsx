@@ -3,9 +3,10 @@
 // ============================================
 
 import { useState } from 'react';
-import { Upload, Download, Eye, CheckCircle, XCircle, Loader2, UploadCloud, Layers, Box, Ruler, RotateCcw, FileDown, Code, ExternalLink, Info } from 'lucide-react';
+import { Upload, Download, Eye, CheckCircle, XCircle, Loader2, UploadCloud, Layers, Box, Ruler, RotateCcw, Code, Info, Box as BoxIcon, Globe, FileBox } from 'lucide-react';
 import { Viewer3D } from '@/modules/capture/components/Viewer3D';
 import { generateSketchUpRubyScript } from '@/modules/capture/infrastructure/sketchup-ruby-generator';
+import { downloadGLB, downloadGLTF } from '@/modules/capture/infrastructure/gltf-exporter';
 
 // ============================================
 // Types
@@ -135,6 +136,34 @@ export default function CapturePage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadGLB = async () => {
+    if (!project) return;
+    try {
+      await downloadGLB({
+        name: project.name,
+        walls: project.walls,
+        doors: project.doors,
+        windows: project.windows,
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erro ao exportar GLB');
+    }
+  };
+
+  const handleDownloadGLTF = async () => {
+    if (!project) return;
+    try {
+      await downloadGLTF({
+        name: project.name,
+        walls: project.walls,
+        doors: project.doors,
+        windows: project.windows,
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Erro ao exportar GLTF');
+    }
   };
 
   const loadExample = () => {
@@ -350,40 +379,67 @@ export default function CapturePage() {
 
                 {/* Actions */}
                 {project.status === 'completed' && (
-                  <div className="flex gap-3 pt-2">
-                    <button
-                      onClick={handleDownloadRubyScript}
-                      className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-medium hover:from-green-600 hover:to-emerald-600 flex items-center justify-center gap-2 shadow-lg shadow-green-500/30"
-                    >
-                      <Code className="w-4 h-4" />
-                      Baixar Script SKP
-                    </button>
+                  <div className="space-y-3 pt-2">
+                    {/* 3D Export - Funciona 100% online */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={handleDownloadGLB}
+                        className="px-4 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-medium hover:from-blue-600 hover:to-cyan-600 flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30"
+                      >
+                        <BoxIcon className="w-4 h-4" />
+                        GLB
+                      </button>
+                      <button
+                        onClick={handleDownloadGLTF}
+                        className="px-4 py-3 bg-gradient-to-r from-cyan-500 to-teal-500 text-white rounded-xl font-medium hover:from-cyan-600 hover:to-teal-600 flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/30"
+                      >
+                        <FileBox className="w-4 h-4" />
+                        GLTF
+                      </button>
+                    </div>
+
+                    {/* Conversão online */}
                     <button
                       onClick={() => setShowInstructions(!showInstructions)}
-                      className="px-4 py-3 bg-amber-100 text-amber-700 rounded-xl font-medium hover:bg-amber-200 flex items-center justify-center gap-2"
+                      className="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl font-medium hover:from-green-600 hover:to-emerald-600 flex items-center justify-center gap-2 shadow-lg shadow-green-500/30"
                     >
-                      <Info className="w-4 h-4" />
-                      Como usar
+                      <Globe className="w-4 h-4" />
+                      Converter para SKP (Online)
+                    </button>
+
+                    {/* Alternativa: Ruby Script */}
+                    <button
+                      onClick={handleDownloadRubyScript}
+                      className="w-full px-3 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 flex items-center justify-center gap-2"
+                    >
+                      <Code className="w-3.5 h-3.5" />
+                      Baixar script Ruby (alternativa)
                     </button>
                   </div>
                 )}
 
                 {/* Instructions */}
                 {showInstructions && (
-                  <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
-                    <h4 className="font-semibold text-amber-900 mb-2 flex items-center gap-2">
+                  <div className="mt-3 bg-green-50 border border-green-200 rounded-xl p-4">
+                    <h4 className="font-semibold text-green-900 mb-3 flex items-center gap-2">
                       <Info className="w-4 h-4" />
-                      Como gerar o arquivo .SKP
+                      Como converter GLB → SKP (100% online, sem instalar nada)
                     </h4>
-                    <ol className="text-sm text-amber-800 space-y-1.5 list-decimal list-inside">
-                      <li>Baixe o script Ruby acima</li>
-                      <li>Abra o <strong>SketchUp</strong> (qualquer versão)</li>
-                      <li>Menu <strong>Window → Ruby Console</strong></li>
-                      <li>Copie o conteúdo do arquivo <code className="bg-amber-200 px-1 rounded">.rb</code></li>
-                      <li>Cole no console e pressione Enter</li>
-                      <li>O SKP será gerado e salvo automaticamente</li>
-                      <li>Importe o .SKP no <strong>Promob Connect</strong></li>
+                    <ol className="text-sm text-green-800 space-y-2 list-decimal list-inside">
+                      <li>Clique em <strong>GLB</strong> para baixar o arquivo 3D</li>
+                      <li>Acesse: <a href="https://app.sketchup.com/app?hl=en" target="_blank" rel="noopener noreferrer" className="underline font-medium">app.sketchup.com</a></li>
+                      <li>Crie uma conta gratuita (Google ou email)</li>
+                      <li>Clique em <strong>"Create New"</strong></li>
+                      <li>Menu <strong>File → Import</strong></li>
+                      <li>Selecione <strong>Files of type: GLTF/GLB</strong></li>
+                      <li>Faça upload do arquivo <code className="bg-green-200 px-1 rounded">.glb</code></li>
+                      <li>O modelo 3D aparece no SketchUp Web</li>
+                      <li>Menu <strong>File → Download → SketchUp (.skp)</strong></li>
+                      <li>Importe o .SKP no <strong>Promob Connect</strong> ✅</li>
                     </ol>
+                    <div className="mt-3 pt-3 border-t border-green-200 text-xs text-green-700">
+                      <strong>💡 Alternativa mais rápida:</strong> use a versão Web do SketchUp (gratuita) que já importa GLB nativamente e exporta SKP direto.
+                    </div>
                   </div>
                 )}
 
@@ -427,9 +483,9 @@ export default function CapturePage() {
       )}
 
       {/* Footer Info */}
-      <div className="mt-8 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100">
-        <p className="text-sm text-green-800 text-center">
-          <strong>Workflow Promob:</strong> Baixe o script Ruby → Rode no SketchUp → Importe o .SKP no Promob Connect
+      <div className="mt-8 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-4 border border-blue-100">
+        <p className="text-sm text-blue-800 text-center">
+          <strong>Workflow 100% online:</strong> Baixe GLB → Suba em app.sketchup.com → Exporte SKP → Importe no Promob Connect
         </p>
       </div>
     </div>
