@@ -31,9 +31,9 @@ export function ArquiteturaPlataforma() {
               <div className="h-full p-7 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl hover:border-white/20 transition-colors group">
                 <div
                   className="w-11 h-11 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center mb-5"
-                  style={{ boxShadow: "0 0 28px -10px #00AAFF" }}
+                  style={{ boxShadow: "0 0 28px -10px #1A9BE8" }}
                 >
-                  <c.icon className="w-4 h-4 text-[#7DD3FC] group-hover:text-[#2DD4BF] transition-colors" />
+                  <c.icon className="w-4 h-4 text-[#7DD3FC] group-hover:text-[#22C97A] transition-colors" />
                 </div>
                 <div className="text-white font-semibold mb-2 text-base">{c.title}</div>
                 <div className="text-white/55 text-sm leading-relaxed">{c.desc}</div>
