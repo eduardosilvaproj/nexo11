@@ -25,7 +25,7 @@ export function VisaoAnalitica() {
               <span className="w-2.5 h-2.5 rounded-full bg-white/15" />
               <span className="w-2.5 h-2.5 rounded-full bg-white/15" />
               <span className="w-2.5 h-2.5 rounded-full bg-white/15" />
-              <span className="ml-3 text-[10px] text-white/40 font-mono">arandu.app / inteligência</span>
+              <span className="ml-3 text-[10px] text-white/40 font-mono">nexus.app / inteligência</span>
             </div>
 
             <div className="p-6 sm:p-10 grid grid-cols-1 md:grid-cols-3 gap-5">
