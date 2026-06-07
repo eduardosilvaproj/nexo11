@@ -12,7 +12,7 @@ export function PlataformaGestores() {
           <h2 className="text-[clamp(1.75rem,5vw,3rem)] font-semibold text-white tracking-tight leading-tight">
             Uma plataforma construída
             <br />
-            <span className="bg-gradient-to-r from-[#7DD3FC] to-[#2DD4BF] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#1A9BE8] to-[#22C97A] bg-clip-text text-transparent">
               para gestores.
             </span>
           </h2>

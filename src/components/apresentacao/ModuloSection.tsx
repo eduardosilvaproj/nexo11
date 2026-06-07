@@ -9,7 +9,7 @@ import { ImageZoomModalGaleria } from "./ImageZoomModalGaleria";
 export function ModuloSection({ modulo, index }: { modulo: ModuloApresentacao; index: number }) {
   const [zoomIdx, setZoomIdx] = useState<number | null>(null);
   const Icon = modulo.icon;
-  const cor = modulo.cor === "blue" ? "#00AAFF" : "#2DD4BF";
+  const cor = modulo.cor === "blue" ? "#1A9BE8" : "#22C97A";
   const screenshot = `/screenshots/${modulo.slug}.webp`;
   const fallback = `/screenshots/${modulo.slug}.png`;
 
@@ -62,7 +62,7 @@ export function ModuloSection({ modulo, index }: { modulo: ModuloApresentacao; i
               <span className="w-2.5 h-2.5 rounded-full bg-white/15" />
               <span className="w-2.5 h-2.5 rounded-full bg-white/15" />
               <span className="ml-3 text-[10px] text-white/40 font-mono">
-                nexo.app{modulo.rota}
+                nexus.app{modulo.rota}
               </span>
             </div>
             <picture>

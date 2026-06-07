@@ -49,7 +49,7 @@ interface ImportData {
 export function CaptureImport() {
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [importType, setImportType] = useState<'json' | 'dwg' | 'pdf'>('json');
+  const [importType, setImportType] = useState<string>('json');
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [project, setProject] = useState<Project | null>(null);

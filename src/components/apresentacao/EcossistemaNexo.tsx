@@ -42,8 +42,8 @@ export function EcossistemaNexo() {
               <svg width={size} height={size} className="absolute inset-0">
                 <defs>
                   <linearGradient id="conn" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="#00AAFF" stopOpacity="0.55" />
-                    <stop offset="100%" stopColor="#2DD4BF" stopOpacity="0.55" />
+                    <stop offset="0%" stopColor="#1A9BE8" stopOpacity="0.55" />
+                    <stop offset="100%" stopColor="#22C97A" stopOpacity="0.55" />
                   </linearGradient>
                 </defs>
                 {NODES.map((_, i) => {
@@ -71,7 +71,7 @@ export function EcossistemaNexo() {
                 style={{
                   left: center - 88,
                   top: center - 88,
-                  boxShadow: "0 0 90px -10px #00AAFF, inset 0 0 40px rgba(45,212,191,0.25)",
+                  boxShadow: "0 0 90px -10px #1A9BE8, inset 0 0 40px rgba(34,201,122,0.25)",
                 }}
               >
                 <LogoOficial size="lg" glow="soft" className="!w-[120px] h-auto" />
@@ -82,7 +82,7 @@ export function EcossistemaNexo() {
                 const x = center + Math.cos(a) * radius;
                 const y = center + Math.sin(a) * radius;
                 const Icon = m.icon;
-                const cor = m.cor === "blue" ? "#00AAFF" : "#2DD4BF";
+                const cor = m.cor === "blue" ? "#1A9BE8" : "#22C97A";
                 return (
                   <div
                     key={m.titulo}
@@ -108,7 +108,7 @@ export function EcossistemaNexo() {
             <div className="flex justify-center mb-6">
               <div
                 className="flex items-center justify-center w-32 h-32 rounded-full bg-[#060d1a] border border-white/15"
-                style={{ boxShadow: "0 0 60px -10px #00AAFF, inset 0 0 30px rgba(45,212,191,0.25)" }}
+                style={{ boxShadow: "0 0 60px -10px #1A9BE8, inset 0 0 30px rgba(34,201,122,0.25)" }}
               >
                 <LogoOficial size="md" glow="soft" className="!w-[80px] h-auto" />
               </div>
@@ -116,7 +116,7 @@ export function EcossistemaNexo() {
             <div className="grid grid-cols-2 gap-3">
               {NODES.map((m) => {
                 const Icon = m.icon;
-                const cor = m.cor === "blue" ? "#00AAFF" : "#2DD4BF";
+                const cor = m.cor === "blue" ? "#1A9BE8" : "#22C97A";
                 return (
                   <div
                     key={m.titulo}

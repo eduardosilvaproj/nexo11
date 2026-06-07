@@ -15,7 +15,8 @@ import {
   ValidationResult,
   BoundingBox,
 } from '../types/capture.types';
-import { v4 as uuid } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
+const uuid = uuidv4;
 
 // ============================================
 // Geometry Utils
@@ -181,19 +182,11 @@ export function validateProject(
     const length = calculateLength(wall.startPoint, wall.endPoint);
 
     if (length < CAPTURE_DEFAULTS.MIN_WALL_LENGTH) {
-      errors.push({
-        type: 'wall_too_short',
-        message: `Parede muito curta: ${length.toFixed(0)}mm (mínimo: ${CAPTURE_DEFAULTS.MIN_WALL_LENGTH}mm)`,
-        entityId: wall.id,
-      });
+      errors.push(`Parede muito curta: ${length.toFixed(0)}mm (mínimo: ${CAPTURE_DEFAULTS.MIN_WALL_LENGTH}mm)`);
     }
 
     if (length > CAPTURE_DEFAULTS.MAX_WALL_LENGTH) {
-      errors.push({
-        type: 'wall_too_long',
-        message: `Parede muito longa: ${length.toFixed(0)}mm (máximo: ${CAPTURE_DEFAULTS.MAX_WALL_LENGTH}mm)`,
-        entityId: wall.id,
-      });
+      errors.push(`Parede muito longa: ${length.toFixed(0)}mm (máximo: ${CAPTURE_DEFAULTS.MAX_WALL_LENGTH}mm)`);
     }
   }
 
@@ -204,11 +197,7 @@ export function validateProject(
     for (const opening of wall.openings) {
       if (opening.type === 'door') {
         if (opening.position + opening.width > wallLength) {
-          errors.push({
-            type: 'door_exceeds_wall',
-            message: `Porta excede o comprimento da parede`,
-            entityId: wall.id,
-          });
+          errors.push(`Porta excede o comprimento da parede`);
         }
       }
     }
@@ -221,11 +210,7 @@ export function validateProject(
     for (const opening of wall.openings) {
       if (opening.type === 'window') {
         if (opening.position + opening.width > wallLength) {
-          errors.push({
-            type: 'window_exceeds_wall',
-            message: `Janela excede o comprimento da parede`,
-            entityId: wall.id,
-          });
+          errors.push(`Janela excede o comprimento da parede`);
         }
       }
     }
@@ -240,11 +225,7 @@ export function validateProject(
       const next = sortedOpenings[i + 1];
 
       if (current.position + current.width > next.position) {
-        warnings.push({
-          type: 'overlapping_doors',
-          message: `Aberturas sobrepostas na mesma parede`,
-          entityId: wall.id,
-        });
+        warnings.push(`Aberturas sobrepostas na mesma parede`);
       }
     }
   }

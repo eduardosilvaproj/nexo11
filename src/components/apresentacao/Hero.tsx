@@ -103,7 +103,7 @@ export function Hero() {
 
       <div className="relative z-10 w-full max-w-5xl mx-auto text-center">
         <div className="text-[10px] tracking-[0.4em] uppercase text-white/40 mb-8 sm:mb-12 animate-fade-in">
-          Inteligência Operacional
+          Gestão que conecta. Resultado que multiplica.
         </div>
 
         <div className="mb-10 sm:mb-16 flex items-center justify-center">
@@ -136,15 +136,15 @@ export function Hero() {
         </div>
 
         <h1 className="text-[clamp(1.75rem,5.5vw,3rem)] font-semibold tracking-tight text-white/95 leading-[1.1] mb-5 max-w-3xl mx-auto animate-fade-in">
-          Mais do que dados.
+          Gestão que conecta.
           <br />
-          <span className="bg-gradient-to-r from-[#7DD3FC] via-[#22D3EE] to-[#2DD4BF] bg-clip-text text-transparent">
-            Inteligência para decidir.
+          <span className="bg-gradient-to-r from-[#1A9BE8] via-[#22C97A] to-[#1A9BE8] bg-clip-text text-transparent">
+            Resultado que multiplica.
           </span>
         </h1>
         <p className="text-sm sm:text-base md:text-lg text-white/60 max-w-2xl mx-auto mb-10 sm:mb-14 animate-fade-in px-2 leading-relaxed">
-          Empresas não crescem apenas por trabalhar mais. Crescem quando conseguem transformar experiência,
-          processos e informações em decisões melhores. É exatamente para isso que o ARANDU foi criado.
+          NEXUS é o ecossistema definitivo para indústrias de móveis planejados. 
+          Transformamos cada etapa — da venda à montagem — em uma operação inteligente, conectada e altamente rentável.
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 gap-y-2 sm:gap-y-3 text-[11px] sm:text-xs md:text-sm text-white/60 mb-12 sm:mb-14 animate-fade-in">
