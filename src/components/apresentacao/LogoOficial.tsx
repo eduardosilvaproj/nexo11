@@ -42,8 +42,8 @@ export function LogoOficial({
 
   return (
     <img
-      src="/nexo-logo.png"
-      alt="NEXO"
+      src="/nexus-logo.png"
+      alt="NEXUS PLANEJADOS"
       width={px}
       height={px}
       loading={eager ? "eager" : "lazy"}

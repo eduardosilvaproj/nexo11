@@ -18,18 +18,18 @@ const Apresentacao = () => {
     <div className="min-h-screen bg-[#060d1a] text-white relative overflow-x-hidden font-sans antialiased">
       <Helmet>
         <html lang="pt-BR" />
-        <title>ARANDU — Inteligência para decidir</title>
+        <title>NEXUS PLANEJADOS — Plataforma para Móveis Sob Medida</title>
         <meta
           name="description"
-          content="ARANDU é uma plataforma de inteligência operacional. Transformamos informação em decisão para que empresas cresçam de forma mais rápida, segura e lucrativa."
+          content="NEXUS PLANEJADOS é a plataforma completa para lojas de móveis planejados. Do primeiro contato comercial ao pós-venda, todos os processos integrados em uma única plataforma."
         />
         <link rel="canonical" href={url} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={url} />
-        <meta property="og:title" content="ARANDU — Inteligência para decidir" />
+        <meta property="og:title" content="NEXUS PLANEJADOS — Plataforma para Móveis Sob Medida" />
         <meta
           property="og:description"
-          content="Mais do que dados. Inteligência para decidir."
+          content="Plataforma completa para lojas de móveis planejados. Do primeiro contato ao pós-venda."
         />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="theme-color" content="#060d1a" />

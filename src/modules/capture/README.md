@@ -1,6 +1,6 @@
-# NEXO CAPTURE
+# Nexus Capture
 
-Módulo de importação de plantas e geração de arquivos SketchUp para o ERP NEXO.
+Módulo de importação de plantas e geração de arquivos SketchUp para o ERP Nexus Planejados.
 
 ## Visão Geral
 

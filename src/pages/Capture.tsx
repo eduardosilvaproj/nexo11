@@ -197,7 +197,7 @@ export default function CapturePage() {
             <UploadCloud className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">NEXO Capture</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Nexus Capture</h1>
             <p className="text-slate-500">Visualize e gere SKP para Promob Connect</p>
           </div>
         </div>
