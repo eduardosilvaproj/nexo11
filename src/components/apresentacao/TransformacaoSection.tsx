@@ -34,8 +34,8 @@ export function TransformacaoSection() {
                 <div className="flex-1 text-white/70 text-sm sm:text-base text-center sm:text-left">
                   {p.de}
                 </div>
-                <ArrowRight className="w-4 h-4 text-white/30 group-hover:text-[#2DD4BF] transition-colors shrink-0 rotate-90 sm:rotate-0" />
-                <div className="flex-1 text-white font-medium text-sm sm:text-base text-center sm:text-right bg-gradient-to-r from-[#7DD3FC] to-[#2DD4BF] bg-clip-text text-transparent">
+                <ArrowRight className="w-4 h-4 text-white/30 group-hover:text-[#22C97A] transition-colors shrink-0 rotate-90 sm:rotate-0" />
+                <div className="flex-1 text-white font-medium text-sm sm:text-base text-center sm:text-right bg-gradient-to-r from-[#1A9BE8] to-[#22C97A] bg-clip-text text-transparent">
                   {p.para}
                 </div>
               </div>
