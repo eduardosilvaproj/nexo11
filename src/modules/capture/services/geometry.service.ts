@@ -15,7 +15,7 @@ import {
   ValidationResult,
   BoundingBox,
 } from '../types/capture.types';
-import { v4 as uuid } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 // ============================================
 // Geometry Utils
