@@ -198,8 +198,8 @@ export default function Dashboard() {
           <div className="hidden md:block shrink-0">
             <img 
               src="/nexus-logo.png" 
-              alt="NEXUS Logo" 
-              className="h-20 w-auto object-contain opacity-95 drop-shadow-md transition-all hover:scale-[1.05]" 
+              alt="NEXUS Planejados" 
+              className="h-24 w-auto object-contain opacity-95 transition-all hover:scale-[1.05]" 
             />
           </div>
         </div>
