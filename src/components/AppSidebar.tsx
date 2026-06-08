@@ -163,14 +163,13 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(26,155,232,0.16),transparent_18rem),#0a0e1a] px-3 py-4 flex items-center justify-center">
         {collapsed ? (
           <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] shadow-inner transition-all duration-300">
-            <img src="/nexus-logo.png" alt="Logo" className="h-10 w-10 max-h-full max-w-full object-contain" />
+            <LogoNexo size="md" className="h-10 w-10" />
           </div>
         ) : (
           <div className="flex w-full items-center justify-center px-1 animate-in fade-in slide-in-from-left-2 duration-500 overflow-hidden">
-            <img
-              src="/nexus-logo.png"
-              alt="NEXUS Planejados"
-              className="h-auto w-full max-h-[80px] max-w-[190px] object-contain transition-all duration-300 hover:scale-[1.02]"
+            <LogoNexo
+              size="xl"
+              className="h-auto w-full max-h-[80px] max-w-[190px] transition-all duration-300 hover:scale-[1.02]"
             />
           </div>
         )}

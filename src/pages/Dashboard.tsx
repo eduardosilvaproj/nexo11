@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { QuickShortcuts } from "@/components/dashboard/QuickShortcuts";
+import { LogoNexo } from "@/components/LogoNexo";
 
 const ETAPAS_CONFIG: { key: string; label: string; border: string; text: string; iconBg: string }[] = [
   { key: "comercial", label: "Comercial", border: "#378ADD", text: "#0C447C", iconBg: "#E6F1FB" },
@@ -196,10 +197,9 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="hidden md:flex shrink-0 items-center justify-center">
-            <img 
-              src="/nexus-logo.png" 
-              alt="NEXUS Planejados" 
-              className="h-16 xs:h-20 sm:h-28 md:h-36 lg:h-44 xl:h-52 w-auto max-w-full object-contain opacity-95 transition-all hover:scale-[1.02]" 
+            <LogoNexo 
+              size="2xl"
+              className="h-16 xs:h-20 sm:h-28 md:h-36 lg:h-44 xl:h-52 w-auto max-w-full transition-all hover:scale-[1.02]" 
             />
           </div>
         </div>
