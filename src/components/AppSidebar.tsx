@@ -168,7 +168,7 @@ export function AppSidebar() {
         ) : (
           <div className="flex flex-col items-start">
             <img
-              src="/nexus-logo.png"
+              src="/nexus-logo.svg"
               alt="NEXUS Logo"
               className="h-auto w-36 object-contain"
               style={{
