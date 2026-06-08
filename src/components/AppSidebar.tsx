@@ -266,8 +266,8 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-white/10 bg-[#0c1526]/95 p-3">
         {!collapsed && perfil && (
           <div className="mb-3 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 shadow-inner shadow-black/10">
-            <p className="truncate nexo-sidebar-user-name">{perfil.nome}</p>
-            <p className="truncate nexo-sidebar-user-email">{perfil.email}</p>
+            <p className="truncate nexus-sidebar-user-name">{perfil.nome}</p>
+            <p className="truncate nexus-sidebar-user-email">{perfil.email}</p>
             <p className="mt-1 truncate text-[10px] font-medium uppercase tracking-wider text-slate-500">Roles: {roles.join(", ")}</p>
           </div>
         )}
