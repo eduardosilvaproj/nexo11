@@ -14,7 +14,7 @@ export function Footer() {
           </div>
         </div>
         <div className="text-[10px] tracking-[0.3em] uppercase text-white/30">
-          © {new Date().getFullYear()} NEXUS Planejados
+          © {new Date().getFullYear()} NEXUS
         </div>
       </div>
     </footer>

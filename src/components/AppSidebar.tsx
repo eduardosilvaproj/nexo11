@@ -169,7 +169,7 @@ export function AppSidebar() {
           <div className="flex flex-col items-start">
             <img
               src="/nexus-logo.png"
-              alt="NEXUS PLANEJADOS Logo"
+              alt="NEXUS Logo"
               className="h-auto w-36 object-contain"
               style={{
                 filter: "drop-shadow(0 4px 12px rgba(26,155,232,0.4)) drop-shadow(0 2px 4px rgba(0,0,0,0.5))",
