@@ -274,7 +274,7 @@ export function AppSidebar() {
         <Button
           variant="ghost"
           size="sm"
-          className="nexo-sidebar-logout w-full justify-start rounded-xl"
+          className="nexus-sidebar-logout w-full justify-start rounded-xl"
           onClick={signOut}
         >
           <LogOut className="h-4 w-4" />
