@@ -51,7 +51,7 @@ export function LogoOficial({
       }}
     >
       <img
-        src="/nexus-logo.svg"
+        src="/nexus-logo.png"
         alt="NEXUS"
         width={px}
         height={px}

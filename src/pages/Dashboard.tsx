@@ -197,7 +197,7 @@ export default function Dashboard() {
           </div>
           <div className="hidden md:block shrink-0">
             <img 
-              src="/nexus-logo.svg" 
+              src="/nexus-logo.png" 
               alt="NEXUS Logo" 
               className="h-16 w-auto object-contain opacity-90 drop-shadow-md" 
             />
