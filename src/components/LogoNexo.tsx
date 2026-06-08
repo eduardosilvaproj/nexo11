@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface LogoNexoProps {
@@ -17,22 +16,7 @@ const SIZE_PX: Record<NonNullable<LogoNexoProps["size"]>, number> = {
 };
 
 export function LogoNexo({ size = "md", className = "" }: LogoNexoProps) {
-  const [error, setError] = useState(false);
   const height = SIZE_PX[size];
-
-  if (error) {
-    return (
-      <div 
-        className={cn("flex items-center justify-center bg-slate-100 rounded-md", className)}
-        style={{ height, width: height * 2.5, maxWidth: "100%" }}
-      >
-        <div className="flex items-center gap-1.5 text-slate-400">
-          <ImageOff size={height * 0.6} />
-          <span className="font-bold tracking-tight" style={{ fontSize: height * 0.4 }}>NEXUS</span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <img 
@@ -40,7 +24,6 @@ export function LogoNexo({ size = "md", className = "" }: LogoNexoProps) {
       alt="NEXUS Planejados" 
       className={className}
       style={{ height, width: "auto", objectFit: "contain" }}
-      onError={() => setError(true)}
     />
   );
 }
