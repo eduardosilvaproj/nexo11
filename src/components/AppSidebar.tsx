@@ -160,21 +160,21 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="border-r border-white/10 bg-[#0a0e1a] shadow-2xl shadow-slate-950/30">
-      <SidebarHeader className="border-b border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(26,155,232,0.16),transparent_18rem),#0a0e1a] px-4 py-5">
+      <SidebarHeader className="border-b border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(26,155,232,0.16),transparent_18rem),#0a0e1a] px-4 py-6">
         {collapsed ? (
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] shadow-inner">
-            <img src="/nexus-logo.png" alt="Logo" className="h-6 w-6 object-contain" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] shadow-inner transition-all duration-300">
+            <img src="/nexus-logo.png" alt="Logo" className="h-7 w-7 object-contain" />
           </div>
         ) : (
-          <div className="flex flex-col items-start px-1">
+          <div className="flex flex-col items-start px-1 animate-in fade-in slide-in-from-left-2 duration-500">
             <img
               src="/nexus-logo.png"
               alt="NEXUS Logo"
-              className="h-8 w-auto object-contain"
+              className="h-10 w-auto object-contain transition-all duration-300 hover:scale-[1.02]"
               style={{
-                filter: "drop-shadow(0 2px 8px rgba(26,155,232,0.2))",
+                filter: "drop-shadow(0 4px 12px rgba(26,155,232,0.3))",
               }}
-            />
+            / >
           </div>
         )}
       </SidebarHeader>
