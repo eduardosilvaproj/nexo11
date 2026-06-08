@@ -245,7 +245,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="nexo-sidebar-label">Inteligência</SidebarGroupLabel>
+          <SidebarGroupLabel className="nexus-sidebar-label">Inteligência</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {inteligencia.filter(canSee).map((item) => (
