@@ -184,7 +184,7 @@ export default function AppLayout() {
             <div className="flex items-center gap-2 md:gap-4">
               <SidebarTrigger className="rounded-xl border border-slate-200 bg-white shadow-sm md:hidden" />
               <div className="md:hidden flex items-center ml-1">
-                <img src="/nexus-logo.png" alt="NEXUS Planejados" className="h-12 w-auto object-contain" />
+                <img src="/nexus-logo.png" alt="NEXUS Planejados" className="h-16 w-auto object-contain" />
               </div>
               {/* Breadcrumb */}
               <nav className="hidden items-center gap-2 rounded-full border border-slate-200/80 bg-white/70 px-3 py-1.5 text-sm shadow-sm sm:flex">

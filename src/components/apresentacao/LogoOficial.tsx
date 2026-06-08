@@ -3,7 +3,7 @@ type Size = "sm" | "md" | "lg" | "xl" | "2xl" | "hero";
 const SIZE_PX: Record<Exclude<Size, "hero">, number> = {
   sm: 28,
   md: 40,
-  lg: 96,
+  lg: 120,
   xl: 160,
   "2xl": 240,
 };
