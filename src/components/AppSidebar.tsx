@@ -181,7 +181,7 @@ export function AppSidebar() {
 
       <SidebarContent className="bg-[linear-gradient(180deg,#0a0e1a_0%,#07101f_100%)] px-2 py-3">
         <SidebarGroup>
-          <SidebarGroupLabel className="nexo-sidebar-label">Início</SidebarGroupLabel>
+          <SidebarGroupLabel className="nexus-sidebar-label">Início</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
