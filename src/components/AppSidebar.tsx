@@ -162,17 +162,17 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-white/10 bg-[#0a0e1a] shadow-2xl shadow-slate-950/30">
       <SidebarHeader className="border-b border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(26,155,232,0.16),transparent_18rem),#0a0e1a] px-4 py-5">
         {collapsed ? (
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] shadow-inner">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] shadow-inner">
             <img src="/nexus-logo.png" alt="Logo" className="h-6 w-6 object-contain" />
           </div>
         ) : (
-          <div className="flex flex-col items-start px-2">
+          <div className="flex flex-col items-start px-1">
             <img
               src="/nexus-logo.png"
               alt="NEXUS Logo"
-              className="h-9 w-auto object-contain"
+              className="h-8 w-auto object-contain"
               style={{
-                filter: "drop-shadow(0 4px 12px rgba(26,155,232,0.3))",
+                filter: "drop-shadow(0 2px 8px rgba(26,155,232,0.2))",
               }}
             />
           </div>

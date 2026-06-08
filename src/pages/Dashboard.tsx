@@ -199,7 +199,7 @@ export default function Dashboard() {
             <img 
               src="/nexus-logo.png" 
               alt="NEXUS Logo" 
-              className="h-16 w-auto object-contain opacity-90 drop-shadow-md" 
+              className="h-12 w-auto object-contain opacity-90 drop-shadow-sm" 
             />
           </div>
         </div>

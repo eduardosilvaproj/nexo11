@@ -5,11 +5,11 @@ interface LogoNexoProps {
 }
 
 const SIZE_PX: Record<NonNullable<LogoNexoProps["size"]>, number> = {
-  sm: 18,
-  md: 22,
-  lg: 32,
-  xl: 96,
-  "2xl": 160,
+  sm: 16,
+  md: 20,
+  lg: 28,
+  xl: 64,
+  "2xl": 120,
 };
 
 export function LogoNexo({ size = "md", className = "" }: LogoNexoProps) {
