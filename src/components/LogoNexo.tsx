@@ -17,7 +17,7 @@ export function LogoNexo({ size = "md", className = "" }: LogoNexoProps) {
 
   return (
     <img 
-      src="/nexus-logo.svg" 
+      src="/nexus-logo.png" 
       alt="NEXUS" 
       className={className}
       style={{ height, width: "auto", objectFit: "contain" }}
