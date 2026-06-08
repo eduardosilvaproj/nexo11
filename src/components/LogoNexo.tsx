@@ -1,26 +1,26 @@
 interface LogoNexoProps {
-  size?: "sm" | "md" | "lg" | "xl" | "2xl";
+  size?: \"sm\" | \"md\" | \"lg\" | \"xl\" | \"2xl\";
   className?: string;
   xColor?: string;
 }
 
-const SIZE_PX: Record<NonNullable<LogoNexoProps["size"]>, number> = {
-  sm: 18,
-  md: 22,
-  lg: 32,
-  xl: 96,
-  "2xl": 160,
+const SIZE_PX: Record<NonNullable<LogoNexoProps[\"size\"]>, number> = {
+  sm: 16,
+  md: 20,
+  lg: 28,
+  xl: 64,
+  \"2xl\": 120,
 };
 
-export function LogoNexo({ size = "md", className = "" }: LogoNexoProps) {
+export function LogoNexo({ size = \"md\", className = \"\" }: LogoNexoProps) {
   const height = SIZE_PX[size];
 
   return (
     <img 
-      src="/nexus-logo.png" 
-      alt="NEXUS" 
+      src=\"/nexus-logo.png\" 
+      alt=\"NEXUS\" 
       className={className}
-      style={{ height, width: "auto", objectFit: "contain" }}
+      style={{ height, width: \"auto\", objectFit: \"contain\" }}
     />
   );
 }
