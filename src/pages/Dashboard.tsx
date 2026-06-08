@@ -181,18 +181,27 @@ export default function Dashboard() {
       <div className="relative overflow-hidden rounded-[28px] border border-sky-100 bg-gradient-to-br from-white via-sky-50/70 to-emerald-50/60 p-6 shadow-sm shadow-slate-200/70">
         <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-sky-200/30 blur-3xl" />
         <div className="absolute bottom-0 right-28 h-32 w-32 rounded-full bg-emerald-200/30 blur-3xl" />
-        <div className="relative max-w-2xl">
-          <span className="inline-flex rounded-full border border-sky-200 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-sky-700">
-            Painel NEXO
-          </span>
-          <h1 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-slate-950">
-            Olá, {perfil?.nome ?? "Bem-vindo"}
-          </h1>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            {perfil?.loja_id
-              ? "Visão executiva da sua loja, com contratos, vendas, margem e mensagens em um só lugar."
-              : "Você ainda não está vinculado a uma loja. Peça ao admin para te associar."}
-          </p>
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="max-w-2xl">
+            <span className="inline-flex rounded-full border border-sky-200 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-sky-700">
+              Painel NEXUS
+            </span>
+            <h1 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-slate-950">
+              Olá, {perfil?.nome ?? "Bem-vindo"}
+            </h1>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              {perfil?.loja_id
+                ? "Visão executiva da sua loja, com contratos, vendas, margem e mensagens em um só lugar."
+                : "Você ainda não está vinculado a uma loja. Peça ao admin para te associar."}
+            </p>
+          </div>
+          <div className="hidden md:block shrink-0">
+            <img 
+              src="/nexus-logo.png" 
+              alt="NEXUS Logo" 
+              className="h-16 w-auto object-contain opacity-90 drop-shadow-md" 
+            />
+          </div>
         </div>
       </div>
 

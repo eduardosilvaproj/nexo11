@@ -175,7 +175,7 @@ export default function AppLayout() {
 
   return (
     <SidebarProvider>
-      <div className="nexo-app-shell flex min-h-screen w-full">
+      <div className="nexus-app-shell flex min-h-screen w-full">
         <AppSidebar />
         <div className="relative z-[1] flex flex-1 flex-col">
           <header

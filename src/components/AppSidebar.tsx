@@ -181,7 +181,7 @@ export function AppSidebar() {
 
       <SidebarContent className="bg-[linear-gradient(180deg,#0a0e1a_0%,#07101f_100%)] px-2 py-3">
         <SidebarGroup>
-          <SidebarGroupLabel className="nexo-sidebar-label">Início</SidebarGroupLabel>
+          <SidebarGroupLabel className="nexus-sidebar-label">Início</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -197,7 +197,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="nexo-sidebar-label">Operação</SidebarGroupLabel>
+          <SidebarGroupLabel className="nexus-sidebar-label">Operação</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {operacao.filter(canSee).map((item) => (
@@ -227,7 +227,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="nexo-sidebar-label">Gestão</SidebarGroupLabel>
+          <SidebarGroupLabel className="nexus-sidebar-label">Gestão</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {gestao.filter(canSee).map((item) => (
@@ -245,7 +245,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="nexo-sidebar-label">Inteligência</SidebarGroupLabel>
+          <SidebarGroupLabel className="nexus-sidebar-label">Inteligência</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {inteligencia.filter(canSee).map((item) => (
@@ -266,15 +266,15 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-white/10 bg-[#0c1526]/95 p-3">
         {!collapsed && perfil && (
           <div className="mb-3 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 shadow-inner shadow-black/10">
-            <p className="truncate nexo-sidebar-user-name">{perfil.nome}</p>
-            <p className="truncate nexo-sidebar-user-email">{perfil.email}</p>
+            <p className="truncate nexus-sidebar-user-name">{perfil.nome}</p>
+            <p className="truncate nexus-sidebar-user-email">{perfil.email}</p>
             <p className="mt-1 truncate text-[10px] font-medium uppercase tracking-wider text-slate-500">Roles: {roles.join(", ")}</p>
           </div>
         )}
         <Button
           variant="ghost"
           size="sm"
-          className="nexo-sidebar-logout w-full justify-start rounded-xl"
+          className="nexus-sidebar-logout w-full justify-start rounded-xl"
           onClick={signOut}
         >
           <LogOut className="h-4 w-4" />
