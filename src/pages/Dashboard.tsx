@@ -199,7 +199,7 @@ export default function Dashboard() {
           <div className="hidden md:flex shrink-0 items-center justify-center">
             <LogoNexo 
               size="2xl"
-              className="h-16 xs:h-20 sm:h-28 md:h-36 lg:h-44 xl:h-52 w-auto max-w-full transition-all hover:scale-[1.02]" 
+              className="h-16 xs:h-20 sm:h-24 md:h-28 lg:h-32 xl:h-36 w-auto object-contain opacity-95 transition-all hover:scale-[1.02]" 
             />
           </div>
         </div>
