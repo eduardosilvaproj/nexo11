@@ -11,7 +11,7 @@ export function NavBar() {
           </span>
         </div>
         <div className="hidden sm:block text-[10px] tracking-[0.3em] uppercase text-white/40 truncate">
-          NEXUS · Nexus Planejados
+          NEXUS
         </div>
       </div>
     </header>
