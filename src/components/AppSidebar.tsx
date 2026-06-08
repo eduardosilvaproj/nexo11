@@ -227,7 +227,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="nexo-sidebar-label">Gestão</SidebarGroupLabel>
+          <SidebarGroupLabel className="nexus-sidebar-label">Gestão</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {gestao.filter(canSee).map((item) => (
