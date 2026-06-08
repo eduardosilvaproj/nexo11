@@ -5,7 +5,7 @@ export function NavBar() {
     <header className="fixed top-0 inset-x-0 z-50 bg-[#060d1a]/70 backdrop-blur-xl border-b border-white/[0.06]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">
-          <LogoOficial size="md" eager glow="soft" />
+          <LogoOficial size="md" eager glow="soft" className="!w-[100px]" />
           <span className="hidden sm:inline text-[10px] tracking-[0.3em] uppercase text-white/40 truncate">
             Gestão que conecta
           </span>

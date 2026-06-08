@@ -74,7 +74,7 @@ export function EcossistemaNexo() {
                   boxShadow: "0 0 90px -10px #1A9BE8, inset 0 0 40px rgba(34,201,122,0.25)",
                 }}
               >
-                <LogoOficial size="lg" glow="soft" className="!w-[120px] h-auto" />
+                <LogoOficial size="lg" glow="soft" className="!w-[140px]" />
               </div>
 
               {NODES.map((m, i) => {
@@ -110,7 +110,7 @@ export function EcossistemaNexo() {
                 className="flex items-center justify-center w-32 h-32 rounded-full bg-[#060d1a] border border-white/15"
                 style={{ boxShadow: "0 0 60px -10px #1A9BE8, inset 0 0 30px rgba(34,201,122,0.25)" }}
               >
-                <LogoOficial size="md" glow="soft" className="!w-[80px] h-auto" />
+                <LogoOficial size="md" glow="soft" className="!w-[100px]" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">

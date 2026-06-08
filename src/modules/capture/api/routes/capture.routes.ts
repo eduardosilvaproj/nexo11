@@ -1,7 +1,7 @@
 import {
   ImportJSONRequest,
-} from '../types/capture.types';
-import { captureService } from '../services/capture.service';
+} from '@/modules/capture/types/capture.types';
+import { captureService } from '@/modules/capture/services/capture.service';
 
 export default class CaptureRoutes {
   async handleImport(req: { body: ImportJSONRequest, headers: any }) {
