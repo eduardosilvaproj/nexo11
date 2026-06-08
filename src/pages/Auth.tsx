@@ -85,7 +85,7 @@ export default function AuthPage() {
         {/* Logo Centralizada */}
         <div className="z-10 flex flex-col items-center animate-fade-up">
           <img
-            src="/nexus-logo.png"
+            src="/nexus-logo.svg"
             alt="NEXUS Logo"
             className="w-[400px] h-auto object-contain animate-logo-glow"
           />
