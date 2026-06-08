@@ -41,21 +41,25 @@ export function LogoOficial({
     : "drop-shadow(0 0 24px rgba(0,170,255,0.40)) drop-shadow(0 0 48px rgba(45,212,191,0.20))";
 
   return (
-    <img
-      src="/nexus-logo.png"
-      alt="NEXUS PLANEJADOS"
-      width={px}
-      height={px}
-      loading={eager ? "eager" : "lazy"}
-      decoding="async"
-      draggable={false}
-      className={`select-none ${className}`}
+    <div 
+      className={`relative select-none ${className}`}
       style={{
         width: isHero ? "clamp(220px, 60vw, 580px)" : px,
         height: "auto",
         filter,
         willChange: isHero ? "transform, filter" : undefined,
       }}
-    />
+    >
+      <img
+        src="/nexus-logo.png"
+        alt="NEXUS PLANEJADOS"
+        width={px}
+        height={px}
+        loading={eager ? "eager" : "lazy"}
+        decoding="async"
+        draggable={false}
+        className="w-full h-auto block"
+      />
+    </div>
   );
 }
