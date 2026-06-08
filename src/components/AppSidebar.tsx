@@ -170,7 +170,7 @@ export function AppSidebar() {
             <img
               src="/nexus-logo.png"
               alt="NEXUS Planejados"
-              className="h-32 w-full max-w-[200px] object-contain transition-all duration-300 hover:scale-[1.02]"
+              className="h-16 sm:h-20 md:h-24 lg:h-32 w-full max-w-[200px] object-contain transition-all duration-300 hover:scale-[1.02]"
             />
           </div>
         )}
