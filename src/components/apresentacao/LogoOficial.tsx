@@ -52,7 +52,7 @@ export function LogoOficial({
     >
       <img
         src="/nexus-logo.png"
-        alt="NEXUS PLANEJADOS"
+        alt="NEXUS"
         width={px}
         height={px}
         loading={eager ? "eager" : "lazy"}
