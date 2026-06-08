@@ -85,8 +85,8 @@ export default function AuthPage() {
         {/* Logo Centralizada */}
         <div className="z-10 flex flex-col items-center animate-fade-up">
           <img
-            src="/nexo-logo.png"
-            alt="NEXO Logo"
+            src="/nexus-logo.png"
+            alt="NEXUS Logo"
             className="w-[400px] h-auto object-contain animate-logo-glow"
           />
         </div>
@@ -116,7 +116,7 @@ export default function AuthPage() {
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 group-focus-within:text-[#1a7fe8] transition-colors" />
                 <Input
                   type="email"
-                  placeholder="exemplo@nexo.com"
+                  placeholder="exemplo@nexus.com"
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); if(errors.email) setErrors({...errors, email: undefined}); }}
                   className={inputClass(errors.email)}
@@ -207,7 +207,7 @@ export default function AuthPage() {
 
         <div className="text-center absolute bottom-8 left-0 w-full">
           <p className="text-slate-600 text-[10px] tracking-wide uppercase">
-            © {new Date().getFullYear()} NEXO. Todos os direitos reservados.
+            © {new Date().getFullYear()} NEXUS. Todos os direitos reservados.
           </p>
         </div>
       </div>
