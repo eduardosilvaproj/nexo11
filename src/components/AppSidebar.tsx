@@ -173,14 +173,6 @@ export function AppSidebar() {
               className="h-20 w-auto object-contain transition-all duration-300 hover:scale-[1.05]"
             />
           </div>
-        ) (
-          <div className="flex flex-col items-start px-1 animate-in fade-in slide-in-from-left-2 duration-500">
-            <img
-              src="/nexus-logo.png"
-              alt="NEXUS Planejados"
-              className="h-16 w-auto object-contain transition-all duration-300 hover:scale-[1.05]"
-            />
-          </div>
         )}
       </SidebarHeader>
 
