@@ -42,7 +42,7 @@ export function LogoOficial({
 
   return (
     <img
-      src="/nexus-logo.svg"
+      src="/nexus-logo.png"
       alt="NEXUS PLANEJADOS"
       width={px}
       height={px}
