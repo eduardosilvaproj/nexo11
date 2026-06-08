@@ -195,11 +195,11 @@ export default function Dashboard() {
                 : "Você ainda não está vinculado a uma loja. Peça ao admin para te associar."}
             </p>
           </div>
-          <div className="hidden md:block shrink-0">
+          <div className="hidden md:flex shrink-0 items-center justify-center">
             <img 
               src="/nexus-logo.png" 
               alt="NEXUS Planejados" 
-              className="h-44 w-auto object-contain opacity-95 transition-all hover:scale-[1.05]" 
+              className="h-48 w-auto object-contain opacity-95 transition-all hover:scale-[1.02]" 
             />
           </div>
         </div>
