@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { QuickShortcuts } from "@/components/dashboard/QuickShortcuts";
+import { LogoNexo } from "@/components/LogoNexo";
 
 const ETAPAS_CONFIG: { key: string; label: string; border: string; text: string; iconBg: string }[] = [
   { key: "comercial", label: "Comercial", border: "#378ADD", text: "#0C447C", iconBg: "#E6F1FB" },
