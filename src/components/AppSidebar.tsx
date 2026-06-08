@@ -169,11 +169,8 @@ export function AppSidebar() {
           <div className="flex flex-col items-start px-1 animate-in fade-in slide-in-from-left-2 duration-500">
             <img
               src="/nexus-logo.png"
-              alt="NEXUS Logo"
-              className="h-14 w-auto object-contain transition-all duration-300 hover:scale-[1.05]"
-              style={{
-                filter: "drop-shadow(0 4px 12px rgba(26,155,232,0.4))",
-              }}
+              alt="NEXUS Planejados"
+              className="h-16 w-auto object-contain transition-all duration-300 hover:scale-[1.05]"
             />
           </div>
         )}

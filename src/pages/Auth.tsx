@@ -86,8 +86,8 @@ export default function AuthPage() {
         <div className="z-10 flex flex-col items-center animate-fade-up">
           <img
             src="/nexus-logo.png"
-            alt="NEXUS Logo"
-            className="w-[400px] h-auto object-contain animate-logo-glow"
+            alt="NEXUS Planejados"
+            className="w-[450px] h-auto object-contain animate-logo-glow"
           />
         </div>
 
