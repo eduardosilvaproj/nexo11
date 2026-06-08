@@ -199,7 +199,7 @@ export default function Dashboard() {
             <img 
               src="/nexus-logo.png" 
               alt="NEXUS Planejados" 
-              className="h-48 w-auto object-contain opacity-95 transition-all hover:scale-[1.02]" 
+              className="h-24 sm:h-32 md:h-40 lg:h-48 w-auto object-contain opacity-95 transition-all hover:scale-[1.02]" 
             />
           </div>
         </div>
