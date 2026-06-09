@@ -73,6 +73,7 @@ import { Button } from "@/components/ui/button";
 import { LogoNexo } from "@/components/LogoNexo";
 import { Input } from "@/components/ui/input";
 import { CommandPalette } from "@/components/CommandPalette";
+import { HelpModal } from "@/components/HelpModal";
 import {
   useFavorites,
   useOpenGroups,
@@ -346,6 +347,8 @@ export function AppSidebar() {
 
   // Estado do Command Palette
   const [paletteOpen, setPaletteOpen] = useState(false);
+  // Estado do Help Modal
+  const [helpOpen, setHelpOpen] = useState(false);
 
   // Abrir palette com Ctrl+K
   useEffect(() => {
@@ -471,7 +474,7 @@ export function AppSidebar() {
               {!collapsed ? (
                 <button
                   onClick={() => toggleGroup(group.id)}
-                  className="nexus-sidebar-label w-full flex items-center justify-between px-2 py-1.5 rounded-md hover:bg-white/[0.04] transition-colors group"
+                  className="nexus-sidebar-label nexus-group-header nexus-ripple w-full flex items-center justify-between px-2 py-1.5 rounded-md hover:bg-white/[0.04] transition-colors group"
                 >
                   <span className="flex items-center gap-2">
                     {isFavoritos ? (
@@ -482,14 +485,14 @@ export function AppSidebar() {
                     <span>{group.title}</span>
                   </span>
                   <ChevronDown
-                    className={`h-3 w-3 text-slate-500 transition-transform ${
+                    className={`h-3 w-3 text-slate-500 transition-transform duration-200 ${
                       isOpen ? "" : "-rotate-90"
                     }`}
                   />
                 </button>
               ) : (
                 <SidebarGroupLabel
-                  className="nexus-sidebar-label flex justify-center py-2"
+                  className="nexus-sidebar-label nexus-group-header flex justify-center py-2"
                   title={group.title}
                 >
                   <group.icon className="h-3.5 w-3.5" />
@@ -497,7 +500,7 @@ export function AppSidebar() {
               )}
 
               {(collapsed || isOpen) && (
-                <SidebarGroupContent>
+                <SidebarGroupContent className="nexus-group-content-enter overflow-hidden">
                   <SidebarMenu>
                     {(() => {
                       // Renderizar grupo Favoritos: fixos + pinned pelo usuário
@@ -509,16 +512,20 @@ export function AppSidebar() {
                         return [...favoritosFixos, ...pinnedFromOthers];
                       }
                       return visibleItems;
-                    })().map((item: any) => {
+                    })().map((item: any, index: number) => {
                       const badge = getBadge(item);
                       const pinned = !isFavoritos && isFavorite(group.id, item.url);
                       return (
-                        <SidebarMenuItem key={`${group.id}-${item.url}`} className="group/menu-item relative">
+                        <SidebarMenuItem
+                          key={`${group.id}-${item.url}`}
+                          className="group/menu-item relative nexus-menu-item-enter"
+                          style={{ animationDelay: `${Math.min(index * 40, 200)}ms` }}
+                        >
                           <SidebarMenuButton asChild>
                             <NavLink
                               to={item.url}
                               end={item.url === "/"}
-                              className={linkClass}
+                              className={`${linkClass} nexus-link-hover`}
                               title={collapsed ? `${item.title} — ${item.description || ""}` : undefined}
                             >
                               <div className="flex items-center justify-between w-full">
@@ -530,16 +537,16 @@ export function AppSidebar() {
                                 </div>
                                 <div className="flex items-center gap-1.5">
                                   {!collapsed && pinned && (
-                                    <Pin className="h-3 w-3 text-amber-400 fill-amber-400/40" />
+                                    <Pin className="h-3 w-3 text-amber-400 fill-amber-400/40 nexus-pin-pop" />
                                   )}
                                   {!collapsed && badge !== null && (
-                                    <span className="min-w-[20px] rounded-full bg-gradient-to-br from-red-500 to-red-600 px-1.5 py-0.5 text-center text-[10px] font-bold text-white shadow-md shadow-red-950/30 ring-1 ring-[#0a0e1a]">
+                                    <span className="nexus-badge-pulse min-w-[20px] rounded-full bg-gradient-to-br from-red-500 to-red-600 px-1.5 py-0.5 text-center text-[10px] font-bold text-white shadow-md shadow-red-950/30 ring-1 ring-[#0a0e1a]">
                                       {badge}
                                     </span>
                                   )}
                                 </div>
                                 {collapsed && badge !== null && (
-                                  <div className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-[#0a0e1a]" />
+                                  <div className="nexus-badge-pulse absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-[#0a0e1a]" />
                                 )}
                                 {collapsed && pinned && (
                                   <div className="absolute right-1.5 bottom-1.5 h-1.5 w-1.5 rounded-full bg-amber-400" />
@@ -599,15 +606,28 @@ export function AppSidebar() {
             <p className="mt-1 truncate text-[10px] font-medium uppercase tracking-wider text-slate-500">Roles: {roles.join(", ")}</p>
           </div>
         )}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="nexus-sidebar-logout w-full justify-start rounded-xl"
-          onClick={signOut}
-        >
-          <LogOut className="h-4 w-4" />
-          {!collapsed && <span className="ml-2">Sair</span>}
-        </Button>
+        <div className="flex gap-1.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex-1 justify-start rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06]"
+            onClick={() => setHelpOpen(true)}
+            title="Atalhos de teclado (?)"
+          >
+            <Keyboard className="h-4 w-4" />
+            {!collapsed && <span className="ml-2">Atalhos</span>}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="nexus-sidebar-logout justify-start rounded-xl"
+            onClick={signOut}
+            title="Sair"
+          >
+            <LogOut className="h-4 w-4" />
+            {!collapsed && <span className="ml-2 hidden lg:inline">Sair</span>}
+          </Button>
+        </div>
       </SidebarFooter>
 
       {/* Command Palette (Ctrl+K) */}
@@ -617,6 +637,9 @@ export function AppSidebar() {
         items={commandItems}
         pinnedIds={pinnedIds}
       />
+
+      {/* Help Modal (?) */}
+      <HelpModal open={helpOpen} onOpenChange={setHelpOpen} />
     </Sidebar>
   );
 }
