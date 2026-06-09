@@ -67,6 +67,35 @@ function isLargePdfFailure(status: number, body: string) {
   return status === 413 || status === 408 || status === 504 || /context_length|too large|payload|timeout/i.test(body);
 }
 
+// Retry helper: tenta de novo com backoff exponencial em erros 503/429/500
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  options: { maxAttempts?: number; baseDelayMs?: number; label?: string } = {},
+): Promise<T> {
+  const { maxAttempts = 3, baseDelayMs = 1500, label = "operation" } = options;
+  let lastErr: any = null;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      lastErr = err;
+      const status = err?.status;
+      const isRetriable =
+        err instanceof AppError &&
+        (status === 503 || status === 429 || status === 500 || status === 502);
+
+      if (!isRetriable || attempt === maxAttempts) throw err;
+
+      // Backoff exponencial: 1.5s, 3s, 6s (com pequeno jitter)
+      const delay = baseDelayMs * Math.pow(2, attempt - 1) + Math.random() * 250;
+      console.log(`[${label}] tentativa ${attempt}/${maxAttempts} falhou (status ${status}). Retry em ${Math.round(delay)}ms...`);
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+  throw lastErr;
+}
+
 async function uploadParaGeminiFileAPI(supabase: any, GEMINI_API_KEY: string, filePath: string): Promise<string> {
   const { data: urlData, error: urlError } = await supabase.storage
     .from(BUCKET)
@@ -152,6 +181,7 @@ async function chamarGemini(GEMINI_API_KEY: string, fileUri: string) {
   if (!response.ok) {
     console.error("Gemini API error:", response.status, responseText.substring(0, 500));
     if (response.status === 429) throw new AppError("Limite de requisições do Gemini excedido. Tente novamente em instantes.", 429);
+    if (response.status === 503) throw new AppError("Modelo do Gemini temporariamente sobrecarregado. Tentando novamente automaticamente...", 503);
     if (isLargePdfFailure(response.status, responseText)) throw new AppError(LARGE_PDF_ERROR, 413);
     throw new AppError(`Gemini retornou status ${response.status}: ${responseText.substring(0, 200)}`, 502);
   }
@@ -225,8 +255,14 @@ serve(async (req) => {
 
     if (cached) return jsonResponse(cached.resultado);
 
-    const fileUri = await uploadParaGeminiFileAPI(supabase, GEMINI_API_KEY, file_path);
-    const analise = await chamarGemini(GEMINI_API_KEY, fileUri);
+    const fileUri = await withRetry(
+      () => uploadParaGeminiFileAPI(supabase, GEMINI_API_KEY, file_path),
+      { maxAttempts: 3, baseDelayMs: 1500, label: "upload-gemini" }
+    );
+    const analise = await withRetry(
+      () => chamarGemini(GEMINI_API_KEY, fileUri),
+      { maxAttempts: 3, baseDelayMs: 2000, label: "gemini-generate" }
+    );
     const resultadoFinal = calcularResultado(analise);
 
     await supabase.from("estimativas_cache").insert({
