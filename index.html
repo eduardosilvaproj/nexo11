@@ -24,7 +24,6 @@
       rel="stylesheet"
     />
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <meta name="theme-color" content="#1a9be8">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -32,7 +31,24 @@
 </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="nexus-fallback" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0a0e1a;color:#94a3b8;font-family:system-ui,sans-serif;z-index:99999;">
+        <div style="text-align:center;padding:24px;">
+          <div style="width:48px;height:48px;border:3px solid #1e293b;border-top-color:#1a9be8;border-radius:50%;margin:0 auto 16px;animation:spin 1s linear infinite;"></div>
+          <p style="margin:0;font-size:14px;">Carregando Nexus...</p>
+          <style>@@keyframes spin{to{transform:rotate(360deg)}}</style>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Remove fallback after React mounts
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          const fb = document.getElementById('nexus-fallback');
+          if (fb) fb.remove();
+        }, 100);
+      });
+    </script>
   </body>
 </html>
