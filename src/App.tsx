@@ -74,6 +74,9 @@ import { VersionChecker } from "./components/VersionChecker";
 import { AgentWidget } from "./components/agent/AgentWidget";
 import { FirstAccessWizard } from "./components/onboarding/FirstAccessWizard";
 import { HintsOverlay } from "./components/onboarding/HintsOverlay";
+import { PageTour } from "./components/PageTour";
+import { PageShortcuts } from "./components/PageShortcuts";
+import { tourConfigs } from "./config/tours";
 import NewContract from "./pages/NewContract";
 
 // Mobile imports - lazy loaded
@@ -287,6 +290,8 @@ const App = () => (
           <AgentWidget />
           <FirstAccessWizard />
           <HintsOverlay />
+          <PageTour configs={tourConfigs} />
+          <PageShortcuts />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

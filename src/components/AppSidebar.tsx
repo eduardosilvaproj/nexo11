@@ -54,6 +54,9 @@ import {
   X,
   Command,
   Keyboard,
+  GripVertical,
+  Pencil,
+  Check,
 } from "lucide-react";
 import {
   Sidebar,
@@ -74,6 +77,8 @@ import { LogoNexo } from "@/components/LogoNexo";
 import { Input } from "@/components/ui/input";
 import { CommandPalette } from "@/components/CommandPalette";
 import { HelpModal } from "@/components/HelpModal";
+import { SortableMenu } from "@/components/SortableMenu";
+import { useMenuReorder } from "@/hooks/useMenuReorder";
 import {
   useFavorites,
   useOpenGroups,
@@ -349,6 +354,16 @@ export function AppSidebar() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   // Estado do Help Modal
   const [helpOpen, setHelpOpen] = useState(false);
+  // Modo de edição (reordenar grupos)
+  const [editMode, setEditMode] = useState(false);
+  // Reordenar grupos
+  const { order: groupOrder, reorder: reorderGroups, resetOrder: resetGroupOrder } = useMenuReorder(groups.map((g) => g.id));
+  // Aplicar ordem
+  const orderedGroups = useMemo(() => {
+    return groupOrder
+      .map((id) => groups.find((g) => g.id === id))
+      .filter((g): g is MenuGroup => !!g);
+  }, [groupOrder]);
 
   // Abrir palette com Ctrl+K
   useEffect(() => {
@@ -461,8 +476,69 @@ export function AppSidebar() {
           </div>
         )}
 
+        {/* Botão de modo de edição */}
+        {!collapsed && !search && (
+          <div className="px-2 pb-1 flex items-center justify-end">
+            {editMode ? (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => {
+                    resetGroupOrder();
+                    setEditMode(false);
+                  }}
+                  className="text-[10px] text-slate-500 hover:text-white px-2 py-0.5 rounded transition-colors"
+                  title="Restaurar ordem padrão"
+                >
+                  Reset
+                </button>
+                <button
+                  onClick={() => setEditMode(false)}
+                  className="text-[10px] flex items-center gap-1 text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded transition-colors"
+                >
+                  <Check className="h-2.5 w-2.5" />
+                  Pronto
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setEditMode(true)}
+                className="text-[10px] flex items-center gap-1 text-slate-500 hover:text-white px-2 py-0.5 rounded transition-colors"
+                title="Reordenar grupos do menu"
+              >
+                <Pencil className="h-2.5 w-2.5" />
+                Editar
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Grupos de menu */}
-        {filteredGroups.map((group) => {
+        {editMode && !collapsed ? (
+          <SortableMenu
+            items={orderedGroups
+              .filter((g) => filteredGroups.some((fg) => fg.id === g.id))
+              .map((group) => ({
+                id: group.id,
+                content: (
+                  <div className="group/sortable relative pl-4 pr-2 py-1.5 rounded-md hover:bg-white/[0.02] cursor-grab active:cursor-grabbing">
+                    <div className="flex items-center gap-2">
+                      <GripVertical className="h-3.5 w-3.5 text-slate-500" />
+                      {group.id === "favoritos" ? (
+                        <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+                      ) : (
+                        <group.icon className="h-3.5 w-3.5 text-slate-400" />
+                      )}
+                      <span className="text-xs font-medium text-slate-300">{group.title}</span>
+                      <span className="ml-auto text-[10px] text-slate-600">{group.items.length} itens</span>
+                    </div>
+                  </div>
+                ),
+              }))}
+            onReorder={reorderGroups}
+          />
+        ) : null}
+
+        {(!editMode || collapsed) && filteredGroups.map((group) => {
           const visibleItems = group.items.filter(canSee);
           if (visibleItems.length === 0) return null;
 
