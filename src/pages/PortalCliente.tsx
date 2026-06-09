@@ -394,7 +394,7 @@ export default function PortalCliente() {
     <div className="min-h-screen flex flex-col bg-[#f8fafc] items-center">
       <div className="w-full max-w-[390px] min-h-screen bg-white shadow-2xl flex flex-col relative overflow-hidden">
         <header className="px-6 py-8 flex flex-col gap-4">
-          <LogoNexo size="sm" xColor="#00d4aa" />
+          <LogoNexo size="sm" />
         </header>
         <main className="flex-1 flex flex-col pb-24">{renderContent()}</main>
         <nav className="fixed bottom-0 w-full max-w-[390px] bg-white border-t flex justify-around p-3 pb-6 z-50">

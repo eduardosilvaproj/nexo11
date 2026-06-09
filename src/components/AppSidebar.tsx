@@ -268,12 +268,13 @@ export function AppSidebar() {
       const { count, error } = await supabase
         .from("contratos")
         .select("*", { count: "exact", head: true })
-        .in("status", ["pendente", "rascunho", "aguardando_assinatura"]);
+        .not("status", "in", "('cancelado', 'finalizado')");
       if (error) return 0;
       return count || 0;
     },
     staleTime: 1000 * 60,
   });
+
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     isActive

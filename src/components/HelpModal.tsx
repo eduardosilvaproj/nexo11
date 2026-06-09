@@ -46,7 +46,9 @@ import {
   Plug,
   HelpCircle,
   Settings,
+  Pin,
 } from 'lucide-react';
+
 
 interface HelpModalProps {
   open: boolean;

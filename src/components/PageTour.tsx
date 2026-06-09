@@ -8,7 +8,7 @@ import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, X, Sparkles, RotateCcw } from 'lucide-react';
 
-interface TourStep {
+export interface TourStep {
   /** Seletor CSS do elemento alvo */
   target: string;
   /** Título do passo */
@@ -21,7 +21,7 @@ interface TourStep {
   onNext?: () => void;
 }
 
-interface PageTourConfig {
+export interface PageTourConfig {
   /** ID único do tour (chave no localStorage) */
   id: string;
   /** Passos do tour */
@@ -33,6 +33,8 @@ interface PageTourConfig {
 interface PageTourProps {
   configs: PageTourConfig[];
 }
+
+
 
 const STORAGE_KEY = 'nexus:tour:completed';
 
