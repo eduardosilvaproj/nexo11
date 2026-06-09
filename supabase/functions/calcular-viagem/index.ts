@@ -25,15 +25,45 @@ const DEFAULTS = {
 
 const round = (n: number) => Math.round(n * 100) / 100;
 
-async function geocode(endereco: string): Promise<{ lat: number; lng: number }> {
-  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(endereco)}&key=${GOOGLE_MAPS_API_KEY}`;
-  const resp = await fetch(url);
-  const json = await resp.json();
-  if (!resp.ok || json.status !== "OK" || !json.results?.[0]) {
-    throw new Error(`Não foi possível localizar o endereço: "${endereco}". Verifique CEP/endereço.`);
+async function geocode(endereco: string): Promise<{ lat: number; lng: number; formattedAddress: string }> {
+  // Tenta várias variações até o Google encontrar
+  const limpo = endereco.trim();
+  const soDigitos = limpo.replace(/\D/g, "");
+
+  const candidatos: string[] = [];
+  // 1. Endereço original
+  candidatos.push(limpo);
+  // 2. Se parece CEP (8 dígitos), tenta com sufixo Brasil
+  if (soDigitos.length === 8) {
+    const cepFormatado = `${soDigitos.slice(0, 5)}-${soDigitos.slice(5)}`;
+    candidatos.push(cepFormatado, soDigitos, `${cepFormatado}, Brasil`, `${soDigitos}, Brasil`);
   }
-  const loc = json.results[0].geometry.location;
-  return { lat: loc.lat, lng: loc.lng };
+  // 3. Adiciona ", Brasil" se ainda não tem
+  if (!/brasil|brazil/i.test(limpo)) {
+    candidatos.push(`${limpo}, Brasil`);
+  }
+
+  let ultimoErro = "";
+  for (const candidato of candidatos) {
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(candidato)}&key=${GOOGLE_MAPS_API_KEY}&region=br`;
+    const resp = await fetch(url);
+    const json = await resp.json();
+    if (resp.ok && json.status === "OK" && json.results?.[0]) {
+      const loc = json.results[0].geometry.location;
+      return {
+        lat: loc.lat,
+        lng: loc.lng,
+        formattedAddress: json.results[0].formatted_address,
+      };
+    }
+    ultimoErro = json.status || `HTTP ${resp.status}`;
+  }
+
+  throw new Error(
+    `Não foi possível localizar "${endereco}". ` +
+    `Verifique o CEP (formato 00000-000) ou informe endereço completo com cidade/UF. ` +
+    `(Google: ${ultimoErro})`
+  );
 }
 
 async function geocodeAndRoute(origem: string, destino: string) {
