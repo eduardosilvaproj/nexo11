@@ -23,6 +23,7 @@ export function SimuladorViagemDialog({ open, onOpenChange, origemPadrao }: Prop
   const [qtdVeiculos, setQtdVeiculos] = useState("1");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [camposVazios, setCamposVazios] = useState<Set<string>>(new Set());
   const reportRef = useRef<HTMLDivElement>(null);
 
   function onMontadoresChange(v: string) {
@@ -32,10 +33,23 @@ export function SimuladorViagemDialog({ open, onOpenChange, origemPadrao }: Prop
   }
 
   async function calcular(silent = false) {
-    if (!origem || !destino || !valor) {
-      if (!silent) toast({ title: "Preencha origem, destino e valor", variant: "destructive" });
+    const camposFaltando: string[] = [];
+    if (!origem?.trim()) camposFaltando.push("Origem");
+    if (!destino?.trim()) camposFaltando.push("Destino");
+    if (!valor || Number(valor) <= 0) camposFaltando.push("Valor da venda");
+
+    if (camposFaltando.length > 0) {
+      setCamposVazios(new Set(camposFaltando));
+      if (!silent) {
+        toast({
+          title: "Preencha os campos obrigatórios",
+          description: camposFaltando.join(" • "),
+          variant: "destructive",
+        });
+      }
       return;
     }
+    setCamposVazios(new Set());
     setLoading(true);
     if (!silent) setResult(null);
     try {
@@ -107,15 +121,52 @@ export function SimuladorViagemDialog({ open, onOpenChange, origemPadrao }: Prop
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2">
             <Label>Origem (CEP ou endereço da loja)</Label>
-            <Input value={origem} onChange={(e) => setOrigem(e.target.value)} placeholder="Ex: 01310-100" />
+            <Input
+              value={origem}
+              onChange={(e) => {
+                setOrigem(e.target.value);
+                if (camposVazios.has("Origem")) {
+                  const next = new Set(camposVazios);
+                  next.delete("Origem");
+                  setCamposVazios(next);
+                }
+              }}
+              placeholder="Ex: 01310-100"
+              className={camposVazios.has("Origem") ? "border-red-500 ring-1 ring-red-500/30" : ""}
+            />
           </div>
           <div>
             <Label>Destino (CEP)</Label>
-            <Input value={destino} onChange={(e) => setDestino(e.target.value)} placeholder="Ex: 13560-000" />
+            <Input
+              value={destino}
+              onChange={(e) => {
+                setDestino(e.target.value);
+                if (camposVazios.has("Destino")) {
+                  const next = new Set(camposVazios);
+                  next.delete("Destino");
+                  setCamposVazios(next);
+                }
+              }}
+              placeholder="Ex: 13560-000"
+              className={camposVazios.has("Destino") ? "border-red-500 ring-1 ring-red-500/30" : ""}
+            />
           </div>
           <div>
             <Label>Valor da venda (R$)</Label>
-            <Input type="number" value={valor} onChange={(e) => setValor(e.target.value)} placeholder="50000" />
+            <Input
+              type="number"
+              value={valor}
+              onChange={(e) => {
+                setValor(e.target.value);
+                if (camposVazios.has("Valor da venda")) {
+                  const next = new Set(camposVazios);
+                  next.delete("Valor da venda");
+                  setCamposVazios(next);
+                }
+              }}
+              placeholder="50000"
+              className={camposVazios.has("Valor da venda") ? "border-red-500 ring-1 ring-red-500/30" : ""}
+            />
           </div>
           <div>
             <Label>Qtd. montadores</Label>
