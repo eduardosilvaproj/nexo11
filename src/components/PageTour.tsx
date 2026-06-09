@@ -8,7 +8,7 @@ import { useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, X, Sparkles, RotateCcw } from 'lucide-react';
 
-interface TourStep {
+export interface TourStep {
   /** Seletor CSS do elemento alvo */
   target: string;
   /** Título do passo */
@@ -19,15 +19,6 @@ interface TourStep {
   placement?: 'top' | 'bottom' | 'left' | 'right' | 'auto';
   /** Ação opcional após este passo */
   onNext?: () => void;
-}
-
-interface PageTourConfig {
-  /** ID único do tour (chave no localStorage) */
-  id: string;
-  /** Passos do tour */
-  steps: TourStep[];
-  /** Versão do tour (mude para forçar re-show) */
-  version?: number;
 }
 
 export interface PageTourConfig {
@@ -42,6 +33,7 @@ export interface PageTourConfig {
 interface PageTourProps {
   configs: PageTourConfig[];
 }
+
 
 
 const STORAGE_KEY = 'nexus:tour:completed';
