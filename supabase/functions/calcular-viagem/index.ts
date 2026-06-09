@@ -25,10 +25,27 @@ const DEFAULTS = {
 
 const round = (n: number) => Math.round(n * 100) / 100;
 
+async function geocode(endereco: string): Promise<{ lat: number; lng: number }> {
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(endereco)}&key=${GOOGLE_MAPS_API_KEY}`;
+  const resp = await fetch(url);
+  const json = await resp.json();
+  if (!resp.ok || json.status !== "OK" || !json.results?.[0]) {
+    throw new Error(`Não foi possível localizar o endereço: "${endereco}". Verifique CEP/endereço.`);
+  }
+  const loc = json.results[0].geometry.location;
+  return { lat: loc.lat, lng: loc.lng };
+}
+
 async function geocodeAndRoute(origem: string, destino: string) {
+  // Routes API exige lat/lng, não endereço. Geocodifica primeiro.
+  const [origemCoord, destinoCoord] = await Promise.all([
+    geocode(origem),
+    geocode(destino),
+  ]);
+
   const body = {
-    origin: { address: origem },
-    destination: { address: destino },
+    origin: { location: { latLng: { latitude: origemCoord.lat, longitude: origemCoord.lng } } },
+    destination: { location: { latLng: { latitude: destinoCoord.lat, longitude: destinoCoord.lng } } },
     travelMode: "DRIVE",
     routingPreference: "TRAFFIC_UNAWARE",
     extraComputations: ["TOLLS"],
@@ -48,7 +65,7 @@ async function geocodeAndRoute(origem: string, destino: string) {
   const json = await resp.json();
   if (!resp.ok) throw new Error(`Google Routes error [${resp.status}]: ${JSON.stringify(json)}`);
   const route = json.routes?.[0];
-  if (!route) throw new Error("Nenhuma rota encontrada");
+  if (!route) throw new Error("Nenhuma rota encontrada entre os endereços informados");
   const distanciaKm = (route.distanceMeters ?? 0) / 1000;
   let pedagio = 0;
   const tolls = route.travelAdvisory?.tollInfo?.estimatedPrice;
