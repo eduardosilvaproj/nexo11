@@ -195,13 +195,14 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
 
   // Estado dos grupos (com persistência)
-  const [openGroups, setOpenGroups] = useOpenGroups(() => {
+  const defaultOpenGroups: Record<string, boolean> = (() => {
     const initial: Record<string, boolean> = {};
     groups.forEach((g) => {
       initial[g.id] = g.defaultOpen ?? true;
     });
     return initial;
-  });
+  })();
+  const [openGroups, setOpenGroups] = useOpenGroups(defaultOpenGroups);
 
   // Estado da busca
   const [search, setSearch] = useState("");
