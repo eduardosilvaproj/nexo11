@@ -66,10 +66,87 @@ export function SimuladorViagemDialog({ open, onOpenChange, origemPadrao }: Prop
       if ((data as any)?.error) throw new Error((data as any).error);
       setResult(data);
     } catch (e: any) {
-      if (!silent) toast({ title: "Erro ao calcular", description: e.message, variant: "destructive" });
+      if (!silent) {
+        const mensagem = humanizeErroViagem(e?.message ?? String(e));
+        toast({
+          title: mensagem.titulo,
+          description: mensagem.descricao,
+          variant: "destructive",
+          duration: 8000,
+        });
+      }
     } finally {
       setLoading(false);
     }
+  }
+
+  // Traduz erros do edge function em mensagens amigáveis com dicas úteis
+  function humanizeErroViagem(msg: string): { titulo: string; descricao: string } {
+    const lower = msg.toLowerCase();
+
+    // Erros de CEP não encontrado
+    if (lower.includes("não foi possível localizar") || lower.includes("nao foi possivel localizar")) {
+      const cepMatch = msg.match(/"([^"]+)"/);
+      const cep = cepMatch?.[1] || "";
+      return {
+        titulo: "Endereço não encontrado",
+        descricao: `Não localizamos "${cep}".\n\nFormatos aceitos:\n• CEP com 8 dígitos: 01310-100\n• CEP sem hífen: 01310100\n• Cidade + UF: "Ribeirão Preto, SP"\n• Endereço completo: "Av. Paulista, 1000, São Paulo, SP"`,
+      };
+    }
+
+    // CEP inválido (formato errado)
+    if (lower.includes("cep inválido") || lower.includes("cep invalido")) {
+      return {
+        titulo: "CEP inválido",
+        descricao: "O CEP deve ter 8 dígitos (com ou sem hífen).\nExemplos: 01310-100 ou 01310100",
+      };
+    }
+
+    // Erro do Google (mas passou pelo Nominatim também)
+    if (lower.includes("request_denied") || lower.includes("api key")) {
+      return {
+        titulo: "Serviço de mapas indisponível",
+        descricao: "Não conseguimos calcular a rota. Tente novamente em alguns minutos ou informe a cidade e UF manualmente (ex: 'Catanduva, SP').",
+      };
+    }
+
+    // Timeout
+    if (lower.includes("timeout") || lower.includes("timed out")) {
+      return {
+        titulo: "A consulta demorou demais",
+        descricao: "O serviço de mapas demorou para responder. Tente novamente ou simplifique o endereço (ex: 'São Paulo, SP').",
+      };
+    }
+
+    // Sem rota encontrada (coordenadas existem mas não há rota)
+    if (lower.includes("nenhuma rota") || lower.includes("zero results")) {
+      return {
+        titulo: "Não encontramos rota",
+        descricao: "Os endereços foram localizados, mas não há rota de carro entre eles. Verifique se estão no mesmo continente.",
+      };
+    }
+
+    // 401/403 - auth
+    if (lower.includes("unauthorized") || lower.includes("401")) {
+      return {
+        titulo: "Sessão expirada",
+        descricao: "Faça login novamente para continuar.",
+      };
+    }
+
+    // 500 genérico
+    if (lower.includes("500") || lower.includes("internal")) {
+      return {
+        titulo: "Erro interno do servidor",
+        descricao: "Tente novamente em alguns instantes. Se persistir, contate o suporte.",
+      };
+    }
+
+    // Fallback
+    return {
+      titulo: "Não foi possível calcular a viagem",
+      descricao: msg,
+    };
   }
 
   // Recalcula automaticamente quando muda montadores/veículos (após primeiro cálculo)
@@ -131,12 +208,12 @@ export function SimuladorViagemDialog({ open, onOpenChange, origemPadrao }: Prop
                   setCamposVazios(next);
                 }
               }}
-              placeholder="Ex: 01310-100"
+              placeholder="Ex: 01310-100 ou 'Ribeirão Preto, SP'"
               className={camposVazios.has("Origem") ? "border-red-500 ring-1 ring-red-500/30" : ""}
             />
           </div>
           <div>
-            <Label>Destino (CEP)</Label>
+            <Label>Destino (CEP ou cidade/UF)</Label>
             <Input
               value={destino}
               onChange={(e) => {
@@ -147,7 +224,7 @@ export function SimuladorViagemDialog({ open, onOpenChange, origemPadrao }: Prop
                   setCamposVazios(next);
                 }
               }}
-              placeholder="Ex: 13560-000"
+              placeholder="Ex: 15800-970 ou 'Catanduva, SP'"
               className={camposVazios.has("Destino") ? "border-red-500 ring-1 ring-red-500/30" : ""}
             />
           </div>
