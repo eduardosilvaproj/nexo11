@@ -1,6 +1,6 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import {
@@ -50,6 +50,10 @@ import {
   Sparkles,
   MessageCircle,
   Send,
+  Pin,
+  X,
+  Command,
+  Keyboard,
 } from "lucide-react";
 import {
   Sidebar,
@@ -68,6 +72,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { LogoNexo } from "@/components/LogoNexo";
 import { Input } from "@/components/ui/input";
+import { CommandPalette } from "@/components/CommandPalette";
+import {
+  useFavorites,
+  useOpenGroups,
+  useKeyboardShortcuts,
+  navigateShortcut,
+} from "@/hooks/useSidebarShortcuts";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 
@@ -92,8 +103,8 @@ type MenuGroup = {
 // MENU REORGANIZADO — 4 ETAPAS
 // ============================================
 
-// ⭐ FAVORITOS (fixos por padrão, usuário pode customizar)
-const favoritos: MenuItem[] = [
+// ⭐ FAVORITOS (fixos por padrão, usuário pode adicionar mais)
+const favoritosFixos: MenuItem[] = [
   { title: "Dashboard", url: "/", icon: Home, description: "Visão geral" },
   { title: "Contratos", url: "/contratos", icon: FileText, description: "Todos os contratos", badge: "contracts" },
   { title: "Mensagens", url: "/mensagens", icon: MessageCircle, description: "Chat com clientes", badge: "messages" },
@@ -160,7 +171,7 @@ const ferramentas: MenuItem[] = [
 ];
 
 const groups: MenuGroup[] = [
-  { id: "favoritos", title: "Favoritos", icon: Star, items: favoritos, defaultOpen: true },
+  { id: "favoritos", title: "Favoritos", icon: Star, items: favoritosFixos, defaultOpen: true },
   { id: "vendas", title: "Vendas & Projetos", icon: Handshake, items: vendas, defaultOpen: true },
   { id: "operacao", title: "Operação", icon: Factory, items: operacao, defaultOpen: true },
   { id: "logistica", title: "Logística & Pós-venda", icon: Truck, items: logistica, defaultOpen: false },
@@ -174,10 +185,11 @@ export function AppSidebar() {
   const queryClient = useQueryClient();
   const { state } = useSidebar();
   const { perfil, roles, signOut } = useAuth();
+  const navigate = useNavigate();
   const collapsed = state === "collapsed";
 
-  // Estado dos grupos (aberto/fechado)
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+  // Estado dos grupos (com persistência)
+  const [openGroups, setOpenGroups] = useOpenGroups(() => {
     const initial: Record<string, boolean> = {};
     groups.forEach((g) => {
       initial[g.id] = g.defaultOpen ?? true;
@@ -187,6 +199,10 @@ export function AppSidebar() {
 
   // Estado da busca
   const [search, setSearch] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
+
+  // Favoritos editáveis
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   // Auto-expandir grupo quando há busca
   useEffect(() => {
@@ -267,6 +283,106 @@ export function AppSidebar() {
     setOpenGroups((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
+  // ============================================
+  // ATALHOS DE TECLADO
+  // ============================================
+  const nav = useNavigate();
+  const shortcuts = useMemo(() => {
+    const items = groups.flatMap((g) => g.items.filter(canSee));
+    const list: { combo: string; description: string; action: () => void }[] = [
+      // Modificadores globais
+      { combo: "ctrl+k", description: "Focar busca do menu", action: () => {
+        const input = document.getElementById("sidebar-search") as HTMLInputElement;
+        if (input) {
+          input.focus();
+          input.select();
+        }
+      }},
+      { combo: "escape", description: "Limpar busca", action: () => {
+        setSearch("");
+        const input = document.getElementById("sidebar-search") as HTMLInputElement;
+        if (input) input.blur();
+      }},
+    ];
+
+    // Atalhos G + letra (Gmail style)
+    const shortcutMap: Record<string, string> = {
+      "/": "/",
+      "d": "/dashboard",
+      "c": "/comercial",
+      "k": "/contratos",
+      "l": "/clientes",
+      "t": "/tecnico",
+      "p": "/producao",
+      "a": "/almoxarifado",
+      "f": "/frota",
+      "g": "/logistica",
+      "m": "/montagem",
+      "v": "/pos-venda",
+      "n": "/financeiro",
+      "r": "/dre",
+      "s": "/comissoes",
+      "o": "/compras",
+      "e": "/equipe",
+      "h": "/rh",
+      "i": "/analytics",
+      "u": "/capture",
+      "?": "/ajuda",
+    };
+
+    Object.entries(shortcutMap).forEach(([key, url]) => {
+      const item = items.find((i) => i.url === url);
+      list.push({
+        combo: `g+${key}`,
+        description: `Ir para ${item?.title || url}`,
+        action: navigateShortcut(nav, url),
+      });
+    });
+
+    return list;
+  }, [nav, roles]);
+
+  const { pendingPrefix } = useKeyboardShortcuts(shortcuts, true);
+
+  // Estado do Command Palette
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  // Abrir palette com Ctrl+K
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPaletteOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
+
+  // Construir items do Command Palette
+  const commandItems = useMemo(() => {
+    return groups
+      .flatMap((g) =>
+        g.items.map((item) => ({
+          id: `${g.id}:${item.url}`,
+          title: item.title,
+          description: item.description,
+          url: item.url,
+          icon: item.icon,
+          group: g.title,
+        }))
+      )
+      .filter((it) => {
+        // Verificar permissão
+        const item = groups.flatMap((g) => g.items).find((i) => i.url === it.url);
+        return item ? canSee(item) : true;
+      });
+  }, [roles]);
+
+  const pinnedIds = useMemo(() => {
+    return Object.keys({}).filter((k) => false); // placeholder
+  }, []);
+
   // Filtrar grupos por busca
   const filteredGroups = useMemo(() => {
     if (!search.trim()) return groups;
@@ -313,14 +429,28 @@ export function AppSidebar() {
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
               <Input
+                id="sidebar-search"
                 type="text"
                 placeholder="Buscar no menu..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-8 pl-8 pr-3 text-xs bg-white/[0.04] border-white/10 text-white placeholder:text-slate-500 focus-visible:ring-1 focus-visible:ring-sky-500/50"
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                onClick={() => setPaletteOpen(true)}
+                readOnly
+                className="h-8 pl-8 pr-12 text-xs bg-white/[0.04] border-white/10 text-white placeholder:text-slate-500 focus-visible:ring-1 focus-visible:ring-sky-500/50 cursor-pointer"
               />
+              <kbd className="absolute right-2 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 rounded border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-medium text-slate-400">
+                <Command className="h-2.5 w-2.5" />K
+              </kbd>
             </div>
-            {search && (
+            {pendingPrefix && (
+              <div className="mt-1.5 px-2 py-1 rounded bg-amber-500/10 border border-amber-500/30 text-[10px] text-amber-300 flex items-center gap-1.5">
+                <Keyboard className="h-3 w-3" />
+                Pressione a próxima tecla (G + <span className="font-bold">{pendingPrefix.toUpperCase()}</span>)
+              </div>
+            )}
+            {search && !pendingPrefix && (
               <p className="text-[10px] text-slate-500 mt-1.5 px-1">
                 {filteredGroups.reduce((acc, g) => acc + g.items.length, 0)} resultado(s)
               </p>
@@ -369,10 +499,21 @@ export function AppSidebar() {
               {(collapsed || isOpen) && (
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {visibleItems.map((item) => {
+                    {(() => {
+                      // Renderizar grupo Favoritos: fixos + pinned pelo usuário
+                      if (group.id === "favoritos") {
+                        const pinnedFromOthers = groups
+                          .filter((g) => g.id !== "favoritos")
+                          .flatMap((g) => g.items.map((it) => ({ ...it, _group: g.id })))
+                          .filter((it) => isFavorite(it._group, it.url) && canSee(it));
+                        return [...favoritosFixos, ...pinnedFromOthers];
+                      }
+                      return visibleItems;
+                    })().map((item: any) => {
                       const badge = getBadge(item);
+                      const pinned = !isFavoritos && isFavorite(group.id, item.url);
                       return (
-                        <SidebarMenuItem key={item.url}>
+                        <SidebarMenuItem key={`${group.id}-${item.url}`} className="group/menu-item relative">
                           <SidebarMenuButton asChild>
                             <NavLink
                               to={item.url}
@@ -387,17 +528,44 @@ export function AppSidebar() {
                                     <span className="truncate">{item.title}</span>
                                   )}
                                 </div>
-                                {!collapsed && badge !== null && (
-                                  <span className="min-w-[20px] rounded-full bg-gradient-to-br from-red-500 to-red-600 px-1.5 py-0.5 text-center text-[10px] font-bold text-white shadow-md shadow-red-950/30 ring-1 ring-[#0a0e1a]">
-                                    {badge}
-                                  </span>
-                                )}
+                                <div className="flex items-center gap-1.5">
+                                  {!collapsed && pinned && (
+                                    <Pin className="h-3 w-3 text-amber-400 fill-amber-400/40" />
+                                  )}
+                                  {!collapsed && badge !== null && (
+                                    <span className="min-w-[20px] rounded-full bg-gradient-to-br from-red-500 to-red-600 px-1.5 py-0.5 text-center text-[10px] font-bold text-white shadow-md shadow-red-950/30 ring-1 ring-[#0a0e1a]">
+                                      {badge}
+                                    </span>
+                                  )}
+                                </div>
                                 {collapsed && badge !== null && (
                                   <div className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-[#0a0e1a]" />
+                                )}
+                                {collapsed && pinned && (
+                                  <div className="absolute right-1.5 bottom-1.5 h-1.5 w-1.5 rounded-full bg-amber-400" />
                                 )}
                               </div>
                             </NavLink>
                           </SidebarMenuButton>
+                          {/* Botão Pin (apenas expanded, fora do link) */}
+                          {!collapsed && !isFavoritos && (
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleFavorite(group.id, item.url);
+                              }}
+                              className="absolute right-8 top-1/2 -translate-y-1/2 opacity-0 group-hover/menu-item:opacity-100 transition-opacity p-1 rounded hover:bg-white/[0.08]"
+                              title={pinned ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+                              aria-label={pinned ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+                            >
+                              {pinned ? (
+                                <Pin className="h-3 w-3 text-amber-400 fill-amber-400/40" />
+                              ) : (
+                                <Pin className="h-3 w-3 text-slate-500" />
+                              )}
+                            </button>
+                          )}
                         </SidebarMenuItem>
                       );
                     })}
@@ -441,6 +609,14 @@ export function AppSidebar() {
           {!collapsed && <span className="ml-2">Sair</span>}
         </Button>
       </SidebarFooter>
+
+      {/* Command Palette (Ctrl+K) */}
+      <CommandPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        items={commandItems}
+        pinnedIds={pinnedIds}
+      />
     </Sidebar>
   );
 }
