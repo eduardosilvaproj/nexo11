@@ -30,9 +30,19 @@ interface PageTourConfig {
   version?: number;
 }
 
+export interface PageTourConfig {
+  /** ID único do tour (chave no localStorage) */
+  id: string;
+  /** Passos do tour */
+  steps: TourStep[];
+  /** Versão do tour (mude para forçar re-show) */
+  version?: number;
+}
+
 interface PageTourProps {
   configs: PageTourConfig[];
 }
+
 
 const STORAGE_KEY = 'nexus:tour:completed';
 
