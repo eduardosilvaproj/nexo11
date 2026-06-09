@@ -25,45 +25,91 @@ const DEFAULTS = {
 
 const round = (n: number) => Math.round(n * 100) / 100;
 
-async function geocode(endereco: string): Promise<{ lat: number; lng: number; formattedAddress: string }> {
-  // Tenta várias variações até o Google encontrar
-  const limpo = endereco.trim();
+// Converte CEP → logradouro/cidade/UF usando ViaCEP (gratuito, sem chave)
+async function viacep(cep: string): Promise<{ logradouro: string; bairro: string; localidade: string; uf: string } | null> {
+  const soDigitos = cep.replace(/\D/g, "");
+  if (soDigitos.length !== 8) return null;
+  try {
+    const resp = await fetch(`https://viacep.com.br/ws/${soDigitos}/json/`);
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    if (data.erro) return null;
+    return {
+      logradouro: data.logradouro || "",
+      bairro: data.bairro || "",
+      localidade: data.localidade || "",
+      uf: data.uf || "",
+    };
+  } catch {
+    return null;
+  }
+}
+
+// Geocodifica um endereço → lat/lng. Tenta Google primeiro, depois Nominatim (OpenStreetMap, gratuito).
+async function geocodeEndereco(endereco: string): Promise<{ lat: number; lng: number } | null> {
+  // Tenta Google Geocoding (precisa da API habilitada)
+  if (GOOGLE_MAPS_API_KEY) {
+    try {
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(endereco)}&key=${GOOGLE_MAPS_API_KEY}&region=br`;
+      const resp = await fetch(url);
+      const json = await resp.json();
+      if (resp.ok && json.status === "OK" && json.results?.[0]) {
+        const loc = json.results[0].geometry.location;
+        return { lat: loc.lat, lng: loc.lng };
+      }
+      console.log("Google geocode falhou:", json.status, "- tentando Nominatim");
+    } catch (e) {
+      console.log("Google geocode erro de rede:", e);
+    }
+  }
+
+  // Fallback: Nominatim (OpenStreetMap) - gratuito, sem chave, sem limite rígido
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&q=${encodeURIComponent(endereco)}`;
+    const resp = await fetch(url, { headers: { "User-Agent": "NexusPlanejados/1.0" } });
+    const data = await resp.json();
+    if (Array.isArray(data) && data[0]?.lat && data[0]?.lon) {
+      return { lat: Number(data[0].lat), lng: Number(data[0].lon) };
+    }
+  } catch (e) {
+    console.log("Nominatim erro:", e);
+  }
+
+  return null;
+}
+
+// Enriquece o input: se for CEP puro, busca dados completos no ViaCEP.
+// Retorna um endereço rico (logradouro, bairro, cidade, UF) pronto para geocoding.
+async function enriquecerEndereco(input: string): Promise<string> {
+  const limpo = input.trim();
   const soDigitos = limpo.replace(/\D/g, "");
 
-  const candidatos: string[] = [];
-  // 1. Endereço original
-  candidatos.push(limpo);
-  // 2. Se parece CEP (8 dígitos), tenta com sufixo Brasil
+  // Se é CEP de 8 dígitos, busca ViaCEP
   if (soDigitos.length === 8) {
-    const cepFormatado = `${soDigitos.slice(0, 5)}-${soDigitos.slice(5)}`;
-    candidatos.push(cepFormatado, soDigitos, `${cepFormatado}, Brasil`, `${soDigitos}, Brasil`);
-  }
-  // 3. Adiciona ", Brasil" se ainda não tem
-  if (!/brasil|brazil/i.test(limpo)) {
-    candidatos.push(`${limpo}, Brasil`);
-  }
-
-  let ultimoErro = "";
-  for (const candidato of candidatos) {
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(candidato)}&key=${GOOGLE_MAPS_API_KEY}&region=br`;
-    const resp = await fetch(url);
-    const json = await resp.json();
-    if (resp.ok && json.status === "OK" && json.results?.[0]) {
-      const loc = json.results[0].geometry.location;
-      return {
-        lat: loc.lat,
-        lng: loc.lng,
-        formattedAddress: json.results[0].formatted_address,
-      };
+    const dados = await viacep(limpo);
+    if (dados && dados.localidade && dados.uf) {
+      // Monta endereço rico: "Cidade, UF, Brasil"
+      return `${dados.localidade}, ${dados.uf}, Brasil`;
     }
-    ultimoErro = json.status || `HTTP ${resp.status}`;
   }
 
-  throw new Error(
-    `Não foi possível localizar "${endereco}". ` +
-    `Verifique o CEP (formato 00000-000) ou informe endereço completo com cidade/UF. ` +
-    `(Google: ${ultimoErro})`
-  );
+  // Se já tem cidade/UF ou é logradouro, usa como está
+  return limpo;
+}
+
+async function geocode(endereco: string): Promise<{ lat: number; lng: number; formattedAddress: string }> {
+  // Enriquece CEP → cidade+UF via ViaCEP
+  const enderecoEnriquecido = await enriquecerEndereco(endereco);
+  console.log("Geocoding:", endereco, "→", enderecoEnriquecido);
+
+  const coord = await geocodeEndereco(enderecoEnriquecido);
+  if (!coord) {
+    throw new Error(
+      `Não foi possível localizar "${endereco}". ` +
+      `Tente informar cidade e UF (ex: "Catanduva, SP") em vez do CEP.`
+    );
+  }
+  return { ...coord, formattedAddress: enderecoEnriquecido };
 }
 
 async function geocodeAndRoute(origem: string, destino: string) {
