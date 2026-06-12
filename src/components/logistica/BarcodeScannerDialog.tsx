@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { Camera, X, ScanLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 interface Props {
@@ -110,97 +109,105 @@ export function BarcodeScannerDialog({ open, onOpenChange, onScan, hint }: Props
     }
   };
 
+  if (!open) return null;
+
+  // Overlay puro (sem Radix Dialog) — evita conflito com Dialogs ja abertos
+  // (RecebimentoDialog). O z-index alto garante que fica acima de tudo.
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="p-0 gap-0 max-w-md"
-        style={{ backgroundColor: "#000" }}
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
-      >
-        <DialogTitle className="sr-only">Scanner de codigo de barras</DialogTitle>
-
-        <div className="relative">
-          {/* Header */}
-          <div className="flex items-center justify-between p-3 text-white" style={{ backgroundColor: "#0D1117" }}>
-            <div className="flex items-center gap-2">
-              <ScanLine className="h-4 w-4" />
-              <span className="text-sm font-medium">Aponte para o codigo de barras</span>
-            </div>
-            <button
-              onClick={() => onOpenChange(false)}
-              className="p-1.5 rounded-md hover:bg-white/10"
-            >
-              <X className="h-4 w-4 text-white" />
-            </button>
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Scanner de codigo de barras"
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        backgroundColor: "#000",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <div className="relative flex-1 flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-3 text-white" style={{ backgroundColor: "#0D1117" }}>
+          <div className="flex items-center gap-2">
+            <ScanLine className="h-4 w-4" />
+            <span className="text-sm font-medium">Aponte para o codigo de barras</span>
           </div>
-
-          {/* Area de video */}
-          <div className="relative" style={{ minHeight: 320, backgroundColor: "#000" }}>
-            <div id={SCANNER_ID} className="w-full" />
-            {starting && (
-              <div className="absolute inset-0 flex items-center justify-center text-white text-sm">
-                <Camera className="h-4 w-4 mr-2 animate-pulse" />
-                Iniciando camera...
-              </div>
-            )}
-            {error && (
-              <div className="absolute inset-0 flex items-center justify-center p-4 text-center text-white text-sm">
-                <div>
-                  <p className="font-semibold mb-2">Camera nao disponivel</p>
-                  <p className="opacity-70 text-xs">{error}</p>
-                  <p className="opacity-70 text-xs mt-2">Verifique permissoes do navegador</p>
-                </div>
-              </div>
-            )}
-
-            {/* Overlay de mira */}
-            {!error && !starting && (
-              <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                <div
-                  style={{
-                    width: "70%",
-                    height: "40%",
-                    border: "2px solid rgba(255,255,255,0.7)",
-                    borderRadius: 8,
-                    boxShadow: "0 0 0 9999px rgba(0,0,0,0.35)",
-                  }}
-                />
-              </div>
-            )}
-
-            {/* Flash de "leu!" */}
-            {lastScan && (
-              <div
-                className="pointer-events-none absolute inset-0 flex items-center justify-center"
-                style={{ backgroundColor: "rgba(16, 185, 129, 0.35)" }}
-              >
-                <div
-                  className="rounded-full px-4 py-2 text-white font-mono text-sm"
-                  style={{ backgroundColor: "rgba(16, 185, 129, 0.9)" }}
-                >
-                  {lastScan}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Footer */}
-          <div className="p-3 text-center" style={{ backgroundColor: "#0D1117" }}>
-            <p className="text-xs text-white/70">
-              {hint || "A camera bipa automaticamente. Continue passando as caixas."}
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onOpenChange(false)}
-              className="mt-2"
-            >
-              Voltar para digitacao
-            </Button>
-          </div>
+          <button
+            onClick={() => onOpenChange(false)}
+            className="p-1.5 rounded-md hover:bg-white/10"
+            aria-label="Fechar scanner"
+          >
+            <X className="h-4 w-4 text-white" />
+          </button>
         </div>
-      </DialogContent>
-    </Dialog>
+
+        {/* Area de video */}
+        <div className="relative flex-1" style={{ minHeight: 320, backgroundColor: "#000" }}>
+          <div id={SCANNER_ID} className="w-full h-full" />
+          {starting && (
+            <div className="absolute inset-0 flex items-center justify-center text-white text-sm">
+              <Camera className="h-4 w-4 mr-2 animate-pulse" />
+              Iniciando camera...
+            </div>
+          )}
+          {error && (
+            <div className="absolute inset-0 flex items-center justify-center p-4 text-center text-white text-sm">
+              <div>
+                <p className="font-semibold mb-2">Camera nao disponivel</p>
+                <p className="opacity-70 text-xs">{error}</p>
+                <p className="opacity-70 text-xs mt-2">Verifique permissoes do navegador</p>
+              </div>
+            </div>
+          )}
+
+          {/* Overlay de mira */}
+          {!error && !starting && (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <div
+                style={{
+                  width: "70%",
+                  height: "40%",
+                  border: "2px solid rgba(255,255,255,0.7)",
+                  borderRadius: 8,
+                  boxShadow: "0 0 0 9999px rgba(0,0,0,0.35)",
+                }}
+              />
+            </div>
+          )}
+
+          {/* Flash de "leu!" */}
+          {lastScan && (
+            <div
+              className="pointer-events-none absolute inset-0 flex items-center justify-center"
+              style={{ backgroundColor: "rgba(16, 185, 129, 0.35)" }}
+            >
+              <div
+                className="rounded-full px-4 py-2 text-white font-mono text-sm"
+                style={{ backgroundColor: "rgba(16, 185, 129, 0.9)" }}
+              >
+                {lastScan}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-3 text-center" style={{ backgroundColor: "#0D1117" }}>
+          <p className="text-xs text-white/70">
+            {hint || "A camera bipa automaticamente. Continue passando as caixas."}
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onOpenChange(false)}
+            className="mt-2"
+          >
+            Voltar para digitacao
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
