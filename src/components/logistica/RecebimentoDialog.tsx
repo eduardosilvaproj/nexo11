@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Camera, Package, CheckCircle2, AlertCircle, X, ScanLine, Home, Warehouse, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -672,14 +673,17 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
         )}
       </DialogContent>
 
-      <BarcodeScannerDialog
-        open={scannerOpen}
-        onOpenChange={setScannerOpen}
-        onScan={(code) => {
-          setScannerOpen(false);
-          handleBipar(code);
-        }}
-      />
+      {createPortal(
+        <BarcodeScannerDialog
+          open={scannerOpen}
+          onOpenChange={setScannerOpen}
+          onScan={(code) => {
+            setScannerOpen(false);
+            handleBipar(code);
+          }}
+        />,
+        document.body,
+      )}
     </Dialog>
   );
 }
