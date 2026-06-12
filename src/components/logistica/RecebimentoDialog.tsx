@@ -360,6 +360,7 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
     || "";
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent style={{ maxWidth: 900 }} className="gap-3 max-h-[92vh] overflow-y-auto">
         <DialogHeader>
