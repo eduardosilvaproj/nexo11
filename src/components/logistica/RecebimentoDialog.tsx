@@ -172,12 +172,29 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
     const cb = codigoBarras.trim();
     if (!cb) return;
 
-    // Busca a caixa prevista
+    // Fonte da verdade: a grade ja carregada (caixas deste pedido).
+    // Se o codigo bipado esta na grade, ele PERTENCE a este pedido
+    // (a query ja filtrou por producao_terceirizada_id = pedidoId).
+    const caixaNaGrade = caixas.find((c) => c.codigo_barras === cb);
+
+    // Busca a caixa prevista no banco (pode ser a mesma ou uma duplicata orfa)
     let { data: caixa } = await supabase
       .from("caixas_previstas")
       .select("id, status, producao_terceirizada_id, numero_pedido, oc")
       .eq("codigo_barras", cb)
       .maybeSingle();
+
+    // Se a caixa existe na grade mas a busca no banco falhou
+    // (RLS, link orfa, etc), usa o ID da grade como fallback
+    if (!caixa && caixaNaGrade) {
+      caixa = {
+        id: caixaNaGrade.id,
+        status: caixaNaGrade.status,
+        producao_terceirizada_id: pedidoId, // forca o vinculo correto
+        numero_pedido: null,
+        oc: caixaNaGrade.oc,
+      };
+    }
 
     if (!caixa) {
       setUltimoBip({ codigo: cb, status: "nao_pertence" });
@@ -186,51 +203,56 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
       return;
     }
 
-    // Auto-correcao: se a caixa existe mas foi importada orfa (sem
-    // producao_terceirizada_id) ou com o vinculo errado, e o codigo de
-    // barras (que comeca com o numero do pedido) bate com o pedido aberto,
-    // atualiza o vinculo agora.
-    //
-    // Garante o numero_pedido do pedido aberto: usa o que ja veio do React
-    // Query ou faz uma busca direta se estiver indisponivel.
-    let pedidoAbertoNumero = (pedido?.numero_pedido ?? "").replace(/\D/g, "");
-    if (!pedidoAbertoNumero && pedidoId) {
-      const { data: p } = await supabase
-        .from("producao_terceirizada")
-        .select("numero_pedido")
-        .eq("id", pedidoId)
-        .maybeSingle();
-      pedidoAbertoNumero = (p?.numero_pedido ?? "").replace(/\D/g, "");
-    }
-    // Tenta diferentes prefixos do codigo de barras (6, 7, 8 digitos)
-    // porque o numero do pedido pode ter tamanhos diferentes.
-    const cbDigitos = cb.replace(/\D/g, "");
-    const cbBateComPedidoAberto = !!pedidoAbertoNumero &&
-      (cbDigitos.startsWith(pedidoAbertoNumero) ||
-        pedidoAbertoNumero.startsWith(cbDigitos.slice(0, pedidoAbertoNumero.length)));
-
-    if (caixa.producao_terceirizada_id !== pedidoId) {
-      if (cbBateComPedidoAberto) {
-        // Caixa pertence a este pedido (prefixo do codigo de barras bate)
-        // mas o vinculo esta errado. Corrige agora.
-        const { error: fixErr } = await supabase
+    // Atalho: se a caixa esta na grade deste pedido, aceita direto.
+    // A grade ja foi filtrada por producao_terceirizada_id = pedidoId,
+    // entao a caixa pertence a este pedido por definicao.
+    if (caixaNaGrade) {
+      // Se a caixa retornada pelo banco tem vinculo errado, corrige.
+      if (caixa.producao_terceirizada_id !== pedidoId) {
+        await supabase
           .from("caixas_previstas")
           .update({ producao_terceirizada_id: pedidoId })
           .eq("id", caixa.id);
-        if (!fixErr) {
-          caixa.producao_terceirizada_id = pedidoId;
-          // Continua para o fluxo normal abaixo
+        caixa.producao_terceirizada_id = pedidoId;
+      }
+      // Pula a checagem de vinculo e cai direto no fluxo de bipar
+    } else {
+      // Caixa NAO esta na grade deste pedido. Pode ser de outro pedido
+      // ou codigo inexistente.
+      let pedidoAbertoNumero = (pedido?.numero_pedido ?? "").replace(/\D/g, "");
+      if (!pedidoAbertoNumero && pedidoId) {
+        const { data: p } = await supabase
+          .from("producao_terceirizada")
+          .select("numero_pedido")
+          .eq("id", pedidoId)
+          .maybeSingle();
+        pedidoAbertoNumero = (p?.numero_pedido ?? "").replace(/\D/g, "");
+      }
+      const cbDigitos = cb.replace(/\D/g, "");
+      const cbBateComPedidoAberto = !!pedidoAbertoNumero &&
+        (cbDigitos.startsWith(pedidoAbertoNumero) ||
+          pedidoAbertoNumero.startsWith(cbDigitos.slice(0, pedidoAbertoNumero.length)));
+
+      if (caixa.producao_terceirizada_id !== pedidoId) {
+        if (cbBateComPedidoAberto) {
+          const { error: fixErr } = await supabase
+            .from("caixas_previstas")
+            .update({ producao_terceirizada_id: pedidoId })
+            .eq("id", caixa.id);
+          if (!fixErr) {
+            caixa.producao_terceirizada_id = pedidoId;
+          } else {
+            setUltimoBip({ codigo: cb, status: "nao_pertence" });
+            toast.error(`Codigo ${cb} pertence a outro pedido (vinculo nao corrigido)`);
+            beep("erro"); vibrate("erro");
+            return;
+          }
         } else {
           setUltimoBip({ codigo: cb, status: "nao_pertence" });
-          toast.error(`Codigo ${cb} pertence a outro pedido (vinculo nao corrigido)`);
+          toast.error(`Codigo ${cb} pertence a outro pedido`);
           beep("erro"); vibrate("erro");
           return;
         }
-      } else {
-        setUltimoBip({ codigo: cb, status: "nao_pertence" });
-        toast.error(`Codigo ${cb} pertence a outro pedido`);
-        beep("erro"); vibrate("erro");
-        return;
       }
     }
 
