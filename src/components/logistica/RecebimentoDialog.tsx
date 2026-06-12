@@ -187,12 +187,27 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
     }
 
     // Auto-correcao: se a caixa existe mas foi importada orfa (sem
-    // producao_terceirizada_id) ou com o vinculo errado, e o numero do
-    // pedido bate com o pedido aberto, atualiza o vinculo agora.
-    // Isso resolve o caso de import duplicado / parser antigo.
-    const cbPedido = cb.replace(/\D/g, "").slice(0, 6); // 1413570001 -> 141357
-    const pedidoAbertoNumero = (pedido?.numero_pedido ?? "").replace(/\D/g, "");
-    const cbBateComPedidoAberto = !!pedidoAbertoNumero && cbPedido === pedidoAbertoNumero;
+    // producao_terceirizada_id) ou com o vinculo errado, e o codigo de
+    // barras (que comeca com o numero do pedido) bate com o pedido aberto,
+    // atualiza o vinculo agora.
+    //
+    // Garante o numero_pedido do pedido aberto: usa o que ja veio do React
+    // Query ou faz uma busca direta se estiver indisponivel.
+    let pedidoAbertoNumero = (pedido?.numero_pedido ?? "").replace(/\D/g, "");
+    if (!pedidoAbertoNumero && pedidoId) {
+      const { data: p } = await supabase
+        .from("producao_terceirizada")
+        .select("numero_pedido")
+        .eq("id", pedidoId)
+        .maybeSingle();
+      pedidoAbertoNumero = (p?.numero_pedido ?? "").replace(/\D/g, "");
+    }
+    // Tenta diferentes prefixos do codigo de barras (6, 7, 8 digitos)
+    // porque o numero do pedido pode ter tamanhos diferentes.
+    const cbDigitos = cb.replace(/\D/g, "");
+    const cbBateComPedidoAberto = !!pedidoAbertoNumero &&
+      (cbDigitos.startsWith(pedidoAbertoNumero) ||
+        pedidoAbertoNumero.startsWith(cbDigitos.slice(0, pedidoAbertoNumero.length)));
 
     if (caixa.producao_terceirizada_id !== pedidoId) {
       if (cbBateComPedidoAberto) {
