@@ -5433,6 +5433,95 @@ export type Database = {
           },
         ]
       }
+      montagens: {
+        Row: {
+          cidade: string | null
+          cliente_id: string | null
+          contrato_id: string | null
+          created_at: string
+          custo_montagem: number
+          data_prevista: string | null
+          endereco: string | null
+          equipe_id: string | null
+          estado: string | null
+          hora_fim: string | null
+          hora_inicio: string | null
+          id: string
+          loja_id: string
+          observacoes: string | null
+          status: string
+          updated_at: string
+          valor_montagem: number
+        }
+        Insert: {
+          cidade?: string | null
+          cliente_id?: string | null
+          contrato_id?: string | null
+          created_at?: string
+          custo_montagem?: number
+          data_prevista?: string | null
+          endereco?: string | null
+          equipe_id?: string | null
+          estado?: string | null
+          hora_fim?: string | null
+          hora_inicio?: string | null
+          id?: string
+          loja_id: string
+          observacoes?: string | null
+          status?: string
+          updated_at?: string
+          valor_montagem?: number
+        }
+        Update: {
+          cidade?: string | null
+          cliente_id?: string | null
+          contrato_id?: string | null
+          created_at?: string
+          custo_montagem?: number
+          data_prevista?: string | null
+          endereco?: string | null
+          equipe_id?: string | null
+          estado?: string | null
+          hora_fim?: string | null
+          hora_inicio?: string | null
+          id?: string
+          loja_id?: string
+          observacoes?: string | null
+          status?: string
+          updated_at?: string
+          valor_montagem?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "montagens_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "montagens_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "montagens_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "montagens_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nexo_atualizacoes: {
         Row: {
           autor: string | null
@@ -5820,6 +5909,70 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "notificacoes_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ocorrencias_campo: {
+        Row: {
+          contrato_id: string | null
+          created_at: string
+          descricao: string | null
+          foto_url: string | null
+          id: string
+          latitude: number | null
+          loja_id: string
+          longitude: number | null
+          reportado_em: string
+          reportado_por: string | null
+          tipo: string
+        }
+        Insert: {
+          contrato_id?: string | null
+          created_at?: string
+          descricao?: string | null
+          foto_url?: string | null
+          id?: string
+          latitude?: number | null
+          loja_id: string
+          longitude?: number | null
+          reportado_em?: string
+          reportado_por?: string | null
+          tipo: string
+        }
+        Update: {
+          contrato_id?: string | null
+          created_at?: string
+          descricao?: string | null
+          foto_url?: string | null
+          id?: string
+          latitude?: number | null
+          loja_id?: string
+          longitude?: number | null
+          reportado_em?: string
+          reportado_por?: string | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ocorrencias_campo_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ocorrencias_campo_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "vw_contratos_dre"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ocorrencias_campo_loja_id_fkey"
             columns: ["loja_id"]
             isOneToOne: false
             referencedRelation: "lojas"
@@ -6885,6 +7038,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles_public: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          id: string
+          nome_publico: string
+          updated_at: string
+          user_id: string | null
+          visible: boolean
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          id?: string
+          nome_publico: string
+          updated_at?: string
+          user_id?: string | null
+          visible?: boolean
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          id?: string
+          nome_publico?: string
+          updated_at?: string
+          user_id?: string | null
+          visible?: boolean
+        }
+        Relationships: []
       }
       registros_ponto: {
         Row: {
@@ -8797,6 +8983,59 @@ export type Database = {
           },
         ]
       }
+      whatsapp_automacoes: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          gatilho: string
+          gatilho_descricao: string | null
+          id: string
+          loja_id: string
+          mensagem: string
+          nome: string
+          template_id: string | null
+          total_enviadas: number
+          total_respostas: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          gatilho: string
+          gatilho_descricao?: string | null
+          id?: string
+          loja_id: string
+          mensagem: string
+          nome: string
+          template_id?: string | null
+          total_enviadas?: number
+          total_respostas?: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          gatilho?: string
+          gatilho_descricao?: string | null
+          id?: string
+          loja_id?: string
+          mensagem?: string
+          nome?: string
+          template_id?: string | null
+          total_enviadas?: number
+          total_respostas?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_automacoes_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       usuarios: {
@@ -9183,6 +9422,7 @@ export type Database = {
         Args: { _contrato_id: string }
         Returns: boolean
       }
+      is_admin_master: { Args: never; Returns: boolean }
       is_platform_admin: { Args: { _user_id: string }; Returns: boolean }
       is_rh_admin_or_manager: {
         Args: { target_loja_id: string }
@@ -9359,6 +9599,12 @@ export type Database = {
         | "negociacao"
         | "fechamento"
       op_status: "aguardando" | "em_corte" | "em_montagem" | "concluido"
+      orcamento_status:
+        | "rascunho"
+        | "enviado"
+        | "aprovado"
+        | "rejeitado"
+        | "convertido"
       papel_comissao_regra:
         | "contrato_assinado"
         | "por_ambiente_tecnico"
@@ -9577,6 +9823,13 @@ export const Constants = {
         "fechamento",
       ],
       op_status: ["aguardando", "em_corte", "em_montagem", "concluido"],
+      orcamento_status: [
+        "rascunho",
+        "enviado",
+        "aprovado",
+        "rejeitado",
+        "convertido",
+      ],
       papel_comissao_regra: [
         "contrato_assinado",
         "por_ambiente_tecnico",
