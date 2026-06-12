@@ -21,7 +21,6 @@
 --   * agent_conversas
 --   * usuarios_publico
 --   * feedback_votos
---   * estoque_minimo
 --
 -- Views criadas:
 --   * vw_contratos_dre
@@ -444,31 +443,30 @@ SELECT
 FROM public.contratos c
 LEFT JOIN public.dre_contrato d ON d.contrato_id = c.id;
 
--- vw_fluxo_caixa: contas a pagar e a receber
+-- vw_fluxo_caixa: contas a pagar e a receber (coluna 'vencimento')
 CREATE OR REPLACE VIEW public.vw_fluxo_caixa AS
-SELECT 'pagar'::text AS tipo, id, loja_id, descricao, valor, data_vencimento, status
+SELECT 'pagar'::text AS tipo, id, loja_id, descricao, valor, vencimento AS data_vencimento, status
 FROM public.financeiro_contas_pagar
 UNION ALL
-SELECT 'receber'::text AS tipo, id, loja_id, descricao, valor, data_vencimento, status
+SELECT 'receber'::text AS tipo, id, loja_id, descricao, valor, vencimento AS data_vencimento, status
 FROM public.financeiro_contas_receber;
 
--- vw_ponto_equilibrio: soma custos fixos vs receita média
+-- vw_ponto_equilibrio: soma custos fixos
 CREATE OR REPLACE VIEW public.vw_ponto_equilibrio AS
 SELECT
   loja_id,
   COALESCE(SUM(valor), 0) AS total_custos_fixos
 FROM public.custos_fixos
-WHERE ativo = true
 GROUP BY loja_id;
 
 -- v_communication_metrics: métricas agregadas de comunicação
 CREATE OR REPLACE VIEW public.v_communication_metrics AS
 SELECT
   loja_id,
-  COUNT(*)                              AS total_envios,
-  COUNT(*) FILTER (WHERE status = 'entregue')  AS total_entregues,
-  COUNT(*) FILTER (WHERE status = 'falhou')    AS total_falhas,
-  COUNT(*) FILTER (WHERE lido = true)          AS total_lidos
+  COUNT(*)                                              AS total_envios,
+  COUNT(*) FILTER (WHERE status = 'entregue')           AS total_entregues,
+  COUNT(*) FILTER (WHERE status = 'falhou')             AS total_falhas,
+  COUNT(*) FILTER (WHERE lido_em IS NOT NULL)           AS total_lidos
 FROM public.communication_outbox
 GROUP BY loja_id;
 
