@@ -7035,6 +7035,7 @@ export type Database = {
           loja_id: string
           numero_pedido: string
           oc: string | null
+          prazo: string | null
           situacao: string | null
           status: Database["public"]["Enums"]["producao_terceirizada_status"]
           tipo: string | null
@@ -7056,6 +7057,7 @@ export type Database = {
           loja_id: string
           numero_pedido: string
           oc?: string | null
+          prazo?: string | null
           situacao?: string | null
           status?: Database["public"]["Enums"]["producao_terceirizada_status"]
           tipo?: string | null
@@ -7077,6 +7079,7 @@ export type Database = {
           loja_id?: string
           numero_pedido?: string
           oc?: string | null
+          prazo?: string | null
           situacao?: string | null
           status?: Database["public"]["Enums"]["producao_terceirizada_status"]
           tipo?: string | null

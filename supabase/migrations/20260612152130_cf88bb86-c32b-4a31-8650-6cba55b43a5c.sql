@@ -1,0 +1,1 @@
+ALTER TABLE public.producao_terceirizada ADD COLUMN IF NOT EXISTS prazo text;
