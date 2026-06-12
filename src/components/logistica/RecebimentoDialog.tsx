@@ -115,11 +115,15 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
   }, [open, destino, finalizando, ultimoBip, scannerOpen]);
 
   // Wake lock: mantem a tela acesa durante a bipagem (mobile)
+  const caixasRecebidasCount = caixas.filter((c) => c.status === "recebida").length;
+  const totalCaixasCount = caixas.length;
+  const completoFlag = totalCaixasCount > 0 && caixasRecebidasCount === totalCaixasCount;
   useEffect(() => {
-    if (!open || !destino || completo) return;
-    const release = requestWakeLock();
-    return () => { release?.(); };
-  }, [open, destino, completo]);
+    if (!open || !destino || completoFlag) return;
+    let releaseFn: (() => void) | null = null;
+    requestWakeLock().then((r) => { releaseFn = r; });
+    return () => { releaseFn?.(); };
+  }, [open, destino, completoFlag]);
 
   // Carrega fotos do pedido
   useEffect(() => {
