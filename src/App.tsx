@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { LojaContextoProvider } from "@/contexts/LojaContexto";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import AppLayout from "@/components/AppLayout";
 import { AppShellMobile } from "@/routes/mobile/AppShellMobile";
@@ -286,12 +287,14 @@ const App = () => (
       <VersionChecker />
       <BrowserRouter>
         <AuthProvider>
-          <RootLayoutSwitcher />
-          <AgentWidget />
-          <FirstAccessWizard />
-          <HintsOverlay />
-          <PageTour configs={tourConfigs} />
-          <PageShortcuts />
+          <LojaContextoProvider>
+            <RootLayoutSwitcher />
+            <AgentWidget />
+            <FirstAccessWizard />
+            <HintsOverlay />
+            <PageTour configs={tourConfigs} />
+            <PageShortcuts />
+          </LojaContextoProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

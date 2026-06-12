@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { PageTransition } from "@/components/ui/page-transition";
 import { LogoNexo } from "@/components/LogoNexo";
+import { LojaContextSelector } from "@/components/LojaContextSelector";
 import {
   LayoutDashboard,
   FileText,
@@ -210,8 +211,9 @@ export default function AppLayout() {
               </span>
             </div>
 
-            {/* Right side: bell + avatar */}
-            <div className="flex items-center gap-3">
+            {/* Right side: context selector + bell + avatar */}
+            <div className="flex items-center gap-2 md:gap-3">
+              <LojaContextSelector />
               <NotificationsBell />
               <div
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-white/80 bg-[linear-gradient(135deg,#1A9BE8,#22C97A)] text-xs font-bold text-white shadow-lg shadow-sky-900/15 ring-4 ring-slate-100"
