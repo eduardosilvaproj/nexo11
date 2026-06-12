@@ -61,7 +61,7 @@ export function RecebimentoTab() {
           contratos:contrato_id ( cliente_nome )
         `)
         .eq("loja_id", lojaId!)
-        .in("status", ["em_producao", "pronto_retirada", "atrasado"])
+        .in("status", ["aguardando_fabricacao", "em_producao", "pronto_retirada", "atrasado"])
         .order("data_prevista", { ascending: true });
       if (error) throw error;
       return (data ?? []) as PedidoRecebimento[];
