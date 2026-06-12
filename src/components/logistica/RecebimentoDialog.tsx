@@ -173,9 +173,9 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
     if (!cb) return;
 
     // Busca a caixa prevista
-    const { data: caixa } = await supabase
+    let { data: caixa } = await supabase
       .from("caixas_previstas")
-      .select("id, status, producao_terceirizada_id")
+      .select("id, status, producao_terceirizada_id, numero_pedido, oc")
       .eq("codigo_barras", cb)
       .maybeSingle();
 
@@ -186,11 +186,37 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
       return;
     }
 
+    // Auto-correcao: se a caixa existe mas foi importada orfa (sem
+    // producao_terceirizada_id) ou com o vinculo errado, e o numero do
+    // pedido bate com o pedido aberto, atualiza o vinculo agora.
+    // Isso resolve o caso de import duplicado / parser antigo.
+    const cbPedido = cb.replace(/\D/g, "").slice(0, 6); // 1413570001 -> 141357
+    const pedidoAbertoNumero = (pedido?.numero_pedido ?? "").replace(/\D/g, "");
+    const cbBateComPedidoAberto = !!pedidoAbertoNumero && cbPedido === pedidoAbertoNumero;
+
     if (caixa.producao_terceirizada_id !== pedidoId) {
-      setUltimoBip({ codigo: cb, status: "nao_pertence" });
-      toast.error(`Codigo ${cb} pertence a outro pedido`);
-      beep("erro"); vibrate("erro");
-      return;
+      if (cbBateComPedidoAberto) {
+        // Caixa pertence a este pedido (prefixo do codigo de barras bate)
+        // mas o vinculo esta errado. Corrige agora.
+        const { error: fixErr } = await supabase
+          .from("caixas_previstas")
+          .update({ producao_terceirizada_id: pedidoId })
+          .eq("id", caixa.id);
+        if (!fixErr) {
+          caixa.producao_terceirizada_id = pedidoId;
+          // Continua para o fluxo normal abaixo
+        } else {
+          setUltimoBip({ codigo: cb, status: "nao_pertence" });
+          toast.error(`Codigo ${cb} pertence a outro pedido (vinculo nao corrigido)`);
+          beep("erro"); vibrate("erro");
+          return;
+        }
+      } else {
+        setUltimoBip({ codigo: cb, status: "nao_pertence" });
+        toast.error(`Codigo ${cb} pertence a outro pedido`);
+        beep("erro"); vibrate("erro");
+        return;
+      }
     }
 
     if (caixa.status === "recebida") {
