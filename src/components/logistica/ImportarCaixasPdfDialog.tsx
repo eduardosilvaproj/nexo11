@@ -35,17 +35,32 @@ const MAX_SIZE = 10 * 1024 * 1024;
 
 // =========================================================
 // Parser do relatorio EER002 (Promob/Casimiro)
-// Layout esperado (extraido via pdfjs getTextContent):
-//   Pedido: 141357
-//   Cliente: 682 - DIAS MOVEIS PLANEJADOS SAO CARLOS LTDA
-//   OC: LUCASASTECACOZ
-//   Caixa Master: 1
-//   *1413570001*  (codigo de barras com asteriscos)
-//   Caixa Master: 2
-//   *1413570002*
-// O parser caminha o texto linearmente, mantendo o contexto
-// (numero_pedido + oc) atual e associando cada "Caixa Master: N"
-// ao proximo codigo de barras "*XXXX*" encontrado.
+//
+// O PDF tem formatos inconsistentes para o mesmo campo entre
+// a capa e as paginas de detalhe. A camada do pdfjs devolve
+// os items em ordem de leitura (esquerda -> direita), entao
+// as labels NAO estao sempre no inicio da linha.
+//
+// Formatos observados:
+//   Capa (pagina 1):
+//     "Pedido:   141357, 141358, 141359, 141360, 141361"
+//   Detalhe de cada pedido (paginas 2+):
+//     "682 - DIAS MOVEIS PLANEJADOS SAO CARLOS LTDA 141358   Cliente: Pedido:"
+//     "LUCASASTECACOZ OC:"
+//     "Caixa Master: 1"
+//     "*1413570001*"  (codigo de barras com asteriscos — aparece 3x, 1 so importa)
+//     "Caixa Master: 2"
+//     "*1413570002*"
+//   Pedidos grandes (141360) podem ocupar varias paginas: o "Pedido:"
+//   so aparece na primeira pagina e as caixas continuam nas seguintes.
+//
+// Estrategia:
+//   1. Detectar header da capa (linha com varios pedidos separados por virgula)
+//   2. Detectar "novo bloco de pedido" por numero de 6+ digitos perto de "Cliente: Pedido:"
+//   3. Detectar OC por string alfanumerica (3+ chars) antes de "OC:"
+//   4. Detectar Caixa Master: N (ancorado no inicio da linha)
+//   5. Detectar *CODIGO* (ancorado no inicio da linha)
+//   6. Manter o curPedido entre paginas (so atualiza quando acha um novo)
 // =========================================================
 function parseEER002(text: string): { caixas: CaixaParsed[]; grupos: PedidoGroup[] } {
   const caixas: CaixaParsed[] = [];
@@ -57,31 +72,70 @@ function parseEER002(text: string): { caixas: CaixaParsed[]; grupos: PedidoGroup
 
   const linhas = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
 
+  // 1. Capa: detecta header com varios pedidos
+  // Ex: "Pedido:   141357, 141358, 141359, 141360, 141361"
   for (const linha of linhas) {
-    // Detecta novo pedido
-    const mPedido = linha.match(/^Pedido:\s*(\d+)/i);
-    if (mPedido) {
-      curPedido = mPedido[1];
+    if (/^Pedido:\s*\d/.test(linha) && linha.includes(",")) {
+      const nums = linha.match(/\d{6,}/g) ?? [];
+      for (const n of nums) {
+        if (!gruposMap.has(n)) {
+          gruposMap.set(n, { numeroPedido: n, oc: "", totalCaixas: 0 });
+        }
+      }
+      break; // so ha 1 header no PDF
+    }
+  }
+
+  for (const linha of linhas) {
+    // Ignora linhas irrelevantes / falsos positivos
+    if (/^Total do Pedido/i.test(linha)) continue;
+    if (/^Qtde total/i.test(linha)) continue;
+    if (/^Total de Volume/i.test(linha)) continue;
+    if (/^PROMOB Software/i.test(linha)) continue;
+    if (/^Relat.rio de entrada/i.test(linha)) continue;
+    if (/^Qtde\s+Item/i.test(linha)) continue;
+    // Ignora a linha de header da capa (ja tratada acima)
+    if (/^Pedido:\s*\d/.test(linha) && linha.includes(",")) continue;
+
+    // 2. Bloco de detalhe: "141358   Cliente: Pedido:" (numero vem antes do label)
+    const mPedidoBloco = linha.match(/\b(\d{6,})\b(?=\s+Cliente:|\s*Pedido:)/);
+    if (mPedidoBloco) {
+      curPedido = mPedidoBloco[1];
       curOC = "";
       curVolume = null;
+      if (!gruposMap.has(curPedido)) {
+        gruposMap.set(curPedido, { numeroPedido: curPedido, oc: "", totalCaixas: 0 });
+      }
       continue;
     }
 
-    // Detecta OC (dentro do bloco de um pedido)
-    const mOC = linha.match(/^OC:\s*(\S+)/i);
-    if (mOC && curPedido) {
-      curOC = mOC[1];
+    // 3. OC: "LUCASASTECACOZ OC:" (valor vem antes do label)
+    const mOCAntes = linha.match(/^([A-Z][A-Z0-9]{2,})\s+OC:\s*$/);
+    if (mOCAntes && curPedido) {
+      curOC = mOCAntes[1];
+      if (gruposMap.has(curPedido)) {
+        gruposMap.get(curPedido)!.oc = curOC;
+      }
+      continue;
+    }
+    // 3b. OC: VALOR (label antes do valor — menos comum mas possivel)
+    const mOCDepois = linha.match(/\bOC:\s*([A-Z][A-Z0-9]{2,})/);
+    if (mOCDepois && curPedido) {
+      curOC = mOCDepois[1];
+      if (gruposMap.has(curPedido)) {
+        gruposMap.get(curPedido)!.oc = curOC;
+      }
       continue;
     }
 
-    // Detecta "Caixa Master: N"
+    // 4. Caixa Master: N
     const mCaixa = linha.match(/^Caixa Master:\s*(\d+)/i);
     if (mCaixa) {
       curVolume = parseInt(mCaixa[1], 10);
       continue;
     }
 
-    // Detecta codigo de barras entre asteriscos (ex: *1413570001*)
+    // 5. *CODIGO* (aparece 3x na mesma linha visual, 1 so importa)
     const mCB = linha.match(/^\*(\d{10,14})\*$/);
     if (mCB && curVolume !== null && curPedido) {
       const codigoBarras = mCB[1];
@@ -93,10 +147,11 @@ function parseEER002(text: string): { caixas: CaixaParsed[]; grupos: PedidoGroup
         producaoTerceirizadaId: null,
         matched: false,
       });
-      if (!gruposMap.has(curPedido)) {
-        gruposMap.set(curPedido, { numeroPedido: curPedido, oc: curOC, totalCaixas: 0 });
+      const g = gruposMap.get(curPedido);
+      if (g) g.totalCaixas += 1;
+      else {
+        gruposMap.set(curPedido, { numeroPedido: curPedido, oc: curOC, totalCaixas: 1 });
       }
-      gruposMap.get(curPedido)!.totalCaixas += 1;
       curVolume = null; // reseta para nao associar o mesmo codigo a 2 caixas
     }
   }
