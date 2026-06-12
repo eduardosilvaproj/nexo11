@@ -143,10 +143,26 @@ export function ImportarCaixasPdfDialog({ open, onOpenChange, lojaId }: Props) {
       for (let p = 1; p <= pdf.numPages; p++) {
         const page = await pdf.getPage(p);
         const content = await page.getTextContent();
-        // Extrai strings mantendo quebras de linha
-        fullText += content.items
-          .map((it: unknown) => (it as { str?: string }).str ?? "")
-          .join(" ") + "\n";
+        // Reconstroi as quebras de linha do PDF usando o Y do transform de cada item.
+        // Itens com o mesmo Y estao na mesma linha; mudanca de Y = quebra.
+        // Sem isso, juntar tudo com " " faz o parser (que espera "Pedido:" e
+        // "*COD*" no inicio de linha) nao encontrar nada.
+        const items = content.items as { str?: string; transform?: number[] }[];
+        const linhas: string[] = [];
+        let yAtual: number | null = null;
+        let linhaBuf: string[] = [];
+        for (const it of items) {
+          const s = it.str ?? "";
+          const y = it.transform?.[5] ?? null;
+          if (y !== null && yAtual !== null && Math.abs(y - yAtual) > 1) {
+            if (linhaBuf.length) linhas.push(linhaBuf.join(" ").trim());
+            linhaBuf = [];
+          }
+          if (s) linhaBuf.push(s);
+          if (y !== null) yAtual = y;
+        }
+        if (linhaBuf.length) linhas.push(linhaBuf.join(" ").trim());
+        fullText += linhas.join("\n") + "\n";
       }
       const parsed = parseEER002(fullText);
       if (!parsed.caixas.length) {

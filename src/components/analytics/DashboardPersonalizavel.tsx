@@ -132,17 +132,17 @@ async function fetchWidgetData(periodo: Periodo, lojaId: string): Promise<Widget
   if (lojaId !== "all") montQ = montQ.eq("loja_id", lojaId);
   const { count: montagensPend } = await montQ;
 
-  // Entregas da semana
+  // Entregas da semana (entregas nao tem loja_id — filtro via contratos)
   const weekStart = new Date(now);
   weekStart.setDate(now.getDate() - now.getDay());
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekStart.getDate() + 7);
   let entQ = (supabase as any)
     .from("entregas")
-    .select("id", { count: "exact", head: true })
+    .select("id, contratos!inner(loja_id)", { count: "exact", head: true })
     .gte("data_prevista", weekStart.toISOString().slice(0, 10))
     .lt("data_prevista", weekEnd.toISOString().slice(0, 10));
-  if (lojaId !== "all") entQ = entQ.eq("loja_id", lojaId);
+  if (lojaId !== "all") entQ = entQ.eq("contratos.loja_id", lojaId);
   const { count: entregasSemana } = await entQ;
 
   // Comissoes pendentes

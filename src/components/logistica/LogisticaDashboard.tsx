@@ -94,10 +94,11 @@ export function LogisticaDashboard() {
     queryKey: ["logistica-dashboard", lojaId, startOfMonth],
     enabled: !!lojaId,
     queryFn: async () => {
+      // entregas nao tem loja_id direto — filtro via inner join com contratos
       const { data, error } = await (supabase as any)
         .from("entregas")
-        .select("id, data_prevista, status_visual, created_at")
-        .eq("loja_id", lojaId)
+        .select("id, data_prevista, status_visual, created_at, contratos!inner(loja_id)")
+        .eq("contratos.loja_id", lojaId)
         .gte("data_prevista", startOfMonth)
         .lt("data_prevista", endOfMonth);
       if (error) throw error;
