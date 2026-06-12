@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Camera, Package, CheckCircle2, AlertCircle, X, ScanLine, Home, Warehouse, Trash2, Image as ImageIcon } from "lucide-react";
+import { Camera, Package, CheckCircle2, AlertCircle, X, ScanLine, Home, Warehouse, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { BarcodeScannerDialog } from "@/components/logistica/BarcodeScannerDialog";
+import { beep, vibrate, requestWakeLock } from "@/lib/recebimento-feedback";
 
 type Destino = "deposito" | "cliente";
 
@@ -54,8 +56,9 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
   const [fotosPedido, setFotosPedido] = useState<{ id: string; storage_path: string; tipo_evento: string; descricao: string | null; url: string }[]>([]);
   const [uploadingFoto, setUploadingFoto] = useState(false);
   const [showSairSemFinalizar, setShowSairSemFinalizar] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const bipInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const fotoInputRef = useRef<HTMLInputElement>(null);
 
   // Busca dados do pedido
   const { data: pedido } = useQuery({
@@ -105,10 +108,17 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
 
   // Mantem foco no input de bipagem
   useEffect(() => {
-    if (open && destino && !finalizando) {
+    if (open && destino && !finalizando && !scannerOpen) {
       bipInputRef.current?.focus();
     }
-  }, [open, destino, finalizando, ultimoBip]);
+  }, [open, destino, finalizando, ultimoBip, scannerOpen]);
+
+  // Wake lock: mantem a tela acesa durante a bipagem (mobile)
+  useEffect(() => {
+    if (!open || !destino || completo) return;
+    const release = requestWakeLock();
+    return () => { release?.(); };
+  }, [open, destino, completo]);
 
   // Carrega fotos do pedido
   useEffect(() => {
@@ -167,18 +177,21 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
     if (!caixa) {
       setUltimoBip({ codigo: cb, status: "nao_pertence" });
       toast.error(`Codigo ${cb} nao encontrado em nenhum pedido`);
+      beep("erro"); vibrate("erro");
       return;
     }
 
     if (caixa.producao_terceirizada_id !== pedidoId) {
       setUltimoBip({ codigo: cb, status: "nao_pertence" });
       toast.error(`Codigo ${cb} pertence a outro pedido`);
+      beep("erro"); vibrate("erro");
       return;
     }
 
     if (caixa.status === "recebida") {
       setUltimoBip({ codigo: cb, status: "duplicado" });
       toast.warning(`Caixa ${cb} ja foi recebida`);
+      beep("duplicado"); vibrate("duplicado");
       return;
     }
 
@@ -193,6 +206,7 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
 
     if (error) {
       toast.error(error.message);
+      beep("erro"); vibrate("erro");
       return;
     }
 
@@ -202,11 +216,12 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
       loja_id: lojaId,
       usuario_id: user?.id,
       usuario_nome: userName,
-      bipado_via: bip === cb ? "input" : "camera",
+      bipado_via: scannerOpen ? "camera" : "input",
     });
 
     setUltimoBip({ codigo: cb, status: "ok" });
     setBip("");
+    beep("ok"); vibrate("ok");
     qc.invalidateQueries({ queryKey: ["recebimento-caixas", pedidoId] });
     qc.invalidateQueries({ queryKey: ["recebimento-pedido", pedidoId] });
   };
@@ -436,14 +451,14 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => cameraInputRef.current?.click()}
+                onClick={() => setScannerOpen(true)}
                 className="h-12"
-                disabled={uploadingFoto}
+                title="Escanear com a camera"
               >
                 <Camera className="h-4 w-4" />
               </Button>
               <input
-                ref={cameraInputRef}
+                ref={fotoInputRef}
                 type="file"
                 accept="image/*"
                 capture="environment"
@@ -656,6 +671,15 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
           </div>
         )}
       </DialogContent>
+
+      <BarcodeScannerDialog
+        open={scannerOpen}
+        onOpenChange={setScannerOpen}
+        onScan={(code) => {
+          setScannerOpen(false);
+          handleBipar(code);
+        }}
+      />
     </Dialog>
   );
 }
