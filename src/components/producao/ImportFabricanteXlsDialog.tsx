@@ -100,7 +100,7 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
   const [parsing, setParsing] = useState(false);
   const [importing, setImporting] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const [result, setResult] = useState<{ atualizados: number; novos: number; ignorados: number } | null>(null);
+  const [result, setResult] = useState<{ atualizados: number; novos: number; ignorados: number; erros?: { pedido: string; mensagem: string }[] } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const reset = () => { setFile(null); setRows([]); setGrouped([]); setResult(null); setDragOver(false); };
@@ -223,32 +223,32 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
   };
 
   const handleImport = async () => {
-    if (!lojaId || !grouped.length) return;
+    if (!lojaId) { toast.error("Contexto de loja não definido"); return; }
+    if (!grouped.length) { toast.error("Nenhum pedido para importar"); return; }
     setImporting(true);
-    try {
-      let atualizados = 0, novos = 0, ignorados = 0;
-      const sb = supabase as unknown as {
-        from: (t: string) => {
-          insert: (v: unknown) => Promise<{ error: Error | null }>;
-          update: (u: unknown) => { eq: (c: string, v: string) => Promise<{ error: Error | null }> };
-          upsert: (v: unknown, o: unknown) => Promise<{ error: Error | null }>;
-          select: (s: string) => { eq: (c: string, v: unknown) => { eq: (c: string, v: unknown) => Promise<{ data: { id: string }[] | null; error: Error | null }> } };
-        };
+
+    let atualizados = 0, novos = 0, ignorados = 0;
+    const erros: { pedido: string; mensagem: string }[] = [];
+
+    const sb = supabase as unknown as {
+      from: (t: string) => {
+        upsert: (v: unknown, o: unknown) => Promise<{ error: { message: string } | null; data: unknown }>;
       };
+    };
 
-      for (const g of grouped) {
-        const numero = g.numeroPedido?.trim();
-        if (!numero) { ignorados++; continue; }
-
-        // Cada pedido/ambiente vira 1 linha em producao_terceirizada.
-        // Upsert idempotente via UNIQUE (loja_id, numero_pedido).
-        const payload = {
+    // Faz upsert em lotes de 50 (Supabase aceita payloads grandes; 50 eh seguro).
+    const BATCH = 50;
+    for (let start = 0; start < grouped.length; start += BATCH) {
+      const fatia = grouped.slice(start, start + BATCH);
+      const payload = fatia
+        .filter((g) => (g.numeroPedido || "").trim())
+        .map((g) => ({
           loja_id: lojaId,
           fornecedor_id: fornecedorId,
           contrato_id: g.contratoId ?? null,
           cliente_id: g.clienteId ?? null,
           cliente_nome: g.clienteBase || null,
-          numero_pedido: numero,
+          numero_pedido: (g.numeroPedido || "").trim(),
           oc: g.oc || null,
           data_prevista: g.dataPrevista || null,
           valor: g.valor || 0,
@@ -259,42 +259,49 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
           status: "aguardando_fabricacao",
           tipo_entrada: "xml",
           vinculo_status: g.contratoId ? "vinculado" : "pendente",
-        };
+        }));
 
-        // Tenta upsert primeiro (idempotente por (loja_id, numero_pedido))
-        const { error: upsertErr } = await sb.from("producao_terceirizada").upsert(payload, {
-          onConflict: "loja_id,numero_pedido",
-        });
+      if (!payload.length) continue;
 
-        if (!upsertErr) {
-          if (g.contratoId) atualizados++;
-          else novos++;
-          continue;
+      // Antes de chamar upsert, conta quantos ja existem pra separar novos vs atualizados.
+      // (Upsert nao retorna essa informacao de forma confiavel com .select() omitido.)
+      const numeros = payload.map((p) => p.numero_pedido);
+      const { data: existentes } = await supabase
+        .from("producao_terceirizada")
+        .select("numero_pedido")
+        .eq("loja_id", lojaId)
+        .in("numero_pedido", numeros);
+      const setExist = new Set((existentes ?? []).map((r) => r.numero_pedido));
+
+      const { error } = await sb.from("producao_terceirizada").upsert(payload, {
+        onConflict: "loja_id,numero_pedido",
+      });
+
+      if (error) {
+        // Em vez de descartar, anexa a mensagem de erro para o usuario ver.
+        for (const p of payload) {
+          erros.push({ pedido: p.numero_pedido, mensagem: error.message });
+          ignorados++;
         }
-
-        // Fallback: insert/update manual
-        const { data: existente } = await sb
-          .from("producao_terceirizada")
-          .select("id")
-          .eq("loja_id", lojaId)
-          .eq("numero_pedido", numero);
-
-        if (existente && existente.length > 0) {
-          const { error } = await sb.from("producao_terceirizada").update(payload).eq("id", existente[0].id);
-          if (error) { console.error(error); ignorados++; continue; }
-          atualizados++;
-        } else {
-          const { error } = await sb.from("producao_terceirizada").insert(payload);
-          if (error) { console.error(error); ignorados++; continue; }
-          novos++;
+        console.error("[ImportFabricante] upsert error:", error);
+      } else {
+        for (const p of payload) {
+          if (setExist.has(p.numero_pedido)) atualizados++;
+          else novos++;
         }
       }
-      setResult({ atualizados, novos, ignorados });
-      qc.invalidateQueries({ queryKey: ["producao-terceirizada"] });
+    }
+
+    setResult({ atualizados, novos, ignorados, erros });
+    qc.invalidateQueries({ queryKey: ["producao-terceirizada"] });
+    if (erros.length === 0) {
       toast.success(`${atualizados} atualizados · ${novos} novos · ${ignorados} ignorados`);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erro na importação");
-    } finally { setImporting(false); }
+    } else {
+      toast.warning(
+        `${atualizados} atualizados · ${novos} novos · ${ignorados} ignorados (veja detalhes)`,
+      );
+    }
+    setImporting(false);
   };
 
   const matchedCount = grouped.filter((r) => r.contratoMatch).length;
@@ -389,13 +396,28 @@ export function ImportFabricanteXlsDialog({ open, onOpenChange, lojaId, forneced
             )}
 
             {result && (
-              <div className="rounded-lg p-3 space-y-1" style={{ backgroundColor: "#D1FAE5" }}>
+              <div className="rounded-lg p-3 space-y-2" style={{ backgroundColor: result.ignorados > 0 ? "#FEF3F2" : "#D1FAE5" }}>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4" style={{ color: "#05873C" }} />
-                  <span className="text-sm font-medium" style={{ color: "#05873C" }}>
+                  {result.ignorados > 0
+                    ? <AlertCircle className="h-4 w-4" style={{ color: "#D92D20" }} />
+                    : <CheckCircle2 className="h-4 w-4" style={{ color: "#05873C" }} />}
+                  <span className="text-sm font-medium" style={{ color: result.ignorados > 0 ? "#D92D20" : "#05873C" }}>
                     {result.atualizados} atualizados · {result.novos} novos · {result.ignorados} ignorados
                   </span>
                 </div>
+                {result.erros && result.erros.length > 0 && (
+                  <div className="text-xs space-y-1 pt-1" style={{ color: "#7A271A" }}>
+                    <div style={{ fontWeight: 600 }}>Erros (até 5):</div>
+                    {result.erros.slice(0, 5).map((e, i) => (
+                      <div key={i}>
+                        <strong>#{e.pedido}</strong>: {e.mensagem}
+                      </div>
+                    ))}
+                    {result.erros.length > 5 && (
+                      <div className="opacity-70">… e mais {result.erros.length - 5}</div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
