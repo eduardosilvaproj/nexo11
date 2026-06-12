@@ -3,7 +3,6 @@ import { FileText, CheckCircle2, AlertCircle, X, ArrowRight, Upload, Package } f
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import * as pdfjsLib from "pdfjs-dist";
-// @ts-expect-error - Vite resolve ?url para o worker
 import workerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
