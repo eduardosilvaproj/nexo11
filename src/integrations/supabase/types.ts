@@ -6952,6 +6952,7 @@ export type Database = {
       }
       producao_terceirizada: {
         Row: {
+          cliente_id: string | null
           cliente_nome: string | null
           contrato_id: string | null
           created_at: string
@@ -6968,9 +6969,11 @@ export type Database = {
           tipo_entrada: string
           transportadora: string | null
           updated_at: string
+          valor: number
           vinculo_status: string
         }
         Insert: {
+          cliente_id?: string | null
           cliente_nome?: string | null
           contrato_id?: string | null
           created_at?: string
@@ -6987,9 +6990,11 @@ export type Database = {
           tipo_entrada?: string
           transportadora?: string | null
           updated_at?: string
+          valor?: number
           vinculo_status?: string
         }
         Update: {
+          cliente_id?: string | null
           cliente_nome?: string | null
           contrato_id?: string | null
           created_at?: string
@@ -7006,9 +7011,17 @@ export type Database = {
           tipo_entrada?: string
           transportadora?: string | null
           updated_at?: string
+          valor?: number
           vinculo_status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "producao_terceirizada_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "producao_terceirizada_contrato_id_fkey"
             columns: ["contrato_id"]
