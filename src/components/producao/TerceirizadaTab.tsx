@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, AlertTriangle, Link2, FileSpreadsheet, Package, ChevronDown } from "lucide-react";
+import { Plus, AlertTriangle, Link2, FileSpreadsheet, Package, ChevronDown, ScanLine } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { NovoPedidoTerceirizadoDialog } from "@/components/producao/NovoPedidoTerceirizadoDialog";
 import { VincularPedidoDialog } from "@/components/producao/VincularPedidoDialog";
 import { ImportFabricanteXlsDialog } from "@/components/producao/ImportFabricanteXlsDialog";
+import { RecebimentoDialog } from "@/components/logistica/RecebimentoDialog";
 import { useAuth } from "@/contexts/AuthContext";
 
 type StatusT = "aguardando_fabricacao" | "em_producao" | "pronto_retirada" | "atrasado";
@@ -33,6 +34,9 @@ interface Pedido {
   situacao?: string | null;
   valor?: number | null;
   vinculo_status?: string;
+  status_recebimento?: string | null;
+  total_caixas_previstas?: number;
+  total_caixas_recebidas?: number;
   cliente_nome?: string | null;
   contratos?: { cliente_nome?: string } | null;
   fornecedores?: { nome?: string } | null;
@@ -145,6 +149,7 @@ export function TerceirizadaTab() {
   const [novoOpen, setNovoOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [vincularId, setVincularId] = useState<string | null>(null);
+  const [receberId, setReceberId] = useState<string | null>(null);
   const [filtroFornecedor, setFiltroFornecedor] = useState<string>(ALL);
   const [busca, setBusca] = useState("");
 
@@ -167,7 +172,7 @@ export function TerceirizadaTab() {
       };
       const { data, error } = await sb
         .from("producao_terceirizada")
-        .select("id, numero_pedido, oc, contrato_id, cliente_id, fornecedor_id, data_prevista, transportadora, status, importado_em, tipo_entrada, tipo, situacao, valor, vinculo_status, cliente_nome, contratos:contrato_id(cliente_nome), fornecedores:fornecedor_id(nome)")
+        .select("id, numero_pedido, oc, contrato_id, cliente_id, fornecedor_id, data_prevista, transportadora, status, importado_em, tipo_entrada, tipo, situacao, valor, vinculo_status, status_recebimento, total_caixas_previstas, total_caixas_recebidas, cliente_nome, contratos:contrato_id(cliente_nome), fornecedores:fornecedor_id(nome)")
         .order("data_prevista", { ascending: true });
       if (error) throw error;
       return data ?? [];
@@ -359,7 +364,7 @@ export function TerceirizadaTab() {
                       <table className="w-full min-w-[1000px]">
                         <thead style={{ backgroundColor: "#F7F9FC" }}>
                           <tr>
-                            {["Nº pedido", "OC / Ambiente", "Data prevista", "Dias", "Tipo", "Situação", "Valor", "Vínculo", "Status", "Ações"].map((h) => (
+                            {["Nº pedido", "OC / Ambiente", "Data prevista", "Dias", "Tipo", "Situação", "Valor", "Caixas", "Vínculo", "Status", "Ações"].map((h) => (
                               <th
                                 key={h}
                                 className="px-4 py-2 text-left"
@@ -404,6 +409,29 @@ export function TerceirizadaTab() {
                                   {p.valor != null ? fmtBRL(Number(p.valor)) : <span className="text-muted-foreground">—</span>}
                                 </td>
                                 <td className="px-4 py-2">
+                                  {(p.total_caixas_previstas ?? 0) > 0 ? (
+                                    <div>
+                                      <div
+                                        className="text-xs font-semibold"
+                                        style={{ color: (p.total_caixas_recebidas ?? 0) >= (p.total_caixas_previstas ?? 0) ? "#05873C" : "#0D1117" }}
+                                      >
+                                        {p.total_caixas_recebidas ?? 0} / {p.total_caixas_previstas}
+                                      </div>
+                                      <div className="mt-0.5 h-1 w-16 rounded-full" style={{ backgroundColor: "#E8ECF2", overflow: "hidden" }}>
+                                        <div
+                                          className="h-full rounded-full"
+                                          style={{
+                                            width: `${Math.min(100, ((p.total_caixas_recebidas ?? 0) / (p.total_caixas_previstas ?? 1)) * 100)}%`,
+                                            backgroundColor: (p.total_caixas_recebidas ?? 0) >= (p.total_caixas_previstas ?? 0) ? "#05873C" : "#1E6FBF",
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">—</span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-2">
                                   {isPendente ? (
                                     <span
                                       className="inline-flex items-center rounded-full px-2 py-0.5"
@@ -436,11 +464,23 @@ export function TerceirizadaTab() {
                                   </Select>
                                 </td>
                                 <td className="px-4 py-2">
-                                  {isPendente && (
-                                    <Button size="sm" variant="outline" onClick={() => setVincularId(p.id)}>
-                                      <Link2 className="h-3 w-3 mr-1" /> Vincular
-                                    </Button>
-                                  )}
+                                  <div className="flex items-center gap-1.5">
+                                    {isPendente && (
+                                      <Button size="sm" variant="outline" onClick={() => setVincularId(p.id)}>
+                                        <Link2 className="h-3 w-3 mr-1" /> Vincular
+                                      </Button>
+                                    )}
+                                    {(p.total_caixas_previstas ?? 0) > 0 && (
+                                      <Button
+                                        size="sm"
+                                        onClick={() => setReceberId(p.id)}
+                                        style={{ backgroundColor: "#1E6FBF", color: "#fff" }}
+                                      >
+                                        <ScanLine className="h-3 w-3 mr-1" />
+                                        {p.status_recebimento === "em_recebimento" ? "Continuar" : "Receber"}
+                                      </Button>
+                                    )}
+                                  </div>
                                 </td>
                               </tr>
                             );
@@ -459,6 +499,7 @@ export function TerceirizadaTab() {
       <NovoPedidoTerceirizadoDialog open={novoOpen} onOpenChange={setNovoOpen} lojaId={lojaId} />
       <ImportFabricanteXlsDialog open={importOpen} onOpenChange={setImportOpen} lojaId={lojaId} fornecedorId={null} />
       <VincularPedidoDialog open={!!vincularId} onOpenChange={(o) => !o && setVincularId(null)} pedidoId={vincularId} lojaId={lojaId} />
+      <RecebimentoDialog open={!!receberId} onOpenChange={(o) => !o && setReceberId(null)} pedidoId={receberId} lojaId={lojaId} />
     </>
   );
 }

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Plus, Box, Truck, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Box, Truck, Clock, ScanLine } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { LogisticaDashboard } from "@/components/logistica/LogisticaDashboard";
@@ -11,6 +11,7 @@ import { NovaEntregaDialog } from "@/components/logistica/NovaEntregaDialog";
 import { EntregaDrawer, type EntregaDrawerData } from "@/components/logistica/EntregaDrawer";
 import { StatusBadge, type StatusVisual } from "@/components/logistica/StatusBadge";
 import { MateriaisSeparadosTab } from "@/components/logistica/MateriaisSeparadosTab";
+import { RecebimentoTab } from "@/components/logistica/RecebimentoTab";
 import { useAuth } from "@/contexts/AuthContext";
 import { canPerform } from "@/lib/permissions";
 import { PageHeader } from "@/components/ui/page-header";
@@ -169,6 +170,10 @@ export default function Logistica() {
             <Box className="w-4 h-4 mr-2" />
             Materiais Separados
           </TabsTrigger>
+          <TabsTrigger value="recebimento" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <ScanLine className="w-4 h-4 mr-2" />
+            Recebimento
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="agenda" className="space-y-6">
@@ -264,6 +269,10 @@ export default function Logistica() {
 
         <TabsContent value="almoxarifado">
           <MateriaisSeparadosTab />
+        </TabsContent>
+
+        <TabsContent value="recebimento">
+          <RecebimentoTab />
         </TabsContent>
       </Tabs>
 
