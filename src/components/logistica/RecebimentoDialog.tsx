@@ -59,6 +59,7 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
   const [scannerOpen, setScannerOpen] = useState(false);
   const bipInputRef = useRef<HTMLInputElement>(null);
   const fotoInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   // Busca dados do pedido
   const { data: pedido } = useQuery({
@@ -114,11 +115,15 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
   }, [open, destino, finalizando, ultimoBip, scannerOpen]);
 
   // Wake lock: mantem a tela acesa durante a bipagem (mobile)
+  const caixasRecebidasCount = caixas.filter((c) => c.status === "recebida").length;
+  const totalCaixasCount = caixas.length;
+  const completoFlag = totalCaixasCount > 0 && caixasRecebidasCount === totalCaixasCount;
   useEffect(() => {
-    if (!open || !destino || completo) return;
-    const release = requestWakeLock();
-    return () => { release?.(); };
-  }, [open, destino, completo]);
+    if (!open || !destino || completoFlag) return;
+    let releaseFn: (() => void) | null = null;
+    requestWakeLock().then((r) => { releaseFn = r; });
+    return () => { releaseFn?.(); };
+  }, [open, destino, completoFlag]);
 
   // Carrega fotos do pedido
   useEffect(() => {
@@ -360,6 +365,7 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
     || "";
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent style={{ maxWidth: 900 }} className="gap-3 max-h-[92vh] overflow-y-auto">
         <DialogHeader>
@@ -671,15 +677,17 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
           </div>
         )}
       </DialogContent>
-
-      <BarcodeScannerDialog
-        open={scannerOpen}
-        onOpenChange={setScannerOpen}
-        onScan={(code) => {
-          setScannerOpen(false);
-          handleBipar(code);
-        }}
-      />
     </Dialog>
+
+    <BarcodeScannerDialog
+      open={scannerOpen}
+      onOpenChange={setScannerOpen}
+      onScan={(code) => {
+        setScannerOpen(false);
+        handleBipar(code);
+      }}
+    />
+    </>
   );
 }
+
