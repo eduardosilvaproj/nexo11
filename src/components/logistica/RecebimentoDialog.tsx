@@ -672,15 +672,17 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
           </div>
         )}
       </DialogContent>
-
-      <BarcodeScannerDialog
-        open={scannerOpen}
-        onOpenChange={setScannerOpen}
-        onScan={(code) => {
-          setScannerOpen(false);
-          handleBipar(code);
-        }}
-      />
     </Dialog>
+
+    <BarcodeScannerDialog
+      open={scannerOpen}
+      onOpenChange={setScannerOpen}
+      onScan={(code) => {
+        setScannerOpen(false);
+        handleBipar(code);
+      }}
+    />
+    </>
   );
 }
+
