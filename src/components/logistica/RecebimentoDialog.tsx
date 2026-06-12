@@ -59,6 +59,7 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
   const [scannerOpen, setScannerOpen] = useState(false);
   const bipInputRef = useRef<HTMLInputElement>(null);
   const fotoInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   // Busca dados do pedido
   const { data: pedido } = useQuery({
