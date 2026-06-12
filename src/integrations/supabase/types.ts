@@ -629,6 +629,78 @@ export type Database = {
           },
         ]
       }
+      backup_producao_terceirizada_full: {
+        Row: {
+          cliente_id: string | null
+          cliente_nome: string | null
+          contrato_id: string | null
+          created_at: string | null
+          data_prevista: string | null
+          fornecedor_id: string | null
+          id: string | null
+          importado_em: string | null
+          loja_id: string | null
+          numero_pedido: string | null
+          oc: string | null
+          situacao: string | null
+          status:
+            | Database["public"]["Enums"]["producao_terceirizada_status"]
+            | null
+          tipo: string | null
+          tipo_entrada: string | null
+          transportadora: string | null
+          updated_at: string | null
+          valor: number | null
+          vinculo_status: string | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          cliente_nome?: string | null
+          contrato_id?: string | null
+          created_at?: string | null
+          data_prevista?: string | null
+          fornecedor_id?: string | null
+          id?: string | null
+          importado_em?: string | null
+          loja_id?: string | null
+          numero_pedido?: string | null
+          oc?: string | null
+          situacao?: string | null
+          status?:
+            | Database["public"]["Enums"]["producao_terceirizada_status"]
+            | null
+          tipo?: string | null
+          tipo_entrada?: string | null
+          transportadora?: string | null
+          updated_at?: string | null
+          valor?: number | null
+          vinculo_status?: string | null
+        }
+        Update: {
+          cliente_id?: string | null
+          cliente_nome?: string | null
+          contrato_id?: string | null
+          created_at?: string | null
+          data_prevista?: string | null
+          fornecedor_id?: string | null
+          id?: string | null
+          importado_em?: string | null
+          loja_id?: string | null
+          numero_pedido?: string | null
+          oc?: string | null
+          situacao?: string | null
+          status?:
+            | Database["public"]["Enums"]["producao_terceirizada_status"]
+            | null
+          tipo?: string | null
+          tipo_entrada?: string | null
+          transportadora?: string | null
+          updated_at?: string | null
+          valor?: number | null
+          vinculo_status?: string | null
+        }
+        Relationships: []
+      }
       cartoes_credito: {
         Row: {
           banco: string | null
