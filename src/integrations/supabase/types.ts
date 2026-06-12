@@ -701,6 +701,63 @@ export type Database = {
         }
         Relationships: []
       }
+      caixas_previstas: {
+        Row: {
+          codigo_barras: string
+          id: string
+          importado_em: string
+          loja_id: string
+          numero_pedido: string
+          oc: string | null
+          producao_terceirizada_id: string | null
+          recebido_em: string | null
+          recebido_por: string | null
+          status: string
+          volume: number
+        }
+        Insert: {
+          codigo_barras: string
+          id?: string
+          importado_em?: string
+          loja_id: string
+          numero_pedido: string
+          oc?: string | null
+          producao_terceirizada_id?: string | null
+          recebido_em?: string | null
+          recebido_por?: string | null
+          status?: string
+          volume: number
+        }
+        Update: {
+          codigo_barras?: string
+          id?: string
+          importado_em?: string
+          loja_id?: string
+          numero_pedido?: string
+          oc?: string | null
+          producao_terceirizada_id?: string | null
+          recebido_em?: string | null
+          recebido_por?: string | null
+          status?: string
+          volume?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "caixas_previstas_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "caixas_previstas_producao_terceirizada_id_fkey"
+            columns: ["producao_terceirizada_id"]
+            isOneToOne: false
+            referencedRelation: "producao_terceirizada"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cartoes_credito: {
         Row: {
           banco: string | null
@@ -7029,6 +7086,8 @@ export type Database = {
           contrato_id: string | null
           created_at: string
           data_prevista: string | null
+          destino_recebimento: string | null
+          entregue_para: string | null
           fornecedor_id: string | null
           id: string
           importado_em: string
@@ -7036,10 +7095,15 @@ export type Database = {
           numero_pedido: string
           oc: string | null
           prazo: string | null
+          recebido_em: string | null
+          recebido_por: string | null
           situacao: string | null
           status: Database["public"]["Enums"]["producao_terceirizada_status"]
+          status_recebimento: string
           tipo: string | null
           tipo_entrada: string
+          total_caixas_previstas: number
+          total_caixas_recebidas: number
           transportadora: string | null
           updated_at: string
           valor: number
@@ -7051,6 +7115,8 @@ export type Database = {
           contrato_id?: string | null
           created_at?: string
           data_prevista?: string | null
+          destino_recebimento?: string | null
+          entregue_para?: string | null
           fornecedor_id?: string | null
           id?: string
           importado_em?: string
@@ -7058,10 +7124,15 @@ export type Database = {
           numero_pedido: string
           oc?: string | null
           prazo?: string | null
+          recebido_em?: string | null
+          recebido_por?: string | null
           situacao?: string | null
           status?: Database["public"]["Enums"]["producao_terceirizada_status"]
+          status_recebimento?: string
           tipo?: string | null
           tipo_entrada?: string
+          total_caixas_previstas?: number
+          total_caixas_recebidas?: number
           transportadora?: string | null
           updated_at?: string
           valor?: number
@@ -7073,6 +7144,8 @@ export type Database = {
           contrato_id?: string | null
           created_at?: string
           data_prevista?: string | null
+          destino_recebimento?: string | null
+          entregue_para?: string | null
           fornecedor_id?: string | null
           id?: string
           importado_em?: string
@@ -7080,10 +7153,15 @@ export type Database = {
           numero_pedido?: string
           oc?: string | null
           prazo?: string | null
+          recebido_em?: string | null
+          recebido_por?: string | null
           situacao?: string | null
           status?: Database["public"]["Enums"]["producao_terceirizada_status"]
+          status_recebimento?: string
           tipo?: string | null
           tipo_entrada?: string
+          total_caixas_previstas?: number
+          total_caixas_recebidas?: number
           transportadora?: string | null
           updated_at?: string
           valor?: number
@@ -7159,6 +7237,102 @@ export type Database = {
           visible?: boolean
         }
         Relationships: []
+      }
+      recebimento_fotos: {
+        Row: {
+          descricao: string | null
+          id: string
+          loja_id: string
+          producao_terceirizada_id: string
+          storage_path: string
+          tipo_evento: string
+          uploaded_by: string | null
+          uploaded_by_nome: string | null
+          uploaded_em: string
+        }
+        Insert: {
+          descricao?: string | null
+          id?: string
+          loja_id: string
+          producao_terceirizada_id: string
+          storage_path: string
+          tipo_evento?: string
+          uploaded_by?: string | null
+          uploaded_by_nome?: string | null
+          uploaded_em?: string
+        }
+        Update: {
+          descricao?: string | null
+          id?: string
+          loja_id?: string
+          producao_terceirizada_id?: string
+          storage_path?: string
+          tipo_evento?: string
+          uploaded_by?: string | null
+          uploaded_by_nome?: string | null
+          uploaded_em?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recebimento_fotos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recebimento_fotos_producao_terceirizada_id_fkey"
+            columns: ["producao_terceirizada_id"]
+            isOneToOne: false
+            referencedRelation: "producao_terceirizada"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recebimentos: {
+        Row: {
+          bipado_em: string
+          bipado_via: string | null
+          caixa_id: string
+          id: string
+          loja_id: string
+          usuario_id: string | null
+          usuario_nome: string | null
+        }
+        Insert: {
+          bipado_em?: string
+          bipado_via?: string | null
+          caixa_id: string
+          id?: string
+          loja_id: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Update: {
+          bipado_em?: string
+          bipado_via?: string | null
+          caixa_id?: string
+          id?: string
+          loja_id?: string
+          usuario_id?: string | null
+          usuario_nome?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recebimentos_caixa_id_fkey"
+            columns: ["caixa_id"]
+            isOneToOne: false
+            referencedRelation: "caixas_previstas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recebimentos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       registros_ponto: {
         Row: {
