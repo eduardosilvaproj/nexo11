@@ -55,6 +55,14 @@ export function RecebimentoTab() {
     // (admin_master nao tem loja_id no perfil, mas tem bypass de RLS)
     enabled: !!lojaId || isAdminMaster,
     queryFn: async () => {
+      // DEBUG: mostra contexto no console do browser
+      console.log("[RecebimentoTab] Query params", {
+        lojaId,
+        isAdminMaster,
+        perfilEmail: perfil?.email ?? null,
+        roles,
+      });
+
       let q = supabase
         .from("producao_terceirizada")
         .select(`
@@ -70,6 +78,17 @@ export function RecebimentoTab() {
         q = q.eq("loja_id", lojaId);
       }
       const { data, error } = await q;
+      // DEBUG: mostra resultado
+      console.log("[RecebimentoTab] Query result", {
+        count: data?.length ?? 0,
+        error: error?.message ?? null,
+        firstFew: (data ?? []).slice(0, 3).map(p => ({
+          numero_pedido: p.numero_pedido,
+          oc: p.oc,
+          status: p.status,
+          loja_id_no_banco: (p as any).loja_id,
+        })),
+      });
       if (error) throw error;
       return (data ?? []) as PedidoRecebimento[];
     },
