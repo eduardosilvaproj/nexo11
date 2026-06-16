@@ -49,13 +49,12 @@ export function RecebimentoTab() {
   const [busca, setBusca] = useState("");
 
   // Busca pedidos que tem caixas previstas OU estao aptos a receber
+  // NAO filtra por loja_id no frontend: o RLS do Supabase ja controla o acesso.
+  // admin_master tem bypass total; usuarios comuns so veem a propria loja.
   const { data: pedidos, isLoading } = useQuery({
-    queryKey: ["recebimento-lista", lojaId, isAdminMaster],
-    // Habilita a query tanto para usuarios com loja quanto para admin_master
-    // (admin_master nao tem loja_id no perfil, mas tem bypass de RLS)
-    enabled: !!lojaId || isAdminMaster,
+    queryKey: ["recebimento-lista"],
     queryFn: async () => {
-      let q = supabase
+      const { data, error } = await supabase
         .from("producao_terceirizada")
         .select(`
           id, numero_pedido, oc, cliente_nome, data_prevista, status,
@@ -65,11 +64,6 @@ export function RecebimentoTab() {
         `)
         .in("status", ["aguardando_fabricacao", "em_producao", "pronto_retirada", "atrasado"])
         .order("data_prevista", { ascending: true });
-      // admin_master: nao filtra por loja (RLS ja da bypass)
-      if (!isAdminMaster && lojaId) {
-        q = q.eq("loja_id", lojaId);
-      }
-      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as PedidoRecebimento[];
     },
