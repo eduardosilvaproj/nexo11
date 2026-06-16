@@ -72,12 +72,20 @@ export function RecebimentoTab() {
   const filtered = useMemo(() => {
     if (!pedidos) return [];
     return pedidos.filter((p) => {
-      if (statusFiltro === "com_caixas" && p.total_caixas_previstas === 0) return false;
-      if (statusFiltro === "pronto" && p.total_caixas_previstas > 0 && p.total_caixas_recebidas < p.total_caixas_previstas && p.status_recebimento === "nao_iniciado") {
-        return true;
+      // ALL = "__all__" significa "mostrar todos exceto finalizados"
+      const isAllMode = statusFiltro === ALL;
+      if (isAllMode) {
+        if (p.status_recebimento === "entrega_finalizada") return false;
+      } else if (statusFiltro === "com_caixas") {
+        if (p.total_caixas_previstas === 0) return false;
+      } else if (statusFiltro === "pronto") {
+        const hasCaixas = p.total_caixas_previstas > 0;
+        const incompleto = p.total_caixas_recebidas < p.total_caixas_previstas;
+        if (!(hasCaixas && incompleto && p.status_recebimento === "nao_iniciado")) return false;
+      } else {
+        // Filtro especifico por status_recebimento
+        if (p.status_recebimento !== statusFiltro) return false;
       }
-      if (statusFiltro !== "all" && statusFiltro !== "com_caixas" && p.status_recebimento !== statusFiltro) return false;
-      if (statusFiltro === "all" && p.status_recebimento === "entrega_finalizada") return false;
       if (busca.trim()) {
         const q = busca.trim().toLowerCase();
         if (!p.numero_pedido.toLowerCase().includes(q) &&
