@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Plus, Box, Truck, Clock, ScanLine } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Box, Truck, Clock, ScanLine, Layers } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { LogisticaDashboard } from "@/components/logistica/LogisticaDashboard";
@@ -12,6 +12,7 @@ import { EntregaDrawer, type EntregaDrawerData } from "@/components/logistica/En
 import { StatusBadge, type StatusVisual } from "@/components/logistica/StatusBadge";
 import { MateriaisSeparadosTab } from "@/components/logistica/MateriaisSeparadosTab";
 import { RecebimentoTab } from "@/components/logistica/RecebimentoTab";
+import { VisaoUnificadaTab } from "@/components/logistica/VisaoUnificadaTab";
 import { useAuth } from "@/contexts/AuthContext";
 import { canPerform } from "@/lib/permissions";
 import { PageHeader } from "@/components/ui/page-header";
@@ -174,6 +175,10 @@ export default function Logistica() {
             <ScanLine className="w-4 h-4 mr-2" />
             Recebimento
           </TabsTrigger>
+          <TabsTrigger value="unificada" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <Layers className="w-4 h-4 mr-2" />
+            Visão Unificada
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="agenda" className="space-y-6">
@@ -273,6 +278,10 @@ export default function Logistica() {
 
         <TabsContent value="recebimento">
           <RecebimentoTab />
+        </TabsContent>
+
+        <TabsContent value="unificada">
+          <VisaoUnificadaTab />
         </TabsContent>
       </Tabs>
 
