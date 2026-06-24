@@ -9,20 +9,19 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import {
+  contratosComMaterialSeparado,
+  contratosFaltandoEntregaAlmox,
+} from "@/lib/logistica-sync";
 
 // Fase B: para cada contrato com material 'separado', garante uma entrega
 // independente na agenda com origem='almoxarifado'. Idempotente — so cria se
 // ainda nao existir uma entrega dessa origem para o contrato. Agrupa por
 // contrato (uma entrega por contrato, nao uma por item).
+// A logica de decisao (dedup + guarda) vive em @/lib/logistica-sync (testada).
 async function reconcileEntregasAlmox(expedicoes: any[]) {
   try {
-    const contratosSeparados = Array.from(
-      new Set(
-        expedicoes
-          .filter((e) => e.status === "separado" && e.contrato_id)
-          .map((e) => e.contrato_id as string)
-      )
-    );
+    const contratosSeparados = contratosComMaterialSeparado(expedicoes);
     if (contratosSeparados.length === 0) return;
 
     // Quais desses ja tem entrega origem=almoxarifado?
@@ -32,8 +31,10 @@ async function reconcileEntregasAlmox(expedicoes: any[]) {
       .eq("origem", "almoxarifado")
       .in("contrato_id", contratosSeparados);
 
-    const comEntrega = new Set((jaTem ?? []).map((r: any) => r.contrato_id));
-    const faltando = contratosSeparados.filter((cid) => !comEntrega.has(cid));
+    const faltando = contratosFaltandoEntregaAlmox(
+      contratosSeparados,
+      (jaTem ?? []).map((r: any) => r.contrato_id)
+    );
     if (faltando.length === 0) return;
 
     // Endereco do contrato para preencher a entrega.
