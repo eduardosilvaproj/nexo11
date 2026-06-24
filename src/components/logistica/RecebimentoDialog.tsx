@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarcodeScannerDialog } from "@/components/logistica/BarcodeScannerDialog";
 import { beep, vibrate, requestWakeLock } from "@/lib/recebimento-feedback";
 
@@ -31,6 +32,7 @@ interface Pedido {
   numero_pedido: string;
   oc: string | null;
   cliente_nome?: string | null;
+  contrato_id?: string | null;
   contratos?: { cliente_nome?: string } | null;
   total_caixas_previstas: number;
   total_caixas_recebidas: number;
@@ -53,6 +55,10 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
   const [finalizando, setFinalizando] = useState(false);
   const [entreguePara, setEntreguePara] = useState("");
   const [observacao, setObservacao] = useState("");
+  // Vinculo de contrato (opcional): so aparece quando o pedido ainda nao tem contrato_id.
+  // "__none__" = manter avulso (estado valido). Ao escolher um contrato, a finalizacao
+  // grava o contrato_id e cria a entrega correspondente na agenda.
+  const [contratoVinculo, setContratoVinculo] = useState<string>("__none__");
   const [fotosPedido, setFotosPedido] = useState<{ id: string; storage_path: string; tipo_evento: string; descricao: string | null; url: string }[]>([]);
   const [uploadingFoto, setUploadingFoto] = useState(false);
   const [showSairSemFinalizar, setShowSairSemFinalizar] = useState(false);
@@ -68,7 +74,7 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
     queryFn: async () => {
       const { data, error } = await supabase
         .from("producao_terceirizada")
-        .select("id, numero_pedido, oc, cliente_nome, total_caixas_previstas, total_caixas_recebidas, status_recebimento, contratos:contrato_id(cliente_nome)")
+        .select("id, numero_pedido, oc, cliente_nome, contrato_id, total_caixas_previstas, total_caixas_recebidas, status_recebimento, contratos:contrato_id(cliente_nome)")
         .eq("id", pedidoId!)
         .single();
       if (error) throw error;
@@ -91,6 +97,22 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
     },
   });
 
+  // Pedido ainda sem contrato? Carrega contratos liberados da loja para vinculo opcional.
+  const semContratoVinculado = !!pedido && !pedido.contrato_id;
+  const { data: contratosDisponiveis } = useQuery({
+    queryKey: ["recebimento-contratos-vinculo", lojaId],
+    enabled: open && semContratoVinculado,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("contratos")
+        .select("id, cliente_nome, cliente_contato")
+        .eq("trava_producao_ok", true)
+        .order("cliente_nome");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   // Carrega destino ja escolhido (se voltar)
   useEffect(() => {
     if (!open || !pedido) return;
@@ -100,6 +122,7 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
     setFinalizando(false);
     setEntreguePara("");
     setObservacao("");
+    setContratoVinculo("__none__");
     setShowSairSemFinalizar(false);
     // Se ja tem destino, restaura
     if (pedido.status_recebimento && pedido.status_recebimento !== "nao_iniciado") {
@@ -364,18 +387,28 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
 
       const statusFinal = destino === "cliente" ? "entrega_finalizada" : "recebido_deposito";
 
+      // Contrato efetivo: o que ja existe no pedido OU o escolhido agora no vinculo opcional.
+      const contratoEscolhido = contratoVinculo !== "__none__" ? contratoVinculo : null;
+      const contratoIdEfetivo = pedido?.contrato_id ?? contratoEscolhido;
+
+      const updatePayload: Record<string, unknown> = {
+        status_recebimento: statusFinal,
+        destino_recebimento: destino,
+        recebido_em: new Date().toISOString(),
+        recebido_por: userName,
+        entregue_para: destino === "cliente" ? entreguePara.trim() : null,
+        // Se for entrega finalizada em casa do cliente, marca como pronto para retirada
+        // (libera a logistica de entrega posterior)
+        status: "pronto_retirada",
+      };
+      // So grava contrato_id quando o pedido ainda nao tinha e o operador vinculou agora.
+      if (!pedido?.contrato_id && contratoEscolhido) {
+        updatePayload.contrato_id = contratoEscolhido;
+      }
+
       const { error } = await supabase
         .from("producao_terceirizada")
-        .update({
-          status_recebimento: statusFinal,
-          destino_recebimento: destino,
-          recebido_em: new Date().toISOString(),
-          recebido_por: userName,
-          entregue_para: destino === "cliente" ? entreguePara.trim() : null,
-          // Se for entrega finalizada em casa do cliente, marca como pronto para retirada
-          // (libera a logistica de entrega posterior)
-          status: "pronto_retirada",
-        })
+        .update(updatePayload)
         .eq("id", pedidoId);
 
       if (error) {
@@ -384,31 +417,96 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
       }
 
       // Log no contrato se houver
-      if (pedido && (pedido as Pedido).id) {
-        const prod = pedido as Pedido;
-        const { data: p } = await supabase
-          .from("producao_terceirizada")
-          .select("contrato_id, numero_pedido")
-          .eq("id", pedidoId)
-          .single();
-        if (p?.contrato_id) {
-          await supabase.from("contrato_logs").insert({
-            contrato_id: p.contrato_id,
-            acao: "recebimento_finalizado",
-            etapa: "logistica",
-            titulo: destino === "cliente" ? "Mercadoria entregue ao cliente" : "Mercadoria recebida no deposito",
-            descricao: `Pedido #${p.numero_pedido} · ${destino === "cliente" ? `Recebido por: ${entreguePara}` : "Aguardando agendamento de entrega"}`,
-            usuario_nome: userName,
-          });
-        }
+      if (contratoIdEfetivo) {
+        const numeroPedido = pedido?.numero_pedido ?? "";
+        await supabase.from("contrato_logs").insert({
+          contrato_id: contratoIdEfetivo,
+          acao: "recebimento_finalizado",
+          etapa: "logistica",
+          titulo: destino === "cliente" ? "Mercadoria entregue ao cliente" : "Mercadoria recebida no deposito",
+          descricao: `Pedido #${numeroPedido} · ${destino === "cliente" ? `Recebido por: ${entreguePara}` : "Aguardando agendamento de entrega"}`,
+          usuario_nome: userName,
+        });
+      }
+
+      // Cria a entrega correspondente na agenda — fecha o elo recebimento->agenda.
+      // So quando ha contrato (a tabela entregas exige contrato_id). Avulso nao gera entrega.
+      if (contratoIdEfetivo) {
+        await criarEntregaDoRecebimento(contratoIdEfetivo, destino, userName);
       }
 
       toast.success(destino === "cliente" ? "Entrega finalizada!" : "Recebido no deposito!");
       qc.invalidateQueries({ queryKey: ["producao-terceirizada"] });
       qc.invalidateQueries({ queryKey: ["recebimento-pedido", pedidoId] });
+      qc.invalidateQueries({ queryKey: ["logistica-list"] });
+      qc.invalidateQueries({ queryKey: ["logistica-unificada"] });
       onOpenChange(false);
     } finally {
       setFinalizando(false);
+    }
+  };
+
+  // Cria uma entrega para o contrato, se ainda nao existir uma.
+  // destino "deposito" -> a_agendar (precisa roteirizar saida depois)
+  // destino "cliente"  -> agendado + data_prevista hoje (saiu para entrega direta)
+  const criarEntregaDoRecebimento = async (
+    contratoId: string,
+    dest: Destino,
+    userName: string
+  ) => {
+    try {
+      // Guarda anti-duplicata: nao cria se ja existe entrega para o contrato.
+      const { data: existentes } = await supabase
+        .from("entregas")
+        .select("id")
+        .eq("contrato_id", contratoId)
+        .limit(1);
+      if (existentes && existentes.length > 0) return;
+
+      const { data: contratoInfo } = await supabase
+        .from("contratos")
+        .select("loja_id, cliente_id, cliente_contato")
+        .eq("id", contratoId)
+        .single();
+
+      const endereco = contratoInfo?.cliente_contato ?? null;
+      const hojeISO = new Date().toISOString().slice(0, 10);
+      const numeroPedido = pedido?.numero_pedido ?? "";
+
+      const statusVisual = dest === "cliente" ? "agendado" : "a_agendar";
+      const dataPrevista = dest === "cliente" ? hojeISO : null;
+
+      const { error: entregaErr } = await supabase.from("entregas").insert({
+        contrato_id: contratoId,
+        data_prevista: dataPrevista,
+        turno: "dia_todo",
+        endereco,
+        rota: endereco,
+        observacoes: `Gerada automaticamente do recebimento do pedido #${numeroPedido}`,
+        status_visual: statusVisual,
+      });
+      if (entregaErr) {
+        console.error("[Recebimento] erro ao criar entrega:", entregaErr);
+        return;
+      }
+
+      // Dispara automacao de entrega agendada (mesmo padrao do NovaEntregaDialog)
+      try {
+        if (contratoInfo) {
+          const { automationService } = await import("@/services/automationService");
+          await automationService.dispararGatilho(
+            "entrega_agendada",
+            "contrato",
+            contratoId,
+            contratoInfo.loja_id,
+            { cliente_id: contratoInfo.cliente_id, contrato_id: contratoId, data_prevista: dataPrevista, origem: "recebimento" }
+          );
+        }
+      } catch (err) {
+        console.error("[Recebimento] erro ao disparar gatilho entrega_agendada:", err);
+      }
+    } catch (err) {
+      console.error("[Recebimento] falha inesperada ao criar entrega:", err);
     }
   };
 
@@ -617,6 +715,28 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
                   placeholder="Ex: Joao da Silva (cliente)"
                   className="mt-1.5"
                 />
+              </div>
+            )}
+
+            {semContratoVinculado && (
+              <div>
+                <Label className="text-sm font-semibold">Vincular a contrato (opcional)</Label>
+                <Select value={contratoVinculo} onValueChange={setContratoVinculo}>
+                  <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Sem contrato (recebimento avulso)</SelectItem>
+                    {contratosDisponiveis?.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        #{c.id.slice(0, 4)} — {c.cliente_nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {contratoVinculo === "__none__"
+                    ? "Sem contrato: nao gera entrega na agenda."
+                    : "Ao finalizar, cria automaticamente a entrega na agenda."}
+                </p>
               </div>
             )}
 
