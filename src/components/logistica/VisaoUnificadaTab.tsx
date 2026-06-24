@@ -69,13 +69,21 @@ const ORIGEM_META: Record<Origem, { label: string; icon: typeof Package }> = {
 };
 
 interface GrupoContrato {
-  contrato_id: string;
+  chave: string;
   cliente_nome: string;
   linhas: LinhaUnificada[];
   faseMax: Fase;
-  // Divergencia: recebimento ja no deposito/entregue mas sem entrega na agenda
+  // Grupo sem contrato real (recebimento avulso, ex.: PDF importado sem vinculo).
+  // "Sem contrato" e um estado VALIDO de negocio, nao uma divergencia.
+  semContrato: boolean;
+  // Divergencia: recebimento ja no deposito mas sem entrega na agenda.
+  // So faz sentido para grupos COM contrato — avulsos nunca geram entrega
+  // (a tabela entregas exige contrato_id), entao nunca sao divergencia.
   semEntregaNaAgenda: boolean;
 }
+
+const normNome = (s: string | null) =>
+  (s ?? "").trim().toLowerCase().replace(/\s+/g, " ");
 
 function FaseBadge({ fase }: { fase: Fase }) {
   const m = FASE_META[fase] ?? FASE_META.aguardando_fabrica;
@@ -109,7 +117,12 @@ export function VisaoUnificadaTab() {
     if (!linhas) return [];
     const map = new Map<string, LinhaUnificada[]>();
     for (const l of linhas) {
-      const key = l.contrato_id ?? `sem-contrato:${l.origem}:${l.origem_id}`;
+      // Com contrato: agrupa pelo contrato_id (cruza as 3 trilhas).
+      // Sem contrato: agrupa por cliente (normalizado) para nao explodir
+      // em um card por pedido. Recebimentos avulsos legitimos caem aqui.
+      const key = l.contrato_id
+        ? `contrato:${l.contrato_id}`
+        : `avulso:${l.loja_id ?? "-"}:${normNome(l.cliente_nome) || `${l.origem}:${l.origem_id}`}`;
       const arr = map.get(key) ?? [];
       arr.push(l);
       map.set(key, arr);
@@ -117,6 +130,7 @@ export function VisaoUnificadaTab() {
 
     const result: GrupoContrato[] = [];
     for (const [key, arr] of map) {
+      const semContrato = key.startsWith("avulso:");
       const faseMax = arr.reduce<Fase>((acc, l) => {
         return FASE_ORDEM[l.fase_canonica] > FASE_ORDEM[acc] ? l.fase_canonica : acc;
       }, "cancelado");
@@ -127,11 +141,13 @@ export function VisaoUnificadaTab() {
       const temEntrega = arr.some((l) => l.origem === "entregas");
 
       result.push({
-        contrato_id: key,
+        chave: key,
         cliente_nome: arr.find((l) => l.cliente_nome)?.cliente_nome ?? "—",
         linhas: arr.sort((a, b) => FASE_ORDEM[b.fase_canonica] - FASE_ORDEM[a.fase_canonica]),
         faseMax,
-        semEntregaNaAgenda: recebimentoNoDeposito && !temEntrega,
+        semContrato,
+        // Avulso nunca e divergencia: sem contrato_id, nao ha como existir entrega.
+        semEntregaNaAgenda: !semContrato && recebimentoNoDeposito && !temEntrega,
       });
     }
 
@@ -153,11 +169,12 @@ export function VisaoUnificadaTab() {
   }, [grupos, busca]);
 
   const metrics = useMemo(() => {
+    const comContrato = grupos.filter((g) => !g.semContrato);
     return {
-      contratos: grupos.length,
+      contratos: comContrato.length,
+      avulsos: grupos.filter((g) => g.semContrato).length,
       divergencias: grupos.filter((g) => g.semEntregaNaAgenda).length,
-      entregues: grupos.filter((g) => g.faseMax === "entregue").length,
-      emAndamento: grupos.filter((g) => g.faseMax !== "entregue" && g.faseMax !== "cancelado").length,
+      emAndamento: comContrato.filter((g) => g.faseMax !== "entregue" && g.faseMax !== "cancelado").length,
     };
   }, [grupos]);
 
@@ -176,7 +193,7 @@ export function VisaoUnificadaTab() {
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <MetricCard label="Contratos no fluxo" value={metrics.contratos} color="#1E6FBF" />
         <MetricCard label="Em andamento" value={metrics.emAndamento} color="#E8A020" />
-        <MetricCard label="Entregues" value={metrics.entregues} color="#05873C" />
+        <MetricCard label="Recebimentos avulsos" value={metrics.avulsos} color="#7C3AED" />
         <MetricCard label="Divergencias" value={metrics.divergencias} color="#DC2626" />
       </div>
 
@@ -206,11 +223,19 @@ export function VisaoUnificadaTab() {
 
       <div className="space-y-3">
         {filtrados.map((g) => (
-          <div key={g.contrato_id} className="rounded-xl border border-[#E8ECF2] bg-white p-4">
+          <div key={g.chave} className="rounded-xl border border-[#E8ECF2] bg-white p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <span style={{ fontSize: 14, fontWeight: 600, color: "#0D1117" }}>{g.cliente_nome}</span>
                 <FaseBadge fase={g.faseMax} />
+                {g.semContrato && (
+                  <span
+                    className="inline-flex items-center rounded-full px-2 py-0.5"
+                    style={{ backgroundColor: "#F1F5F9", color: "#6B7A90", fontSize: 11, fontWeight: 500 }}
+                  >
+                    Sem contrato
+                  </span>
+                )}
               </div>
               {g.semEntregaNaAgenda && (
                 <div
