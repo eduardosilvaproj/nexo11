@@ -455,11 +455,14 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
     userName: string
   ) => {
     try {
-      // Guarda anti-duplicata: nao cria se ja existe entrega para o contrato.
+      // Guarda anti-duplicata: nao cria se ja existe entrega de ORIGEM recebimento
+      // para o contrato. Entregas de outras origens (almoxarifado/manual) sao
+      // independentes e nao bloqueiam a criacao desta.
       const { data: existentes } = await supabase
         .from("entregas")
         .select("id")
         .eq("contrato_id", contratoId)
+        .eq("origem", "recebimento")
         .limit(1);
       if (existentes && existentes.length > 0) return;
 
@@ -484,6 +487,7 @@ export function RecebimentoDialog({ open, onOpenChange, pedidoId, lojaId }: Prop
         rota: endereco,
         observacoes: `Gerada automaticamente do recebimento do pedido #${numeroPedido}`,
         status_visual: statusVisual,
+        origem: "recebimento",
       });
       if (entregaErr) {
         console.error("[Recebimento] erro ao criar entrega:", entregaErr);

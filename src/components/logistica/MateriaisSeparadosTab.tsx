@@ -10,6 +10,82 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
+// Fase B: para cada contrato com material 'separado', garante uma entrega
+// independente na agenda com origem='almoxarifado'. Idempotente — so cria se
+// ainda nao existir uma entrega dessa origem para o contrato. Agrupa por
+// contrato (uma entrega por contrato, nao uma por item).
+async function reconcileEntregasAlmox(expedicoes: any[]) {
+  try {
+    const contratosSeparados = Array.from(
+      new Set(
+        expedicoes
+          .filter((e) => e.status === "separado" && e.contrato_id)
+          .map((e) => e.contrato_id as string)
+      )
+    );
+    if (contratosSeparados.length === 0) return;
+
+    // Quais desses ja tem entrega origem=almoxarifado?
+    const { data: jaTem } = await supabase
+      .from("entregas")
+      .select("contrato_id")
+      .eq("origem", "almoxarifado")
+      .in("contrato_id", contratosSeparados);
+
+    const comEntrega = new Set((jaTem ?? []).map((r: any) => r.contrato_id));
+    const faltando = contratosSeparados.filter((cid) => !comEntrega.has(cid));
+    if (faltando.length === 0) return;
+
+    // Endereco do contrato para preencher a entrega.
+    const { data: contratosInfo } = await supabase
+      .from("contratos")
+      .select("id, loja_id, cliente_id, cliente_contato")
+      .in("id", faltando);
+    const infoById = new Map((contratosInfo ?? []).map((c: any) => [c.id, c]));
+
+    const rows = faltando.map((cid) => {
+      const info = infoById.get(cid) as any;
+      const endereco = info?.cliente_contato ?? null;
+      return {
+        contrato_id: cid,
+        data_prevista: null,
+        turno: "dia_todo",
+        endereco,
+        rota: endereco,
+        observacoes: "Gerada automaticamente da separacao de material (almoxarifado)",
+        status_visual: "a_agendar",
+        origem: "almoxarifado",
+      };
+    });
+
+    const { error: insErr } = await supabase.from("entregas").insert(rows);
+    if (insErr) {
+      console.error("[Almox] erro ao criar entregas origem=almoxarifado:", insErr);
+      return;
+    }
+
+    // Dispara automacao de entrega agendada para cada contrato novo.
+    try {
+      const { automationService } = await import("@/services/automationService");
+      for (const cid of faltando) {
+        const info = infoById.get(cid) as any;
+        if (!info?.loja_id) continue;
+        await automationService.dispararGatilho(
+          "entrega_agendada",
+          "contrato",
+          cid,
+          info.loja_id,
+          { cliente_id: info.cliente_id, contrato_id: cid, origem: "almoxarifado" }
+        );
+      }
+    } catch (err) {
+      console.error("[Almox] erro ao disparar gatilho entrega_agendada (almox):", err);
+    }
+  } catch (err) {
+    console.error("[Almox] falha inesperada no reconcile de entregas:", err);
+  }
+}
+
 export function MateriaisSeparadosTab() {
   const { perfil, user } = useAuth();
   const qc = useQueryClient();
@@ -34,6 +110,12 @@ export function MateriaisSeparadosTab() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
+
+      // Fase B: garante uma entrega independente (origem=almoxarifado) na agenda
+      // para cada contrato com material separado. Idempotente: so cria se ainda
+      // nao existe entrega origem=almoxarifado para o contrato.
+      await reconcileEntregasAlmox((data ?? []) as any[]);
+
       return data || [];
     },
   });
@@ -108,6 +190,7 @@ export function MateriaisSeparadosTab() {
       toast.success("Status atualizado com sucesso!");
       qc.invalidateQueries({ queryKey: ["expedicoes_almoxarifado"] });
       qc.invalidateQueries({ queryKey: ["logistica-unificada"] });
+      qc.invalidateQueries({ queryKey: ["logistica-list"] });
     },
     onError: (err: any) => {
       toast.error("Erro ao atualizar status: " + err.message);
