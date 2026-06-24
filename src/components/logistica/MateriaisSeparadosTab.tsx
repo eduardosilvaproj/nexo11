@@ -42,7 +42,7 @@ export function MateriaisSeparadosTab() {
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const now = new Date().toISOString();
       const updates: any = { status, updated_at: now };
-      
+
       if (status === 'carregado') {
         updates.carregado_at = now;
         updates.responsavel_carregamento_id = user?.id;
@@ -57,10 +57,57 @@ export function MateriaisSeparadosTab() {
         .eq("id", id);
 
       if (error) throw error;
+
+      // Elo com o fluxo logistico (Fase A): registra evento + log no contrato e
+      // dispara automacao quando o material e carregado/entregue. So para os
+      // status que sao marcos do fluxo (carregado, entregue).
+      if (status === 'carregado' || status === 'entregue') {
+        const exp = expedicoes.find((e) => e.id === id);
+        const contratoId = exp?.contrato_id as string | undefined;
+        const lojaId = exp?.loja_id as string | undefined;
+        if (contratoId) {
+          const itemDesc = (exp?.estoque_itens as any)?.descricao ?? "material";
+          const isEntregue = status === 'entregue';
+          const titulo = isEntregue ? "Material de estoque entregue" : "Material de estoque carregado";
+          const descricao = isEntregue
+            ? `Expedicao de almoxarifado entregue: ${itemDesc} (qtd ${exp?.quantidade}).`
+            : `Material de almoxarifado carregado para saida: ${itemDesc} (qtd ${exp?.quantidade}).`;
+
+          const { registrarEventoContrato } = await import("@/services/contratoEventos");
+          await registrarEventoContrato({
+            contratoId,
+            tipo: isEntregue ? "almox_material_entregue" : "almox_material_carregado",
+            modulo: "almoxarifado",
+            titulo,
+            descricao,
+            entidadeTipo: "expedicoes_almoxarifado",
+            entidadeId: id,
+          });
+
+          // Dispara automacao so na entrega final. Reusa o gatilho existente
+          // 'entrega_concluida' (origem no metadata) para aproveitar regras ja
+          // configuradas, em vez de criar um gatilho sem nenhuma regra associada.
+          if (isEntregue && lojaId) {
+            try {
+              const { automationService } = await import("@/services/automationService");
+              await automationService.dispararGatilho(
+                "entrega_concluida",
+                "contrato",
+                contratoId,
+                lojaId,
+                { contrato_id: contratoId, expedicao_id: id, origem: "almoxarifado" }
+              );
+            } catch (err) {
+              console.error("[Almox] erro ao disparar gatilho entrega_concluida (almox):", err);
+            }
+          }
+        }
+      }
     },
     onSuccess: () => {
       toast.success("Status atualizado com sucesso!");
       qc.invalidateQueries({ queryKey: ["expedicoes_almoxarifado"] });
+      qc.invalidateQueries({ queryKey: ["logistica-unificada"] });
     },
     onError: (err: any) => {
       toast.error("Erro ao atualizar status: " + err.message);
