@@ -53,7 +53,9 @@ function loadPrefs(userId: string): WidgetConfig[] {
       }
       return merged;
     }
-  } catch {}
+  } catch (e) {
+    console.warn("[Dashboard] preferencias de widgets corrompidas no localStorage, usando padrao:", e);
+  }
   return DEFAULT_WIDGETS;
 }
 

@@ -173,7 +173,9 @@ export function ConferenciaAmbientesSection({ contratoId, lojaId }: Props) {
             custoOriginal = oc.pedido;
             itensOriginais = oc.itens as any[];
           }
-        } catch {}
+        } catch (e) {
+          console.warn("[Conferencia] falha ao parsear XML original do orcamento, tentando fallback:", e);
+        }
       }
       if (!custoOriginal && orcamento?.total_pedido) {
         custoOriginal = Number(orcamento.total_pedido) / Math.max(1, ambientes.length);
