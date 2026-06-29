@@ -8,6 +8,54 @@ export function diffHoras(ini?: string | null, fim?: string | null): number {
   return mins > 0 ? mins / 60 : 0;
 }
 
+export interface IntervaloAgendado {
+  id: string;
+  hora_inicio: string | null;
+  hora_fim: string | null;
+}
+
+/**
+ * Encontra o primeiro agendamento existente cujo horario se sobrepoe ao
+ * intervalo [horaInicio, horaFim). Sobreposicao = inicio_a < fim_b && inicio_b < fim_a.
+ * Retorna null quando o novo intervalo nao tem horario definido ou nao ha choque.
+ * Logica pura (sem I/O) para ser testavel isoladamente.
+ */
+export function encontrarSobreposicao(
+  existentes: IntervaloAgendado[],
+  horaInicio?: string | null,
+  horaFim?: string | null
+): IntervaloAgendado | null {
+  if (!horaInicio || !horaFim) return null;
+  return (
+    existentes.find(
+      (a) =>
+        a.hora_inicio &&
+        a.hora_fim &&
+        a.hora_inicio < horaFim &&
+        horaInicio < a.hora_fim
+    ) ?? null
+  );
+}
+
+/**
+ * Soma as horas ja reservadas e verifica se, ao adicionar horasNovas,
+ * a capacidade diaria e excedida. Logica pura (sem I/O).
+ */
+export function calcularCapacidade(
+  existentes: IntervaloAgendado[],
+  horasNovas: number,
+  capacidade: number
+): { horasReservadas: number; excedeCapacidade: boolean } {
+  const horasReservadas = existentes.reduce(
+    (acc, a) => acc + diffHoras(a.hora_inicio, a.hora_fim),
+    0
+  );
+  return {
+    horasReservadas,
+    excedeCapacidade: horasReservadas + horasNovas > capacidade,
+  };
+}
+
 export interface ConflictCheckParams {
   equipeId: string | null | undefined;
   data: string; // yyyy-MM-dd
@@ -109,25 +157,20 @@ export async function checkAgendamentoConflict(
 
   const { data: existentes = [] } = await q;
 
-  const conflito =
-    p.horaInicio && p.horaFim
-      ? existentes.find(
-          (a) =>
-            a.hora_inicio &&
-            a.hora_fim &&
-            a.hora_inicio < p.horaFim! &&
-            p.horaInicio! < a.hora_fim
-        ) ?? null
-      : null;
-
-  const horasReservadas = existentes.reduce(
-    (acc, a) => acc + diffHoras(a.hora_inicio, a.hora_fim),
-    0
+  const conflito = encontrarSobreposicao(
+    (existentes ?? []) as IntervaloAgendado[],
+    p.horaInicio,
+    p.horaFim
   );
-  const excedeCapacidade = horasReservadas + horasNovas > capacidade;
+
+  const { horasReservadas, excedeCapacidade } = calcularCapacidade(
+    (existentes ?? []) as IntervaloAgendado[],
+    horasNovas,
+    capacidade
+  );
 
   return {
-    conflito: conflito as any,
+    conflito,
     excedeCapacidade,
     horasReservadas,
     horasNovas,
