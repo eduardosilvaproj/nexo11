@@ -23,3 +23,16 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+# RuFlo / claude-flow (infra local de orquestracao — NAO deve ir para o deploy)
+.claude/
+.claude-flow/
+.swarm/
+.mcp.json
+CLAUDE.md
+ruvector.db
+*.ruvector.db
+
+# Artefatos de teste/diagnostico locais
+test-results/
+scripts/check_status.sql
